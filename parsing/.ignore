@@ -7,5 +7,3 @@ linenum.ml
 parser.output
 parser.automaton
 parser.conflicts
-*.cm*
-*.o
