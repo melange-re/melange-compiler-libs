@@ -95,6 +95,12 @@ type t =
   | Unused_open_bang of string              (* 66 *)
   | Unused_functor_parameter of string      (* 67 *)
   | Match_on_mutable_state_prevent_uncurry  (* 68 *)
+#if undefined BS_NO_COMPILER_PATCH then
+  | Bs_unused_attribute of string           (* 101 *)
+  | Bs_polymorphic_comparison               (* 102 *)
+  | Bs_ffi_warning of string                (* 103 *)
+  | Bs_derive_warning of string             (* 104 *)
+#end
 ;;
 
 type alert = {kind:string; message:string; def:loc; use:loc}
@@ -139,3 +145,11 @@ val restore: state -> unit
 val mk_lazy: (unit -> 'a) -> 'a Lazy.t
     (** Like [Lazy.of_fun], but the function is applied with
         the warning/alert settings at the time [mk_lazy] is called. *)
+
+#if undefined BS_NO_COMPILER_PATCH then
+val message : t -> string
+val id_name: t -> string
+val super_report :
+  (t -> string) ->
+  t ->  [ `Active of reporting_information | `Inactive ]
+#end

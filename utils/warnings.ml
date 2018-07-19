@@ -93,6 +93,12 @@ type t =
   | Unused_open_bang of string              (* 66 *)
   | Unused_functor_parameter of string      (* 67 *)
   | Match_on_mutable_state_prevent_uncurry  (* 68 *)
+#if undefined BS_NO_COMPILER_PATCH then
+  | Bs_unused_attribute of string           (* 101 *)
+  | Bs_polymorphic_comparison               (* 102 *)
+  | Bs_ffi_warning of string                (* 103 *)
+  | Bs_derive_warning of string             (* 104 *)
+#end
 ;;
 
 (* If you remove a warning, leave a hole in the numbering.  NEVER change
@@ -171,9 +177,15 @@ let number = function
   | Unused_open_bang _ -> 66
   | Unused_functor_parameter _ -> 67
   | Match_on_mutable_state_prevent_uncurry -> 68
+#if undefined BS_NO_COMPILER_PATCH then
+  | Bs_unused_attribute _ -> 101
+  | Bs_polymorphic_comparison -> 102
+  | Bs_ffi_warning _ -> 103
+  | Bs_derive_warning _ -> 104
+#end
 ;;
 
-let last_warning_number = 68
+let last_warning_number = 104
 ;;
 
 (* Third component of each tuple is the list of names for each warning. The
@@ -332,6 +344,12 @@ let descriptions =
     68, "Pattern-matching depending on mutable state prevents the remaining \
          arguments from being uncurried.",
     ["match-on-mutable-state-prevent-uncurry"];
+#if undefined BS_NO_COMPILER_PATCH then
+   101, "Unused bs attributes", ["unused-bs-attributes"];
+   102, "polymorphic comparison introduced (maybe unsafe)", ["polymorphic-comparison-introduced"];
+   103, "BuckleScript FFI warning: ", [ "bucklescript-ffi-warning" ];
+   104, "BuckleScript bs.deriving warning: ", [ "bucklescript-bs-deriving" ]
+#end
   ]
 ;;
 
@@ -343,12 +361,14 @@ let name_to_number =
   fun s -> Hashtbl.find_opt h s
 ;;
 
+let letter_all =
+  let rec loop i = if i = 0 then [] else i :: loop (i - 1) in
+  loop last_warning_number
+
 (* Must be the max number returned by the [number] function. *)
 
 let letter = function
-  | 'a' ->
-     let rec loop i = if i = 0 then [] else i :: loop (i - 1) in
-     loop last_warning_number
+  | 'a' -> letter_all
   | 'b' -> []
   | 'c' -> [1; 2]
   | 'd' -> [3]
@@ -572,7 +592,7 @@ let parse_options errflag s =
   current := {(!current) with error; active}
 
 (* If you change these, don't forget to change them in man/ocamlc.m *)
-let defaults_w = "+a-4-6-7-9-27-29-30-32..42-44-45-48-50-60-66-67-68";;
+let defaults_w = "+a-4-6-7-9-27-29-30-32..42-44-45-48-50-60-66-67-68-102";;
 let defaults_warn_error = "-a+31";;
 
 let () = parse_options false defaults_w;;
@@ -815,6 +835,16 @@ let message = function
     "This pattern depends on mutable state.\n\
      It prevents the remaining arguments from being uncurried, which will \
      cause additional closure allocations."
+#if undefined BS_NO_COMPILER_PATCH then
+  | Bs_unused_attribute s ->
+      "Unused BuckleScript attribute: " ^ s
+  | Bs_polymorphic_comparison ->
+      "polymorphic comparison introduced (maybe unsafe)"
+  | Bs_ffi_warning s ->
+      "BuckleScript FFI warning: " ^ s
+  | Bs_derive_warning s ->
+      "BuckleScript bs.deriving warning: " ^ s
+#end
 ;;
 
 let nerrors = ref 0;;
@@ -876,6 +906,16 @@ let report_alert (alert : alert) =
           sub_locs;
         }
 
+#if undefined BS_NO_COMPILER_PATCH then
+let super_report message w =
+  match is_active w with
+  | false -> `Inactive
+  | true ->
+     if is_error w then incr nerrors;
+     `Active { id = id_name w; message = message w; is_error = is_error w;
+               sub_locs = [] }
+;;
+#end
 exception Errors;;
 
 let reset_fatal () =
