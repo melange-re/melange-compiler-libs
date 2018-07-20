@@ -290,7 +290,18 @@ let crc_of_unit penv f name =
     | Some crc -> crc
 
 let imports {imported_units; crc_units; _} =
+#if undefined BS_NO_COMPILER_PATCH then
+  let dont_record_crc_unit = !Clflags.dont_record_crc_unit in
+  match dont_record_crc_unit with
+  | None -> Consistbl.extract (String.Set.elements !imported_units) crc_units
+  | Some x ->
+    Consistbl.extract
+      (String.Set.fold
+      (fun m acc -> if m = x then acc else m::acc)
+      !imported_units []) crc_units
+#else
   Consistbl.extract (String.Set.elements !imported_units) crc_units
+#end
 
 let looked_up {persistent_structures; _} modname =
   Hashtbl.mem persistent_structures modname
