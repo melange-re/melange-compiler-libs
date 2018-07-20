@@ -84,7 +84,13 @@ let kind_and_message = function
   | _ -> None
 
 let cat s1 s2 =
-  if s2 = "" then s1 else s1 ^ "\n" ^ s2
+  if s2 = "" then s1 else
+#if undefined BS_NO_COMPILER_PATCH then 
+    if Clflags.bs_vscode then s1 ^ " " ^ s2
+    else s1 ^ "\n" ^ s2 
+#else    
+    s1 ^ "\n" ^ s2
+#end    
 
 let alert_attr x =
   match x.attr_name.txt with
