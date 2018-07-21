@@ -1354,12 +1354,18 @@ let transl_value_decl env loc valdecl =
           ~native_repr_args
           ~native_repr_res
       in
+      let prim_native_name = prim.prim_native_name in 
       if prim.prim_arity = 0 &&
-         (prim.prim_name = "" || prim.prim_name.[0] <> '%') then
+         not ( String.length prim_native_name > 3 &&
+               String.unsafe_get prim_native_name 0 = 'B' &&
+               String.unsafe_get prim_native_name 1 = 'S' &&
+               String.unsafe_get prim_native_name 2 = ':'
+             ) && 
+         (prim.prim_name = "" || (prim.prim_name.[0] <> '%' && prim.prim_name.[0] <> '#')) then
         raise(Error(valdecl.pval_type.ptyp_loc, Null_arity_external));
       if !Clflags.native_code
       && prim.prim_arity > 5
-      && prim.prim_native_name = ""
+      && prim_native_name = ""
       then raise(Error(valdecl.pval_type.ptyp_loc, Missing_native_external));
       check_unboxable env loc ty;
       { val_type = ty; val_kind = Val_prim prim; Types.val_loc = loc;
