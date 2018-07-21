@@ -85,3 +85,5 @@ val builtin_idents: (string * Ident.t) list
     so flambda can generate code to raise it. *)
 val ident_division_by_zero: Ident.t
 val all_predef_exns : Ident.t list
+
+val type_is_builtin_path_but_option : Path.t -> bool

@@ -78,3 +78,5 @@ val remove: t -> 'a tbl -> 'a tbl
 (* Idents for sharing keys *)
 
 val make_key_generator : unit -> (t -> t)
+
+val stamp : t -> int
