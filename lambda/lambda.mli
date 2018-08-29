@@ -246,7 +246,9 @@ type let_kind = Strict | Alias | StrictOpt | Variable
     Variable: the variable x is assigned later in e'
  *)
 
-type meth_kind = Self | Public | Cached
+type public_info = string option (* label name *)
+
+type meth_kind = Self | Public of public_info | Cached
 
 val equal_meth_kind : meth_kind -> meth_kind -> bool
 

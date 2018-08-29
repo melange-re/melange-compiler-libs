@@ -459,7 +459,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
           Tmeth_val id -> Lsend (Self, Lvar id, obj, [], loc)
         | Tmeth_name nm ->
             let (tag, cache) = Translobj.meth obj nm in
-            let kind = if cache = [] then Public else Cached in
+            let kind = if cache = [] then Public (Some nm) else Cached in
             Lsend (kind, tag, obj, cache, loc)
       in
       event_after ~scopes e lam
