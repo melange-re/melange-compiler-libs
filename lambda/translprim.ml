@@ -686,7 +686,7 @@ let lambda_of_prim prim_name prim loc args arg_exps =
       let lam = lambda_of_loc kind loc in
       Lprim(Pmakeblock(0, Immutable, None), [lam; arg], loc)
   | Send, [obj; meth] ->
-      Lsend(Public, meth, obj, [], loc)
+      Lsend(Public None, meth, obj, [], loc)
   | Send_self, [obj; meth] ->
       Lsend(Self, meth, obj, [], loc)
   | Send_cache, [obj; meth; cache; pos] ->
