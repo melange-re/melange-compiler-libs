@@ -978,7 +978,7 @@ and transl_record ~scopes loc env fields repres opt_init_expr =
         let cl = List.map extract_constant ll in
         match repres with
         | Record_regular -> Lconst(Const_block(0, Lambda.Blk_record all_labels_info, cl))
-        | Record_inlined tag -> Lconst(Const_block(tag, Lambda.Blk_record all_labels_info, cl)) (* FIXME: inline record*)
+        | Record_inlined tag -> Lconst(Const_block(tag, Lambda.Blk_record_inlined all_labels_info, cl))
         | Record_unboxed _ -> Lconst(match cl with [v] -> v | _ -> assert false)
         | Record_float ->
             Lconst(Const_float_array(List.map extract_float cl))
