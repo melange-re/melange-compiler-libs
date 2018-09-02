@@ -39,6 +39,50 @@ let scrape_ty env ty =
 let scrape env ty =
   (scrape_ty env ty).desc
 
+
+(**  [Types.constructor_description]
+     records the type at the definition type so for ['a option]
+     it will always be [Tvar]
+*)
+let cannot_inhabit_none_like_value (typ : Types.type_expr) (env : Env.t) =
+  match scrape env typ with
+  |  Tconstr(p, _,_) ->
+      (* all built in types could not inhabit none-like values:
+         int, char, float, bool, unit, exn, array, list, nativeint,
+         int32, int64, lazy_t, bytes
+      *)
+      if Predef.type_is_builtin_path_but_option p then true
+      else
+        begin match (Env.find_type p env).type_kind with
+        | exception _ ->
+            false
+        | Types.Type_abstract | Types.Type_open -> false
+        | Types.Type_record _ -> true
+        | Types.Type_variant
+            ([{cd_id = i1; cd_args = Types.Cstr_tuple [] };
+             {cd_id = i2; cd_args = Types.Cstr_tuple [_]}]
+            |
+             [{cd_id = i1; cd_args = Types.Cstr_tuple [_] };
+              {cd_id = i2; cd_args = Types.Cstr_tuple []}]
+            ) when (Ident.name i1 = "None" && Ident.name i2 = "Some") ||
+                  (Ident.name i1 = "Some" && Ident.name i2 = "None")
+            -> false (* conservative *)
+        | Types.Type_variant _ -> true
+        end
+  | Ttuple _
+  | Tvariant _
+  | Tpackage _
+  | Tarrow _ -> true
+  | Tfield _
+  | Tpoly _
+  | Tunivar _
+  | Tlink _
+  | Tsubst _
+  | Tnil
+  | Tvar _
+  | Tobject _
+    -> false
+
 let is_function_type env ty =
   match scrape env ty with
   | Tarrow (_, lhs, rhs, _) -> Some (lhs, rhs)

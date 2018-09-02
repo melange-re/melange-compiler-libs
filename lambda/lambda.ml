@@ -26,6 +26,21 @@ type compile_time_constant =
   | Ostype_cygwin
   | Backend_type
 
+type tag_info =
+  | Blk_constructor of string * int (* Number of non-const constructors*)
+  | Blk_tuple
+  | Blk_array
+  | Blk_variant of string
+  | Blk_record of string array
+  | Blk_module of string list option
+  | Blk_extension_slot
+  | Blk_na
+  | Blk_some
+  | Blk_some_not_nested (* ['a option] where ['a] can not inhabit a non-like value *)
+
+let default_tag_info : tag_info = Blk_na
+
+let ref_tag_info : tag_info = Blk_record [| "contents" |]
 type immediate_or_pointer =
   | Immediate
   | Pointer
@@ -207,7 +222,7 @@ let equal_value_kind x y =
 
 type structured_constant =
     Const_base of constant
-  | Const_block of int * structured_constant list
+  | Const_block of int * tag_info * structured_constant list
   | Const_float_array of string list
   | Const_immstring of string
 

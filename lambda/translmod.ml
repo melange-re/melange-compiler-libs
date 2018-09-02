@@ -217,7 +217,7 @@ let mod_prim = Lambda.transl_prim "CamlinternalMod"
 
 let undefined_location loc =
   let (fname, line, char) = Location.get_pos_info loc.Location.loc_start in
-  Lconst(Const_block(0,
+  Lconst(Const_block(0, Lambda.default_tag_info,
                      [Const_base(Const_string (fname, loc, None));
                       const_int line;
                       const_int char]))
@@ -232,7 +232,8 @@ let init_shape id modl =
         raise (Initialization_failure
                 (Unsafe {reason=Unsafe_module_binding;loc;subid}))
     | Mty_signature sg ->
-        Const_block(0, [Const_block(0, init_shape_struct env sg)])
+        Const_block(0, Lambda.default_tag_info,
+          [Const_block(0, Lambda.default_tag_info, init_shape_struct env sg)])
     | Mty_functor _ ->
         (* can we do better? *)
         raise (Initialization_failure

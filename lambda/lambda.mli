@@ -27,6 +27,22 @@ type compile_time_constant =
   | Ostype_cygwin
   | Backend_type
 
+type tag_info =
+  | Blk_constructor of string * int (* Number of non-const constructors*)
+  | Blk_tuple
+  | Blk_array
+  | Blk_variant of string
+  | Blk_record of string array
+  | Blk_module of string list option
+  | Blk_extension_slot
+  | Blk_na
+  | Blk_some
+  | Blk_some_not_nested (* ['a option] where ['a] can not inhabit a non-like value *)
+
+val default_tag_info : tag_info
+
+val ref_tag_info : tag_info
+
 type immediate_or_pointer =
   | Immediate
   | Pointer
@@ -198,7 +214,7 @@ val equal_boxed_integer : boxed_integer -> boxed_integer -> bool
 
 type structured_constant =
     Const_base of constant
-  | Const_block of int * structured_constant list
+  | Const_block of int * tag_info * structured_constant list
   | Const_float_array of string list
   | Const_immstring of string
 

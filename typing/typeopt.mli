@@ -41,3 +41,9 @@ val value_kind_union :
       Lambda.value_kind -> Lambda.value_kind -> Lambda.value_kind
   (** [value_kind_union k1 k2] is a value_kind at least as general as
       [k1] and [k2] *)
+
+val cannot_inhabit_none_like_value:
+  Types.type_expr ->
+  Env.t ->
+  bool
+
