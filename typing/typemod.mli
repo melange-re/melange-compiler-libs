@@ -35,11 +35,18 @@ val type_structure:
   Env.t -> Parsetree.structure ->
   Typedtree.structure * Types.signature * Signature_names.t * Env.t
 val type_toplevel_phrase:
+
   Env.t -> Parsetree.structure ->
   Typedtree.structure * Types.signature * Signature_names.t * Env.t
+
+val type_implementation_more:
+  string -> string -> string -> Env.t -> Parsetree.structure ->
+  Typedtree.structure * Typedtree.module_coercion * Env.t * Types.signature
+
 val type_implementation:
   string -> string -> string -> Env.t -> Parsetree.structure ->
   Typedtree.structure * Typedtree.module_coercion
+
 val type_interface:
         Env.t -> Parsetree.signature -> Typedtree.signature
 val transl_signature:

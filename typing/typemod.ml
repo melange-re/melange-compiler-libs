@@ -2616,11 +2616,12 @@ let () =
 
 (* Typecheck an implementation file *)
 
+
 let gen_annot outputprefix sourcefile annots =
   Cmt2annot.gen_annot (Some (outputprefix ^ ".annot"))
     ~sourcefile:(Some sourcefile) ~use_summaries:false annots
 
-let type_implementation sourcefile outputprefix modulename initial_env ast =
+let type_implementation_more sourcefile outputprefix modulename initial_env ast =
   Cmt_format.clear ();
   Misc.try_finally (fun () ->
       Typecore.reset_delayed_checks ();
@@ -2637,11 +2638,16 @@ let type_implementation sourcefile outputprefix modulename initial_env ast =
               (Printtyp.printed_signature sourcefile) simple_sg
           );
         gen_annot outputprefix sourcefile (Cmt_format.Implementation str);
-        (str, Tcoerce_none)   (* result is ignored by Compile.implementation *)
+        (str, Tcoerce_none, finalenv, simple_sg)   (* result is ignored by Compile.implementation *)
       end else begin
         let sourceintf =
           Filename.remove_extension sourcefile ^ !Config.interface_suffix in
-        if Sys.file_exists sourceintf then begin
+#if undefined BS_NO_COMPILER_PATCH then
+    let mli_status = !Clflags.assume_no_mli in
+    if (mli_status = Clflags.Mli_na && Sys.file_exists sourceintf) || (mli_status = Clflags.Mli_exists) then begin
+#else
+    if Sys.file_exists sourceintf then begin
+#end
           let intf_file =
             try
               Load_path.find_uncap (modulename ^ ".cmi")
@@ -2661,7 +2667,7 @@ let type_implementation sourcefile outputprefix modulename initial_env ast =
           Cmt_format.save_cmt (outputprefix ^ ".cmt") modulename
             annots (Some sourcefile) initial_env None;
           gen_annot outputprefix sourcefile annots;
-          (str, coercion)
+          (str, coercion, finalenv, dclsig)
         end else begin
           let coercion =
             Includemod.compunit initial_env ~mark:Mark_positive
@@ -2685,7 +2691,7 @@ let type_implementation sourcefile outputprefix modulename initial_env ast =
               annots (Some sourcefile) initial_env (Some cmi);
             gen_annot outputprefix sourcefile annots
           end;
-          (str, coercion)
+          (str, coercion, finalenv, simple_sg)
         end
       end
     )
@@ -2698,6 +2704,11 @@ let type_implementation sourcefile outputprefix modulename initial_env ast =
           annots (Some sourcefile) initial_env None;
         gen_annot outputprefix sourcefile annots
       )
+
+let type_implementation sourcefile outputprefix modulename initial_env ast =
+  let (a,b,_,_) =
+    type_implementation_more sourcefile outputprefix modulename initial_env ast in
+  a,b
 
 let save_signature modname tsg outputprefix source_file initial_env cmi =
   Cmt_format.save_cmt  (outputprefix ^ ".cmti") modname
@@ -2759,7 +2770,12 @@ let package_units initial_env objfiles cmifile modulename =
   (* See if explicit interface is provided *)
   let prefix = Filename.remove_extension cmifile in
   let mlifile = prefix ^ !Config.interface_suffix in
+#if undefined BS_NO_COMPILER_PATCH then
+  let mli_status = !Clflags.assume_no_mli in
+  if (mli_status = Clflags.Mli_na && Sys.file_exists mlifile) || (mli_status = Clflags.Mli_exists) then begin
+#else
   if Sys.file_exists mlifile then begin
+#end
     if not (Sys.file_exists cmifile) then begin
       raise(Error(Location.in_file mlifile, Env.empty,
                   Interface_not_compiled mlifile))
