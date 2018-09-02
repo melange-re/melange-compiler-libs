@@ -607,7 +607,7 @@ let lambda_of_loc kind sloc =
       loc_start.Lexing.pos_cnum + cnum in
   match kind with
   | Loc_POS ->
-    Lconst (Const_block (0, [
+    Lconst (Const_block (0, Blk_tuple, [
           Const_immstring file;
           Const_base (Const_int lnum);
           Const_base (Const_int cnum);

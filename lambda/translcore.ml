@@ -184,10 +184,15 @@ let assert_failed ~scopes exp =
     Location.get_pos_info loc.Location.loc_start
   in
   let loc = of_location ~scopes exp.exp_loc in
+#if undefined BS_NO_COMPILER_PATCH then
+  let fname =
+    if  not !Clflags.absname then Filename.basename fname else fname
+  in
+#end
   Lprim(Praise Raise_regular, [event_after ~scopes exp
     (Lprim(Pmakeblock(0, Immutable, None),
           [slot;
-           Lconst(Const_block(0,
+           Lconst(Const_block(0, Lambda.Blk_tuple,
               [Const_base(Const_string (fname, exp.exp_loc, None));
                Const_base(Const_int line);
                Const_base(Const_int char)]))], loc))], loc)
@@ -307,8 +312,9 @@ and transl_exp0 ~in_new_scope ~scopes e =
                  (transl_cases_try ~scopes pat_expr_list))
   | Texp_tuple el ->
       let ll, shape = transl_list_with_shape ~scopes el in
+      let tag_info = Lambda.Blk_tuple in
       begin try
-        Lconst(Const_block(0, List.map extract_constant ll))
+        Lconst(Const_block(0, tag_info, List.map extract_constant ll))
       with Not_constant ->
         Lprim(Pmakeblock(0, Immutable, Some shape), ll,
               (of_location ~scopes e.exp_loc))
@@ -324,8 +330,20 @@ and transl_exp0 ~in_new_scope ~scopes e =
       | Cstr_unboxed ->
           (match ll with [v] -> v | _ -> assert false)
       | Cstr_block n ->
+          let tag_info : Lambda.tag_info =
+            if Datarepr.constructor_has_optional_shape cstr then
+              begin
+                match args with
+                | [arg] when  Typeopt.cannot_inhabit_none_like_value arg.exp_type arg.exp_env
+                  ->
+                    (* Format.fprintf Format.err_formatter "@[special boxingl@]@."; *)
+                    Blk_some_not_nested
+                | _ ->
+                    Blk_some
+              end
+            else (Lambda.Blk_constructor (cstr.cstr_name, cstr.cstr_nonconsts)) in
           begin try
-            Lconst(Const_block(n, List.map extract_constant ll))
+            Lconst(Const_block(n, tag_info, List.map extract_constant ll))
           with Not_constant ->
             Lprim(Pmakeblock(n, Immutable, Some shape), ll,
                   of_location ~scopes e.exp_loc)
@@ -346,8 +364,9 @@ and transl_exp0 ~in_new_scope ~scopes e =
         None -> Lconst(const_int tag)
       | Some arg ->
           let lam = transl_exp ~scopes arg in
+          let tag_info = Lambda.Blk_variant l in
           try
-            Lconst(Const_block(0, [const_int tag;
+            Lconst(Const_block(0, tag_info, [const_int tag;
                                    extract_constant lam]))
           with Not_constant ->
             Lprim(Pmakeblock(0, Immutable, None),
@@ -420,7 +439,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
             let imm_array =
               match kind with
               | Paddrarray | Pintarray ->
-                  Lconst(Const_block(0, cl))
+                  Lconst(Const_block(0, Lambda.Blk_array, cl)) (* ATTENTION: ? [|1;2;3;4|]*)
               | Pfloatarray ->
                   Lconst(Const_float_array(List.map extract_float cl))
               | Pgenarray ->
@@ -952,13 +971,14 @@ and transl_record ~scopes loc env fields repres opt_init_expr =
       if Array.exists (fun (lbl, _) -> lbl.lbl_mut = Mutable) fields
       then Mutable
       else Immutable in
+    let all_labels_info = fields |> Array.map (fun (x,_) -> x.Types.lbl_name) in
     let lam =
       try
         if mut = Mutable then raise Not_constant;
         let cl = List.map extract_constant ll in
         match repres with
-        | Record_regular -> Lconst(Const_block(0, cl))
-        | Record_inlined tag -> Lconst(Const_block(tag, cl))
+        | Record_regular -> Lconst(Const_block(0, Lambda.Blk_record all_labels_info, cl))
+        | Record_inlined tag -> Lconst(Const_block(tag, Lambda.Blk_record all_labels_info, cl)) (* FIXME: inline record*)
         | Record_unboxed _ -> Lconst(match cl with [v] -> v | _ -> assert false)
         | Record_float ->
             Lconst(Const_float_array(List.map extract_float cl))
