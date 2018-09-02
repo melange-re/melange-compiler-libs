@@ -18,6 +18,9 @@
 
 open Types
 
+val constructor_has_optional_shape:
+  Types.constructor_description -> bool
+
 val extension_descr:
   current_unit:string -> Path.t -> extension_constructor ->
   constructor_description
