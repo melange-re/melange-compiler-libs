@@ -3349,7 +3349,7 @@ let failure_handler ~scopes loc ~failer () =
     Lprim
       ( Praise Raise_regular,
         [ Lprim
-            ( Pmakeblock (0, Immutable, None),
+            ( Pmakeblock (0, Lambda.default_tag_info, Immutable, None),
               [ slot;
                 Lconst
                   (Const_block
@@ -3691,7 +3691,7 @@ let do_for_multiple_match ~scopes loc paraml pat_act_list partial =
       | Total -> (-1, Default_environment.empty)
     in
     let loc = Scoped_location.of_location ~scopes loc in
-    let arg = Lprim (Pmakeblock (0, Immutable, None), paraml, loc) in
+    let arg = Lprim (Pmakeblock (0, Lambda.default_tag_info, Immutable, None), paraml, loc) in
     ( raise_num,
       arg,
       { cases = List.map (fun (pat, act) -> ([ pat ], act)) pat_act_list;
