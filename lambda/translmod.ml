@@ -51,6 +51,11 @@ let cons_opt x_opt xs =
    currently compiled module expression).  Useful for naming extensions. *)
 
 let global_path glob = Some(Pident glob)
+let is_top rootpath =
+  match rootpath with
+  | Some (Pident _ ) -> true
+  | _ -> false
+
 let functor_path path param =
   match path with
     None -> None
@@ -469,6 +474,10 @@ let merge_functors ~scopes mexp coercion root_path =
   in
   merge ~scopes mexp coercion root_path [] Default_inline
 
+let export_identifiers  : Ident.t list ref = ref []
+let get_export_identifiers () =
+  !export_identifiers
+
 let rec compile_functor ~scopes mexp coercion root_path loc =
   let functor_params_rev, body, body_path, res_coercion, inline_attribute =
     merge_functors ~scopes mexp coercion root_path
@@ -546,7 +555,10 @@ and transl_structure ~scopes loc fields cc rootpath final_env = function
             let fields = List.rev fields in
             let field_names = List.map (fun id -> Ident.name id) fields in
             Lprim(Pmakeblock(0, Lambda.Blk_module (Some field_names), Immutable, None),
-                  List.map (fun id -> Lvar id) (List.rev fields), loc),
+                (List.fold_right (fun id acc -> begin
+                      (if is_top rootpath then
+                         export_identifiers :=  id :: !export_identifiers);
+                      (Lvar id :: acc) end) fields [])  , loc),
               List.length fields
         | Tcoerce_structure(pos_cc_list, id_pos_list) ->
                 (* Do not ignore id_pos_list ! *)
@@ -560,17 +572,25 @@ and transl_structure ~scopes loc fields cc rootpath final_env = function
               else Lvar v.(pos)
             in
             let ids = List.fold_right Ident.Set.add fields Ident.Set.empty in
-            let lam =
-              Lprim(Pmakeblock(0, Lambda.default_tag_info, Immutable, None),
-                  List.map
-                    (fun (pos, cc) ->
-                      match cc with
-                        Tcoerce_primitive p ->
-                          Translprim.transl_primitive
+            let (result, names) = List.fold_right
+              (fun  (pos, cc) (code, name) ->
+                 begin match cc with
+                 | Tcoerce_primitive p ->
+                     (if is_top rootpath then
+                        export_identifiers := p.pc_id:: !export_identifiers);
+                     (Translprim.transl_primitive
                             (of_location ~scopes p.pc_loc)
                             p.pc_desc p.pc_env p.pc_type None
-                      | _ -> apply_coercion loc Strict cc (get_field pos))
-                    pos_cc_list, loc)
+                       :: code, p.pc_desc.prim_name ::name)
+                 | _ ->
+                     (if is_top rootpath then
+                        export_identifiers :=  v.(pos) :: !export_identifiers);
+                     (apply_coercion loc Strict cc (get_field pos) :: code, Ident.name v.(pos) :: name)
+                 end)
+              pos_cc_list ([], [])in
+            let lam =
+              Lprim(Pmakeblock(0, Blk_module (Some names), Immutable, None),
+                   result, loc)
             and id_pos_list =
               List.filter (fun (id,_,_) -> not (Ident.Set.mem id ids))
                 id_pos_list

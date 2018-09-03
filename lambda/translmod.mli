@@ -61,3 +61,6 @@ exception Error of Location.t * error
 val report_error: Location.t -> error -> Location.error
 
 val reset: unit -> unit
+
+(** make it an array for better performance*)
+val get_export_identifiers : unit -> Ident.t list 
