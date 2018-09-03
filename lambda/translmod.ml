@@ -217,8 +217,36 @@ let record_primitive = function
   | _ -> ()
 
 (* Utilities for compiling "module rec" definitions *)
+let bs_init_mod args loc : Lambda.lambda =
+  Lprim(Pccall (Primitive.simple
+    ~name:"#init_mod"
+    ~arity:2
+    ~alloc:true), args, loc)
+let bs_update_mod args loc : Lambda.lambda =
+  Lprim(Pccall (Primitive.simple
+    ~name:"#update_mod"
+    ~arity:3
+    ~alloc:true), args, loc)
 
-let mod_prim = Lambda.transl_prim "CamlinternalMod"
+let mod_prim name args loc =
+  if !Clflags.bs_only then
+    if name = "init_mod" then
+      bs_init_mod args loc
+    else if name = "update_mod" then
+      bs_update_mod args loc
+    else assert false
+  else
+  try
+    Lapply {
+      ap_func = Lambda.transl_prim "CamlinternalMod" name;
+      ap_args =  args;
+      ap_loc =  loc;
+      ap_tailcall = Default_tailcall;
+      ap_inlined = Default_inline;
+      ap_specialised = Default_specialise;
+    }
+  with Not_found ->
+    fatal_error ("Primitive " ^ name ^ " not found.")
 
 let undefined_location loc =
   let (fname, line, char) = Location.get_pos_info loc.Location.loc_start in
@@ -366,14 +394,7 @@ let eval_rec_bindings bindings cont =
       bind_inits rem
   | (Id id, Some(loc, shape), _rhs) :: rem ->
       Llet(Strict, Pgenval, id,
-           Lapply{
-             ap_loc=Loc_unknown;
-             ap_func=mod_prim "init_mod";
-             ap_args=[loc; shape];
-             ap_tailcall=Default_tailcall;
-             ap_inlined=Default_inline;
-             ap_specialised=Default_specialise;
-           },
+           mod_prim "init_mod" [loc; shape] Loc_unknown,
            bind_inits rem)
   and bind_strict = function
     [] ->
@@ -392,14 +413,7 @@ let eval_rec_bindings bindings cont =
       patch_forwards rem
   | (Id id, Some(_loc, shape), rhs) :: rem ->
       Lsequence(
-        Lapply {
-          ap_loc=Loc_unknown;
-          ap_func=mod_prim "update_mod";
-          ap_args=[shape; Lvar id; rhs];
-          ap_tailcall=Default_tailcall;
-          ap_inlined=Default_inline;
-          ap_specialised=Default_specialise;
-        },
+        mod_prim "update_mod" [shape; Lvar id; rhs] Loc_unknown,
         patch_forwards rem)
   in
     bind_inits bindings
