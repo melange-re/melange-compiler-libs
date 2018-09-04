@@ -44,6 +44,11 @@ let default_tag_info : tag_info = Blk_na
 
 let ref_tag_info : tag_info = Blk_record [| "contents" |]
 
+type field_dbg_info =
+  | Fld_na
+  | Fld_record of string
+  | Fld_module of string
+
 type set_field_dbg_info =
     | Fld_set_na
     | Fld_record_set of string
@@ -79,7 +84,7 @@ type primitive =
   | Pfield_computed
   | Psetfield of int * immediate_or_pointer * initialization_or_assignment * set_field_dbg_info
   | Psetfield_computed of immediate_or_pointer * initialization_or_assignment
-  | Pfloatfield of int
+  | Pfloatfield of int * field_dbg_info
   | Psetfloatfield of int * initialization_or_assignment * set_field_dbg_info
   | Pduprecord of Types.record_representation * int
   (* Force lazy values *)
