@@ -39,14 +39,17 @@ type tag_info =
   | Blk_some
   | Blk_some_not_nested (* ['a option] where ['a] can not inhabit a non-like value *)
   | Blk_record_inlined of string array
+  | Blk_record_ext of string array
 
 val default_tag_info : tag_info
 
 val ref_tag_info : tag_info
 
-type set_field_dbg_info = 
+type set_field_dbg_info =
   | Fld_set_na
-  | Fld_record_set of string 
+  | Fld_record_set of string
+  | Fld_record_inline_set of string
+  | Fld_record_extension_set of string
 
 type immediate_or_pointer =
   | Immediate
