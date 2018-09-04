@@ -80,7 +80,7 @@ type primitive =
   | Psetglobal of Ident.t
   (* Operations on heap blocks *)
   | Pmakeblock of int * tag_info * mutable_flag * block_shape
-  | Pfield of int
+  | Pfield of int * field_dbg_info
   | Pfield_computed
   | Psetfield of int * immediate_or_pointer * initialization_or_assignment * set_field_dbg_info
   | Psetfield_computed of immediate_or_pointer * initialization_or_assignment
@@ -674,7 +674,7 @@ let rec transl_address loc = function
       then Lprim(Pgetglobal id, [], loc)
       else Lvar id
   | Env.Adot(addr, pos) ->
-      Lprim(Pfield pos, [transl_address loc addr], loc)
+      Lprim(Pfield (pos, Fld_module (Format.asprintf "%a" Env.print_address addr)), [transl_address loc addr], loc)
 
 let transl_path find loc env path =
   match find path env with
