@@ -86,7 +86,7 @@ type primitive =
   | Psetglobal of Ident.t
   (* Operations on heap blocks *)
   | Pmakeblock of int * tag_info * mutable_flag * block_shape
-  | Pfield of int
+  | Pfield of int * field_dbg_info
   | Pfield_computed
   | Psetfield of int * immediate_or_pointer * initialization_or_assignment * set_field_dbg_info
   | Psetfield_computed of immediate_or_pointer * initialization_or_assignment
