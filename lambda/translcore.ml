@@ -385,7 +385,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
                  of_location ~scopes e.exp_loc)
         | Record_unboxed _ -> targ
         | Record_float ->
-          Lprim (Pfloatfield lbl.lbl_pos, [targ],
+          Lprim (Pfloatfield (lbl.lbl_pos, Fld_record lbl.lbl_name), [targ],
                  of_location ~scopes e.exp_loc)
         | Record_extension _ ->
           Lprim (Pfield (lbl.lbl_pos + 1), [targ],
@@ -950,7 +950,7 @@ and transl_record ~scopes loc env fields repres opt_init_expr =
     let init_id = Ident.create_local "init" in
     let lv =
       Array.mapi
-        (fun i (_, definition) ->
+        (fun i (lbl, definition) ->
            match definition with
            | Kept typ ->
                let field_kind = value_kind env typ in
@@ -959,7 +959,8 @@ and transl_record ~scopes loc env fields repres opt_init_expr =
                    Record_regular | Record_inlined _ -> Pfield i
                  | Record_unboxed _ -> assert false
                  | Record_extension _ -> Pfield (i + 1)
-                 | Record_float -> Pfloatfield i in
+                 | Record_float -> Pfloatfield (i, Fld_record lbl.lbl_name)
+               in
                Lprim(access, [Lvar init_id],
                      of_location ~scopes loc),
                field_kind
