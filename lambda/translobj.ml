@@ -133,7 +133,7 @@ let transl_store_label_init glob size f arg =
     if !method_count = 0 then (size, expr) else
     (size+1,
      Lsequence(
-     Lprim(Psetfield(size, Pointer, Root_initialization),
+     Lprim(Psetfield(size, Pointer, Root_initialization, Fld_set_na),
            [Lprim(Pgetglobal glob, [], Loc_unknown);
             Lprim (Pccall prim_makearray,
                    [int !method_count; int 0],

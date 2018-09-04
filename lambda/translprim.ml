@@ -125,7 +125,7 @@ let primitives_table =
     "%loc_FUNCTION", Loc Loc_FUNCTION;
     "%field0", Primitive ((Pfield 0), 1);
     "%field1", Primitive ((Pfield 1), 1);
-    "%setfield0", Primitive ((Psetfield(0, Pointer, Assignment)), 2);
+    "%setfield0", Primitive ((Psetfield(0, Pointer, Assignment, Fld_set_na)), 2);
     "%makeblock", Primitive ((Pmakeblock(0, Lambda.default_tag_info, Immutable, None)), 1);
     "%makemutable", Primitive ((Pmakeblock(0, Lambda.ref_tag_info, Mutable, None)), 1);
     "%raise", Raise Raise_regular;
@@ -417,10 +417,10 @@ let specialize_primitive env ty ~has_constant_constructor prim =
       | Some (p2, _) -> [p1;p2]
   in
   match prim, param_tys with
-  | Primitive (Psetfield(n, Pointer, init), arity), [_; p2] -> begin
+  | Primitive (Psetfield(n, Pointer, init, dbg_info), arity), [_; p2] -> begin
       match maybe_pointer_type env p2 with
       | Pointer -> None
-      | Immediate -> Some (Primitive (Psetfield(n, Immediate, init), arity))
+      | Immediate -> Some (Primitive (Psetfield(n, Immediate, init, dbg_info), arity))
     end
   | Primitive (Parraylength t, arity), [p] -> begin
       let array_type = glb_array_type t (array_type_kind env p) in

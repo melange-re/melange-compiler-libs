@@ -586,8 +586,8 @@ and transl_structure ~scopes loc fields cc rootpath final_env = function
               else Lvar v.(pos)
             in
             let ids = List.fold_right Ident.Set.add fields Ident.Set.empty in
-            let (result, names) = List.fold_right
-              (fun  (pos, cc) (code, name) ->
+            let result = List.fold_right
+              (fun  (pos, cc) code ->
                  begin match cc with
                  | Tcoerce_primitive p ->
                      (if is_top rootpath then
@@ -595,15 +595,16 @@ and transl_structure ~scopes loc fields cc rootpath final_env = function
                      (Translprim.transl_primitive
                             (of_location ~scopes p.pc_loc)
                             p.pc_desc p.pc_env p.pc_type None
-                       :: code, p.pc_desc.prim_name ::name)
+                       :: code)
                  | _ ->
                      (if is_top rootpath then
-                        export_identifiers :=  v.(pos) :: !export_identifiers);
-                     (apply_coercion loc Strict cc (get_field pos) :: code, Ident.name v.(pos) :: name)
+                        export_identifiers :=  if pos < 0 then !export_identifiers else v.(pos) :: !export_identifiers);
+                     (apply_coercion loc Strict cc (get_field pos) :: code)
                  end)
-              pos_cc_list ([], [])in
+              pos_cc_list []
+            in
             let lam =
-              Lprim(Pmakeblock(0, Blk_module (Some names), Immutable, None),
+              Lprim(Pmakeblock(0, Blk_module (Some []), Immutable, None),
                    result, loc)
             and id_pos_list =
               List.filter (fun (id,_,_) -> not (Ident.Set.mem id ids))
@@ -1305,7 +1306,7 @@ let transl_store_structure ~scopes glob map prims aliases str =
     try
       let (pos, cc) = Ident.find_same id map in
       let init_val = apply_coercion loc Alias cc (Lvar id) in
-      Lprim(Psetfield(pos, Pointer, Root_initialization),
+      Lprim(Psetfield(pos, Pointer, Root_initialization, Fld_set_na),
             [Lprim(Pgetglobal glob, [], loc); init_val],
             loc)
     with Not_found ->
@@ -1333,7 +1334,7 @@ let transl_store_structure ~scopes glob map prims aliases str =
     List.fold_right (add_ident may_coerce) idlist subst
 
   and store_primitive (pos, prim) cont =
-    Lsequence(Lprim(Psetfield(pos, Pointer, Root_initialization),
+    Lsequence(Lprim(Psetfield(pos, Pointer, Root_initialization, Fld_set_na),
                     [Lprim(Pgetglobal glob, [], Loc_unknown);
                      Translprim.transl_primitive Loc_unknown
                        prim.pc_desc prim.pc_env prim.pc_type None],
@@ -1343,7 +1344,7 @@ let transl_store_structure ~scopes glob map prims aliases str =
   and store_alias (pos, env, path, cc) =
     let path_lam = transl_module_path Loc_unknown env path in
     let init_val = apply_coercion Loc_unknown Strict cc path_lam in
-    Lprim(Psetfield(pos, Pointer, Root_initialization),
+    Lprim(Psetfield(pos, Pointer, Root_initialization, Fld_set_na),
           [Lprim(Pgetglobal glob, [], Loc_unknown);
            init_val],
           Loc_unknown)
@@ -1664,7 +1665,7 @@ let transl_store_package component_names target_name coercion =
       (List.length component_names,
        make_sequence
          (fun pos id ->
-           Lprim(Psetfield(pos, Pointer, Root_initialization),
+           Lprim(Psetfield(pos, Pointer, Root_initialization, Fld_set_na),
                  [Lprim(Pgetglobal target_name, [], Loc_unknown);
                   get_component id],
                  Loc_unknown))
@@ -1681,7 +1682,7 @@ let transl_store_package component_names target_name coercion =
              apply_coercion Loc_unknown Strict coercion components,
              make_sequence
                (fun pos _id ->
-                 Lprim(Psetfield(pos, Pointer, Root_initialization),
+                 Lprim(Psetfield(pos, Pointer, Root_initialization, Fld_set_na),
                        [Lprim(Pgetglobal target_name, [], Loc_unknown);
                         Lprim(Pfield pos, [Lvar blk], Loc_unknown)],
                        Loc_unknown))

@@ -885,7 +885,7 @@ let transl_class ~scopes ids cl_id pub_meths cl vflag =
                                     inh_keys, Loc_unknown)]),
          lam)
   and lset cached i lam =
-    Lprim(Psetfield(i, Pointer, Assignment),
+    Lprim(Psetfield(i, Pointer, Assignment, Fld_set_na),
           [Lvar cached; lam], Loc_unknown)
   in
   let ldirect () =

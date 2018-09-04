@@ -396,11 +396,11 @@ and transl_exp0 ~in_new_scope ~scopes e =
         match lbl.lbl_repres with
           Record_regular
         | Record_inlined _ ->
-          Psetfield(lbl.lbl_pos, maybe_pointer newval, Assignment)
+          Psetfield(lbl.lbl_pos, maybe_pointer newval, Assignment, Fld_record_set lbl.lbl_name)
         | Record_unboxed _ -> assert false
         | Record_float -> Psetfloatfield (lbl.lbl_pos, Assignment)
         | Record_extension _ ->
-          Psetfield (lbl.lbl_pos + 1, maybe_pointer newval, Assignment)
+          Psetfield (lbl.lbl_pos + 1, maybe_pointer newval, Assignment, Fld_set_na)
       in
       Lprim(access, [transl_exp ~scopes arg; transl_exp ~scopes newval],
             of_location ~scopes e.exp_loc)
@@ -1016,11 +1016,11 @@ and transl_record ~scopes loc env fields repres opt_init_expr =
             match repres with
               Record_regular
             | Record_inlined _ ->
-                Psetfield(lbl.lbl_pos, maybe_pointer expr, Assignment)
+                Psetfield(lbl.lbl_pos, maybe_pointer expr, Assignment, Fld_record_set lbl.lbl_name)
             | Record_unboxed _ -> assert false
             | Record_float -> Psetfloatfield (lbl.lbl_pos, Assignment)
             | Record_extension _ ->
-                Psetfield(lbl.lbl_pos + 1, maybe_pointer expr, Assignment)
+                Psetfield(lbl.lbl_pos + 1, maybe_pointer expr, Assignment, Fld_set_na)
           in
           Lsequence(Lprim(upd, [Lvar copy_id; transl_exp ~scopes expr],
                           of_location ~scopes loc),
