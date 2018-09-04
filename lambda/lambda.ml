@@ -80,7 +80,7 @@ type primitive =
   | Psetfield of int * immediate_or_pointer * initialization_or_assignment * set_field_dbg_info
   | Psetfield_computed of immediate_or_pointer * initialization_or_assignment
   | Pfloatfield of int
-  | Psetfloatfield of int * initialization_or_assignment
+  | Psetfloatfield of int * initialization_or_assignment * set_field_dbg_info
   | Pduprecord of Types.record_representation * int
   (* Force lazy values *)
   (* External call *)
