@@ -1148,6 +1148,18 @@ let rec extract_equiv_head p l =
         ([], l)
   | _ -> ([], l)
 
+let is_none_bs_primitve : Lambda.primitive =
+  Pccall
+    (Primitive.simple ~name:"#is_none" ~arity:1 ~alloc:false)
+
+let val_from_option_bs_primitive : Lambda.primitive =
+  Pccall
+    (Primitive.simple ~name:"#val_from_option" ~arity:1 ~alloc:true)
+
+let val_from_unnest_option_bs_primitive : Lambda.primitive =
+  Pccall
+    (Primitive.simple ~name:"#val_from_unnest_option" ~arity:1 ~alloc:true)
+
 module Or_matrix = struct
   (* Splitting a matrix uses an or-matrix that contains or-patterns (at
      the head of some of its rows).
@@ -1687,6 +1699,19 @@ let get_expr_args_constr ~scopes head (arg, _mut) rem =
     (arg, Alias) :: rem
   else
     match cstr.cstr_tag with
+    | Cstr_block _ when
+        !Clflags.bs_only &&
+        Datarepr.constructor_has_optional_shape cstr
+      ->
+        begin
+          let from_option =
+            match head.pat_desc with
+            | Patterns.Head.Construct _
+              when Typeopt.cannot_inhabit_none_like_value head.pat_type head.pat_env
+              -> val_from_unnest_option_bs_primitive
+            | _ -> val_from_option_bs_primitive in
+          (Lprim (from_option, [arg], Scoped_location.of_location ~scopes head.pat_loc), Alias) :: rem
+        end
     | Cstr_constant _
     | Cstr_block _ ->
         make_field_accesses Alias 0 (cstr.cstr_arity - 1) rem
@@ -2745,7 +2770,15 @@ let combine_constructor loc arg pat_env cstr partial ctx def
             | 1, 1, [ (0, act1) ], [ (0, act2) ] ->
                 (* Typically, match on lists, will avoid isint primitive in that
               case *)
-                Lifthenelse (arg, act2, act1)
+                let arg =
+                  if !Clflags.bs_only && Datarepr.constructor_has_optional_shape cstr then
+                    Lprim(is_none_bs_primitve , [arg], loc)
+                  else arg
+                in
+                Lifthenelse(arg, act2, act1)
+            | (2,0, [(i1,act1); (_,act2)],[]) ->
+              if i1 = 0 then Lifthenelse(arg, act2, act1)
+              else Lifthenelse (arg,act1,act2)
             | n, 0, _, [] ->
                 (* The type defines constant constructors only *)
                 call_switcher loc fail_opt arg 0 (n - 1) consts
