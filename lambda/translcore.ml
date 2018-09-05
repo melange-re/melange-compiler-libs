@@ -380,7 +380,9 @@ and transl_exp0 ~in_new_scope ~scopes e =
   | Texp_field(arg, _, lbl) ->
       let targ = transl_exp ~scopes arg in
       begin match lbl.lbl_repres with
-          Record_regular | Record_inlined _ ->
+          Record_regular ->
+          Lprim (Pfield (lbl.lbl_pos, Fld_record lbl.lbl_name), [targ], of_location ~scopes e.exp_loc)
+        | Record_inlined _ ->
           Lprim (Pfield (lbl.lbl_pos, Fld_record lbl.lbl_name), [targ],
                  of_location ~scopes e.exp_loc)
         | Record_unboxed _ -> targ
@@ -388,8 +390,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
           Lprim (Pfloatfield (lbl.lbl_pos, Fld_record lbl.lbl_name), [targ],
                  of_location ~scopes e.exp_loc)
         | Record_extension _ ->
-          Lprim (Pfield (lbl.lbl_pos + 1, Fld_record lbl.lbl_name), [targ],
-                 of_location ~scopes e.exp_loc)
+          Lprim (Pfield (lbl.lbl_pos + 1, Fld_record_extension lbl.lbl_name), [targ], of_location ~scopes e.exp_loc)
       end
   | Texp_setfield(arg, _, lbl, newval) ->
       let access =
@@ -956,9 +957,10 @@ and transl_record ~scopes loc env fields repres opt_init_expr =
                let field_kind = value_kind env typ in
                let access =
                  match repres with
-                   Record_regular | Record_inlined _ -> Pfield (i, Fld_record lbl.lbl_name)
+                   Record_regular -> Pfield (i, Fld_record lbl.lbl_name)
+                 | Record_inlined _ -> Pfield (i, Fld_record_inline lbl.lbl_name)
                  | Record_unboxed _ -> assert false
-                 | Record_extension _ -> Pfield (i + 1,Fld_record lbl.lbl_name)
+                 | Record_extension _ -> Pfield (i + 1, Fld_record_extension lbl.lbl_name)
                  | Record_float -> Pfloatfield (i, Fld_record lbl.lbl_name)
                in
                Lprim(access, [Lvar init_id],

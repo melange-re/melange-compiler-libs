@@ -1968,12 +1968,13 @@ let get_expr_args_record ~scopes head (arg, _mut) rem =
       let lbl = all_labels.(pos) in
       let access =
         match lbl.lbl_repres with
-        | Record_regular
+        | Record_regular  ->
+          Lprim (Pfield (lbl.lbl_pos, Fld_record lbl.lbl_name), [arg], loc)
         | Record_inlined _ ->
-            Lprim (Pfield (lbl.lbl_pos, Fld_record lbl.lbl_name), [ arg ], loc)
+          Lprim (Pfield (lbl.lbl_pos, Fld_record_inline lbl.lbl_name), [arg], loc)
         | Record_unboxed _ -> arg
         | Record_float -> Lprim (Pfloatfield (lbl.lbl_pos, Fld_record lbl.lbl_name), [arg], loc)
-        | Record_extension _ -> Lprim (Pfield (lbl.lbl_pos + 1, Fld_record lbl.lbl_name), [ arg ], loc)
+        | Record_extension _ -> Lprim (Pfield (lbl.lbl_pos + 1, Fld_record_extension lbl.lbl_name), [ arg ], loc)
       in
       let str =
         match lbl.lbl_mut with

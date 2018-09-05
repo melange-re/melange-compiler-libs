@@ -49,6 +49,8 @@ type field_dbg_info =
   | Fld_na
   | Fld_record of string
   | Fld_module of string
+  | Fld_record_inline of string
+  | Fld_record_extension of string
 
 type set_field_dbg_info =
   | Fld_set_na
