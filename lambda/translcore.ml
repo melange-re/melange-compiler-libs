@@ -953,7 +953,10 @@ and transl_record ~scopes loc env fields repres opt_init_expr =
   (* Determine if there are "enough" fields (only relevant if this is a
      functional-style record update *)
   let no_init = match opt_init_expr with None -> true | _ -> false in
-  if no_init || size < Config.max_young_wosize
+  if no_init || size < (if !Clflags.bs_only then 20 else Config.max_young_wosize)
+  (* TODO: More strategies
+     3 + 2 * List.length lbl_expr_list >= size (density)
+  *)
   then begin
     (* Allocate new record with given fields (and remaining fields
        taken from init_expr if any *)
@@ -995,6 +998,8 @@ and transl_record ~scopes loc env fields repres opt_init_expr =
         | Record_inlined tag -> Lconst(Const_block(tag, Lambda.Blk_record_inlined all_labels_info, cl))
         | Record_unboxed _ -> Lconst(match cl with [v] -> v | _ -> assert false)
         | Record_float ->
+            if !Clflags.bs_only then Lconst(Const_block(0, Lambda.Blk_record all_labels_info, cl))
+            else
             Lconst(Const_float_array(List.map extract_float cl))
         | Record_extension _ ->
             raise Not_constant
@@ -1007,6 +1012,8 @@ and transl_record ~scopes loc env fields repres opt_init_expr =
             Lprim(Pmakeblock(tag, Lambda.Blk_record_inlined all_labels_info, mut, Some shape), ll, loc)
         | Record_unboxed _ -> (match ll with [v] -> v | _ -> assert false)
         | Record_float ->
+            if !Clflags.bs_only then Lprim(Pmakeblock(0, Lambda.Blk_record all_labels_info, mut, Some shape), ll, loc)
+            else
             Lprim(Pmakearray (Pfloatarray, mut), ll, loc)
         | Record_extension path ->
             let slot = transl_extension_path loc env path in
