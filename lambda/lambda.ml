@@ -235,6 +235,15 @@ let equal_value_kind x y =
   | Pintval, Pintval -> true
   | (Pgenval | Pfloatval | Pboxedintval _ | Pintval), _ -> false
 
+type pointer_info =
+  | Pt_constructor of string
+  | Pt_variant of string
+  | Pt_module_alias
+  | Pt_builtin_boolean
+  | Pt_shape_none
+  | Pt_na
+
+let default_pointer_info = Pt_na
 
 type structured_constant =
     Const_base of constant
@@ -383,6 +392,8 @@ type program =
 let const_int n = Const_base (Const_int n)
 
 let const_unit = const_int 0
+
+let lambda_assert_false = Lconst const_unit
 
 let lambda_unit = Lconst const_unit
 
