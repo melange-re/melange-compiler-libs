@@ -76,7 +76,7 @@ exception Not_constant
 
 let extract_constant = function
     Lconst sc -> sc
-  | _ -> raise Not_constant
+  | _ -> raise_notrace Not_constant
 
 let extract_float = function
     Const_base(Const_float f) -> f
@@ -162,7 +162,7 @@ let event_after ~scopes exp lam =
   Translprim.event_after (of_location ~scopes exp.exp_loc) exp lam
 
 let event_function ~scopes exp lam =
-  if !Clflags.debug && not !Clflags.native_code then
+  if !Clflags.record_event_when_debug && !Clflags.debug && not !Clflags.native_code then
     let repr = Some (ref 0) in
     let (info, body) = lam repr in
     (info,
@@ -550,7 +550,10 @@ and transl_exp0 ~in_new_scope ~scopes e =
   | Texp_pack modl ->
       !transl_module ~scopes Tcoerce_none None modl
   | Texp_assert {exp_desc=Texp_construct(_, {cstr_name="false"}, _)} ->
-      assert_failed ~scopes e
+      if !Clflags.no_assert_false then
+        Lambda.lambda_assert_false
+      else
+        assert_failed ~scopes e
   | Texp_assert (cond) ->
       if !Clflags.noassert
       then lambda_unit

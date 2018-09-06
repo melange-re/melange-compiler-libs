@@ -227,6 +227,16 @@ val equal_value_kind : value_kind -> value_kind -> bool
 
 val equal_boxed_integer : boxed_integer -> boxed_integer -> bool
 
+type pointer_info =
+  | Pt_constructor of string
+  | Pt_variant of string
+  | Pt_module_alias
+  | Pt_builtin_boolean
+  | Pt_shape_none
+  | Pt_na
+
+val default_pointer_info : pointer_info
+
 type structured_constant =
     Const_base of constant
   | Const_block of int * tag_info * structured_constant list
@@ -381,6 +391,7 @@ val make_key: lambda -> lambda option
 val const_unit: structured_constant
 val const_int : int -> structured_constant
 val lambda_unit: lambda
+val lambda_assert_false: lambda
 val name_lambda: let_kind -> lambda -> (Ident.t -> lambda) -> lambda
 val name_lambda_list: lambda list -> (lambda list -> lambda) -> lambda
 

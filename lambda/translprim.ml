@@ -35,7 +35,7 @@ exception Error of Location.t * error
 let event_before loc exp lam = match lam with
 | Lstaticraise (_,_) -> lam
 | _ ->
-  if !Clflags.debug && not !Clflags.native_code
+  if !Clflags.record_event_when_debug && !Clflags.debug && not !Clflags.native_code
   then Levent(lam, {lev_loc = loc;
                     lev_kind = Lev_before;
                     lev_repr = None;
@@ -43,7 +43,7 @@ let event_before loc exp lam = match lam with
   else lam
 
 let event_after loc exp lam =
-  if !Clflags.debug && not !Clflags.native_code
+  if !Clflags.record_event_when_debug && !Clflags.debug && not !Clflags.native_code
   then Levent(lam, {lev_loc = loc;
                     lev_kind = Lev_after exp.exp_type;
                     lev_repr = None;
@@ -727,6 +727,10 @@ let transl_primitive loc p env ty path =
     else (Ident.create_local "prim", Pgenval) :: make_params (n-1)
   in
   let params = make_params p.prim_arity in
+#if undefined BS_NO_COMPILER_PATCH then
+    if params = [] then lambda_of_prim p.prim_name prim loc [] None (* arity = 0 in Buckle? TODO: unneeded*)
+      else
+#end
   let args = List.map (fun (id, _) -> Lvar id) params in
   let body = lambda_of_prim p.prim_name prim loc args None in
   match params with
