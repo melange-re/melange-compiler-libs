@@ -1347,6 +1347,25 @@ let transl_value_decl env loc valdecl =
         | Native_repr_attr_absent -> None
       in
       let native_repr_args, native_repr_res =
+        if !Clflags.bs_only then
+          let rec scann (attrs : Parsetree.attributes)  =
+            match attrs with
+            | { attr_name = {txt = "internal.arity";_};
+                attr_payload = PStr [ {pstr_desc = Pstr_eval
+                        (
+                          ({pexp_desc = Pexp_constant (Pconst_integer (i,_))} :
+                            Parsetree.expression) ,_)}]} :: _ ->
+               Some (int_of_string i)
+            | _ :: rest  -> scann rest
+            | [] -> None
+          and make n =
+            if n = 0 then []
+            else Primitive.Same_as_ocaml_repr :: make (n - 1)
+          in
+            match scann valdecl.pval_attributes with
+            | None ->  parse_native_repr_attributes env valdecl.pval_type ty ~global_repr
+            | Some x -> make x , Primitive.Same_as_ocaml_repr
+        else
         parse_native_repr_attributes env valdecl.pval_type ty ~global_repr
       in
       let prim =
@@ -1354,13 +1373,13 @@ let transl_value_decl env loc valdecl =
           ~native_repr_args
           ~native_repr_res
       in
-      let prim_native_name = prim.prim_native_name in 
+      let prim_native_name = prim.prim_native_name in
       if prim.prim_arity = 0 &&
          not ( String.length prim_native_name > 3 &&
                String.unsafe_get prim_native_name 0 = 'B' &&
                String.unsafe_get prim_native_name 1 = 'S' &&
                String.unsafe_get prim_native_name 2 = ':'
-             ) && 
+             ) &&
          (prim.prim_name = "" || (prim.prim_name.[0] <> '%' && prim.prim_name.[0] <> '#')) then
         raise(Error(valdecl.pval_type.ptyp_loc, Null_arity_external));
       if !Clflags.native_code
