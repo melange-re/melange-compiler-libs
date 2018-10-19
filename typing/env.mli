@@ -470,3 +470,11 @@ val scrape_alias: t -> module_type -> module_type
 val check_value_name: string -> Location.t -> unit
 
 val print_address : Format.formatter -> address -> unit
+
+
+#if true then
+val spellcheck:
+  Format.formatter ->
+  (Longident.t option -> 'a -> string list) ->
+  'a -> Longident.t -> unit
+#end
