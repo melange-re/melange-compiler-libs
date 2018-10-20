@@ -618,7 +618,7 @@ and transl_structure ~scopes loc fields cc rootpath final_env = function
       (* This debugging event provides information regarding the structure
          items. It is ignored by the OCaml debugger but is used by
          Js_of_ocaml to preserve variable names. *)
-      (if !Clflags.debug && not !Clflags.native_code then
+      (if !Clflags.debug && not !Clflags.bs_only then
          Levent(body,
                 {lev_loc = loc;
                  lev_kind = Lev_pseudo;
@@ -695,6 +695,10 @@ and transl_structure ~scopes loc fields cc rootpath final_env = function
               size
           | Some id ->
               let module_body =
+#if true then
+            if !Clflags.bs_only then module_body
+            else
+#end
                 Levent (module_body, {
                   lev_loc = of_location ~scopes mb.mb_loc;
                   lev_kind = Lev_module_definition id;
@@ -728,6 +732,10 @@ and transl_structure ~scopes loc fields cc rootpath final_env = function
                       ~scopes:(enter_module_definition ~scopes id)
                       Tcoerce_none (field_path rootpath id) modl
                   in
+#if true then
+                 if !Clflags.bs_only then module_body
+                 else
+#end
                   Levent (module_body, {
                     lev_loc = of_location ~scopes loc;
                     lev_kind = Lev_module_definition id;

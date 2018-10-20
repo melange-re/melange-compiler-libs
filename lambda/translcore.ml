@@ -162,7 +162,7 @@ let event_after ~scopes exp lam =
   Translprim.event_after (of_location ~scopes exp.exp_loc) exp lam
 
 let event_function ~scopes exp lam =
-  if !Clflags.record_event_when_debug && !Clflags.debug && not !Clflags.native_code then
+  if !Clflags.record_event_when_debug && !Clflags.debug && not !Clflags.bs_only then
     let repr = Some (ref 0) in
     let (info, body) = lam repr in
     (info,
@@ -538,6 +538,10 @@ and transl_exp0 ~in_new_scope ~scopes e =
                 transl_exp ~scopes body)
   | Texp_letmodule(Some id, loc, Mp_present, modl, body) ->
       let defining_expr =
+#if true then
+        if !Clflags.bs_only then !transl_module ~scopes Tcoerce_none None modl
+        else
+#end
         let mod_scopes = enter_module_definition ~scopes id in
         Levent (!transl_module ~scopes:mod_scopes Tcoerce_none None modl, {
           lev_loc = of_location ~scopes loc.loc;
