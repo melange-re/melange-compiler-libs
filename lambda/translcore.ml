@@ -415,6 +415,11 @@ and transl_exp0 ~in_new_scope ~scopes e =
   | Texp_array expr_list ->
       let kind = array_kind e in
       let ll = transl_list ~scopes expr_list in
+#if true then
+      if !Clflags.bs_only then
+         Lprim(Pmakearray (kind, Mutable), ll, of_location ~scopes e.exp_loc)
+      else
+#end
       begin try
         (* For native code the decision as to which compilation strategy to
            use is made later.  This enables the Flambda passes to lift certain
