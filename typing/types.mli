@@ -374,7 +374,7 @@ and record_representation =
     Record_regular                      (* All fields are boxed / tagged *)
   | Record_float                        (* All fields are floats *)
   | Record_unboxed of bool    (* Unboxed single-field record, inlined or not *)
-  | Record_inlined of int               (* Inlined record *)
+  | Record_inlined of { tag : int ; name : string; num_nonconsts : int}              (* Inlined record *)
   | Record_extension of Path.t          (* Inlined record under extension *)
 
 and label_declaration =
