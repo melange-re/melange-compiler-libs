@@ -38,7 +38,7 @@ type tag_info =
   | Blk_na
   | Blk_some
   | Blk_some_not_nested (* ['a option] where ['a] can not inhabit a non-like value *)
-  | Blk_record_inlined of string array
+  | Blk_record_inlined of string array * string  * int
   | Blk_record_ext of string array
 
 val default_tag_info : tag_info

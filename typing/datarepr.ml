@@ -142,7 +142,7 @@ let constructor_descrs ~current_unit ty_path decl cstrs =
           let representation =
             if decl.type_unboxed.unboxed
             then Record_unboxed true
-            else Record_inlined idx_nonconst
+            else Record_inlined {tag = idx_nonconst; name = cstr_name; num_nonconsts = !num_nonconsts}
           in
           constructor_args ~current_unit decl.type_private cd_args cd_res
             (Path.Pdot (ty_path, cstr_name)) representation
