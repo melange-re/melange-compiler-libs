@@ -74,6 +74,10 @@ exception Error of Location.t * error
    the records must be constants for the compiler to do sharing on them.
 *)
 let get_unboxed_from_attributes sdecl =
+#if true then   
+  if !Clflags.bs_only then unboxed_false_default_false
+  else
+#end
   let unboxed = Builtin_attributes.has_unboxed sdecl.ptype_attributes in
   let boxed = Builtin_attributes.has_boxed sdecl.ptype_attributes in
   match boxed, unboxed, !Clflags.unboxed_types with
