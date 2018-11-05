@@ -390,6 +390,21 @@ let lookup_primitive_and_mark_used loc p env path =
   | External _ as e -> add_used_primitive loc env path; e
   | x -> x
 
+let simplify_constant_constructor = function
+  | Equal -> true
+  | Not_equal -> true
+  | Less_equal -> false
+  | Less_than -> false
+  | Greater_equal -> false
+  | Greater_than -> false
+  | Compare -> false
+  | Max -> false
+  | Min -> false
+  | Null -> true
+  | Undefined -> true
+  | Nullable -> true
+
+
 (* The following function computes the greatest lower bound in the
    semilattice of array kinds:
           gen
@@ -891,7 +906,9 @@ let transl_primitive_application loc p env ty path exp args arg_exps =
       in
       if has_constant_constructor then
         match Hashtbl.find_opt primitives_table prim_name with
-        | Some prim -> specialize_primitive env ty prim
+        | Some (Comparison(comp, _)) when simplify_constant_constructor comp ->
+          specialize_primitive env ty prim
+        | Some _
         | None -> specialize_primitive env ty prim
       else
         specialize_primitive env ty prim
