@@ -187,7 +187,7 @@ let assert_failed ~scopes exp =
   let loc = of_location ~scopes exp.exp_loc in
 #if undefined BS_NO_COMPILER_PATCH then
   let fname =
-    if  not !Clflags.absname then Filename.basename fname else fname
+    Filename.basename fname
   in
 #end
   Lprim(Praise Raise_regular, [event_after ~scopes exp
