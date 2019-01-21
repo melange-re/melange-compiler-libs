@@ -39,7 +39,7 @@ val type_toplevel_phrase:
   Env.t -> Parsetree.structure ->
   Typedtree.structure * Types.signature * Signature_names.t * Env.t
 
-val type_implementation_more:
+val type_implementation_more: ?check_exists:unit -> 
   string -> string -> string -> Env.t -> Parsetree.structure ->
   Typedtree.structure * Typedtree.module_coercion * Env.t * Types.signature
 

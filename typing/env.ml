@@ -2142,7 +2142,7 @@ let persistent_structures_of_dir dir =
   |> String.Set.of_seq
 
 (* Save a signature to a file *)
-let save_signature_with_transform cmi_transform ~alerts sg modname filename =
+let save_signature_with_transform ?check_exists cmi_transform ~alerts sg modname filename =
   Btype.cleanup_abbrev ();
   Subst.reset_for_saving ();
   let sg = Subst.signature Make_local (Subst.for_saving Subst.identity) sg in
@@ -2151,17 +2151,17 @@ let save_signature_with_transform cmi_transform ~alerts sg modname filename =
     |> cmi_transform in
   let pm = save_sign_of_cmi
       { Persistent_env.Persistent_signature.cmi; filename } in
-  Persistent_env.save_cmi !persistent_env
+  Persistent_env.save_cmi ?check_exists !persistent_env
     { Persistent_env.Persistent_signature.filename; cmi } pm;
   cmi
 
-let save_signature ~alerts sg modname filename =
-  save_signature_with_transform (fun cmi -> cmi)
+let save_signature ?check_exists ~alerts sg modname filename =
+  save_signature_with_transform ?check_exists (fun cmi -> cmi)
     ~alerts sg modname filename
 
-let save_signature_with_imports ~alerts sg modname filename imports =
+let save_signature_with_imports ?check_exists ~alerts sg modname filename imports =
   let with_imports cmi = { cmi with cmi_crcs = imports } in
-  save_signature_with_transform with_imports
+  save_signature_with_transform with_imports ?check_exists
     ~alerts sg modname filename
 
 (* Make the initial environment *)

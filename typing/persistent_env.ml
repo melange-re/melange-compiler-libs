@@ -329,7 +329,7 @@ let make_cmi penv modname sign alerts =
     cmi_flags = flags
   }
 
-let save_cmi penv psig pm =
+let save_cmi ?check_exists penv psig pm =
   let { Persistent_signature.filename; cmi } = psig in
   Misc.try_finally (fun () ->
       let {
@@ -339,9 +339,13 @@ let save_cmi penv psig pm =
         cmi_flags = flags;
       } = cmi in
       let crc =
+#if false then
         output_to_file_via_temporary (* see MPR#7472, MPR#4991 *)
           ~mode: [Open_binary] filename
           (fun temp_filename oc -> output_cmi temp_filename oc cmi) in
+#else
+      create_cmi ?check_exists filename cmi in
+#end
       (* Enter signature in persistent table so that imports()
          will also return its crc *)
       let ps =

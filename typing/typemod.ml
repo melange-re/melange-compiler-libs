@@ -2621,7 +2621,7 @@ let gen_annot outputprefix sourcefile annots =
   Cmt2annot.gen_annot (Some (outputprefix ^ ".annot"))
     ~sourcefile:(Some sourcefile) ~use_summaries:false annots
 
-let type_implementation_more sourcefile outputprefix modulename initial_env ast =
+let type_implementation_more ?check_exists sourcefile outputprefix modulename initial_env ast =
   Cmt_format.clear ();
   Misc.try_finally (fun () ->
       Typecore.reset_delayed_checks ();
@@ -2683,7 +2683,7 @@ let type_implementation_more sourcefile outputprefix modulename initial_env ast 
           if not !Clflags.dont_write_files then begin
             let alerts = Builtin_attributes.alerts_of_str ast in
             let cmi =
-              Env.save_signature ~alerts
+              Env.save_signature ?check_exists ~alerts
                 simple_sg modulename (outputprefix ^ ".cmi")
             in
             let annots = Cmt_format.Implementation str in
