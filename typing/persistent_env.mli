@@ -84,7 +84,7 @@ val register_import_as_opaque : 'a t -> modname -> unit
 val make_cmi : 'a t -> modname -> Types.signature -> alerts
   -> Cmi_format.cmi_infos
 
-val save_cmi : 'a t -> Persistent_signature.t -> 'a -> unit
+val save_cmi : ?check_exists:unit -> 'a t -> Persistent_signature.t -> 'a -> unit
 
 val can_load_cmis : 'a t -> can_load_cmis
 val set_can_load_cmis : 'a t -> can_load_cmis -> unit

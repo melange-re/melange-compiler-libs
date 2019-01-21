@@ -354,10 +354,12 @@ val get_unit_name: unit -> string
 val read_signature: modname -> filepath -> signature
         (* Arguments: module name, file name. Results: signature. *)
 val save_signature:
+  ?check_exists:unit ->
   alerts:alerts -> signature -> modname -> filepath
   -> Cmi_format.cmi_infos
         (* Arguments: signature, module name, file name. *)
 val save_signature_with_imports:
+  ?check_exists:unit ->
   alerts:alerts -> signature -> modname -> filepath -> crcs
   -> Cmi_format.cmi_infos
         (* Arguments: signature, module name, file name,
