@@ -700,6 +700,9 @@ let lambda_of_loc kind sloc =
   let loc = to_location sloc in
   let loc_start = loc.Location.loc_start in
   let (file, lnum, cnum) = Location.get_pos_info loc_start in
+#if true then
+  let file = Filename.basename file in
+#end
   let file =
     if Filename.is_relative file then
       file

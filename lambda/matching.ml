@@ -3377,7 +3377,7 @@ let failure_handler ~scopes loc ~failer () =
       Location.get_pos_info loc.Location.loc_start in
 #if undefined BS_NO_COMPILER_PATCH then
     let fname =
-      if  not !Clflags.absname then Filename.basename fname else fname
+      Filename.basename fname
     in
 #end
     Lprim
