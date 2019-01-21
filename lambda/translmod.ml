@@ -250,6 +250,9 @@ let mod_prim name args loc =
 
 let undefined_location loc =
   let (fname, line, char) = Location.get_pos_info loc.Location.loc_start in
+#if true then
+  let fname = Filename.basename fname in
+#end
   Lconst(Const_block(0, Lambda.default_tag_info,
                      [Const_base(Const_string (fname, loc, None), default_pointer_info);
                       const_int line;
