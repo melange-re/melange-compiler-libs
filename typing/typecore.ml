@@ -5565,6 +5565,10 @@ let report_error ~loc env = function
         (function ppf ->
           fprintf ppf "but bindings were expected of type")
 
+#if true then
+let super_report_error_no_wrap_printing_env = report_error
+#end
+
 let report_error ~loc env err =
   Printtyp.wrap_printing_env ~error:true env
     (fun () -> report_error ~loc env err)
