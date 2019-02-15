@@ -2942,6 +2942,10 @@ let report_error ppf = function
   | Invalid_type_subst_rhs ->
       fprintf ppf "Only type synonyms are allowed on the right of :="
 
+#if true then
+let super_report_error_no_wrap_printing_env = report_error
+#end
+
 let report_error env ppf err =
   Printtyp.wrap_printing_env ~error:true env (fun () -> report_error ppf err)
 
