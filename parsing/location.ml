@@ -867,7 +867,9 @@ let print_warning loc ppf w =
   | None -> ()
   | Some report -> print_report ppf report
 
-let prerr_warning loc w = print_warning loc !formatter_for_warnings w
+let prerr_warning loc w =
+    if not !Clflags.bs_quiet then
+      print_warning loc !formatter_for_warnings w
 
 let default_alert_reporter =
   default_warning_alert_reporter
