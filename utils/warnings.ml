@@ -98,6 +98,7 @@ type t =
   | Bs_polymorphic_comparison               (* 102 *)
   | Bs_ffi_warning of string                (* 103 *)
   | Bs_derive_warning of string             (* 104 *)
+  | Bs_fragile_external of string           (* 105 *)
 #end
 ;;
 
@@ -182,10 +183,11 @@ let number = function
   | Bs_polymorphic_comparison -> 102
   | Bs_ffi_warning _ -> 103
   | Bs_derive_warning _ -> 104
+  | Bs_fragile_external _ -> 105
 #end
 ;;
 
-let last_warning_number = 104
+let last_warning_number = 105
 ;;
 
 (* Third component of each tuple is the list of names for each warning. The
@@ -348,7 +350,8 @@ let descriptions =
    101, "Unused bs attributes", ["unused-bs-attributes"];
    102, "polymorphic comparison introduced (maybe unsafe)", ["polymorphic-comparison-introduced"];
    103, "BuckleScript FFI warning: ", [ "bucklescript-ffi-warning" ];
-   104, "BuckleScript bs.deriving warning: ", [ "bucklescript-bs-deriving" ]
+   104, "BuckleScript bs.deriving warning: ", [ "bucklescript-bs-deriving" ];
+   105, "BuckleScript fragile external warning ", [ "bucklescript-fragile-external" ]
 #end
   ]
 ;;
@@ -844,6 +847,8 @@ let message = function
       "BuckleScript FFI warning: " ^ s
   | Bs_derive_warning s ->
       "BuckleScript bs.deriving warning: " ^ s
+  | Bs_fragile_external s ->
+      "BuckleScript warning: " ^ s ^" : the external name is inferred from val name is unsafe from refactoring when changing value name"
 #end
 ;;
 

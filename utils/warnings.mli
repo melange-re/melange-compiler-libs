@@ -100,6 +100,7 @@ type t =
   | Bs_polymorphic_comparison               (* 102 *)
   | Bs_ffi_warning of string                (* 103 *)
   | Bs_derive_warning of string             (* 104 *)
+  | Bs_fragile_external of string           (* 105 *)
 #end
 ;;
 
@@ -147,9 +148,9 @@ val mk_lazy: (unit -> 'a) -> 'a Lazy.t
         the warning/alert settings at the time [mk_lazy] is called. *)
 
 #if undefined BS_NO_COMPILER_PATCH then
-val message : t -> string
-val id_name: t -> string
-val super_report :
-  (t -> string) ->
-  t ->  [ `Active of reporting_information | `Inactive ]
+  val message : t -> string
+  val id_name: t -> string
+  val super_report :
+    (t -> string) ->
+    t ->  [ `Active of reporting_information | `Inactive ]
 #end
