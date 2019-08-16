@@ -80,9 +80,9 @@ let value_descriptions ~loc env ~mark cxt subst id vd1 vd2 =
   try
 #if undefined BS_NO_COMPILER_PATCH then
     Includecore.value_descriptions ~loc env id vd1 vd2
-#else    
+#else
     Includecore.value_descriptions ~loc env (Ident.name id) vd1 vd2
-#end      
+#end
   with Includecore.Dont_match ->
     raise(Error[cxt, env, Value_descriptions(id, vd1, vd2)])
 
@@ -212,7 +212,7 @@ let rec print_coercion ppf c =
   let pr fmt = Format.fprintf ppf fmt in
   match c with
     Tcoerce_none -> pr "id"
-  | Tcoerce_structure (fl, nl) ->
+  | Tcoerce_structure (fl, nl, _) ->
       pr "@[<2>struct@ %a@ %a@]"
         (print_list print_coercion2) fl
         (print_list print_coercion3) nl
@@ -247,7 +247,7 @@ let equal_modtype_paths env p1 subst p2 =
        (Env.normalize_modtype_path env
           (Subst.modtype_path subst p2))
 
-let simplify_structure_coercion cc id_pos_list =
+let simplify_structure_coercion cc id_pos_list runtime_fields =
   let rec is_identity_coercion pos = function
   | [] ->
       true
@@ -255,7 +255,7 @@ let simplify_structure_coercion cc id_pos_list =
       n = pos && c = Tcoerce_none && is_identity_coercion (pos + 1) rem in
   if is_identity_coercion 0 cc
   then Tcoerce_none
-  else Tcoerce_structure (cc, id_pos_list)
+  else Tcoerce_structure (cc, id_pos_list, runtime_fields)
 
 (* Inclusion between module types.
    Return the restriction that transforms a value of the smaller type
@@ -375,6 +375,19 @@ and signatures ~loc env ~mark cxt subst sig1 sig2 =
             ((id,pos,Tcoerce_none)::l , pos+1)
         | item -> (l, if is_runtime_component item then pos+1 else pos))
       ([], 0) sig1 in
+
+  let runtime_fields =
+    let get_id = function
+      | Sig_value (i,_, _)
+      | Sig_module (i,_,_, _, _)
+      | Sig_typext (i,_,_, _)
+      | Sig_modtype(i,_, _)
+      | Sig_class (i,_,_, _)
+      | Sig_class_type(i,_,_, _)
+      | Sig_type(i,_,_, _) -> Ident.name i in
+     List.fold_right (fun item fields ->
+        if is_runtime_component item then get_id item :: fields else fields) sig2 [] in
+
   (* Build a table of the components of sig1, along with their positions.
      The table is indexed by kind and name of component *)
   let rec build_component_table pos tbl = function
@@ -419,9 +432,9 @@ and signatures ~loc env ~mark cxt subst sig1 sig2 =
                   (List.rev paired)
               in
               if len1 = len2 then (* see PR#5098 *)
-                simplify_structure_coercion cc id_pos_list
+                simplify_structure_coercion cc id_pos_list runtime_fields
               else
-                Tcoerce_structure (cc, id_pos_list)
+                Tcoerce_structure (cc, id_pos_list, runtime_fields)
           | _  -> raise(Error unpaired)
         end
     | item2 :: rem ->
@@ -635,7 +648,7 @@ module Illegal_permutation = struct
 
   (** We extract a lone transposition from a full tree of permutations. *)
   let rec transposition_under path = function
-    | Tcoerce_structure(c,_) ->
+    | Tcoerce_structure(c,_, _) ->
         either
           (not_fixpoint path 0) c
           (first_non_id path 0) c
