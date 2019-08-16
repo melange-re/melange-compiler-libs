@@ -329,7 +329,7 @@ let module_coercion sub = function
   | Tcoerce_alias (env, _, c1) ->
       sub.env sub env;
       sub.module_coercion sub c1
-  | Tcoerce_structure (l1, l2) ->
+  | Tcoerce_structure (l1, l2, _) ->
       List.iter (fun (_, c) -> sub.module_coercion sub c) l1;
       List.iter (fun (_, _ ,c) -> sub.module_coercion sub c) l2
   | Tcoerce_primitive {pc_env; _} -> sub.env sub pc_env
