@@ -1820,6 +1820,10 @@ let code_force_lazy_block = get_mod_field "CamlinternalLazy" "force_lazy_block"
 
 let code_force_lazy = get_mod_field "CamlinternalLazy" "force"
 
+let code_force =
+    get_mod_field "CamlinternalLazy" "force"
+;;
+
 (* inline_lazy_force inlines the beginning of the code of Lazy.force. When
    the value argument is tagged as:
    - forward, take field 0
@@ -1831,6 +1835,9 @@ let code_force_lazy = get_mod_field "CamlinternalLazy" "force"
 *)
 
 let inline_lazy_force_cond arg loc =
+  if !Clflags.bs_only then
+    Lapply {ap_tailcall=Default_tailcall; ap_func = Lazy.force code_force; ap_inlined = Default_inline; ap_specialised = Default_specialise; ap_args = [arg]; ap_loc = loc}
+  else
   let idarg = Ident.create_local "lzarg" in
   let varg = Lvar idarg in
   let tag = Ident.create_local "tag" in

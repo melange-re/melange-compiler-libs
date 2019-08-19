@@ -39,6 +39,8 @@ type tag_info =
   | Blk_some_not_nested (* ['a option] where ['a] can not inhabit a non-like value *)
   | Blk_record_inlined of string array * string * int
   | Blk_record_ext of string array
+  | Blk_lazy_general
+  | Blk_lazy_forward
 
 let default_tag_info : tag_info = Blk_na
 
