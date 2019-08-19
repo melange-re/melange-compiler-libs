@@ -589,7 +589,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
           (* We don't need to wrap with Popaque: this forward
              block will never be shortcutted since it points to a float
              and Config.flat_float_array is true. *)
-          Lprim(Pmakeblock(Obj.forward_tag, Lambda.default_tag_info, Immutable, None),
+          Lprim(Pmakeblock(Obj.forward_tag, Lambda.Blk_lazy_forward, Immutable, None),
                 [transl_exp ~scopes e], of_location ~scopes e.exp_loc)
       | `Identifier `Forward_value ->
          (* CR-someday mshinwell: Consider adding a new primitive
@@ -599,7 +599,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
             block doesn't really match what is going on here.  This
             value may subsequently turn into an immediate... *)
          Lprim (Popaque,
-                [Lprim(Pmakeblock(Obj.forward_tag, Lambda.default_tag_info, Immutable, None),
+                [Lprim(Pmakeblock(Obj.forward_tag, Lambda.Blk_lazy_forward, Immutable, None),
                        [transl_exp ~scopes e],
                        of_location ~scopes e.exp_loc)],
                 of_location ~scopes e.exp_loc)
@@ -613,7 +613,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
                              attr = default_function_attribute;
                              loc = of_location ~scopes e.exp_loc;
                              body = transl_exp ~scopes e} in
-          Lprim(Pmakeblock(Config.lazy_tag, Lambda.default_tag_info, Mutable, None), [fn],
+          Lprim(Pmakeblock(Config.lazy_tag, Lambda.Blk_lazy_forward, Mutable, None), [fn],
                 of_location ~scopes e.exp_loc)
       end
   | Texp_object (cs, meths) ->
