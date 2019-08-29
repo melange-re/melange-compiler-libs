@@ -190,11 +190,5 @@ let save_cmt filename modname binary_annots sourcefile initial_env cmi =
            cmt_use_summaries = need_to_clear_env;
          } in
          output_cmt oc cmt)
-#if undefined BS_NO_COMPILER_PATCH then
-    (* TODO: does not make sense to do post-proccesing for [Partial_implementaiton]*)
-  ; match !Clflags.bs_gentype with
-    | None -> ()
-    | Some cmd -> ignore (Sys.command (cmd ^ " -cmt-add " ^ filename ^ (match sourcefile with None -> "" | Some sourcefile -> ":" ^ sourcefile)))
-#end
   end;
   clear ()
