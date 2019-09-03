@@ -159,6 +159,7 @@ let primitive ppf = function
       fprintf ppf "makeblock %i%a" tag block_shape shape
   | Pmakeblock(tag, _, Mutable, shape) ->
       fprintf ppf "makemutable %i%a" tag block_shape shape
+  | Pfield (n, (Fld_module s | Fld_record s)) -> fprintf ppf "field:%s/%i" s n      
   | Pfield (n,_) -> fprintf ppf "field %i" n
   | Pfield_computed -> fprintf ppf "field_computed"
   | Psetfield(n, ptr, init, _) ->
