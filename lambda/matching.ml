@@ -1075,6 +1075,16 @@ let what_is_first_case = what_is_cases ~skip_any:false
 
 let what_is_cases = what_is_cases ~skip_any:true
 
+let rec what_is_cases_pat cases =
+  let open Patterns in
+  match cases with
+  | ({pat_desc=Tpat_any} :: _, _) :: rem -> what_is_cases_pat rem
+  | (({pat_desc=(Tpat_var _|Tpat_or (_,_,_)|Tpat_alias (_,_,_))}::_),_)::_
+    -> assert false (* applies to simplified matchings only *)
+  | (p::_,_)::_ -> p
+  | [] -> omega
+  | _ -> assert false
+
 let pm_free_variables { cases } =
   List.fold_right
     (fun (_, act) r -> Ident.Set.union (free_variables act) r)
@@ -1907,7 +1917,8 @@ let inline_lazy_force_switch arg loc =
                           ap_specialised = Default_specialise
                         } )
                   ];
-                sw_failaction = Some varg
+                sw_failaction = Some varg;
+                sw_names = None
               },
               loc ) ) )
 
@@ -2308,7 +2319,7 @@ module SArg = struct
 
   let make_if cond ifso ifnot = Lifthenelse (cond, ifso, ifnot)
 
-  let make_switch loc arg cases acts =
+  let make_switch loc arg cases acts sw_names =
     let l = ref [] in
     for i = Array.length cases - 1 downto 0 do
       l := (i, acts.(cases.(i))) :: !l
@@ -2319,7 +2330,8 @@ module SArg = struct
           sw_consts = !l;
           sw_numblocks = 0;
           sw_blocks = [];
-          sw_failaction = None
+          sw_failaction = None;
+          sw_names
         },
         loc )
 
@@ -2524,9 +2536,9 @@ let as_interval fail low high l =
     | None -> as_interval_nofail l
     | Some act -> as_interval_canfail act low high l )
 
-let call_switcher loc fail arg low high int_lambda_list =
+let call_switcher loc fail arg low high int_lambda_list sw_names =
   let edges, (cases, actions) = as_interval fail low high int_lambda_list in
-  Switcher.zyva loc edges arg cases actions
+  Switcher.zyva loc edges arg cases actions sw_names
 
 let rec list_as_pat = function
   | [] -> fatal_error "Matching.list_as_pat"
@@ -2620,7 +2632,7 @@ let mk_failaction_pos partial seen ctx defs =
     (fail, [], jumps)
   )
 
-let combine_constant loc arg cst partial ctx def
+let combine_constant names loc arg cst partial ctx def
     (const_lambda_list, total, _pats) =
   let fail, local_jumps = mk_failaction_neg partial ctx def in
   let lambda1 =
@@ -2633,7 +2645,7 @@ let combine_constant loc arg cst partial ctx def
               | _ -> assert false)
             const_lambda_list
         in
-        call_switcher loc fail arg min_int max_int int_lambda_list
+        call_switcher loc fail arg min_int max_int int_lambda_list names
     | Const_char _ ->
         let int_lambda_list =
           List.map
@@ -2642,7 +2654,7 @@ let combine_constant loc arg cst partial ctx def
               | _ -> assert false)
             const_lambda_list
         in
-        call_switcher loc fail arg 0 255 int_lambda_list
+        call_switcher loc fail arg 0 255 int_lambda_list names
     | Const_string _ ->
         (* Note as the bytecode compiler may resort to dichotomic search,
    the clauses of stringswitch  are sorted with duplicates removed.
@@ -2708,7 +2720,7 @@ let split_extension_cases tag_lambda_list =
   in
   split_rec tag_lambda_list
 
-let combine_constructor loc arg pat_env cstr partial ctx def
+let combine_constructor sw_names loc arg pat_env cstr partial ctx def
     (descr_lambda_list, total1, pats) =
   let tag_lambda (cstr, act) = (cstr.cstr_tag, act) in
   match cstr.cstr_tag with
@@ -2788,7 +2800,7 @@ let combine_constructor loc arg pat_env cstr partial ctx def
               else Lifthenelse (arg,act1,act2)
             | n, 0, _, [] ->
                 (* The type defines constant constructors only *)
-                call_switcher loc fail_opt arg 0 (n - 1) consts
+                call_switcher loc fail_opt arg 0 (n - 1) consts sw_names
             | n, _, _, _ -> (
                 let act0 =
                   (* = Some act when all non-const constructors match to act *)
@@ -2805,7 +2817,7 @@ let combine_constructor loc arg pat_env cstr partial ctx def
                 | Some act ->
                     Lifthenelse
                       ( Lprim (Pisint, [ arg ], loc),
-                        call_switcher loc fail_opt arg 0 (n - 1) consts,
+                        call_switcher loc fail_opt arg 0 (n - 1) consts sw_names,
                         act )
                 | None ->
                     (* Emit a switch, as bytecode implements this sophisticated
@@ -2815,7 +2827,8 @@ let combine_constructor loc arg pat_env cstr partial ctx def
                         sw_consts = consts;
                         sw_numblocks = cstr.cstr_nonconsts;
                         sw_blocks = nonconsts;
-                        sw_failaction = fail_opt
+                        sw_failaction = fail_opt;
+                        sw_names
                       }
                     in
                     let hs, sw = share_actions_sw sw in
@@ -2830,19 +2843,19 @@ let make_test_sequence_variant_constant fail arg int_lambda_list =
   let _, (cases, actions) = as_interval fail min_int max_int int_lambda_list in
   Switcher.test_sequence arg cases actions
 
-let call_switcher_variant_constant loc fail arg int_lambda_list =
-  call_switcher loc fail arg min_int max_int int_lambda_list
+let call_switcher_variant_constant loc fail arg int_lambda_list names =
+  call_switcher loc fail arg min_int max_int int_lambda_list names
 
-let call_switcher_variant_constr loc fail arg int_lambda_list =
+let call_switcher_variant_constr loc fail arg int_lambda_list names =
   let v = Ident.create_local "variant" in
   Llet
     ( Alias,
       Pgenval,
       v,
       Lprim (Pfield (0, Fld_na), [ arg ], loc),
-      call_switcher loc fail (Lvar v) min_int max_int int_lambda_list )
+      call_switcher loc fail (Lvar v) min_int max_int int_lambda_list names)
 
-let combine_variant loc row arg partial ctx def (tag_lambda_list, total1, _pats)
+let combine_variant names loc row arg partial ctx def (tag_lambda_list, total1, _pats)
     =
   let row = Btype.row_repr row in
   let num_constr = ref 0 in
@@ -2886,29 +2899,29 @@ let combine_variant loc row arg partial ctx def (tag_lambda_list, total1, _pats)
             (* One can compare integers and pointers *)
             make_test_sequence_variant_constant fail arg consts
         | [], _ -> (
-            let lam = call_switcher_variant_constr loc fail arg nonconsts in
+            let lam = call_switcher_variant_constr loc fail arg nonconsts names in
             (* One must not dereference integers *)
             match fail with
             | None -> lam
             | Some fail -> test_int_or_block arg fail lam
           )
         | _, _ ->
-            let lam_const = call_switcher_variant_constant loc fail arg consts
+            let lam_const = call_switcher_variant_constant loc fail arg consts names
             and lam_nonconst =
-              call_switcher_variant_constr loc fail arg nonconsts
+              call_switcher_variant_constr loc fail arg nonconsts names
             in
             test_int_or_block arg lam_const lam_nonconst
       )
   in
   (lambda1, Jumps.union local_jumps total1)
 
-let combine_array loc arg kind partial ctx def (len_lambda_list, total1, _pats)
+let combine_array names loc arg kind partial ctx def (len_lambda_list, total1, _pats)
     =
   let fail, local_jumps = mk_failaction_neg partial ctx def in
   let lambda1 =
     let newvar = Ident.create_local "len" in
     let switch =
-      call_switcher loc fail (Lvar newvar) 0 max_int len_lambda_list
+      call_switcher loc fail (Lvar newvar) 0 max_int len_lambda_list names
     in
     bind Alias newvar (Lprim (Parraylength kind, [ arg ], loc)) switch
   in
@@ -3118,6 +3131,10 @@ let arg_to_var arg cls =
       let v = name_pattern "match" cls in
       (v, Lvar v)
 
+(* To be set by Lam_compile *)
+let names_from_construct_pattern : (pattern -> switch_names option) ref =
+  ref (fun _ -> assert false)
+
 (*
   The main compilation function.
    Input:
@@ -3235,20 +3252,25 @@ and do_compile_matching ~scopes repr partial ctx pmh =
           compile_test
             (compile_match ~scopes repr partial)
             partial divide_constant
-            (combine_constant ploc arg cst partial)
+            (combine_constant None ploc arg cst partial)
             ctx pm
       | Construct cstr ->
+          let sw_names = if !Clflags.bs_only
+            then !names_from_construct_pattern
+              (what_is_cases_pat
+                (List.map (fun ((x, ps), _lam) -> ps, x) pm.cases))
+            else None in
           compile_test
             (compile_match ~scopes repr partial)
             partial (divide_constructor ~scopes)
-            (combine_constructor ploc arg ph.pat_env cstr partial)
+            (combine_constructor sw_names ploc arg ph.pat_env cstr partial)
             ctx pm
       | Array _ ->
           let kind = Typeopt.array_pattern_kind pomega in
           compile_test
             (compile_match ~scopes repr partial)
             partial (divide_array ~scopes kind)
-            (combine_array ploc arg kind partial)
+            (combine_array None ploc arg kind partial)
             ctx pm
       | Lazy ->
           compile_no_test ~scopes
@@ -3258,7 +3280,7 @@ and do_compile_matching ~scopes repr partial ctx pmh =
           compile_test
             (compile_match ~scopes repr partial)
             partial (divide_variant ~scopes !row)
-            (combine_variant ploc !row arg partial)
+            (combine_variant None ploc !row arg partial)
             ctx pm
     )
   | PmVar { inside = pmh } ->

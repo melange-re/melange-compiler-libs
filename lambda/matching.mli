@@ -52,3 +52,6 @@ val expand_stringswitch:
     lambda option -> lambda
 
 val inline_lazy_force : lambda -> scoped_location -> lambda
+
+(* To be set by Lam_compile *)
+val names_from_construct_pattern : (pattern -> switch_names option) ref

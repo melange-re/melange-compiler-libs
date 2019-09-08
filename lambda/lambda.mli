@@ -40,9 +40,9 @@ type tag_info =
   | Blk_some_not_nested (* ['a option] where ['a] can not inhabit a non-like value *)
   | Blk_record_inlined of string array * string  * int
   | Blk_record_ext of string array
-  | Blk_lazy_general  
+  | Blk_lazy_general
   | Blk_lazy_forward
-  
+
 val default_tag_info : tag_info
 
 val ref_tag_info : tag_info
@@ -307,6 +307,8 @@ type function_attribute = {
 
 type scoped_location = Debuginfo.Scoped_location.t
 
+type switch_names = {consts: string array; blocks: string array}
+
 type lambda =
     Lvar of Ident.t
   | Lconst of structured_constant
@@ -355,7 +357,8 @@ and lambda_switch =
     sw_consts: (int * lambda) list;     (* Integer cases *)
     sw_numblocks: int;                  (* Number of tag block cases *)
     sw_blocks: (int * lambda) list;     (* Tag block cases *)
-    sw_failaction : lambda option}      (* Action to take if failure *)
+    sw_failaction : lambda option;      (* Action to take if failure *)
+    sw_names: switch_names option }
 and lambda_event =
   { lev_loc: scoped_location;
     lev_kind: lambda_event_kind;

@@ -323,6 +323,7 @@ type function_attribute = {
   is_a_functor: bool;
   stub: bool;
 }
+type switch_names = {consts: string array; blocks: string array}
 
 type scoped_location = Debuginfo.Scoped_location.t
 
@@ -370,7 +371,9 @@ and lambda_switch =
     sw_consts: (int * lambda) list;
     sw_numblocks: int;
     sw_blocks: (int * lambda) list;
-    sw_failaction : lambda option}
+    sw_failaction : lambda option;
+    sw_names: switch_names option
+  }
 
 and lambda_event =
   { lev_loc: scoped_location;
@@ -890,6 +893,7 @@ let shallow_map f = function
                  sw_numblocks = sw.sw_numblocks;
                  sw_blocks = List.map (fun (n, e) -> (n, f e)) sw.sw_blocks;
                  sw_failaction = Option.map f sw.sw_failaction;
+                 sw_names = sw.sw_names;
                },
                loc)
   | Lstringswitch (e, sw, default, loc) ->
