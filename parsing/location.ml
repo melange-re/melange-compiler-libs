@@ -86,6 +86,10 @@ let input_lexbuf = ref (None : lexbuf option)
 let input_phrase_buffer = ref (None : Buffer.t option)
 
 (******************************************************************************)
+
+let set_input_name name =
+  if name <> "" then input_name := name
+
 (* Terminal info *)
 
 let status = ref Terminfo.Uninitialised
