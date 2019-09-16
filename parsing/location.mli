@@ -59,6 +59,7 @@ val symbol_gloc: unit -> t
 val rhs_loc: int -> t
 
 val rhs_interval: int -> int -> t
+val set_input_name: string -> unit
 
 val get_pos_info: Lexing.position -> string * int * int
 (** file, line, char *)
