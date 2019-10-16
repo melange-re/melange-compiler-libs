@@ -213,6 +213,9 @@ val copy_file_chunk: in_channel -> out_channel -> int -> unit
 val string_of_file: in_channel -> string
         (* [string_of_file ic] reads the contents of file [ic] and copies
            them to a string. It stops when encountering EOF on [ic]. *)
+           
+val output_to_bin_file_directly: string -> (string -> out_channel -> 'a) -> 'a
+
 val output_to_file_via_temporary:
       ?mode:open_flag list -> string -> (string -> out_channel -> 'a) -> 'a
         (* Produce output in temporary file, then rename it

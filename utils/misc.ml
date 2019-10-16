@@ -333,6 +333,12 @@ let string_of_file ic =
       (Buffer.add_subbytes b buff 0 n; copy())
   in copy()
 
+let output_to_bin_file_directly filename fn =  
+  let oc = Pervasives.open_out_bin filename in 
+  match fn filename oc with 
+  | v -> close_out oc ; v 
+  | exception e -> close_out oc ; raise e
+
 let output_to_file_via_temporary ?(mode = [Open_text]) filename fn =
   let (temp_filename, oc) =
     Filename.open_temp_file
