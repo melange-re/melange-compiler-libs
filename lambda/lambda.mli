@@ -35,13 +35,14 @@ type tag_info =
   | Blk_record of string array
   | Blk_module of string list
   | Blk_extension_slot
-  | Blk_na
+  | Blk_na of string (* This string only for debugging*)
   | Blk_some
   | Blk_some_not_nested (* ['a option] where ['a] can not inhabit a non-like value *)
   | Blk_record_inlined of string array * string  * int
   | Blk_record_ext of string array
   | Blk_lazy_general
   | Blk_lazy_forward
+  | Blk_class (* ocaml style class *)
 
 val default_tag_info : tag_info
 
@@ -53,6 +54,7 @@ type field_dbg_info =
   | Fld_module of string
   | Fld_record_inline of string
   | Fld_record_extension of string
+  | Fld_tuple
 
 type set_field_dbg_info =
   | Fld_set_na
