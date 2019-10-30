@@ -35,6 +35,17 @@ type tag_info =
   | Blk_record of string array
   | Blk_module of string list
   | Blk_extension_slot
+  | Blk_extension
+    (* underlying is the same as tuple, immutable block
+      {[
+         exception A of int * int 
+      ]}
+      is translated into
+      {[
+        [A, x, y]
+      ]}
+
+    *)
   | Blk_na of string (* This string only for debugging*)
   | Blk_some
   | Blk_some_not_nested (* ['a option] where ['a] can not inhabit a non-like value *)

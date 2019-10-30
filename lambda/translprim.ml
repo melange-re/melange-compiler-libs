@@ -789,7 +789,7 @@ let lambda_of_prim prim_name prim loc args arg_exps =
       lambda_of_loc kind loc
   | Loc kind, [arg] ->
       let lam = lambda_of_loc kind loc in
-      Lprim(Pmakeblock(0, Lambda.default_tag_info, Immutable, None), [lam; arg], loc)
+      Lprim(Pmakeblock(0, Blk_tuple, Immutable, None), [lam; arg], loc)
   | Send, [obj; meth] ->
       Lsend(Public None, meth, obj, [], loc)
   | Send_self, [obj; meth] ->
