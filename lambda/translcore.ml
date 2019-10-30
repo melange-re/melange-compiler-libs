@@ -191,7 +191,7 @@ let assert_failed ~scopes exp =
   in
 #end
   Lprim(Praise Raise_regular, [event_after ~scopes exp
-    (Lprim(Pmakeblock(0, Lambda.default_tag_info, Immutable, None),
+    (Lprim(Pmakeblock(0, Lambda.Blk_extension, Immutable, None),
           [slot;
            Lconst(Const_block(0, Lambda.Blk_tuple,
               [Const_base(Const_string (fname, exp.exp_loc, None), default_pointer_info);
@@ -362,7 +362,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
                       (of_location ~scopes e.exp_loc) e.exp_env path in
           if is_const then lam
           else
-            Lprim(Pmakeblock(0, Lambda.default_tag_info, Immutable, Some (Pgenval :: shape)),
+            Lprim(Pmakeblock(0, Blk_extension, Immutable, Some (Pgenval :: shape)),
                   lam :: ll, of_location ~scopes e.exp_loc)
       end
   | Texp_extension_constructor (_, path) ->

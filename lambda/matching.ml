@@ -3412,7 +3412,7 @@ let failure_handler ~scopes loc ~failer () =
     Lprim
       ( Praise Raise_regular,
         [ Lprim
-            ( Pmakeblock (0, Lambda.default_tag_info, Immutable, None),
+            ( Pmakeblock (0, Lambda.Blk_extension, Immutable, None),
               [ slot;
                 Lconst
                   (Const_block

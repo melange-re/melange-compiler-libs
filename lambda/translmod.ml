@@ -255,7 +255,7 @@ let undefined_location loc =
 #if true then
   let fname = Filename.basename fname in
 #end
-  Lconst(Const_block(0, Lambda.default_tag_info,
+  Lconst(Const_block(0, Blk_tuple,
                      [Const_base(Const_string (fname, loc, None), default_pointer_info);
                       const_int line;
                       const_int char]))
@@ -265,7 +265,7 @@ exception Initialization_failure of unsafe_info
 let init_shape id modl =
   let add_name x id =
     if !Clflags.bs_only then
-      Const_block (0, Lambda.default_tag_info, [x; Const_base (Const_string (Ident.name id, Location.none, None), Lambda.default_pointer_info)])
+      Const_block (0, Blk_tuple, [x; Const_base (Const_string (Ident.name id, Location.none, None), Lambda.default_pointer_info)])
     else x in
   let rec init_shape_mod subid loc env mty =
     match Mtype.scrape env mty with
@@ -274,8 +274,9 @@ let init_shape id modl =
         raise (Initialization_failure
                 (Unsafe {reason=Unsafe_module_binding;loc;subid}))
     | Mty_signature sg ->
-        Const_block(0, Lambda.default_tag_info,
-          [Const_block(0, Lambda.default_tag_info, init_shape_struct env sg)])
+        let module_tag_info : Lambda.tag_info = Blk_constructor ("Module",2) in
+        Const_block(0, module_tag_info,
+          [Const_block(0, Blk_array, init_shape_struct env sg)])
     | Mty_functor _ ->
         (* can we do better? *)
         raise (Initialization_failure
