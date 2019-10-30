@@ -385,6 +385,7 @@ let transl_declaration env sdecl (id, uid) =
       | Ptype_record lbls ->
           let lbls, lbls' = transl_labels env true lbls in
           let rep =
+            if !Clflags.bs_only then Record_regular else (* ATTENTION: revisit when we support @@unbox*)
             if unbox then Record_unboxed false
             else if List.for_all (fun l -> is_float env l.Types.ld_type) lbls'
             then Record_float
