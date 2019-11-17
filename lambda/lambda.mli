@@ -34,6 +34,7 @@ type tag_info =
   | Blk_variant of string
   | Blk_record of string array
   | Blk_module of string list
+  | Blk_module_export of Ident.t list
   | Blk_extension_slot
   | Blk_extension
     (* underlying is the same as tuple, immutable block
