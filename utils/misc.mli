@@ -20,6 +20,10 @@
 
 *)
 
+#if true then
+val array_of_list_rev : 'a list -> 'a array
+#end
+
 val fatal_error: string -> 'a
 val fatal_errorf: ('a, Format.formatter, unit, 'b) format4 -> 'a
 exception Fatal_error
@@ -213,7 +217,7 @@ val copy_file_chunk: in_channel -> out_channel -> int -> unit
 val string_of_file: in_channel -> string
         (* [string_of_file ic] reads the contents of file [ic] and copies
            them to a string. It stops when encountering EOF on [ic]. *)
-           
+
 val output_to_bin_file_directly: string -> (string -> out_channel -> 'a) -> 'a
 
 val output_to_file_via_temporary:
