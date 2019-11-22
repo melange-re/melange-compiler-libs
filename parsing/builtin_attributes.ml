@@ -85,12 +85,12 @@ let kind_and_message = function
 
 let cat s1 s2 =
   if s2 = "" then s1 else
-#if undefined BS_NO_COMPILER_PATCH then 
+#if undefined BS_NO_COMPILER_PATCH then
     if Clflags.bs_vscode then s1 ^ " " ^ s2
-    else s1 ^ "\n" ^ s2 
-#else    
+    else s1 ^ "\n" ^ s2
+#else
     s1 ^ "\n" ^ s2
-#end    
+#end
 
 let alert_attr x =
   match x.attr_name.txt with
@@ -153,6 +153,11 @@ let check_deprecated_mutable_inclusion ~def ~use loc attrs1 attrs2 s =
   | Some txt, None ->
       Location.deprecated ~def ~use loc
         (Printf.sprintf "mutating field %s" (cat s txt))
+
+let check_bs_attributes_inclusion =
+  ref (fun _attrs1 _attrs2 _s ->
+      None
+    )
 
 let rec attrs_of_sig = function
   | {psig_desc = Psig_attribute a} :: tl ->

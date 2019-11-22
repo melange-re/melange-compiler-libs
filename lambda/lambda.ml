@@ -46,18 +46,36 @@ type tag_info =
   | Blk_class (* Ocaml style class*)
 
 let default_tag_info : tag_info = Blk_na ""
+let blk_record = ref (fun fields ->
+  let all_labels_info = fields |> Array.map (fun (x,_) -> x.Types.lbl_name) in
+  Blk_record all_labels_info
+  )
+
+let blk_record_ext =  ref (fun fields ->
+    let all_labels_info = fields |> Array.map (fun (x,_) -> x.Types.lbl_name) in
+    Blk_record_ext all_labels_info
+  )
+
+let blk_record_inlined = ref (fun fields name num_nonconsts ->
+  let all_labels_info = fields |> Array.map (fun (x,_) -> x.Types.lbl_name) in
+  Blk_record_inlined (all_labels_info, name, num_nonconsts)
+)
 
 let ref_tag_info : tag_info = Blk_record [| "contents" |]
 
 type field_dbg_info =
   | Fld_na
-  | Fld_record of string
+  | Fld_record of {name : string; mutable_flag : Asttypes.mutable_flag}
   | Fld_module of string
   | Fld_record_inline of string
   | Fld_record_extension of string
   | Fld_tuple
 
-let ref_field_info : field_dbg_info = Fld_record "contents"
+let fld_record = ref (fun (lbl : Types.label_description) ->
+  Fld_record {name = lbl.lbl_name; mutable_flag = Mutable})
+
+let ref_field_info : field_dbg_info =
+  Fld_record { name = "contents"; mutable_flag = Mutable}
 
 type set_field_dbg_info =
     | Fld_set_na
@@ -66,6 +84,8 @@ type set_field_dbg_info =
     | Fld_record_extension_set of string
 
 let ref_field_set_info : set_field_dbg_info = Fld_record_set "contents"
+let fld_record_set = ref ( fun (lbl : Types.label_description) ->
+  Fld_record_set lbl.lbl_name  )
 
 type immediate_or_pointer =
   | Immediate

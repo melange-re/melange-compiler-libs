@@ -2012,11 +2012,11 @@ let get_expr_args_record ~scopes head (arg, _mut) rem =
       let access =
         match lbl.lbl_repres with
         | Record_regular  ->
-          Lprim (Pfield (lbl.lbl_pos, Fld_record lbl.lbl_name), [arg], loc)
+          Lprim (Pfield (lbl.lbl_pos, !Lambda.fld_record lbl), [arg], loc)
         | Record_inlined _ ->
           Lprim (Pfield (lbl.lbl_pos, Fld_record_inline lbl.lbl_name), [arg], loc)
         | Record_unboxed _ -> arg
-        | Record_float -> Lprim (Pfloatfield (lbl.lbl_pos, Fld_record lbl.lbl_name), [arg], loc)
+        | Record_float -> Lprim (Pfloatfield (lbl.lbl_pos, !Lambda.fld_record lbl), [arg], loc)
         | Record_extension _ -> Lprim (Pfield (lbl.lbl_pos + 1, Fld_record_extension lbl.lbl_name), [ arg ], loc)
       in
       let str =

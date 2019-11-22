@@ -56,17 +56,41 @@ type tag_info =
   | Blk_lazy_forward
   | Blk_class (* ocaml style class *)
 
+val blk_record :
+  (
+    (Types.label_description* Typedtree.record_label_definition) array ->
+    tag_info
+  ) ref
+
+val blk_record_ext :
+  (
+    (Types.label_description* Typedtree.record_label_definition) array ->
+    tag_info
+  ) ref
+
+val blk_record_inlined :
+  (
+    (Types.label_description* Typedtree.record_label_definition) array ->
+    string ->
+    int ->
+    tag_info
+  ) ref
+
 val default_tag_info : tag_info
 
 val ref_tag_info : tag_info
 
 type field_dbg_info =
   | Fld_na
-  | Fld_record of string
+  | Fld_record of {name : string; mutable_flag : Asttypes.mutable_flag}
   | Fld_module of string
   | Fld_record_inline of string
   | Fld_record_extension of string
   | Fld_tuple
+
+val fld_record :
+  (Types.label_description ->
+  field_dbg_info) ref
 
 val ref_field_info : field_dbg_info
 
@@ -77,6 +101,10 @@ type set_field_dbg_info =
   | Fld_record_extension_set of string
 
 val ref_field_set_info : set_field_dbg_info
+
+val fld_record_set :
+  (Types.label_description ->
+  set_field_dbg_info) ref
 
 type immediate_or_pointer =
   | Immediate
