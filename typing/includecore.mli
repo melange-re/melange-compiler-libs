@@ -28,7 +28,7 @@ type label_mismatch =
 
 type record_mismatch =
   | Label_mismatch of label_declaration * label_declaration * label_mismatch
-  | Label_names of int * Ident.t * Ident.t
+  | Label_names of int * string * string
   | Label_missing of position * Ident.t
   | Unboxed_float_representation of position
 

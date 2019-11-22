@@ -34,9 +34,9 @@ let value_descriptions ~loc env name
     vd1.val_attributes vd2.val_attributes
 #if undefined BS_NO_COMPILER_PATCH then
     (Ident.name name);
-#else    
+#else
     name;
-#end  
+#end
   if Ctype.moregeneral env true vd1.val_type vd2.val_type then begin
     match (vd1.val_kind, vd2.val_kind) with
         (Val_prim p1, Val_prim p2) ->
@@ -150,7 +150,7 @@ type record_mismatch =
   | Label_mismatch of Types.label_declaration
                       * Types.label_declaration
                       * label_mismatch
-  | Label_names of int * Ident.t * Ident.t
+  | Label_names of int * string * string
   | Label_missing of position * Ident.t
   | Unboxed_float_representation of position
 
@@ -208,7 +208,7 @@ let report_record_mismatch first second decl ppf err =
         (report_label_mismatch first second) err
   | Label_names (n, name1, name2) ->
       pr "@[<hv>Fields number %i have different names, %s and %s.@]"
-        n (Ident.name name1) (Ident.name name2)
+        n name1 name2
   | Label_missing (ord, s) ->
       pr "@[<hv>The field %s is only present in %s %s.@]"
         (Ident.name s) (choose ord first second) decl
@@ -360,7 +360,7 @@ and compare_records ~loc env params1 params2 n
   | l::_, [] -> Some (Label_missing (First, l.Types.ld_id))
   | ld1::rem1, ld2::rem2 ->
       if Ident.name ld1.ld_id <> Ident.name ld2.ld_id
-      then Some (Label_names (n, ld1.ld_id, ld2.ld_id))
+      then Some (Label_names (n, Ident.name ld1.ld_id, Ident.name ld2.ld_id))
       else begin
         Builtin_attributes.check_deprecated_mutable_inclusion
           ~def:ld1.ld_loc
