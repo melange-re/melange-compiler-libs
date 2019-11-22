@@ -368,13 +368,20 @@ and compare_records ~loc env params1 params2 n
           loc
           ld1.ld_attributes ld2.ld_attributes
           (Ident.name ld1.ld_id);
-        match compare_labels env params1 params2 ld1 ld2 with
-        | Some r -> Some (Label_mismatch (ld1, ld2, r))
-        (* add arguments to the parameters, cf. PR#7378 *)
-        | None -> compare_records ~loc env
-                    (ld1.ld_type::params1) (ld2.ld_type::params2)
-                    (n+1)
-                    rem1 rem2
+        let field_mismatch = !Builtin_attributes.check_bs_attributes_inclusion
+          ld1.ld_attributes ld2.ld_attributes
+          (Ident.name ld1.ld_id) in
+        match field_mismatch with
+        | Some (a,b) -> Some (Label_names (n,a,b))
+        | None ->
+          begin match compare_labels env params1 params2 ld1 ld2 with
+          | Some r -> Some (Label_mismatch (ld1, ld2, r))
+          (* add arguments to the parameters, cf. PR#7378 *)
+          | None -> compare_records ~loc env
+                      (ld1.ld_type::params1) (ld2.ld_type::params2)
+                      (n+1)
+                      rem1 rem2
+          end
       end
 
 let compare_records_with_representation ~loc env params1 params2 n
