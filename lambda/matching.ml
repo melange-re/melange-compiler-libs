@@ -1742,7 +1742,7 @@ let get_expr_args_variant_constant = drop_expr_arg
 
 let get_expr_args_variant_nonconst ~scopes head (arg, _mut) rem =
   let loc = head_loc ~scopes head in
-  (Lprim (Pfield (1, Fld_na), [ arg ], loc), Alias) :: rem
+  (Lprim (Pfield (1, Fld_poly_var_content), [ arg ], loc), Alias) :: rem
 
 let divide_variant ~scopes row ctx { cases = cl; args; default = def } =
   let row = Btype.row_repr row in
@@ -1969,7 +1969,7 @@ let get_expr_args_tuple ~scopes head (arg, _mut) rem =
     if pos >= arity then
       rem
     else
-      (Lprim (Pfield (pos, Fld_na), [ arg ], loc), Alias) :: make_args (pos + 1)
+      (Lprim (Pfield (pos, Fld_tuple), [ arg ], loc), Alias) :: make_args (pos + 1)
   in
   make_args 0
 
@@ -2852,7 +2852,7 @@ let call_switcher_variant_constr loc fail arg int_lambda_list names =
     ( Alias,
       Pgenval,
       v,
-      Lprim (Pfield (0, Fld_na), [ arg ], loc),
+      Lprim (Pfield (0, Fld_poly_var_tag), [ arg ], loc),
       call_switcher loc fail (Lvar v) min_int max_int int_lambda_list names)
 
 let combine_variant names loc row arg partial ctx def (tag_lambda_list, total1, _pats)

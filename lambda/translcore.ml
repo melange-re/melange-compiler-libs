@@ -501,7 +501,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
       Lapply{
         ap_loc=loc;
         ap_func=
-          Lprim(Pfield (0, Fld_na), [transl_class_path loc e.exp_env cl], loc);
+          Lprim(Pfield (0, Fld_tuple), [transl_class_path loc e.exp_env cl], loc);
         ap_args=[lambda_unit];
         ap_tailcall=Default_tailcall;
         ap_inlined=Default_inline;

@@ -278,8 +278,8 @@ let rec build_class_init ~scopes cla cstr super inh_init cl_init msubst top cl =
       | (_, path_lam, obj_init)::inh_init ->
           (inh_init,
            Llet (Strict, Pgenval, obj_init,
-                 mkappl(Lprim(Pfield (1, Fld_na), [path_lam], Loc_unknown), Lvar cla ::
-                        if top then [Lprim(Pfield (3, Fld_na), [path_lam], Loc_unknown)]
+                 mkappl(Lprim(Pfield (1, Fld_tuple), [path_lam], Loc_unknown), Lvar cla ::
+                        if top then [Lprim(Pfield (3, Fld_tuple), [path_lam], Loc_unknown)]
                         else []),
                  bind_super cla super cl_init))
       | _ ->

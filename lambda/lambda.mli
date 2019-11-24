@@ -87,6 +87,8 @@ type field_dbg_info =
   | Fld_record_inline of string
   | Fld_record_extension of string
   | Fld_tuple
+  | Fld_poly_var_tag
+  | Fld_poly_var_content
 
 val fld_record :
   (Types.label_description ->
@@ -443,6 +445,7 @@ val const_unit: structured_constant
 val const_int : ?ptr_info:pointer_info -> int -> structured_constant
 val lambda_unit: lambda
 val lambda_assert_false: lambda
+val lambda_module_alias : lambda
 val name_lambda: let_kind -> lambda -> (Ident.t -> lambda) -> lambda
 val name_lambda_list: lambda list -> (lambda list -> lambda) -> lambda
 
