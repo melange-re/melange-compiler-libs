@@ -382,7 +382,7 @@ let rec build_class_init ~scopes cla cstr super inh_init cl_init msubst top cl =
            Llet (Strict, Pgenval, inh,
                  mkappl(oo_prim "inherits", narrow_args @
                         [path_lam;
-                         Lconst(const_int (if top then 1 else 0))]),
+                         Lconst(const_int ~ptr_info:Pt_builtin_boolean (if top then 1 else 0))]),
                  Llet(StrictOpt, Pgenval, obj_init, lfield inh 0, cl_init)))
       | _ ->
           let core cl_init =

@@ -276,8 +276,8 @@ val equal_value_kind : value_kind -> value_kind -> bool
 val equal_boxed_integer : boxed_integer -> boxed_integer -> bool
 
 type pointer_info =
-  | Pt_constructor of string
-  | Pt_variant of string
+  | Pt_constructor of {name : string; cstrs : int * int}
+  | Pt_variant of {name : string}
   | Pt_module_alias
   | Pt_builtin_boolean
   | Pt_shape_none
