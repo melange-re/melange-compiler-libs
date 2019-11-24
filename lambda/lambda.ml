@@ -266,8 +266,8 @@ let equal_value_kind x y =
   | (Pgenval | Pfloatval | Pboxedintval _ | Pintval), _ -> false
 
 type pointer_info =
-  | Pt_constructor of string
-  | Pt_variant of string
+  | Pt_constructor of {name : string; cstrs : int * int}
+  | Pt_variant of {name : string}
   | Pt_module_alias
   | Pt_builtin_boolean
   | Pt_shape_none
@@ -422,13 +422,16 @@ type program =
     required_globals : Ident.Set.t;
     code : lambda }
 
-let const_int ?(ptr_info=default_pointer_info) n = Const_base (Const_int n, ptr_info)
+let const_int ?(ptr_info=Pt_na) n = Const_base (Const_int n, ptr_info)
 
+(* This is actually a dummy value
+    not necessary "()", it can be used as a place holder for module
+    alias etc.
+*)
 let const_unit = const_int 0
 
-let lambda_assert_false = Lconst (const_int ~ptr_info:(Pt_constructor "assert false") 0)
-
 let lambda_unit = Lconst const_unit
+let lambda_assert_false = Lconst (const_int ~ptr_info:(Pt_constructor {name = "assert false"; cstrs = (1,0)}) 0)
 
 let default_function_attribute = {
   inline = Default_inline;

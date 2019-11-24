@@ -333,7 +333,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
             | Longident.Lident "None"
                when Datarepr.constructor_has_optional_shape cstr
               -> Pt_shape_none
-            | _ -> (Lambda.Pt_constructor cstr.cstr_name)
+            | _ -> (Lambda.Pt_constructor {name = cstr.cstr_name; cstrs = cstr.cstr_consts,cstr.cstr_nonconsts})
           in
           Lconst(const_int ~ptr_info n)
       | Cstr_unboxed ->
@@ -370,7 +370,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
   | Texp_variant(l, arg) ->
       let tag = Btype.hash_variant l in
       begin match arg with
-        None -> Lconst(const_int ~ptr_info:(Pt_variant l) tag)
+        None -> Lconst(const_int ~ptr_info:(Pt_variant { name = l }) tag)
       | Some arg ->
           let lam = transl_exp ~scopes arg in
           let tag_info = Lambda.Blk_variant l in

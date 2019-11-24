@@ -262,6 +262,7 @@ let undefined_location loc =
 
 exception Initialization_failure of unsafe_info
 
+let cstrs = (3,2)
 let init_shape id modl =
   let add_name x id =
     if !Clflags.bs_only then
@@ -288,9 +289,9 @@ let init_shape id modl =
         let init_v =
           match Ctype.expand_head env ty with
             {desc = Tarrow(_,_,_,_)} ->
-              const_int 0 (* camlinternalMod.Function *)
+              const_int 0 ~ptr_info:(Pt_constructor{name = "Function"; cstrs})(* camlinternalMod.Function *)
           | {desc = Tconstr(p, _, _)} when Path.same p Predef.path_lazy_t ->
-              const_int 1 (* camlinternalMod.Lazy *)
+              const_int 1 ~ptr_info:(Pt_constructor{name = "Lazy"; cstrs}) (* camlinternalMod.Lazy *)
           | _ ->
               let not_a_function =
                 Unsafe {reason=Unsafe_non_function; loc; subid }
@@ -316,7 +317,7 @@ let init_shape id modl =
     | Sig_modtype(id, minfo, _) :: rem ->
         init_shape_struct (Env.add_modtype id minfo env) rem
     | Sig_class (id, _, _, _) :: rem ->
-        (add_name (const_int 2) id) (* camlinternalMod.Class *)
+        (add_name (const_int ~ptr_info:(Pt_constructor{name = "Class";cstrs}) 2) id) (* camlinternalMod.Class *)
         :: init_shape_struct env rem
     | Sig_class_type _ :: rem ->
         init_shape_struct env rem
