@@ -70,6 +70,8 @@ type field_dbg_info =
   | Fld_record_inline of string
   | Fld_record_extension of string
   | Fld_tuple
+  | Fld_poly_var_tag
+  | Fld_poly_var_content
 
 let fld_record = ref (fun (lbl : Types.label_description) ->
   Fld_record {name = lbl.lbl_name; mutable_flag = Mutable})
@@ -430,8 +432,11 @@ let const_int ?(ptr_info=Pt_na) n = Const_base (Const_int n, ptr_info)
 *)
 let const_unit = const_int 0
 
-let lambda_unit = Lconst const_unit
 let lambda_assert_false = Lconst (const_int ~ptr_info:(Pt_constructor {name = "assert false"; cstrs = (1,0)}) 0)
+
+let lambda_unit = Lconst const_unit
+
+let lambda_module_alias = Lconst (const_int ~ptr_info:Pt_module_alias 0)
 
 let default_function_attribute = {
   inline = Default_inline;
