@@ -159,6 +159,10 @@ let check_bs_attributes_inclusion =
       None
     )
 
+let check_duplicated_labels = ref (fun _lbls ->
+  failwith "check_duplicated_label not implemented"
+)
+
 let rec attrs_of_sig = function
   | {psig_desc = Psig_attribute a} :: tl ->
       a :: attrs_of_sig tl
