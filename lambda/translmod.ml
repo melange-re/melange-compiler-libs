@@ -88,9 +88,9 @@ let rec apply_coercion loc strict restr arg =
       assert (List.length runtime_fields = List.length pos_cc_list);
       let names = Array.of_list runtime_fields in
       name_lambda strict arg (fun id ->
-        let get_field_i i pos = Lprim(Pfield (pos, Fld_module names.(i)),[Lvar id], loc) in
+        let get_field_i i pos = Lprim(Pfield (pos, Fld_module { name = names.(i) }),[Lvar id], loc) in
         let get_field_name name pos =
-            Lprim (Pfield (pos, Fld_module name), [Lvar id], loc) in
+            Lprim (Pfield (pos, Fld_module {name}), [Lvar id], loc) in
         let lam =
           Lprim(Pmakeblock(0, Lambda.Blk_module runtime_fields, Immutable, None),
                 List.mapi (fun i x -> apply_coercion_field loc (get_field_i i) x) pos_cc_list,
@@ -782,7 +782,7 @@ and transl_structure ~scopes loc fields cc rootpath final_env = function
                   rebind_idents (pos + 1) (id :: newfields) ids
                 in
                 Llet(Alias, Pgenval, id,
-                     Lprim(Pfield (pos, Fld_module (Ident.name id)), [Lvar mid],
+                     Lprim(Pfield (pos, Fld_module { name = (Ident.name id) }), [Lvar mid],
                            of_location ~scopes incl.incl_loc), body),
                 size
           in

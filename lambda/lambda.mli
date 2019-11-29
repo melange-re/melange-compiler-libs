@@ -31,7 +31,7 @@ type tag_info =
   | Blk_constructor of string * int (* Number of non-const constructors*)
   | Blk_tuple
   | Blk_array
-  | Blk_variant of string
+  | Blk_poly_var of string
   | Blk_record of string array
   | Blk_module of string list
   | Blk_module_export of Ident.t list
@@ -83,13 +83,13 @@ val ref_tag_info : tag_info
 type field_dbg_info =
   | Fld_na
   | Fld_record of {name : string; mutable_flag : Asttypes.mutable_flag}
-  | Fld_module of string
-  | Fld_record_inline of string
-  | Fld_record_extension of string
+  | Fld_module of {name : string}
+  | Fld_record_inline of {name : string}
+  | Fld_record_extension of {name : string}
   | Fld_tuple
   | Fld_poly_var_tag
   | Fld_poly_var_content
-
+  | Fld_extension_slot
 val fld_record :
   (Types.label_description ->
   field_dbg_info) ref
