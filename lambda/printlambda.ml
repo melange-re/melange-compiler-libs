@@ -146,6 +146,16 @@ let float_comparison ppf = function
   | CFge -> fprintf ppf ">=."
   | CFnge -> fprintf ppf "!>=."
 
+let str_of_field_info (fld_info : Lambda.field_dbg_info)=
+  match fld_info with
+  | (Fld_module {name } | Fld_record {name} | Fld_record_inline {name} | Fld_record_extension {name})
+    -> name
+  | Fld_na  -> "na"
+  | Fld_tuple -> "[]"
+  | Fld_poly_var_tag->"`"
+  | Fld_poly_var_content -> "#"
+  | Fld_extension_slot -> "ext"
+
 let primitive ppf = function
   | Pidentity -> fprintf ppf "id"
   | Pbytes_to_string -> fprintf ppf "bytes_to_string"
@@ -159,8 +169,7 @@ let primitive ppf = function
       fprintf ppf "makeblock %i%a" tag block_shape shape
   | Pmakeblock(tag, _, Mutable, shape) ->
       fprintf ppf "makemutable %i%a" tag block_shape shape
-  | Pfield (n, (Fld_module s | Fld_record {name=s})) -> fprintf ppf "field:%s/%i" s n
-  | Pfield (n,_) -> fprintf ppf "field %i" n
+  | Pfield (n, fld) -> fprintf ppf "field:%s/%i" (str_of_field_info fld) n
   | Pfield_computed -> fprintf ppf "field_computed"
   | Psetfield(n, ptr, init, _) ->
       let instr =

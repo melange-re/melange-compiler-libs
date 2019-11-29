@@ -191,9 +191,9 @@ let assert_failed ~scopes exp =
   in
 #end
   Lprim(Praise Raise_regular, [event_after ~scopes exp
-    (Lprim(Pmakeblock(0, Lambda.Blk_extension, Immutable, None),
+    (Lprim(Pmakeblock(0, Blk_extension, Immutable, None),
           [slot;
-           Lconst(Const_block(0, Lambda.Blk_tuple,
+           Lconst(Const_block(0, Blk_tuple,
               [Const_base(Const_string (fname, exp.exp_loc, None), default_pointer_info);
                Const_base(Const_int line, default_pointer_info);
                Const_base(Const_int char, default_pointer_info)]))], loc))], loc)
@@ -373,7 +373,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
         None -> Lconst(const_int ~ptr_info:(Pt_variant { name = l }) tag)
       | Some arg ->
           let lam = transl_exp ~scopes arg in
-          let tag_info = Lambda.Blk_variant l in
+          let tag_info = Blk_poly_var l in
           try
             Lconst(Const_block(0, tag_info, [const_int tag;
                                    extract_constant lam]))
@@ -391,12 +391,12 @@ and transl_exp0 ~in_new_scope ~scopes e =
           Record_regular ->
           Lprim (Pfield (lbl.lbl_pos, !Lambda.fld_record lbl), [targ], of_location ~scopes e.exp_loc)
         | Record_inlined _ ->
-          Lprim (Pfield (lbl.lbl_pos, Fld_record_inline lbl.lbl_name), [targ],
+          Lprim (Pfield (lbl.lbl_pos, Fld_record_inline { name = lbl.lbl_name }), [targ],
                  of_location ~scopes e.exp_loc)
         | Record_unboxed _ -> targ
         | Record_float -> Lprim (Pfloatfield (lbl.lbl_pos, !Lambda.fld_record lbl), [targ], of_location ~scopes e.exp_loc)
         | Record_extension _ ->
-          Lprim (Pfield (lbl.lbl_pos + 1, Fld_record_extension lbl.lbl_name), [targ], of_location ~scopes e.exp_loc)
+          Lprim (Pfield (lbl.lbl_pos + 1, Fld_record_extension { name = lbl.lbl_name }), [targ], of_location ~scopes e.exp_loc)
       end
   | Texp_setfield(arg, _, lbl, newval) ->
       let access =
@@ -979,9 +979,9 @@ and transl_record ~scopes loc env fields repres opt_init_expr =
                let access =
                  match repres with
                    Record_regular ->   Pfield (i, !Lambda.fld_record lbl)
-                 | Record_inlined _ -> Pfield (i, Fld_record_inline lbl.lbl_name)
+                 | Record_inlined _ -> Pfield (i, Fld_record_inline { name = lbl.lbl_name })
                  | Record_unboxed _ -> assert false
-                 | Record_extension _ -> Pfield (i + 1, Fld_record_extension lbl.lbl_name)
+                 | Record_extension _ -> Pfield (i + 1, Fld_record_extension { name = lbl.lbl_name })
                  | Record_float -> Pfloatfield (i, !Lambda.fld_record lbl) in
                Lprim(access, [Lvar init_id],
                      of_location ~scopes loc),

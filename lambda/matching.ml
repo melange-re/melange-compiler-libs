@@ -2014,10 +2014,10 @@ let get_expr_args_record ~scopes head (arg, _mut) rem =
         | Record_regular  ->
           Lprim (Pfield (lbl.lbl_pos, !Lambda.fld_record lbl), [arg], loc)
         | Record_inlined _ ->
-          Lprim (Pfield (lbl.lbl_pos, Fld_record_inline lbl.lbl_name), [arg], loc)
+          Lprim (Pfield (lbl.lbl_pos, Fld_record_inline { name = lbl.lbl_name}), [arg], loc)
         | Record_unboxed _ -> arg
         | Record_float -> Lprim (Pfloatfield (lbl.lbl_pos, !Lambda.fld_record lbl), [arg], loc)
-        | Record_extension _ -> Lprim (Pfield (lbl.lbl_pos + 1, Fld_record_extension lbl.lbl_name), [ arg ], loc)
+        | Record_extension _ -> Lprim (Pfield (lbl.lbl_pos + 1, Fld_record_extension { name = lbl.lbl_name }), [ arg ], loc)
       in
       let str =
         match lbl.lbl_mut with
@@ -2753,7 +2753,7 @@ let combine_constructor sw_names loc arg pat_env cstr partial ctx def
                       (Lprim (Pintcomp Ceq, [ Lvar tag; ext ], loc), act, rem))
                   nonconsts default
               in
-              Llet (Alias, Pgenval, tag, Lprim (Pfield (0, Fld_na), [ arg ], loc), tests)
+              Llet (Alias, Pgenval, tag, Lprim (Pfield (0, Fld_extension_slot), [ arg ], loc), tests)
         in
         List.fold_right
           (fun (path, act) rem ->
@@ -3404,7 +3404,7 @@ let failure_handler ~scopes loc ~failer () =
     in
     let fname, line, char =
       Location.get_pos_info loc.Location.loc_start in
-#if undefined BS_NO_COMPILER_PATCH then
+#if true then
     let fname =
       Filename.basename fname
     in
@@ -3412,12 +3412,12 @@ let failure_handler ~scopes loc ~failer () =
     Lprim
       ( Praise Raise_regular,
         [ Lprim
-            ( Pmakeblock (0, Lambda.Blk_extension, Immutable, None),
+            ( Pmakeblock (0, Blk_extension, Immutable, None),
               [ slot;
                 Lconst
                   (Const_block
                      ( 0,
-                       Lambda.Blk_tuple,
+                       Blk_tuple,
                        [ Const_base (Const_string (fname, loc, None), default_pointer_info);
                          Const_base (Const_int line, default_pointer_info);
                          Const_base (Const_int char, default_pointer_info)
