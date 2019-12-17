@@ -147,8 +147,8 @@ let array_type_kind env ty =
   | Tconstr(p, [elt_ty], _) | Tpoly({desc = Tconstr(p, [elt_ty], _)}, _)
     when Path.same p Predef.path_array ->
       begin match classify env elt_ty with
-      | Any -> if Config.flat_float_array then Pgenarray else Paddrarray
-      | Float -> if Config.flat_float_array then Pfloatarray else Paddrarray
+      | Any -> if not !Clflags.bs_only && Config.flat_float_array   then Pgenarray else Paddrarray
+      | Float -> if not !Clflags.bs_only && Config.flat_float_array  then Pfloatarray else Paddrarray
       | Addr | Lazy -> Paddrarray
       | Int -> Pintarray
       end

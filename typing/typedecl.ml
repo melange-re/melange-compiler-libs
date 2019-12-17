@@ -74,10 +74,6 @@ exception Error of Location.t * error
    the records must be constants for the compiler to do sharing on them.
 *)
 let get_unboxed_from_attributes sdecl =
-#if true then
-  if !Clflags.bs_only then unboxed_false_default_false
-  else
-#end
   let unboxed = Builtin_attributes.has_unboxed sdecl.ptype_attributes in
   let boxed = Builtin_attributes.has_boxed sdecl.ptype_attributes in
   match boxed, unboxed, !Clflags.unboxed_types with
@@ -390,8 +386,8 @@ let transl_declaration env sdecl (id, uid) =
       | Ptype_record lbls ->
           let lbls, lbls' = transl_labels env true lbls in
           let rep =
-            if !Clflags.bs_only then Record_regular else (* ATTENTION: revisit when we support @@unbox*)
             if unbox then Record_unboxed false
+            else if !Clflags.bs_only then Record_regular
             else if List.for_all (fun l -> is_float env l.Types.ld_type) lbls'
             then Record_float
             else Record_regular
