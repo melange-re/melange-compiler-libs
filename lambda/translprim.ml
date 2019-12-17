@@ -110,7 +110,7 @@ let get_used_primitives () =
   Hashtbl.fold (fun path _ acc -> path :: acc) used_primitives []
 
 let gen_array_kind =
-  if Config.flat_float_array then Pgenarray else Paddrarray
+  if not !Clflags.bs_only && Config.flat_float_array then Pgenarray else Paddrarray
 
 let prim_sys_argv =
   Primitive.simple ~name:"caml_sys_argv" ~arity:1 ~alloc:true
