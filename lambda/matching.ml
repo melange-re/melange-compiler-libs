@@ -1710,7 +1710,7 @@ let get_expr_args_constr ~scopes head (arg, _mut) rem =
   else
     match cstr.cstr_tag with
     | Cstr_block _ when
-        !Clflags.bs_only &&
+        !Config.bs_only &&
         Datarepr.constructor_has_optional_shape cstr
       ->
         begin
@@ -1845,7 +1845,7 @@ let code_force =
 *)
 
 let inline_lazy_force_cond arg loc =
-  if !Clflags.bs_only then
+  if !Config.bs_only then
     Lapply {ap_tailcall=Default_tailcall; ap_func = Lazy.force code_force; ap_inlined = Default_inline; ap_specialised = Default_specialise; ap_args = [arg]; ap_loc = loc}
   else
   let idarg = Ident.create_local "lzarg" in
@@ -2790,7 +2790,7 @@ let combine_constructor sw_names loc arg pat_env cstr partial ctx def
                 (* Typically, match on lists, will avoid isint primitive in that
               case *)
                 let arg =
-                  if !Clflags.bs_only && Datarepr.constructor_has_optional_shape cstr then
+                  if !Config.bs_only && Datarepr.constructor_has_optional_shape cstr then
                     Lprim(is_none_bs_primitve , [arg], loc)
                   else arg
                 in
@@ -3255,7 +3255,7 @@ and do_compile_matching ~scopes repr partial ctx pmh =
             (combine_constant None ploc arg cst partial)
             ctx pm
       | Construct cstr ->
-          let sw_names = if !Clflags.bs_only
+          let sw_names = if !Config.bs_only
             then !names_from_construct_pattern
               (what_is_cases_pat
                 (List.map (fun ((x, ps), _lam) -> ps, x) pm.cases))
@@ -3629,7 +3629,7 @@ let for_let ~scopes loc param pat body =
   | _ ->
 #if true then
       (* Turn off such optimization to reduce diff in the beginning*)
-      if !Clflags.bs_only then simple_for_let ~scopes loc param pat body
+      if !Config.bs_only then simple_for_let ~scopes loc param pat body
       else
 #end
       let opt = ref false in

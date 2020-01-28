@@ -162,7 +162,7 @@ let event_after ~scopes exp lam =
   Translprim.event_after (of_location ~scopes exp.exp_loc) exp lam
 
 let event_function ~scopes exp lam =
-  if !Clflags.record_event_when_debug && !Clflags.debug && not !Clflags.bs_only then
+  if !Clflags.record_event_when_debug && !Clflags.debug && not !Config.bs_only then
     let repr = Some (ref 0) in
     let (info, body) = lam repr in
     (info,
@@ -416,7 +416,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
       let kind = array_kind e in
       let ll = transl_list ~scopes expr_list in
 #if true then
-      if !Clflags.bs_only then
+      if !Config.bs_only then
          Lprim(Pmakearray (kind, Mutable), ll, of_location ~scopes e.exp_loc)
       else
 #end
@@ -544,7 +544,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
   | Texp_letmodule(Some id, loc, Mp_present, modl, body) ->
       let defining_expr =
 #if true then
-        if !Clflags.bs_only then !transl_module ~scopes Tcoerce_none None modl
+        if !Config.bs_only then !transl_module ~scopes Tcoerce_none None modl
         else
 #end
         let mod_scopes = enter_module_definition ~scopes id in
@@ -962,7 +962,7 @@ and transl_record ~scopes loc env fields repres opt_init_expr =
   (* Determine if there are "enough" fields (only relevant if this is a
      functional-style record update *)
   let no_init = match opt_init_expr with None -> true | _ -> false in
-  if no_init || size < (if !Clflags.bs_only then 20 else Config.max_young_wosize)
+  if no_init || size < (if !Config.bs_only then 20 else Config.max_young_wosize)
   (* TODO: More strategies
      3 + 2 * List.length lbl_expr_list >= size (density)
   *)
@@ -1005,7 +1005,7 @@ and transl_record ~scopes loc env fields repres opt_init_expr =
         | Record_inlined {tag;name;num_nonconsts} -> Lconst(Const_block(tag, !Lambda.blk_record_inlined fields name num_nonconsts, cl))
         | Record_unboxed _ -> Lconst(match cl with [v] -> v | _ -> assert false)
         | Record_float ->
-            if !Clflags.bs_only then Lconst(Const_block(0, !Lambda.blk_record fields, cl))
+            if !Config.bs_only then Lconst(Const_block(0, !Lambda.blk_record fields, cl))
             else
             Lconst(Const_float_array(List.map extract_float cl))
         | Record_extension _ ->
@@ -1019,7 +1019,7 @@ and transl_record ~scopes loc env fields repres opt_init_expr =
             Lprim(Pmakeblock(tag, !Lambda.blk_record_inlined fields name num_nonconsts, mut, Some shape), ll, loc)
         | Record_unboxed _ -> (match ll with [v] -> v | _ -> assert false)
         | Record_float ->
-            if !Clflags.bs_only then Lprim(Pmakeblock(0, !Lambda.blk_record fields, mut, Some shape), ll, loc)
+            if !Config.bs_only then Lprim(Pmakeblock(0, !Lambda.blk_record fields, mut, Some shape), ll, loc)
             else
             Lprim(Pmakearray (Pfloatarray, mut), ll, loc)
         | Record_extension path ->
