@@ -231,7 +231,7 @@ let bs_update_mod args loc : Lambda.lambda =
     ~alloc:true), args, loc)
 
 let mod_prim name args loc =
-  if !Clflags.bs_only then
+  if !Config.bs_only then
     if name = "init_mod" then
       bs_init_mod args loc
     else if name = "update_mod" then
@@ -265,7 +265,7 @@ exception Initialization_failure of unsafe_info
 let cstrs = (3,2)
 let init_shape id modl =
   let add_name x id =
-    if !Clflags.bs_only then
+    if !Config.bs_only then
       Const_block (0, Blk_tuple, [x; Const_base (Const_string (Ident.name id, Location.none, None), Lambda.default_pointer_info)])
     else x in
   let rec init_shape_mod subid loc env mty =
@@ -636,7 +636,7 @@ and transl_structure ~scopes loc fields cc rootpath final_env = function
       (* This debugging event provides information regarding the structure
          items. It is ignored by the OCaml debugger but is used by
          Js_of_ocaml to preserve variable names. *)
-      (if !Clflags.debug && not !Clflags.bs_only then
+      (if !Clflags.debug && not !Config.bs_only then
          Levent(body,
                 {lev_loc = loc;
                  lev_kind = Lev_pseudo;
@@ -714,7 +714,7 @@ and transl_structure ~scopes loc fields cc rootpath final_env = function
           | Some id ->
               let module_body =
 #if true then
-            if !Clflags.bs_only then module_body
+            if !Config.bs_only then module_body
             else
 #end
                 Levent (module_body, {
@@ -751,7 +751,7 @@ and transl_structure ~scopes loc fields cc rootpath final_env = function
                       Tcoerce_none (field_path rootpath id) modl
                   in
 #if true then
-                 if !Clflags.bs_only then module_body
+                 if !Config.bs_only then module_body
                  else
 #end
                   Levent (module_body, {

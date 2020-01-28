@@ -35,7 +35,7 @@ exception Error of Location.t * error
 let event_before loc exp lam = match lam with
 | Lstaticraise (_,_) -> lam
 | _ ->
-  if !Clflags.record_event_when_debug && !Clflags.debug && not !Clflags.bs_only
+  if !Clflags.record_event_when_debug && !Clflags.debug && not !Config.bs_only
   then Levent(lam, {lev_loc = loc;
                     lev_kind = Lev_before;
                     lev_repr = None;
@@ -43,7 +43,7 @@ let event_before loc exp lam = match lam with
   else lam
 
 let event_after loc exp lam =
-  if !Clflags.record_event_when_debug && !Clflags.debug && not !Clflags.bs_only
+  if !Clflags.record_event_when_debug && !Clflags.debug && not !Config.bs_only
   then Levent(lam, {lev_loc = loc;
                     lev_kind = Lev_after exp.exp_type;
                     lev_repr = None;
@@ -110,14 +110,14 @@ let get_used_primitives () =
   Hashtbl.fold (fun path _ acc -> path :: acc) used_primitives []
 
 let gen_array_kind =
-  if not !Clflags.bs_only && Config.flat_float_array then Pgenarray else Paddrarray
+  if not !Config.bs_only && Config.flat_float_array then Pgenarray else Paddrarray
 
 let prim_sys_argv =
   Primitive.simple ~name:"caml_sys_argv" ~arity:1 ~alloc:true
 
 let arity2 name : Lambda.primitive = Lambda.Pccall (Primitive.simple ~name ~arity:2 ~alloc:true)
 let more_bs_primitives ls =
-  if !Clflags.bs_only then
+  if !Config.bs_only then
     ("%bs_max", Comparison(Max, Compare_generic)) ::
     ("%bs_min", Comparison(Min, Compare_generic)) ::
     ("%bs_equal_null", Comparison(Null, Compare_generic)) ::
@@ -569,7 +569,7 @@ let comparison_primitive comparison comparison_kind =
   | Equal, Compare_generic -> Pccall caml_equal
   | Equal, Compare_ints -> Pintcomp Ceq
   | Equal, Compare_bools ->
-      if not !Clflags.bs_only then Pintcomp Ceq
+      if not !Config.bs_only then Pintcomp Ceq
       else Pccall (Primitive.simple ~name:"caml_bool_equal" ~arity:2
                       ~alloc:false);
   | Equal, Compare_floats -> Pfloatcomp CFeq
@@ -581,7 +581,7 @@ let comparison_primitive comparison comparison_kind =
   | Not_equal, Compare_generic -> Pccall caml_notequal
   | Not_equal, Compare_ints -> Pintcomp Cne
   | Not_equal, Compare_bools ->
-      if not !Clflags.bs_only then Pintcomp Cne
+      if not !Config.bs_only then Pintcomp Cne
       else Pccall (Primitive.simple ~name:"caml_bool_notequal" ~arity:2
                   ~alloc:false)
   | Not_equal, Compare_floats -> Pfloatcomp CFneq
@@ -593,7 +593,7 @@ let comparison_primitive comparison comparison_kind =
   | Less_equal, Compare_generic -> Pccall caml_lessequal
   | Less_equal, Compare_ints -> Pintcomp Cle
   | Less_equal, Compare_bools ->
-    if not !Clflags.bs_only then Pintcomp Cle
+    if not !Config.bs_only then Pintcomp Cle
     else Pccall( Primitive.simple ~name:"caml_bool_lessequal" ~arity:2
                     ~alloc:false);
   | Less_equal, Compare_floats -> Pfloatcomp CFle
@@ -605,7 +605,7 @@ let comparison_primitive comparison comparison_kind =
   | Less_than, Compare_generic -> Pccall caml_lessthan
   | Less_than, Compare_ints -> Pintcomp Clt
   | Less_than, Compare_bools ->
-    if not !Clflags.bs_only then Pintcomp Clt
+    if not !Config.bs_only then Pintcomp Clt
     else Pccall (Primitive.simple ~name:"caml_bool_lessthan" ~arity:2
                      ~alloc:false)
 
@@ -618,7 +618,7 @@ let comparison_primitive comparison comparison_kind =
   | Greater_equal, Compare_generic -> Pccall caml_greaterequal
   | Greater_equal, Compare_ints -> Pintcomp Cge
   | Greater_equal, Compare_bools ->
-    if not !Clflags.bs_only then Pintcomp Cge
+    if not !Config.bs_only then Pintcomp Cge
     else Pccall (Primitive.simple ~name:"caml_bool_greaterequal" ~arity:2
                     ~alloc:false);
   | Greater_equal, Compare_floats -> Pfloatcomp CFge
@@ -630,7 +630,7 @@ let comparison_primitive comparison comparison_kind =
   | Greater_than, Compare_generic -> Pccall caml_greaterthan
   | Greater_than, Compare_ints -> Pintcomp Cgt
   | Greater_than, Compare_bools ->
-    if not !Clflags.bs_only then Pintcomp Cgt
+    if not !Config.bs_only then Pintcomp Cgt
     else Pccall (Primitive.simple ~name:"caml_bool_greaterthan" ~arity:2
             ~alloc:false);
   | Greater_than, Compare_floats -> Pfloatcomp CFgt
@@ -642,7 +642,7 @@ let comparison_primitive comparison comparison_kind =
   | Compare, Compare_generic -> Pccall caml_compare
   | Compare, Compare_ints -> Pcompare_ints
   | Compare, Compare_bools ->
-    if not !Clflags.bs_only then
+    if not !Config.bs_only then
       Pcompare_ints
     else
       Pccall (Primitive.simple ~name: "caml_bool_compare" ~arity:2 ~alloc:false);
