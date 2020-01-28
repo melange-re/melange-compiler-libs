@@ -598,8 +598,11 @@ let parse_options errflag s =
 let defaults_w = "+a-4-6-7-9-27-29-30-32..42-44-45-48-50-60-66-67-68-102";;
 let defaults_warn_error = "-a+31";;
 
-let () = parse_options false defaults_w;;
-let () = parse_options true defaults_warn_error;;
+let () = 
+  if not !Config.bs_only then (
+    parse_options false defaults_w;
+    parse_options true defaults_warn_error;
+  )
 
 let ref_manual_explanation () =
   (* manual references are checked a posteriori by the manual
