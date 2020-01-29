@@ -93,12 +93,15 @@ type t =
   | Unused_open_bang of string              (* 66 *)
   | Unused_functor_parameter of string      (* 67 *)
   | Match_on_mutable_state_prevent_uncurry  (* 68 *)
-#if undefined BS_NO_COMPILER_PATCH then
+#if true then
   | Bs_unused_attribute of string           (* 101 *)
   | Bs_polymorphic_comparison               (* 102 *)
   | Bs_ffi_warning of string                (* 103 *)
   | Bs_derive_warning of string             (* 104 *)
   | Bs_fragile_external of string           (* 105 *)
+  | Bs_unimplemented_primitive of string    (* 106 *)
+  | Bs_integer_literal_overflow              (* 107 *)
+  | Bs_uninterpreted_delimiters of string   (* 108 *)
 #end
 ;;
 
@@ -178,17 +181,19 @@ let number = function
   | Unused_open_bang _ -> 66
   | Unused_functor_parameter _ -> 67
   | Match_on_mutable_state_prevent_uncurry -> 68
-#if undefined BS_NO_COMPILER_PATCH then
+#if true then
   | Bs_unused_attribute _ -> 101
   | Bs_polymorphic_comparison -> 102
   | Bs_ffi_warning _ -> 103
   | Bs_derive_warning _ -> 104
   | Bs_fragile_external _ -> 105
+  | Bs_unimplemented_primitive _ -> 106
+  | Bs_integer_literal_overflow -> 107
+  | Bs_uninterpreted_delimiters _ -> 108
 #end
 ;;
 
-let last_warning_number = 105
-;;
+let last_warning_number = 108
 
 (* Third component of each tuple is the list of names for each warning. The
    first element of the list is the current name, any following ones are
@@ -351,7 +356,10 @@ let descriptions =
    102, "polymorphic comparison introduced (maybe unsafe)", ["polymorphic-comparison-introduced"];
    103, "BuckleScript FFI warning: ", [ "bucklescript-ffi-warning" ];
    104, "BuckleScript bs.deriving warning: ", [ "bucklescript-bs-deriving" ];
-   105, "BuckleScript fragile external warning ", [ "bucklescript-fragile-external" ]
+   105, "BuckleScript fragile external warning ", [ "bucklescript-fragile-external" ];
+   106, "BuckleScript unimplemented primitive warning ", [ "bucklescript-unimplemented-primitive" ];
+   107, "BuckleScript literal integer overflow warning ", [ "bucklescript-literal-int-overflow" ];
+   109, "BuckleScript uninterpreted delimiters warning ", [ "bucklescript-uninterpreted-delimiters" ];
 #end
   ]
 ;;
@@ -598,7 +606,7 @@ let parse_options errflag s =
 let defaults_w = "+a-4-6-7-9-27-29-30-32..42-44-45-48-50-60-66-67-68-102";;
 let defaults_warn_error = "-a+31";;
 
-let () = 
+let () =
   if not !Config.bs_only then (
     parse_options false defaults_w;
     parse_options true defaults_warn_error;
@@ -852,6 +860,12 @@ let message = function
       "BuckleScript bs.deriving warning: " ^ s
   | Bs_fragile_external s ->
       "BuckleScript warning: " ^ s ^" : the external name is inferred from val name is unsafe from refactoring when changing value name"
+  | Bs_unimplemented_primitive s ->
+      "BuckleScript warning: Unimplemented primitive used:" ^ s
+  | Bs_integer_literal_overflow ->
+      "BuckleScript warning: Integer literal exceeds the range of representable integers of type int"
+  | Bs_uninterpreted_delimiters s ->
+      "BuckleScript warning: Uninterpreted delimiters" ^ s
 #end
 ;;
 
