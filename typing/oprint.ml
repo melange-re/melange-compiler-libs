@@ -294,10 +294,8 @@ and print_simple_out_type ppf =
     Otyp_class (ng, id, tyl) ->
       fprintf ppf "@[%a%s#%a@]" print_typargs tyl (if ng then "_" else "")
         print_ident id
-#if undefined BS_NO_COMPILER_PATCH then
-  | Otyp_constr ( (Oide_dot (
-      ((Oide_dot (Oide_ident { printed_name = "Js"}, "Internal")) | (Oide_ident { printed_name = "Js_internal"})),
-                             ("fn" | "meth" as name )) as id) ,
+#if true then
+  | Otyp_constr (Oide_dot (Oide_dot (Oide_ident { printed_name = "Js" }, "Internal"), "fn") as id,
                  ([Otyp_variant(_,Ovar_fields [ variant, _, tys], _,_); result] as tyl))
     ->
       (* Otyp_arrow*)
@@ -325,16 +323,39 @@ and print_simple_out_type ppf =
             pp_close_box ppf ()
           end
       | res ->
-          begin match name  with
-          | "fn" ->
-              fprintf ppf "@[<0>(%a@ [@bs])@]" print_out_type_1 res
-          | "meth" ->
-              fprintf ppf "@[<0>(%a@ [@bs.meth])@]" print_out_type_1 res
-          | _ -> assert false
-          end
+          fprintf ppf "@[<0>(%a@ [@bs])@]" print_out_type_1 res
       end
-  | Otyp_constr ((Oide_dot ((Oide_dot (Oide_ident { printed_name = "Js"}, "Internal")
-                  | (Oide_ident { printed_name = "Js_internal"})), "meth_callback" ) as id) ,
+  | Otyp_constr (Oide_dot (Oide_ident { printed_name = "Js_internalOO" }, "meth" ) as id ,
+                 ([Otyp_variant(_,Ovar_fields [ variant, _, tys], _,_); result] as tyl))
+    ->
+      (* Otyp_arrow*)
+      let make tys result =
+        if tys = [] then
+          Otyp_arrow ("", Otyp_constr (Oide_ident { printed_name = "unit" }, []),result)
+        else
+          match tys with
+          | [ Otyp_tuple tys as single] ->
+              if variant = "Arity_1" then
+                Otyp_arrow ("", single, result)
+              else
+                List.fold_right (fun x acc  -> Otyp_arrow("",x,acc) ) tys result
+          | [single] ->
+              Otyp_arrow ("", single, result)
+          | _ ->
+              raise_notrace Not_found
+      in
+      begin match (make tys result) with
+      | exception _ ->
+          begin
+            pp_open_box ppf 0;
+            print_typargs ppf tyl;
+            print_ident ppf id;
+            pp_close_box ppf ()
+          end
+      | res ->
+          fprintf ppf "@[<0>(%a@ [@bs.meth])@]" print_out_type_1 res
+      end
+  | Otyp_constr (Oide_dot (Oide_ident { printed_name = "Js_internalOO" }, "meth_callback" ) as id ,
                  ([Otyp_variant(_,Ovar_fields [ variant, _, tys], _,_); result] as tyl))
     ->
       let make tys result =
