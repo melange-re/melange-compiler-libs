@@ -1158,9 +1158,9 @@ let rec extract_equiv_head p l =
         ([], l)
   | _ -> ([], l)
 
-let is_none_bs_primitve : Lambda.primitive =
+let is_not_none_bs_primitve : Lambda.primitive =
   Pccall
-    (Primitive.simple ~name:"#is_none" ~arity:1 ~alloc:false)
+    (Primitive.simple ~name:"#is_not_none" ~arity:1 ~alloc:false)
 
 let val_from_option_bs_primitive : Lambda.primitive =
   Pccall
@@ -2791,7 +2791,7 @@ let combine_constructor sw_names loc arg pat_env cstr partial ctx def
               case *)
                 let arg =
                   if !Config.bs_only && Datarepr.constructor_has_optional_shape cstr then
-                    Lprim(is_none_bs_primitve , [arg], loc)
+                    Lprim(is_not_none_bs_primitve , [arg], loc)
                   else arg
                 in
                 Lifthenelse(arg, act2, act1)
@@ -3060,6 +3060,10 @@ let rec lower_bind v arg lam =
         bind Alias v arg lam
       else
         Llet (Alias, k, vv, lv, lower_bind v arg l)
+#if true then
+| Lvar u when Ident.same u v && Ident.name u = "*sth*" ->
+    arg (* eliminate let *sth* = from_option x in *sth* *)
+#end
   | _ -> bind Alias v arg lam
 
 let bind_check str v arg lam =
