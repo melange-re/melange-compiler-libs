@@ -632,8 +632,17 @@ let rec lam ppf = function
   | Lsend (k, met, obj, largs, _) ->
       let args ppf largs =
         List.iter (fun l -> fprintf ppf "@ %a" lam l) largs in
+#if true then         
+      let kind = 
+        match k with 
+        | Self -> "self"    
+        | Cached -> "cache"
+        | Public (Some x) -> x 
+        | Public None -> "" in
+#else
       let kind =
         if k = Self then "self" else if k = Cached then "cache" else "" in
+#end        
       fprintf ppf "@[<2>(send%s@ %a@ %a%a)@]" kind lam obj lam met args largs
   | Levent(expr, ev) ->
       let kind =
