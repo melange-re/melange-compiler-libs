@@ -22,8 +22,9 @@ let cautious f ppf arg =
   try f ppf arg with
     Ellipsis -> fprintf ppf "..."
 
-#if undefined BS_NO_COMPILER_PATCH then
+#if true then
 let out_ident = ref pp_print_string
+let map_primitive_name = ref (fun x -> x)
 #end
 
 let print_lident ppf = function
@@ -707,15 +708,7 @@ and print_out_sig_item ppf =
             List.iter (fun s ->
 (* TODO: in general, we should print bs attributes, some attributes like
   bs.splice does need it *)
-#if undefined BS_NO_COMPILER_PATCH then
-    let len = String.length s in
-    if len >= 3 && s.[0] = 'B' && s.[1] = 'S' && s.[2] = ':' then
-      fprintf ppf "@ \"BS-EXTERNAL\""
-    else
-      fprintf ppf "@ \"%s\"" s
-#else
-      fprintf ppf "@ \"%s\"" s
-#end
+      fprintf ppf "@ \"%s\"" (!map_primitive_name s)
               ) sl
       in
       fprintf ppf "@[<2>%s %a :@ %a%a%a@]" kwd value_ident vd.oval_name
