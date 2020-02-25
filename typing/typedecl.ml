@@ -1381,10 +1381,9 @@ let transl_value_decl env loc valdecl =
       in
       let prim_native_name = prim.prim_native_name in
       if prim.prim_arity = 0 &&
-         not ( String.length prim_native_name > 3 &&
-               String.unsafe_get prim_native_name 0 = 'B' &&
-               String.unsafe_get prim_native_name 1 = 'S' &&
-               String.unsafe_get prim_native_name 2 = ':'
+         not ( String.length prim_native_name >= 20 &&
+               String.unsafe_get prim_native_name 0 = '\132' &&
+               String.unsafe_get prim_native_name 1 = '\149'
              ) &&
          (prim.prim_name = "" || (prim.prim_name.[0] <> '%' && prim.prim_name.[0] <> '#')) then
         raise(Error(valdecl.pval_type.ptyp_loc, Null_arity_external));
