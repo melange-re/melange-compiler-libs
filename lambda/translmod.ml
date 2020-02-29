@@ -703,7 +703,7 @@ and transl_structure ~scopes loc fields cc rootpath final_env = function
           in
           (* Translate remainder second *)
           let body, size =
-            transl_structure ~scopes loc (cons_opt id fields)
+            transl_structure ~scopes loc (if !Typemod.should_hide mb then fields else cons_opt id fields)
               cc rootpath final_env rem
           in
           begin match id with
@@ -907,8 +907,8 @@ let rec defined_idents = function
       List.map (fun ext -> ext.ext_id) tyext.tyext_constructors
       @ defined_idents rem
     | Tstr_exception ext -> ext.tyexn_constructor.ext_id :: defined_idents rem
-    | Tstr_module {mb_id = Some id; mb_presence=Mp_present} ->
-      id :: defined_idents rem
+    | Tstr_module ({mb_id = Some id; mb_presence=Mp_present} as mb) ->
+      if !Typemod.should_hide mb then defined_idents rem else id :: defined_idents rem
     | Tstr_module ({mb_id = None}
                   |{mb_presence=Mp_absent}) -> defined_idents rem
     | Tstr_recmodule decls ->
