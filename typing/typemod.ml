@@ -106,6 +106,9 @@ type error =
 exception Error of Location.t * Env.t * error
 exception Error_forward of Location.error
 
+#if true then
+let should_hide : (Typedtree.module_binding -> bool) ref = ref (fun _ -> false)
+#end
 open Typedtree
 
 let rec path_concat head p =
@@ -2432,7 +2435,11 @@ and type_structure ?(toplevel = false) funct_body anchor env sstr =
         Cmt_format.set_saved_types (Cmt_format.Partial_structure_item str
                                     :: previous_saved_types);
         let (str_rem, sig_rem, final_env) = type_struct new_env srem in
-        (str :: str_rem, sg @ sig_rem, final_env)
+        let new_sg =
+          match desc with
+          | Tstr_module m when !should_hide m -> sig_rem
+          | _ -> sg @ sig_rem in
+        (str :: str_rem, new_sg, final_env)
   in
   let previous_saved_types = Cmt_format.get_saved_types () in
   let run () =
