@@ -5266,6 +5266,16 @@ let report_error ~loc env = function
           (Ident.name id);
         spellcheck_idents ppf id valid_idents
       ) ()
+  (* | Expr_type_clash (_tr, _expl, [ *)
+    (* _, {desc = Tarrow _}; *)
+    (* _, {desc = Tconstr (Pdot (Pdot(Pident {name = "Js"},"Fn",_),_,_),_,_)} *)
+    (* ]) -> *)
+      (* fprintf ppf "This function is a curried function where an uncurried function is expected" *)
+  (* | Expr_type_clash (_tr, _expl, [ *)
+    (* _, {desc = Tconstr (Pdot (Pdot(Pident {name = "Js"},"Fn",_),a,_),_,_)}; *)
+      (* _, {desc = Tconstr (Pdot (Pdot(Pident {name = "Js"},"Fn",_),b,_),_,_)} *)
+    (* ]) when a <> b -> *)
+      (* fprintf ppf "This function has %s but was expected %s" a b *)
   | Expr_type_clash (trace, explanation, exp) ->
       let diff = type_clash_of_trace trace in
       let sub = report_expr_type_clash_hints exp diff in
@@ -5285,6 +5295,9 @@ let report_error ~loc env = function
             "@[<v>@[<2>This function has type@ %a@]\
              @ @[It is applied to too many arguments;@ %s@]@]"
             Printtyp.type_expr typ "maybe you forgot a `;'.";
+      | Tconstr (Pdot (Pdot(Pident id,"Fn"),_),_, _) when Ident.name id = "Js" ->
+          Location.errorf ~loc
+            "This function has uncurried type, it needs to be applied in ucurried style";
       | _ ->
           Location.errorf ~loc "@[<v>@[<2>This expression has type@ %a@]@ %s@]"
             Printtyp.type_expr typ
