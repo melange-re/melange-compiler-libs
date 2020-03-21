@@ -5266,16 +5266,21 @@ let report_error ~loc env = function
           (Ident.name id);
         spellcheck_idents ppf id valid_idents
       ) ()
-  (* | Expr_type_clash (_tr, _expl, [ *)
-    (* _, {desc = Tarrow _}; *)
-    (* _, {desc = Tconstr (Pdot (Pdot(Pident {name = "Js"},"Fn",_),_,_),_,_)} *)
-    (* ]) -> *)
+  (* | Expr_type_clash ( *)
+    (* (_, {desc = Tarrow _}) :: *)
+    (* (_, {desc = Tconstr (Pdot (Pdot(Pident {name = "Js"},"Fn",_),_,_),_,_)}) :: _ *)
+   (* ) -> *)
       (* fprintf ppf "This function is a curried function where an uncurried function is expected" *)
-  (* | Expr_type_clash (_tr, _expl, [ *)
-    (* _, {desc = Tconstr (Pdot (Pdot(Pident {name = "Js"},"Fn",_),a,_),_,_)}; *)
-      (* _, {desc = Tconstr (Pdot (Pdot(Pident {name = "Js"},"Fn",_),b,_),_,_)} *)
-    (* ]) when a <> b -> *)
+  (* | Expr_type_clash ( *)
+      (* (_, {desc = Tconstr (Pdot (Pdot(Pident {name = "Js"},"Fn",_),a,_),_,_)}) :: *)
+      (* (_, {desc = Tconstr (Pdot (Pdot(Pident {name = "Js"},"Fn",_),b,_),_,_)}) :: _ *)
+   (* ) when a <> b -> *)
       (* fprintf ppf "This function has %s but was expected %s" a b *)
+  (* | Expr_type_clash ( *)
+      (* (_, {desc = Tconstr (Pdot (Pdot(Pident {name = "Js_OO"},"Meth",_),a,_),_,_)}) :: *)
+      (* (_, {desc = Tconstr (Pdot (Pdot(Pident {name = "Js_OO"},"Meth",_),b,_),_,_)}) :: _ *)
+   (* ) when a <> b -> *)
+      (* fprintf ppf "This method has %s but was expected %s" a b *)
   | Expr_type_clash (trace, explanation, exp) ->
       let diff = type_clash_of_trace trace in
       let sub = report_expr_type_clash_hints exp diff in
@@ -5464,7 +5469,7 @@ let report_error ~loc env = function
       Location.errorf ~loc "The type %a@ is not a variant type" longident lid
   | Incoherent_label_order ->
       Location.errorf ~loc
-        "This function is applied to arguments@ \
+        "This labeled function is applied to arguments@ \
         in an order different from other calls.@ \
         This is only allowed when the real type is known."
   | Less_general (kind, trace) ->
