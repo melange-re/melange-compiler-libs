@@ -431,7 +431,7 @@ let const_int ?(ptr_info=Pt_na) n = Const_base (Const_int n, ptr_info)
     not necessary "()", it can be used as a place holder for module
     alias etc.
 *)
-let const_unit = const_int 0
+let const_unit = const_int 0 ~ptr_info:(Pt_constructor{name = "()"; cstrs = 1, 0})
 
 let lambda_assert_false = Lconst (const_int ~ptr_info:(Pt_constructor {name = "assert false"; cstrs = (1,0)}) 0)
 
