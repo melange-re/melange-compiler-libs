@@ -86,4 +86,10 @@ val builtin_idents: (string * Ident.t) list
 val ident_division_by_zero: Ident.t
 val all_predef_exns : Ident.t list
 
-val type_is_builtin_path_but_option : Path.t -> bool
+type test =
+  | For_sure_yes
+  | For_sure_no 
+  | NA
+
+val type_is_builtin_path_but_option : 
+  Path.t -> test 
