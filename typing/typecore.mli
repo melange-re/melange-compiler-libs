@@ -122,6 +122,7 @@ val force_delayed_checks: unit -> unit
 
 val name_pattern : string -> Typedtree.pattern list -> Ident.t
 val name_cases : string -> Typedtree.value Typedtree.case list -> Ident.t
+val id_of_pattern : Typedtree.pattern -> Ident.t option
 
 val self_coercion : (Path.t * Location.t list ref) list ref
 

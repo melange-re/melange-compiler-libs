@@ -120,10 +120,9 @@ let create_object cl obj init =
   end
 
 let name_pattern default p =
-  match p.pat_desc with
-  | Tpat_var (id, _) -> id
-  | Tpat_alias(_, id, _) -> id
-  | _ -> Ident.create_local default
+  match Typecore.id_of_pattern p with
+  | Some id -> id
+  | None -> Ident.create_local default
 
 let rec build_object_init ~scopes cl_table obj params inh_init obj_init cl =
   match cl.cl_desc with

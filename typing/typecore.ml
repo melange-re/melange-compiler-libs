@@ -2530,15 +2530,22 @@ let proper_exp_loc exp =
   in
   aux exp.exp_extra
 
+let id_of_pattern : Typedtree.pattern -> Ident.t option = fun pat ->
+  match pat.pat_desc with
+  | Tpat_var (id, _) -> Some id
+  | Tpat_alias(_, id, _) -> Some id
+  | Tpat_construct (_,_,
+                    [{pat_desc = (Tpat_var (id,_) | Tpat_alias(_,id,_))}])
+    -> Some (Ident.rename id)
+  | _ -> None
 (* To find reasonable names for let-bound and lambda-bound idents *)
 
 let rec name_pattern default = function
     [] -> Ident.create_local default
   | p :: rem ->
-    match p.pat_desc with
-      Tpat_var (id, _) -> id
-    | Tpat_alias(_, id, _) -> id
-    | _ -> name_pattern default rem
+    match id_of_pattern p with
+    | None -> name_pattern default rem
+    | Some id -> id
 
 let name_cases default lst =
   name_pattern default (List.map (fun c -> c.c_lhs) lst)
