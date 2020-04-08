@@ -3121,11 +3121,10 @@ let rec comp_match_handlers comp_fun partial ctx first_match next_matchs =
 
 let rec name_pattern default = function
   | ((pat, _), _) :: rem -> (
-      match pat.pat_desc with
-      | Tpat_var (id, _) -> id
-      | Tpat_alias (_, id, _) -> id
-      | _ -> name_pattern default rem
-    )
+      begin match Typecore.id_of_pattern pat with
+      | Some id ->  id
+      | None -> name_pattern default rem
+      end)
   | _ -> Ident.create_local default
 
 let arg_to_var arg cls =
