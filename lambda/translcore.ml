@@ -31,6 +31,7 @@ type error =
 
 exception Error of Location.t * error
 
+let wrap_single_field_record = ref (fun _ _ lam -> lam)
 let use_dup_for_constant_arrays_bigger_than = 4
 
 (* Forward declaration -- to be filled in by Translmod.transl_module *)
@@ -958,7 +959,11 @@ and transl_setinstvar ~scopes loc self var expr =
     [self; var; transl_exp ~scopes expr], loc)
 
 and transl_record ~scopes loc env fields repres opt_init_expr =
-  let size = Array.length fields in
+   match opt_init_expr, repres, fields with
+  | None, Record_unboxed _, [|{lbl_name; lbl_loc}, Overridden (_,expr)|]
+    ->
+      !wrap_single_field_record lbl_loc lbl_name (transl_exp ~scopes expr)
+  | _ ->     let size = Array.length fields in
   (* Determine if there are "enough" fields (only relevant if this is a
      functional-style record update *)
   let no_init = match opt_init_expr with None -> true | _ -> false in
