@@ -23,6 +23,13 @@ open Debuginfo.Scoped_location
 
 val pure_module : module_expr -> let_kind
 
+val wrap_single_field_record :
+  (
+    Location.t ->
+    string ->
+    lambda ->
+    lambda) ref
+
 val transl_exp: scopes:scopes -> expression -> lambda
 val transl_apply: scopes:scopes
                   -> ?tailcall:tailcall_attribute
