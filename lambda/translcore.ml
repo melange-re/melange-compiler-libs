@@ -351,7 +351,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
                 | _ ->
                     Blk_some
               end
-            else (Lambda.Blk_constructor (cstr.cstr_name, cstr.cstr_nonconsts)) in
+            else (Lambda.Blk_constructor { name = cstr.cstr_name; num_nonconst = cstr.cstr_nonconsts}) in
           begin try
             Lconst(Const_block(n, tag_info, List.map extract_constant ll))
           with Not_constant ->

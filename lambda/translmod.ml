@@ -275,7 +275,7 @@ let init_shape id modl =
         raise (Initialization_failure
                 (Unsafe {reason=Unsafe_module_binding;loc;subid}))
     | Mty_signature sg ->
-        let module_tag_info : Lambda.tag_info = Blk_constructor ("Module",2) in
+        let module_tag_info : Lambda.tag_info = Blk_constructor { name = "Module"; num_nonconst = 2} in
         Const_block(0, module_tag_info,
           [Const_block(0, Blk_array, init_shape_struct env sg)])
     | Mty_functor _ ->

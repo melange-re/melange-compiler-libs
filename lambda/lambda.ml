@@ -27,7 +27,7 @@ type compile_time_constant =
   | Backend_type
 
 type tag_info =
-  | Blk_constructor of string * int (* Number of non-const constructors*)
+  | Blk_constructor of {name : string ; num_nonconst : int}
   | Blk_tuple
   | Blk_array
   | Blk_poly_var of string
@@ -39,7 +39,7 @@ type tag_info =
   | Blk_na of string
   | Blk_some
   | Blk_some_not_nested (* ['a option] where ['a] can not inhabit a non-like value *)
-  | Blk_record_inlined of string array * string * int
+  | Blk_record_inlined of { name : string ; num_nonconst :  int ; fields : string array}
   | Blk_record_ext of string array
   | Blk_lazy_general
   | Blk_lazy_forward
@@ -56,9 +56,9 @@ let blk_record_ext =  ref (fun fields ->
     Blk_record_ext all_labels_info
   )
 
-let blk_record_inlined = ref (fun fields name num_nonconsts ->
-  let all_labels_info = fields |> Array.map (fun (x,_) -> x.Types.lbl_name) in
-  Blk_record_inlined (all_labels_info, name, num_nonconsts)
+let blk_record_inlined = ref (fun fields name num_nonconst ->
+  let fields = fields |> Array.map (fun (x,_) -> x.Types.lbl_name) in
+  Blk_record_inlined {fields; name; num_nonconst}
 )
 
 let ref_tag_info : tag_info = Blk_record [| "contents" |]
