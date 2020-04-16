@@ -81,7 +81,7 @@ val default_tag_info : tag_info
 val ref_tag_info : tag_info
 
 type field_dbg_info =
-  | Fld_na
+  | Fld_na of string
   | Fld_record of {name : string; mutable_flag : Asttypes.mutable_flag}
   | Fld_module of {name : string}
   | Fld_record_inline of {name : string}
@@ -90,11 +90,16 @@ type field_dbg_info =
   | Fld_poly_var_tag
   | Fld_poly_var_content
   | Fld_extension_slot
+  | Fld_extension
+  | Fld_variant
+
 val fld_record :
   (Types.label_description ->
   field_dbg_info) ref
 
 val ref_field_info : field_dbg_info
+
+val fld_na : field_dbg_info
 
 type set_field_dbg_info =
   | Fld_set_na
