@@ -150,11 +150,13 @@ let str_of_field_info (fld_info : Lambda.field_dbg_info)=
   match fld_info with
   | (Fld_module {name } | Fld_record {name} | Fld_record_inline {name} | Fld_record_extension {name})
     -> name
-  | Fld_na  -> "na"
+  | Fld_na s  -> if s = "" then "na" else ""
   | Fld_tuple -> "[]"
   | Fld_poly_var_tag->"`"
   | Fld_poly_var_content -> "#"
-  | Fld_extension_slot -> "ext"
+  | Fld_extension_slot -> "ext_slot"
+  | Fld_extension -> "ext"
+  | Fld_variant -> "var"
 
 let primitive ppf = function
   | Pidentity -> fprintf ppf "id"
@@ -632,17 +634,17 @@ let rec lam ppf = function
   | Lsend (k, met, obj, largs, _) ->
       let args ppf largs =
         List.iter (fun l -> fprintf ppf "@ %a" lam l) largs in
-#if true then         
-      let kind = 
-        match k with 
-        | Self -> "self"    
+#if true then
+      let kind =
+        match k with
+        | Self -> "self"
         | Cached -> "cache"
-        | Public (Some x) -> x 
+        | Public (Some x) -> x
         | Public None -> "" in
 #else
       let kind =
         if k = Self then "self" else if k = Cached then "cache" else "" in
-#end        
+#end
       fprintf ppf "@[<2>(send%s@ %a@ %a%a)@]" kind lam obj lam met args largs
   | Levent(expr, ev) ->
       let kind =

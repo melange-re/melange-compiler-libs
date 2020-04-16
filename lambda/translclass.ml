@@ -62,7 +62,7 @@ let mkappl (func, args) =
 let lsequence l1 l2 =
   if l2 = lambda_unit then l1 else Lsequence(l1, l2)
 
-let lfield v i = Lprim(Pfield (i, Fld_na), [Lvar v], Loc_unknown)
+let lfield v i = Lprim(Pfield (i, fld_na), [Lvar v], Loc_unknown)
 
 let transl_label l = share (Const_immstring l)
 
@@ -132,7 +132,7 @@ let rec build_object_init ~scopes cl_table obj params inh_init obj_init cl =
       let env =
         match envs with None -> []
         | Some envs ->
-            [Lprim(Pfield (List.length inh_init + 1, Fld_na),
+            [Lprim(Pfield (List.length inh_init + 1, Lambda.fld_na),
                    [Lvar envs],
                    Loc_unknown)]
       in

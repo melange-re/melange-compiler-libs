@@ -1696,12 +1696,12 @@ let get_expr_args_constr ~scopes head (arg, _mut) rem =
     | _ -> fatal_error "Matching.get_expr_args_constr"
   in
   let loc = head_loc ~scopes head in
-  let make_field_accesses binding_kind first_pos last_pos argl =
+  let make_field_accesses ~fld_info binding_kind first_pos last_pos argl =
     let rec make_args pos =
       if pos > last_pos then
         argl
       else
-        (Lprim (Pfield (pos, Fld_na), [ arg ], loc), binding_kind) :: make_args (pos + 1)
+        (Lprim (Pfield (pos, fld_info), [ arg ], loc), binding_kind) :: make_args (pos + 1)
     in
     make_args first_pos
   in
@@ -1724,9 +1724,9 @@ let get_expr_args_constr ~scopes head (arg, _mut) rem =
         end
     | Cstr_constant _
     | Cstr_block _ ->
-        make_field_accesses Alias 0 (cstr.cstr_arity - 1) rem
+        make_field_accesses ~fld_info:Fld_variant Alias 0 (cstr.cstr_arity - 1) rem
     | Cstr_unboxed -> (arg, Alias) :: rem
-    | Cstr_extension _ -> make_field_accesses Alias 1 cstr.cstr_arity rem
+    | Cstr_extension _ -> make_field_accesses ~fld_info:Fld_extension Alias 1 cstr.cstr_arity rem
 
 let divide_constructor ~scopes ctx pm =
   divide
@@ -1869,7 +1869,7 @@ let inline_lazy_force_cond arg loc =
                 ( Pintcomp Ceq,
                   [ tag_var; Lconst (Const_base (Const_int Obj.forward_tag, default_pointer_info)) ],
                   loc ),
-              Lprim (Pfield (0, Fld_na), [ varg ], loc),
+              Lprim (Pfield (0, fld_na), [ varg ], loc),
               Lifthenelse
                 (* if (tag == Obj.lazy_tag) then Lazy.force varg else ... *)
                 ( Lprim
@@ -1906,7 +1906,7 @@ let inline_lazy_force_switch arg loc =
                 sw_numblocks = 256;
                 (* PR#6033 - tag ranges from 0 to 255 *)
                 sw_blocks =
-                  [ (Obj.forward_tag, Lprim (Pfield (0, Fld_na), [ varg ], loc));
+                  [ (Obj.forward_tag, Lprim (Pfield (0, fld_na), [ varg ], loc));
                     ( Obj.lazy_tag,
                       Lapply
                         { ap_tailcall = Default_tailcall;

@@ -643,7 +643,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
           let body, _ =
             List.fold_left (fun (body, pos) id ->
               Llet(Alias, Pgenval, id,
-                   Lprim(Pfield (pos, Fld_na), [Lvar oid],
+                   Lprim(Pfield (pos, fld_na), [Lvar oid],
                          of_location ~scopes od.open_loc), body),
               pos + 1
             ) (transl_exp ~scopes e, 0)
