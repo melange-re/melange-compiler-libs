@@ -62,7 +62,7 @@ let mkappl (func, args) =
 let lsequence l1 l2 =
   if l2 = lambda_unit then l1 else Lsequence(l1, l2)
 
-let lfield v i = Lprim(Pfield (i, fld_na), [Lvar v], Loc_unknown)
+let lfield ?(fld_info=Lambda.fld_na) v i = Lprim(Pfield (i, fld_info), [Lvar v], Loc_unknown)
 
 let transl_label l = share (Const_immstring l)
 
@@ -513,15 +513,15 @@ let transl_class_rebind ~scopes cl vf =
     Llet(
     Alias, Pgenval, cla, path_lam,
     Lprim(Pmakeblock(0, Lambda.Blk_class, Immutable, None),
-          [mkappl(Lvar new_init, [lfield cla 0]);
+          [mkappl(Lvar new_init, [lfield ~fld_info:Fld_tuple cla 0]);
            lfunction [table, Pgenval]
              (Llet(Strict, Pgenval, env_init,
-                   mkappl(lfield cla 1, [Lvar table]),
+                   mkappl(lfield ~fld_info:Fld_tuple cla 1, [Lvar table]),
                    lfunction [envs, Pgenval]
                      (mkappl(Lvar new_init,
                              [mkappl(Lvar env_init, [Lvar envs])]))));
-           lfield cla 2;
-           lfield cla 3],
+           lfield ~fld_info:Fld_tuple cla 2;
+           lfield ~fld_info:Fld_tuple cla 3],
           Loc_unknown)))
   with Exit ->
     lambda_unit
@@ -918,19 +918,19 @@ let transl_class ~scopes ids cl_id pub_meths cl vflag =
          so that the program's behaviour does not change between runs *)
       lupdate_cache
     else
-      Lifthenelse(lfield cached 0, lambda_unit, lupdate_cache) in
+      Lifthenelse(lfield ~fld_info:(Fld_record_inline {name = "key"}) cached 0, lambda_unit, lupdate_cache) in
   llets (
   lcache (
   Lsequence(lcheck_cache,
   make_envs (
-  if ids = [] then mkappl (lfield cached 0, [lenvs]) else
+  if ids = [] then mkappl (lfield ~fld_info:(Fld_record_inline {name = "key"}) cached 0, [lenvs]) else
   Lprim(Pmakeblock(0, Lambda.Blk_class, Immutable, None),
         (if concrete then
-          [mkappl (lfield cached 0, [lenvs]);
-           lfield cached 1;
-           lfield cached 0;
+          [mkappl (lfield ~fld_info:(Fld_record_inline {name = "key"}) cached 0, [lenvs]);
+           lfield ~fld_info:(Fld_record_inline {name = "data"}) cached 1;
+           lfield ~fld_info:(Fld_record_inline {name = "key"}) cached 0;
            lenvs]
-        else [lambda_unit; lfield cached 0; lambda_unit; lenvs]),
+        else [lambda_unit; lfield ~fld_info:(Fld_record_inline {name = "key"}) cached 0; lambda_unit; lenvs]),
         Loc_unknown
        )))))
 
