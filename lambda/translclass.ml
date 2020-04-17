@@ -883,17 +883,17 @@ let transl_class ~scopes ids cl_id pub_meths cl vflag =
                 [Lvar tables; Lprim(Pmakeblock(0, Lambda.Blk_array, Immutable, None),
                                     inh_keys, Loc_unknown)]),
          lam)
-  and lset cached i lam =
-    Lprim(Psetfield(i, Pointer, Assignment, Fld_set_na),
+  and lset cached lam =
+    Lprim(Psetfield(0, Pointer, Assignment, Lambda.Fld_record_inline_set "key"),
           [Lvar cached; lam], Loc_unknown)
   in
   let ldirect () =
     ltable cla
       (Llet(Strict, Pgenval, env_init, def_ids cla cl_init,
             Lsequence(mkappl (oo_prim "init_class", [Lvar cla]),
-                      lset cached 0 (Lvar env_init))))
+                      lset cached (Lvar env_init))))
   and lclass_virt () =
-    lset cached 0
+    lset cached
       (Lfunction
          {
            kind = Curried;
