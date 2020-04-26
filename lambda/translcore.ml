@@ -64,9 +64,11 @@ let transl_extension_constructor ~scopes env path ext =
   match ext.ext_kind with
     Text_decl _ ->
       let tag_info = Blk_extension_slot in
+      let ext_name = Lconst (Const_base (Const_string (name, ext.ext_loc, None), default_pointer_info)) in
       Lprim (Pmakeblock (Obj.object_tag, tag_info, Immutable, None),
-        [Lconst (Const_base (Const_string (name, ext.ext_loc, None), default_pointer_info));
-         Lprim (prim_fresh_oo_id, [Lconst (const_int 0)], loc)],
+        (if !Config.bs_only then [ ext_name ]
+         else [ ext_name;
+                Lprim (prim_fresh_oo_id, [Lconst (const_int 0)], loc)]),
         loc)
   | Text_rebind(path, _lid) ->
       transl_extension_path loc env path
