@@ -65,11 +65,11 @@ let return_kind ppf = function
   | Pfloatval -> fprintf ppf ": float@ "
   | Pboxedintval bi -> fprintf ppf ": %s@ " (boxed_integer_name bi)
 
-let field_kind = function
+(* let field_kind = function
   | Pgenval -> "*"
   | Pintval -> "int"
   | Pfloatval -> "float"
-  | Pboxedintval bi -> boxed_integer_name bi
+  | Pboxedintval bi -> boxed_integer_name bi *)
 
 let print_boxed_integer_conversion ppf bi1 bi2 =
   fprintf ppf "%s_of_%s" (boxed_integer_name bi2) (boxed_integer_name bi1)
@@ -114,7 +114,7 @@ let record_rep ppf r =
   | Record_extension path -> fprintf ppf "ext(%a)" Printtyp.path path
 ;;
 
-let block_shape ppf shape = match shape with
+(* let block_shape ppf shape = match shape with
   | None | Some [] -> ()
   | Some l when List.for_all ((=) Pgenval) l -> ()
   | Some [elt] ->
@@ -124,7 +124,7 @@ let block_shape ppf shape = match shape with
       List.iter (fun elt ->
           Format.fprintf ppf ",%s" (field_kind elt))
         t;
-      Format.fprintf ppf ")"
+      Format.fprintf ppf ")" *)
 
 let integer_comparison ppf = function
   | Ceq -> fprintf ppf "=="
@@ -154,9 +154,28 @@ let str_of_field_info (fld_info : Lambda.field_dbg_info)=
   | Fld_tuple -> "[]"
   | Fld_poly_var_tag->"`"
   | Fld_poly_var_content -> "#"
-  | Fld_extension_slot -> "ext_slot"
   | Fld_extension -> "ext"
   | Fld_variant -> "var"
+
+let print_taginfo ppf = function
+  | Blk_extension -> fprintf ppf "ext"
+  | Blk_record_ext ss -> fprintf ppf "[%s]" (String.concat ";" (Array.to_list ss) )
+  | Blk_tuple -> fprintf ppf "tuple"
+  | Blk_constructor {name ;num_nonconst} -> fprintf ppf "%s/%i" name num_nonconst
+  | Blk_array -> fprintf ppf "array"
+  | Blk_poly_var name -> fprintf ppf "`%s" name
+  | Blk_record  ss ->  fprintf ppf "[%s]" (String.concat ";" (Array.to_list ss) )
+  | Blk_module ss ->  fprintf ppf "[%s]" (String.concat ";"  ss)
+  | Blk_extension_slot -> fprintf ppf "ext_slot"
+  | Blk_na s -> fprintf ppf "%s"  s
+  | Blk_some -> fprintf ppf "some"
+  | Blk_some_not_nested -> fprintf ppf "some_not_nested"
+  | Blk_lazy_general -> fprintf ppf "lazy_general"
+  | Blk_lazy_forward -> fprintf ppf "lazy_forward"
+  | Blk_class -> fprintf ppf "class"
+  | Blk_module_export _ -> fprintf ppf "module/exports"
+  | Blk_record_inlined {fields = ss }
+    -> fprintf ppf "[%s]" (String.concat ";" (Array.to_list ss) )
 
 let primitive ppf = function
   | Pidentity -> fprintf ppf "id"
@@ -167,10 +186,10 @@ let primitive ppf = function
   | Pdirapply -> fprintf ppf "dirapply"
   | Pgetglobal id -> fprintf ppf "global %a" Ident.print id
   | Psetglobal id -> fprintf ppf "setglobal %a" Ident.print id
-  | Pmakeblock(tag, _, Immutable, shape) ->
-      fprintf ppf "makeblock %i%a" tag block_shape shape
-  | Pmakeblock(tag, _, Mutable, shape) ->
-      fprintf ppf "makemutable %i%a" tag block_shape shape
+  | Pmakeblock(tag, taginfo, Immutable, _) ->
+      fprintf ppf "makeblock %i%a" tag print_taginfo taginfo
+  | Pmakeblock(tag, taginfo, Mutable, _) ->
+      fprintf ppf "makemutable %i%a" tag print_taginfo taginfo
   | Pfield (n, fld) -> fprintf ppf "field:%s/%i" (str_of_field_info fld) n
   | Pfield_computed -> fprintf ppf "field_computed"
   | Psetfield(n, ptr, init, _) ->
