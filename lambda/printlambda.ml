@@ -65,11 +65,11 @@ let return_kind ppf = function
   | Pfloatval -> fprintf ppf ": float@ "
   | Pboxedintval bi -> fprintf ppf ": %s@ " (boxed_integer_name bi)
 
-(* let field_kind = function
+let field_kind = function
   | Pgenval -> "*"
   | Pintval -> "int"
   | Pfloatval -> "float"
-  | Pboxedintval bi -> boxed_integer_name bi *)
+  | Pboxedintval bi -> boxed_integer_name bi
 
 let print_boxed_integer_conversion ppf bi1 bi2 =
   fprintf ppf "%s_of_%s" (boxed_integer_name bi2) (boxed_integer_name bi1)
@@ -114,7 +114,7 @@ let record_rep ppf r =
   | Record_extension path -> fprintf ppf "ext(%a)" Printtyp.path path
 ;;
 
-(* let block_shape ppf shape = match shape with
+let block_shape ppf shape = match shape with
   | None | Some [] -> ()
   | Some l when List.for_all ((=) Pgenval) l -> ()
   | Some [elt] ->
@@ -124,7 +124,7 @@ let record_rep ppf r =
       List.iter (fun elt ->
           Format.fprintf ppf ",%s" (field_kind elt))
         t;
-      Format.fprintf ppf ")" *)
+      Format.fprintf ppf ")"
 
 let integer_comparison ppf = function
   | Ceq -> fprintf ppf "=="
