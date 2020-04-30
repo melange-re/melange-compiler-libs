@@ -363,7 +363,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
       | Cstr_extension(path, is_const) ->
           let lam = transl_extension_path
                       (of_location ~scopes e.exp_loc) e.exp_env path in
-          if is_const then lam
+          if not !Config.bs_only && is_const then lam
           else
             Lprim(Pmakeblock(0, Blk_extension, Immutable, Some (Pgenval :: shape)),
                   lam :: ll, of_location ~scopes e.exp_loc)
