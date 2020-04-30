@@ -3136,7 +3136,7 @@ let arg_to_var arg cls =
 
 (* To be set by Lam_compile *)
 let names_from_construct_pattern : (pattern -> switch_names option) ref =
-  ref (fun _ -> assert false)
+  ref (fun _ -> None)
 
 (*
   The main compilation function.

@@ -89,7 +89,6 @@ type field_dbg_info =
   | Fld_tuple
   | Fld_poly_var_tag
   | Fld_poly_var_content
-  | Fld_extension_slot
   | Fld_extension
   | Fld_variant
 
