@@ -851,7 +851,9 @@ let message = function
      cause additional closure allocations."
 #if undefined BS_NO_COMPILER_PATCH then
   | Bs_unused_attribute s ->
-      "Unused BuckleScript attribute: " ^ s
+      "Unused BuckleScript attribute: " ^ s ^ "\n\
+      This means such annotation is not annotated properly. \n\
+      for example, some annotations is only meaningful in externals \n"
   | Bs_polymorphic_comparison ->
       "polymorphic comparison introduced (maybe unsafe)"
   | Bs_ffi_warning s ->
