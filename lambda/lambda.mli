@@ -53,7 +53,6 @@ type tag_info =
   | Blk_record_inlined of { name : string ; num_nonconst :  int ; fields : string array}
   | Blk_record_ext of string array
   | Blk_lazy_general
-  | Blk_lazy_forward
   | Blk_class (* ocaml style class *)
 
 val blk_record :

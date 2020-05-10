@@ -171,7 +171,6 @@ let print_taginfo ppf = function
   | Blk_some -> fprintf ppf "some"
   | Blk_some_not_nested -> fprintf ppf "some_not_nested"
   | Blk_lazy_general -> fprintf ppf "lazy_general"
-  | Blk_lazy_forward -> fprintf ppf "lazy_forward"
   | Blk_class -> fprintf ppf "class"
   | Blk_module_export _ -> fprintf ppf "module/exports"
   | Blk_record_inlined {fields = ss }
