@@ -179,8 +179,6 @@ let primitives_table =
       "%leint", Primitive ((Pintcomp Cle), 2);
       "%gtint", Primitive ((Pintcomp Cgt), 2);
       "%geint", Primitive ((Pintcomp Cge), 2);
-      "%incr", Primitive ((Poffsetref(1)), 1);
-      "%decr", Primitive ((Poffsetref(-1)), 1);
       "%intoffloat", Primitive (Pintoffloat, 1);
       "%floatofint", Primitive (Pfloatofint, 1);
       "%negfloat", Primitive (Pnegfloat, 1);
@@ -197,9 +195,7 @@ let primitives_table =
       "%gefloat", Primitive ((Pfloatcomp CFge), 2);
       "%string_length", Primitive (Pstringlength, 1);
       "%string_safe_get", Primitive (Pstringrefs, 2);
-      "%string_safe_set", Primitive (Pbytessets, 3);
       "%string_unsafe_get", Primitive (Pstringrefu, 2);
-      "%string_unsafe_set", Primitive (Pbytessetu, 3);
       "%bytes_length", Primitive (Pbyteslength, 1);
       "%bytes_safe_get", Primitive (Pbytesrefs, 2);
       "%bytes_safe_set", Primitive (Pbytessets, 3);
