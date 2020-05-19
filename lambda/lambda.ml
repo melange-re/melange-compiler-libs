@@ -271,11 +271,12 @@ let equal_value_kind x y =
   | (Pgenval | Pfloatval | Pboxedintval _ | Pintval), _ -> false
 
 type pointer_info =
-  | Pt_constructor of {name : string; cstrs : int * int}
+  | Pt_constructor of {name : string; const : int ; non_const : int }
   | Pt_variant of {name : string}
   | Pt_module_alias
   | Pt_builtin_boolean
   | Pt_shape_none
+  | Pt_assertfalse
   | Pt_na
 
 let default_pointer_info = Pt_na
@@ -433,9 +434,9 @@ let const_int ?(ptr_info=Pt_na) n = Const_base (Const_int n, ptr_info)
     not necessary "()", it can be used as a place holder for module
     alias etc.
 *)
-let const_unit = const_int 0 ~ptr_info:(Pt_constructor{name = "()"; cstrs = 1, 0})
+let const_unit = const_int 0 ~ptr_info:(Pt_constructor{name = "()"; const = 1; non_const = 0})
 
-let lambda_assert_false = Lconst (const_int ~ptr_info:(Pt_constructor {name = "assert false"; cstrs = (1,0)}) 0)
+let lambda_assert_false = Lconst (const_int ~ptr_info:Pt_assertfalse 0)
 
 let lambda_unit = Lconst const_unit
 

@@ -129,6 +129,15 @@ type is_safe =
   | Safe
   | Unsafe
 
+type pointer_info =
+  | Pt_constructor of {name : string; const : int ; non_const :  int}
+  | Pt_variant of {name : string}
+  | Pt_module_alias
+  | Pt_builtin_boolean
+  | Pt_shape_none
+  | Pt_assertfalse
+  | Pt_na
+
 type primitive =
   | Pidentity
   | Pbytes_to_string
@@ -279,14 +288,6 @@ val equal_primitive : primitive -> primitive -> bool
 val equal_value_kind : value_kind -> value_kind -> bool
 
 val equal_boxed_integer : boxed_integer -> boxed_integer -> bool
-
-type pointer_info =
-  | Pt_constructor of {name : string; cstrs : int * int}
-  | Pt_variant of {name : string}
-  | Pt_module_alias
-  | Pt_builtin_boolean
-  | Pt_shape_none
-  | Pt_na
 
 val default_pointer_info : pointer_info
 

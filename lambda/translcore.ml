@@ -336,7 +336,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
             | Longident.Lident "None"
                when Datarepr.constructor_has_optional_shape cstr
               -> Pt_shape_none
-            | _ -> (Lambda.Pt_constructor {name = cstr.cstr_name; cstrs = cstr.cstr_consts,cstr.cstr_nonconsts})
+            | _ -> (Lambda.Pt_constructor {name = cstr.cstr_name; const = cstr.cstr_consts; non_const = cstr.cstr_nonconsts})
           in
           Lconst(const_int ~ptr_info n)
       | Cstr_unboxed ->
