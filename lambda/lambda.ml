@@ -73,6 +73,7 @@ type field_dbg_info =
   | Fld_poly_var_content
   | Fld_extension
   | Fld_variant
+  | Fld_array
 
 let fld_record = ref (fun (lbl : Types.label_description) ->
   Fld_record {name = lbl.lbl_name; mutable_flag = Mutable})
