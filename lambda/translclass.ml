@@ -750,9 +750,9 @@ let transl_class ~scopes ids cl_id pub_meths cl vflag =
     if top then lam else
     (* must be called only once! *)
     let lam = Lambda.subst no_env_update (subst env1 lam 1 new_ids_init) lam in
-    Llet(Alias, Pgenval, env1, (if l = [] then Lvar envs else lfield envs 0  ~fld_info:(Fld_na "FLD_NA")),
+    Llet(Alias, Pgenval, env1, (if l = [] then Lvar envs else lfield envs 0  ~fld_info:(if !Config.bs_only then assert false else Lambda.fld_na)),
     Llet(Alias, Pgenval, env1',
-         (if !new_ids_init = [] then Lvar env1 else lfield env1 0 ~fld_info:(Fld_na "FLD_NA")),
+         (if !new_ids_init = [] then Lvar env1 else lfield env1 0 ~fld_info:(if !Config.bs_only then assert false else Lambda.fld_na)),
          lam))
   in
 
