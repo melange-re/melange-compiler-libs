@@ -206,7 +206,6 @@ let primitives_table =
       "%array_safe_set", Primitive ((Parraysets gen_array_kind), 3);
       "%array_unsafe_get", Primitive ((Parrayrefu gen_array_kind), 2);
       "%array_unsafe_set", Primitive ((Parraysetu gen_array_kind), 3);
-      "%obj_size", Primitive ((Parraylength gen_array_kind), 1);
       "%obj_field", Primitive ((Parrayrefu gen_array_kind), 2);
       "%obj_set_field", Primitive ((Parraysetu gen_array_kind), 3);
       "%floatarray_length", Primitive ((Parraylength Pfloatarray), 1);
@@ -293,9 +292,9 @@ let primitives_table =
       "%loc_POS", Loc Loc_POS;
       "%loc_MODULE", Loc Loc_MODULE;
       "%loc_FUNCTION", Loc Loc_FUNCTION;
-      "%field0", Primitive ((Pfield (0, fld_na)), 1);
+      "%field0", Primitive ((Pfield (0, Fld_tuple)), 1);
+      "%field1", Primitive ((Pfield (1, Fld_tuple)), 1);
       "%bs_ref_field0", Primitive (Pfield(0, Lambda.ref_field_info), 1);
-      "%field1", Primitive ((Pfield (1, fld_na)), 1);
       "%setfield0", Primitive ((Psetfield(0, Pointer, Assignment, Fld_set_na)), 2);
       "%bs_ref_setfield0", Primitive (Psetfield(0, Pointer, Assignment, Lambda.ref_field_set_info), 2);
       "%makeblock", Primitive ((Pmakeblock(0, Lambda.default_tag_info, Immutable, None)), 1);
