@@ -5441,11 +5441,16 @@ let report_error ~loc env = function
           Printtyp.type_expr ty
           (report_type_expected_explanation_opt explanation)
       end else begin
-        Location.errorf ~loc
-          "This expression should not be a function,@ \
-           the expected type is@ %a%t"
-          Printtyp.type_expr ty
-          (report_type_expected_explanation_opt explanation)
+        match ty with
+        | {desc = Tconstr (Pdot (Pdot(Pident name,"Fn"),_),_,_)} when Ident.name name = "Js" ->
+          Location.errorf ~loc
+            "This expression is expected to have an uncurried function"
+        | _ ->
+          Location.errorf ~loc
+            "This expression should not be a function,@ \
+             the expected type is@ %a%t"
+            Printtyp.type_expr ty
+            (report_type_expected_explanation_opt explanation)
       end
   | Abstract_wrong_label (l, ty, explanation) ->
       let label_mark = function
