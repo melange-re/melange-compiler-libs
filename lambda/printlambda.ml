@@ -156,6 +156,7 @@ let str_of_field_info (fld_info : Lambda.field_dbg_info)=
   | Fld_poly_var_content -> "#"
   | Fld_extension -> "ext"
   | Fld_variant -> "var"
+  | Fld_cons -> "cons"
   | Fld_array -> "[||]"
 let print_taginfo ppf = function
   | Blk_extension -> fprintf ppf "ext"

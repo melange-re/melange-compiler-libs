@@ -1724,7 +1724,7 @@ let get_expr_args_constr ~scopes head (arg, _mut) rem =
         end
     | Cstr_constant _
     | Cstr_block _ ->
-        make_field_accesses ~fld_info:Fld_variant Alias 0 (cstr.cstr_arity - 1) rem
+        make_field_accesses ~fld_info:(if cstr.cstr_name = "::" then Fld_cons else Fld_variant) Alias 0 (cstr.cstr_arity - 1) rem
     | Cstr_unboxed -> (arg, Alias) :: rem
     | Cstr_extension _ -> make_field_accesses ~fld_info:Fld_extension Alias 1 cstr.cstr_arity rem
 
