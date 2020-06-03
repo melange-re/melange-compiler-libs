@@ -430,8 +430,10 @@ let eval_rec_bindings bindings cont =
   in
     bind_inits bindings
 
+let eval_rec_bindings = ref eval_rec_bindings
+
 let compile_recmodule ~scopes compile_rhs bindings cont =
-  eval_rec_bindings
+  !eval_rec_bindings
     (reorder_rec_bindings
        (List.map
           (fun {mb_id=id; mb_name; mb_expr=modl; mb_loc=loc; _} ->

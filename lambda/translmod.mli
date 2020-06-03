@@ -19,6 +19,16 @@
 open Typedtree
 open Lambda
 
+type id_or_ignore_loc =
+  | Id of Ident.t
+  | Ignore_loc of Lambda.scoped_location
+
+val eval_rec_bindings:
+     ((id_or_ignore_loc * (Lambda.lambda * Lambda.lambda) option *
+       Lambda.lambda)
+      list -> Lambda.lambda -> Lambda.lambda)
+     ref
+
 val transl_implementation:
       string -> structure * module_coercion -> Lambda.program
 val transl_store_phrases: string -> structure -> int * lambda
@@ -63,4 +73,4 @@ val report_error: Location.t -> error -> Location.error
 val reset: unit -> unit
 
 (** make it an array for better performance*)
-val get_export_identifiers : unit -> Ident.t list 
+val get_export_identifiers : unit -> Ident.t list
