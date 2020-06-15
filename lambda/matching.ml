@@ -2863,6 +2863,34 @@ let call_switcher_variant_constr loc fail arg int_lambda_list names =
       Lprim (Pfield (0, Fld_poly_var_tag), [ arg ], loc),
       call_switcher loc fail (Lvar v) min_int max_int int_lambda_list names)
 
+let call_switcher_variant_constant :
+  (Lambda.scoped_location ->
+   Lambda.lambda option ->
+   Lambda.lambda ->
+   (int * Lambda.lambda) list ->
+   Lambda.switch_names option ->
+   Lambda.lambda)
+    ref= ref call_switcher_variant_constant
+
+let call_switcher_variant_constr :
+  (Lambda.scoped_location ->
+   Lambda.lambda option ->
+   Lambda.lambda ->
+   (int * Lambda.lambda) list ->
+   Lambda.switch_names option ->
+   Lambda.lambda)
+    ref
+  = ref call_switcher_variant_constr
+
+let make_test_sequence_variant_constant :
+  (Lambda.lambda option ->
+   Lambda.lambda ->
+   (int * Lambda.lambda) list ->
+   Lambda.lambda)
+    ref
+  = ref make_test_sequence_variant_constant
+
+
 let combine_variant names loc row arg partial ctx def (tag_lambda_list, total1, _pats)
     =
   let row = Btype.row_repr row in
@@ -2905,18 +2933,18 @@ let combine_variant names loc row arg partial ctx def (tag_lambda_list, total1, 
             test_int_or_block arg act1 act2
         | _, [] ->
             (* One can compare integers and pointers *)
-            make_test_sequence_variant_constant fail arg consts
+            !make_test_sequence_variant_constant fail arg consts
         | [], _ -> (
-            let lam = call_switcher_variant_constr loc fail arg nonconsts names in
+            let lam = !call_switcher_variant_constr loc fail arg nonconsts names in
             (* One must not dereference integers *)
             match fail with
             | None -> lam
             | Some fail -> test_int_or_block arg fail lam
           )
         | _, _ ->
-            let lam_const = call_switcher_variant_constant loc fail arg consts names
+            let lam_const = !call_switcher_variant_constant loc fail arg consts names
             and lam_nonconst =
-              call_switcher_variant_constr loc fail arg nonconsts names
+              !call_switcher_variant_constr loc fail arg nonconsts names
             in
             test_int_or_block arg lam_const lam_nonconst
       )
