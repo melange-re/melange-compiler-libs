@@ -254,11 +254,11 @@ let rec find_constr tag num_const num_nonconst = function
     [] ->
       raise Constr_not_found
   | {cd_args = Cstr_tuple []; _} as c  :: rem ->
-      if tag = Cstr_constant num_const
+      if Types.equal_tag tag  (Cstr_constant num_const)
       then c
       else find_constr tag (num_const + 1) num_nonconst rem
   | c :: rem ->
-      if tag = Cstr_block num_nonconst || tag = Cstr_unboxed
+      if Types.equal_tag tag (Cstr_block num_nonconst) || tag = Cstr_unboxed
       then c
       else find_constr tag num_const (num_nonconst + 1) rem
 
