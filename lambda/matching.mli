@@ -19,20 +19,20 @@ open Typedtree
 open Lambda
 open Debuginfo.Scoped_location
 
-
 val call_switcher_variant_constant :
    (Lambda.scoped_location ->
-    Lambda.lambda option ->
-    Lambda.lambda ->
-    (int * Lambda.lambda) list ->
-    Lambda.switch_names option -> Lambda.lambda)
-   ref
+   Lambda.lambda option ->
+   Lambda.lambda ->
+   (int * (string * Lambda.lambda)) list ->
+   Lambda.switch_names option ->
+   Lambda.lambda)
+    ref
 
 val call_switcher_variant_constr :
   (Lambda.scoped_location ->
    Lambda.lambda option ->
    Lambda.lambda ->
-   (int * Lambda.lambda) list ->
+   (int * (string * Lambda.lambda)) list ->
    Lambda.switch_names option ->
    Lambda.lambda)
     ref
@@ -40,7 +40,7 @@ val call_switcher_variant_constr :
 val make_test_sequence_variant_constant :
   (Lambda.lambda option ->
    Lambda.lambda ->
-   (int * Lambda.lambda) list ->
+   (int * (string * Lambda.lambda)) list ->
    Lambda.lambda)
     ref
 
@@ -79,4 +79,4 @@ val expand_stringswitch:
 val inline_lazy_force : lambda -> scoped_location -> lambda
 
 (* To be set by Lam_compile *)
-val names_from_construct_pattern : (pattern -> switch_names option) ref
+val names_from_construct_pattern : (Patterns.Head.desc Typedtree.pattern_data -> switch_names option) ref

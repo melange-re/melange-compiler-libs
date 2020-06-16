@@ -1075,16 +1075,6 @@ let what_is_first_case = what_is_cases ~skip_any:false
 
 let what_is_cases = what_is_cases ~skip_any:true
 
-let rec what_is_cases_pat cases =
-  let open Patterns in
-  match cases with
-  | ({pat_desc=Tpat_any} :: _, _) :: rem -> what_is_cases_pat rem
-  | (({pat_desc=(Tpat_var _|Tpat_or (_,_,_)|Tpat_alias (_,_,_))}::_),_)::_
-    -> assert false (* applies to simplified matchings only *)
-  | (p::_,_)::_ -> p
-  | [] -> omega
-  | _ -> assert false
-
 let pm_free_variables { cases } =
   List.fold_right
     (fun (_, act) r -> Ident.Set.union (free_variables act) r)
@@ -1767,13 +1757,13 @@ let divide_variant ~scopes row ctx { cases = cl; args; default = def } =
           | None ->
               add_in_div
                 (make_matching get_expr_args_variant_constant head def ctx)
-                ( = ) (Cstr_constant tag) (patl, action) variants
+                ( = ) (lab, Cstr_constant tag) (patl, action) variants
           | Some pat ->
               add_in_div
                 (make_matching
                    (get_expr_args_variant_nonconst ~scopes)
                    head def ctx)
-                ( = ) (Cstr_block tag)
+                ( = ) (lab, Cstr_block tag)
                 (pat :: patl, action)
                 variants
       )
@@ -2707,6 +2697,21 @@ let split_cases tag_lambda_list =
   let const, nonconst = split_rec tag_lambda_list in
   (sort_int_lambda_list const, sort_int_lambda_list nonconst)
 
+(* refine [split_cases] and [split_variant_cases] *)
+let split_variant_cases tag_lambda_list =
+  let rec split_rec = function
+      [] -> ([], [])
+    | ((name,cstr), act) :: rem ->
+        let (consts, nonconsts) = split_rec rem in
+        match cstr with
+          Cstr_constant n -> ((n, (name, act)) :: consts, nonconsts)
+        | Cstr_block n    -> (consts, (n, (name, act)) :: nonconsts)
+        | Cstr_unboxed    -> assert false
+        | Cstr_extension _ -> assert false in
+  let const, nonconst = split_rec tag_lambda_list in
+  sort_int_lambda_list const,
+  sort_int_lambda_list nonconst
+
 let split_extension_cases tag_lambda_list =
   let rec split_rec = function
     | [] -> ([], [])
@@ -2848,11 +2853,11 @@ let combine_constructor sw_names loc arg pat_env cstr partial ctx def
       (lambda1, Jumps.union local_jumps total1)
 
 let make_test_sequence_variant_constant fail arg int_lambda_list =
-  let _, (cases, actions) = as_interval fail min_int max_int int_lambda_list in
+  let _, (cases, actions) = as_interval fail min_int max_int (List.map (fun (a,(_,c)) -> (a,c)) int_lambda_list) in
   Switcher.test_sequence arg cases actions
 
 let call_switcher_variant_constant loc fail arg int_lambda_list names =
-  call_switcher loc fail arg min_int max_int int_lambda_list names
+  call_switcher loc fail arg min_int max_int (List.map (fun (a,(_,c)) -> (a,c)) int_lambda_list) names
 
 let call_switcher_variant_constr loc fail arg int_lambda_list names =
   let v = Ident.create_local "variant" in
@@ -2861,13 +2866,13 @@ let call_switcher_variant_constr loc fail arg int_lambda_list names =
       Pgenval,
       v,
       Lprim (Pfield (0, Fld_poly_var_tag), [ arg ], loc),
-      call_switcher loc fail (Lvar v) min_int max_int int_lambda_list names)
+      call_switcher loc fail (Lvar v) min_int max_int (List.map (fun (a,(_,c)) -> (a,c)) int_lambda_list) names)
 
 let call_switcher_variant_constant :
   (Lambda.scoped_location ->
    Lambda.lambda option ->
    Lambda.lambda ->
-   (int * Lambda.lambda) list ->
+   (int * (string * Lambda.lambda)) list ->
    Lambda.switch_names option ->
    Lambda.lambda)
     ref= ref call_switcher_variant_constant
@@ -2876,7 +2881,7 @@ let call_switcher_variant_constr :
   (Lambda.scoped_location ->
    Lambda.lambda option ->
    Lambda.lambda ->
-   (int * Lambda.lambda) list ->
+   (int * (string * Lambda.lambda)) list ->
    Lambda.switch_names option ->
    Lambda.lambda)
     ref
@@ -2885,7 +2890,7 @@ let call_switcher_variant_constr :
 let make_test_sequence_variant_constant :
   (Lambda.lambda option ->
    Lambda.lambda ->
-   (int * Lambda.lambda) list ->
+   (int * (string * Lambda.lambda)) list ->
    Lambda.lambda)
     ref
   = ref make_test_sequence_variant_constant
@@ -2923,13 +2928,13 @@ let combine_variant names loc row arg partial ctx def (tag_lambda_list, total1, 
     else
       mk_failaction_neg partial ctx def
   in
-  let consts, nonconsts = split_cases tag_lambda_list in
+  let consts, nonconsts = split_variant_cases tag_lambda_list in
   let lambda1 =
     match (fail, one_action) with
     | None, Some act -> act
     | _, _ -> (
         match (consts, nonconsts) with
-        | [ (_, act1) ], [ (_, act2) ] when fail = None ->
+        | [ (_, (_, act1)) ], [ (_, (_, act2)) ] when fail = None ->
             test_int_or_block arg act1 act2
         | _, [] ->
             (* One can compare integers and pointers *)
@@ -3171,7 +3176,7 @@ let arg_to_var arg cls =
       (v, Lvar v)
 
 (* To be set by Lam_compile *)
-let names_from_construct_pattern : (pattern -> switch_names option) ref =
+let names_from_construct_pattern : (Patterns.Head.desc Typedtree.pattern_data -> switch_names option) ref =
   ref (fun _ -> None)
 
 (*
@@ -3294,11 +3299,8 @@ and do_compile_matching ~scopes repr partial ctx pmh =
             (combine_constant None ploc arg cst partial)
             ctx pm
       | Construct cstr ->
-          let sw_names = if !Config.bs_only
-            then !names_from_construct_pattern
-              (what_is_cases_pat
-                (List.map (fun ((x, ps), _lam) -> ps, x) pm.cases))
-            else None in
+          let sw_names = !names_from_construct_pattern ph
+          in
           compile_test
             (compile_match ~scopes repr partial)
             partial (divide_constructor ~scopes)
