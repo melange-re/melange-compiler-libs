@@ -867,7 +867,7 @@ let message = function
   | Bs_integer_literal_overflow ->
       "BuckleScript warning: Integer literal exceeds the range of representable integers of type int"
   | Bs_uninterpreted_delimiters s ->
-      "BuckleScript warning: Uninterpreted delimiters" ^ s
+      "BuckleScript warning: Uninterpreted delimiters " ^ s
 #end
 ;;
 
@@ -889,12 +889,12 @@ let id_name w =
       string_of_int n
 
 let report w =
-  match w with 
+  match w with
   | Name_out_of_scope _ (* 40 *)
   | Disambiguated_name _ (* 42 *)
   | Unboxable_type_in_prim_decl _ (* 61 *) -> `Inactive
   (* TODO: we could simplify the code even more *)
-  | _ -> 
+  | _ ->
   match is_active w with
   | false -> `Inactive
   | true ->
