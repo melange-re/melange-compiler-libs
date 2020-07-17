@@ -219,25 +219,8 @@ let record_primitive = function
   | _ -> ()
 
 (* Utilities for compiling "module rec" definitions *)
-let bs_init_mod args loc : Lambda.lambda =
-  Lprim(Pccall (Primitive.simple
-    ~name:"#init_mod"
-    ~arity:2
-    ~alloc:true), args, loc)
-let bs_update_mod args loc : Lambda.lambda =
-  Lprim(Pccall (Primitive.simple
-    ~name:"#update_mod"
-    ~arity:3
-    ~alloc:true), args, loc)
 
 let mod_prim name args loc =
-  if !Config.bs_only then
-    if name = "init_mod" then
-      bs_init_mod args loc
-    else if name = "update_mod" then
-      bs_update_mod args loc
-    else assert false
-  else
   try
     Lapply {
       ap_func = Lambda.transl_prim "CamlinternalMod" name;
