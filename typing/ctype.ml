@@ -509,10 +509,11 @@ let rec class_type_arity =
                   (*******************************************)
                   (*  Miscellaneous operations on row types  *)
                   (*******************************************)
+type row_fields = (Asttypes.label * Types.row_field) list
+type row_pairs = (Asttypes.label * Types.row_field * Types.row_field) list
+let sort_row_fields : row_fields -> row_fields = List.sort (fun (p,_) (q,_) -> compare (p : string) q)
 
-let sort_row_fields = List.sort (fun (p,_) (q,_) -> compare p q)
-
-let rec merge_rf r1 r2 pairs fi1 fi2 =
+let rec merge_rf (r1 : row_fields) (r2 : row_fields) (pairs : row_pairs) (fi1 : row_fields) (fi2 : row_fields) =
   match fi1, fi2 with
     (l1,f1 as p1)::fi1', (l2,f2 as p2)::fi2' ->
       if l1 = l2 then merge_rf r1 r2 ((l1,f1,f2)::pairs) fi1' fi2' else
@@ -521,7 +522,7 @@ let rec merge_rf r1 r2 pairs fi1 fi2 =
   | [], _ -> (List.rev r1, List.rev_append r2 fi2, pairs)
   | _, [] -> (List.rev_append r1 fi1, List.rev r2, pairs)
 
-let merge_row_fields fi1 fi2 =
+let merge_row_fields (fi1 : row_fields) (fi2 : row_fields) : row_fields * row_fields * row_pairs =
   match fi1, fi2 with
     [], _ | _, [] -> (fi1, fi2, [])
   | [p1], _ when not (List.mem_assoc (fst p1) fi2) -> (fi1, fi2, [])
