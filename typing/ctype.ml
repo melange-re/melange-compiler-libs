@@ -2917,7 +2917,8 @@ and unify_row env row1 row2 =
   let rm1 = row_more row1 and rm2 = row_more row2 in
   if unify_eq rm1 rm2 then () else
   let r1, r2, pairs = merge_row_fields row1.row_fields row2.row_fields in
-  if r1 <> [] && r2 <> [] then begin
+  if not !Config.bs_only && (r1 <> [] && r2 <> []) then begin
+    (* pairs are the intersection, r1 , r2 should be disjoint *)
     let ht = Hashtbl.create (List.length r1) in
     List.iter (fun (l,_) -> Hashtbl.add ht (hash_variant l) l) r1;
     List.iter
