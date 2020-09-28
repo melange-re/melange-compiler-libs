@@ -204,11 +204,13 @@ val default_warning_reporter: t -> Warnings.t -> report option
 
 (** {2 Printing warnings} *)
 
+#if undefined BS_ONLY then (* Not using below APIs in ReScript *)
 val formatter_for_warnings : formatter ref
 
 val print_warning: t -> formatter -> Warnings.t -> unit
 (** Prints a warning. This is simply the composition of [report_warning] and
    [print_report]. *)
+#end
 
 val prerr_warning: t -> Warnings.t -> unit
 (** Same as [print_warning], but uses [!formatter_for_warnings] as output
