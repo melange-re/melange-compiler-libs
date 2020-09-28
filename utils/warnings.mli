@@ -157,6 +157,7 @@ val mk_lazy: (unit -> 'a) -> 'a Lazy.t
         the warning/alert settings at the time [mk_lazy] is called. *)
 
 #if true then
+val has_warnings : bool ref
 val nerrors : int ref
 val message : t -> string
 val number: t -> int
