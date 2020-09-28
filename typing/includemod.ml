@@ -901,12 +901,31 @@ let report_apply_error p1 p2 ppf errs =
   fprintf ppf "@[The type of %a does not match %a's parameter@ %a@]"
     Printtyp.path p1 Printtyp.path p2 report_error errs
 
+let better_candidate_loc (x : error list) =
+    match x with
+    | [ (_,_,Interface_mismatch _); (_,_,descr)]
+      ->
+        begin match descr with
+        | Value_descriptions (_,d1,_) -> Some d1.val_loc
+        | Type_declarations (_,tdcl1,_,_) ->
+          Some tdcl1.type_loc
+        | Missing_field (_,loc,_) -> Some loc
+        | _ -> None
+        end
+    | _ -> None
+
 (* We could do a better job to split the individual error items
    as sub-messages of the main interface mismatch on the whole unit. *)
 let () =
   Location.register_error_of_exn
     (function
-      | Error err -> Some (Location.error_of_printer_file report_error err)
+      | Error err ->
+        begin match better_candidate_loc err with
+        | None ->
+          Some (Location.error_of_printer_file report_error err)
+        | Some loc ->
+          Some (Location.error_of_printer ~loc report_error err)
+        end
       | Apply_error(loc, p1, p2, err) ->
           Some (Location.error_of_printer ~loc (report_apply_error p1 p2) err)
       | _ -> None
