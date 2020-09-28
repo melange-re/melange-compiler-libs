@@ -983,16 +983,6 @@ let report_alert (alert : alert) =
           sub_locs;
         }
 
-#if true then
-let super_report message w =
-  match is_active w with
-  | false -> `Inactive
-  | true ->
-     if is_error w then incr nerrors;
-     `Active { id = id_name w; message = message w; is_error = is_error w;
-               sub_locs = [] }
-;;
-#end
 exception Errors;;
 
 let reset_fatal () =
