@@ -2072,8 +2072,8 @@ let rec is_nonexpansive exp =
   | Texp_ident _
   | Texp_constant _
   | Texp_unreachable
-  | Texp_function _
-  | Texp_array [] -> true
+  | Texp_function _ -> true
+  | Texp_array [] ->  !Config.unsafe_empty_array
   | Texp_let(_rec_flag, pat_exp_list, body) ->
       List.for_all (fun vb -> is_nonexpansive vb.vb_expr) pat_exp_list &&
       is_nonexpansive body

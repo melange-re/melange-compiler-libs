@@ -30,6 +30,7 @@ let standard_library =
   with Not_found ->
     standard_library_default
 let bs_only = ref false
+let unsafe_empty_array = ref true
 let syntax_kind = ref `ml
 let ccomp_type = "cc"
 let c_compiler = "clang"
