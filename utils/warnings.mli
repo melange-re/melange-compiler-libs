@@ -57,7 +57,9 @@ type t =
   | Wildcard_arg_to_constant_constr         (* 28 *)
   | Eol_in_string                           (* 29 *)
   | Duplicate_definitions of string * string * string * string (* 30 *)
+#if undefined BS_ONLY then
   | Module_linked_twice of string * string * string (* 31 *)
+#end
   | Unused_value_declaration of string      (* 32 *)
   | Unused_open of string                   (* 33 *)
   | Unused_type_declaration of string       (* 34 *)
@@ -77,14 +79,18 @@ type t =
   | Eliminated_optional_arguments of string list (* 48 *)
   | No_cmi_file of string * string option   (* 49 *)
   | Unexpected_docstring of bool            (* 50 *)
+#if undefined BS_ONLY then
   | Wrong_tailcall_expectation of bool      (* 51 *)
+#end
   | Fragile_literal_pattern                 (* 52 *)
   | Misplaced_attribute of string           (* 53 *)
   | Duplicated_attribute of string          (* 54 *)
   | Inlining_impossible of string           (* 55 *)
   | Unreachable_case                        (* 56 *)
   | Ambiguous_var_in_pattern_guard of string list (* 57 *)
+#if undefined BS_ONLY then
   | No_cmx_file of string                   (* 58 *)
+#end
   | Flambda_assignment_to_non_mutable_value (* 59 *)
   | Unused_module of string                 (* 60 *)
   | Unboxable_type_in_prim_decl of string   (* 61 *)
@@ -150,10 +156,11 @@ val mk_lazy: (unit -> 'a) -> 'a Lazy.t
     (** Like [Lazy.of_fun], but the function is applied with
         the warning/alert settings at the time [mk_lazy] is called. *)
 
-#if undefined BS_NO_COMPILER_PATCH then
-  val message : t -> string
-  val id_name: t -> string
-  val super_report :
-    (t -> string) ->
-    t ->  [ `Active of reporting_information | `Inactive ]
+#if true then
+val nerrors : int ref
+val message : t -> string
+val number: t -> int
+val super_report :
+  (t -> string) ->
+  t ->  [ `Active of reporting_information | `Inactive ]
 #end
