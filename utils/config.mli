@@ -30,6 +30,8 @@ val syntax_kind : [ `ml | `reason | `rescript ] ref
 
 val bs_only : bool ref
 
+val unsafe_empty_array: bool ref
+
 val ccomp_type: string
 (** The "kind" of the C compiler, assembler and linker used: one of
     "cc" (for Unix-style C compilers)
