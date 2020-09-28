@@ -160,7 +160,4 @@ val mk_lazy: (unit -> 'a) -> 'a Lazy.t
 val nerrors : int ref
 val message : t -> string
 val number: t -> int
-val super_report :
-  (t -> string) ->
-  t ->  [ `Active of reporting_information | `Inactive ]
 #end
