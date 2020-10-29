@@ -108,6 +108,7 @@ type t =
   | Bs_unimplemented_primitive of string    (* 106 *)
   | Bs_integer_literal_overflow              (* 107 *)
   | Bs_uninterpreted_delimiters of string   (* 108 *)
+  | Bs_toplevel_expression_unit             (* 109 *)
 #end
 ;;
 
@@ -202,10 +203,11 @@ let number = function
   | Bs_unimplemented_primitive _ -> 106
   | Bs_integer_literal_overflow -> 107
   | Bs_uninterpreted_delimiters _ -> 108
+  | Bs_toplevel_expression_unit -> 109
 #end
 ;;
 
-let last_warning_number = 108
+let last_warning_number = 109
 
 (* Third component of each tuple is the list of names for each warning. The
    first element of the list is the current name, any following ones are
@@ -373,6 +375,7 @@ let descriptions =
    106, "Unimplemented primitive used:", [ "bucklescript-unimplemented-primitive" ];
    107, "Integer literal exceeds the range of representable integers of type int", [ "bucklescript-literal-int-overflow" ];
    108, "Uninterpreted delimiters (for unicode)", [ "bucklescript-uninterpreted-delimiters" ];
+   109, "Toplevel expression has unit type", [ "bucklescript-toplevel-expr-unit"  ]
 #end
   ]
 ;;
@@ -616,7 +619,7 @@ let parse_options errflag s =
   current := {(!current) with error; active}
 
 (* If you change these, don't forget to change them in man/ocamlc.m *)
-let defaults_w = "+a-4-6-7-9-27-29-30-32..42-44-45-48-50-60-66-67-68-102";;
+let defaults_w = "+a-4-6-7-9-27-29-30-32..42-44-45-48-50-60-66-67-68-102-109";;
 let defaults_warn_error = "-a+31";;
 
 let () =
@@ -915,6 +918,8 @@ let message = function
       "Integer literal exceeds the range of representable integers of type int"
   | Bs_uninterpreted_delimiters s ->
       "Uninterpreted delimiters " ^ s
+  | Bs_toplevel_expression_unit ->
+      "Toplevel expression is expected to have unit type."
 #end
 ;;
 
