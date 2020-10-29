@@ -110,6 +110,7 @@ type t =
   | Bs_unimplemented_primitive of string    (* 106 *)
   | Bs_integer_literal_overflow              (* 107 *)
   | Bs_uninterpreted_delimiters of string   (* 108 *)
+  | Bs_toplevel_expression_unit             (* 109 *)
 #end
 ;;
 
