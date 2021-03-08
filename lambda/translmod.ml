@@ -251,7 +251,7 @@ let mod_prim name args loc =
 let undefined_location loc =
   let (fname, line, char) = Location.get_pos_info loc.Location.loc_start in
   Lconst(Const_block(0, Lambda.default_tag_info,
-                     [Const_base(Const_string (fname, loc, None));
+                     [Const_base(Const_string (fname, loc, None), default_pointer_info);
                       const_int line;
                       const_int char]))
 
@@ -1464,7 +1464,7 @@ let toploop_getvalue id =
                   [Lprim(Pgetglobal toploop_ident, [], Loc_unknown)],
                   Loc_unknown);
     ap_args=[Lconst(Const_base(
-      Const_string (toplevel_name id, Location.none, None)))];
+      Const_string (toplevel_name id, Location.none, None), default_pointer_info))];
     ap_tailcall=Default_tailcall;
     ap_inlined=Default_inline;
     ap_specialised=Default_specialise;
@@ -1478,7 +1478,7 @@ let toploop_setvalue id lam =
                   Loc_unknown);
     ap_args=
       [Lconst(Const_base(
-         Const_string(toplevel_name id, Location.none, None)));
+         Const_string(toplevel_name id, Location.none, None), default_pointer_info));
        lam];
     ap_tailcall=Default_tailcall;
     ap_inlined=Default_inline;

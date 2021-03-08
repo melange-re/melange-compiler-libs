@@ -609,9 +609,9 @@ let lambda_of_loc kind sloc =
   | Loc_POS ->
     Lconst (Const_block (0, Blk_tuple, [
           Const_immstring file;
-          Const_base (Const_int lnum);
-          Const_base (Const_int cnum);
-          Const_base (Const_int enum);
+          Const_base (Const_int lnum, default_pointer_info);
+          Const_base (Const_int cnum, default_pointer_info);
+          Const_base (Const_int enum, default_pointer_info);
         ]))
   | Loc_FILE -> Lconst (Const_immstring file)
   | Loc_MODULE ->
@@ -623,7 +623,7 @@ let lambda_of_loc kind sloc =
     let loc = Printf.sprintf "File %S, line %d, characters %d-%d"
         file lnum cnum enum in
     Lconst (Const_immstring loc)
-  | Loc_LINE -> Lconst (Const_base (Const_int lnum))
+  | Loc_LINE -> Lconst (Const_base (Const_int lnum, default_pointer_info))
   | Loc_FUNCTION ->
     let scope_name = Debuginfo.Scoped_location.string_of_scoped_location sloc in
     Lconst (Const_immstring scope_name)
