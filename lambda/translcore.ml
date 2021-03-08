@@ -64,7 +64,7 @@ let transl_extension_constructor ~scopes env path ext =
     Text_decl _ ->
       let tag_info = Blk_extension_slot in
       Lprim (Pmakeblock (Obj.object_tag, tag_info, Immutable, None),
-        [Lconst (Const_base (Const_string (name, ext.ext_loc, None)));
+        [Lconst (Const_base (Const_string (name, ext.ext_loc, None), default_pointer_info));
          Lprim (prim_fresh_oo_id, [Lconst (const_int 0)], loc)],
         loc)
   | Text_rebind(path, _lid) ->
@@ -79,7 +79,7 @@ let extract_constant = function
   | _ -> raise_notrace Not_constant
 
 let extract_float = function
-    Const_base(Const_float f) -> f
+    Const_base(Const_float f, _) -> f
   | _ -> fatal_error "Translcore.extract_float"
 
 (* Push the default values under the functional abstractions *)
@@ -194,9 +194,9 @@ let assert_failed ~scopes exp =
     (Lprim(Pmakeblock(0, Lambda.default_tag_info, Immutable, None),
           [slot;
            Lconst(Const_block(0, Lambda.Blk_tuple,
-              [Const_base(Const_string (fname, exp.exp_loc, None));
-               Const_base(Const_int line);
-               Const_base(Const_int char)]))], loc))], loc)
+              [Const_base(Const_string (fname, exp.exp_loc, None), default_pointer_info);
+               Const_base(Const_int line, default_pointer_info);
+               Const_base(Const_int char, default_pointer_info)]))], loc))], loc)
 ;;
 
 let rec cut n l =
@@ -249,7 +249,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
       transl_ident (of_location ~scopes e.exp_loc)
         e.exp_env e.exp_type path desc
   | Texp_constant cst ->
-      Lconst(Const_base cst)
+      Lconst(Const_base (cst, default_pointer_info))
   | Texp_let(rec_flag, pat_expr_list, body) ->
       transl_let ~scopes rec_flag pat_expr_list
         (event_before ~scopes body (transl_exp ~scopes body))
@@ -320,14 +320,20 @@ and transl_exp0 ~in_new_scope ~scopes e =
         Lprim(Pmakeblock(0, tag_info, Immutable, Some shape), ll,
               (of_location ~scopes e.exp_loc))
       end
-  | Texp_construct(_, cstr, args) ->
+  | Texp_construct(lid, cstr, args) ->
       let ll, shape = transl_list_with_shape ~scopes args in
       if cstr.cstr_inlined <> None then begin match ll with
         | [x] -> x
         | _ -> assert false
       end else begin match cstr.cstr_tag with
         Cstr_constant n ->
-          Lconst(const_int n)
+          let ptr_info = match lid.txt with
+            | Longident.Lident ("false"|"true") -> Pt_builtin_boolean
+            | Longident.Lident "None" when Datarepr.constructor_has_optional_shape cstr
+              -> Pt_shape_none
+            | _ -> (Lambda.Pt_constructor cstr.cstr_name)
+          in
+          Lconst(const_int ~ptr_info n)
       | Cstr_unboxed ->
           (match ll with [v] -> v | _ -> assert false)
       | Cstr_block n ->
@@ -362,7 +368,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
   | Texp_variant(l, arg) ->
       let tag = Btype.hash_variant l in
       begin match arg with
-        None -> Lconst(const_int tag)
+        None -> Lconst(const_int ~ptr_info:(Pt_variant l) tag)
       | Some arg ->
           let lam = transl_exp ~scopes arg in
           let tag_info = Lambda.Blk_variant l in

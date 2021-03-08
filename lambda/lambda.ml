@@ -246,7 +246,7 @@ type pointer_info =
 let default_pointer_info = Pt_na
 
 type structured_constant =
-    Const_base of constant
+    Const_base of constant * pointer_info
   | Const_block of int * tag_info * structured_constant list
   | Const_float_array of string list
   | Const_immstring of string
@@ -389,11 +389,11 @@ type program =
     required_globals : Ident.Set.t;
     code : lambda }
 
-let const_int n = Const_base (Const_int n)
+let const_int ?(ptr_info=default_pointer_info) n = Const_base (Const_int n, ptr_info)
 
 let const_unit = const_int 0
 
-let lambda_assert_false = Lconst const_unit
+let lambda_assert_false = Lconst (const_int ~ptr_info:(Pt_constructor "assert false") 0)
 
 let lambda_unit = Lconst const_unit
 
@@ -431,7 +431,7 @@ let make_key e =
         try Ident.find_same id env
         with Not_found -> e
       end
-    | Lconst  (Const_base (Const_string _)) ->
+    | Lconst  (Const_base (Const_string _, _)) ->
         (* Mutable constants are not shared *)
         raise Not_simple
     | Lconst _ -> e
