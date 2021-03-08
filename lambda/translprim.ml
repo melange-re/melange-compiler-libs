@@ -58,6 +58,11 @@ type comparison =
   | Greater_equal
   | Greater_than
   | Compare
+  | Max
+  | Min
+  | Null
+  | Undefined
+  | Nullable
 
 type comparison_kind =
   | Compare_generic
@@ -110,8 +115,19 @@ let gen_array_kind =
 let prim_sys_argv =
   Primitive.simple ~name:"caml_sys_argv" ~arity:1 ~alloc:true
 
+let arity2 name : Lambda.primitive = Lambda.Pccall (Primitive.simple ~name ~arity:2 ~alloc:true)
+let more_bs_primitives ls =
+  if !Clflags.bs_only then
+    ("%bs_max", Comparison(Max, Compare_generic)) ::
+    ("%bs_min", Comparison(Min, Compare_generic)) ::
+    ("%bs_equal_null", Comparison(Null, Compare_generic)) ::
+    ("%bs_equal_undefined", Comparison(Undefined, Compare_generic)) ::
+    ("%bs_equal_nullable", Comparison(Nullable, Compare_generic)) ::
+    ls
+    else ls
+
 let primitives_table =
-  create_hashtable 57 [
+  create_hashtable 57 @@ more_bs_primitives [
     "%identity", Primitive (Pidentity, 1);
     "%bytes_to_string", Primitive (Pbytes_to_string, 1);
     "%bytes_of_string", Primitive (Pbytes_of_string, 1);
@@ -361,7 +377,6 @@ let primitives_table =
     "%compare", Comparison(Compare, Compare_generic);
   ]
 
-
 let lookup_primitive loc p =
   match Hashtbl.find primitives_table p.prim_name with
   | prim -> prim
@@ -374,15 +389,6 @@ let lookup_primitive_and_mark_used loc p env path =
   match lookup_primitive loc p with
   | External _ as e -> add_used_primitive loc env path; e
   | x -> x
-
-let _simplify_constant_constructor = function
-  | Equal -> true
-  | Not_equal -> true
-  | Less_equal -> false
-  | Less_than -> false
-  | Greater_equal -> false
-  | Greater_than -> false
-  | Compare -> false
 
 (* The following function computes the greatest lower bound in the
    semilattice of array kinds:
@@ -629,6 +635,51 @@ let comparison_primitive comparison comparison_kind =
   | Compare, Compare_nativeints -> Pcompare_bints Pnativeint
   | Compare, Compare_int32s -> Pcompare_bints Pint32
   | Compare, Compare_int64s -> Pcompare_bints Pint64
+  | Max, Compare_bytes
+  | Max, Compare_generic -> arity2 "caml_max"
+  | Max, Compare_ints -> arity2 "caml_int_max"
+  | Max, Compare_bools -> arity2 "caml_bool_max"
+  | Max, Compare_floats -> arity2 "caml_float_max"
+  | Max, Compare_strings -> arity2 "caml_string_max"
+  | Max, Compare_nativeints -> arity2 "caml_nativeint_max"
+  | Max, Compare_int32s -> arity2 "caml_int32_max"
+  | Max, Compare_int64s -> arity2 "caml_int64_max"
+  | Min, Compare_bytes
+  | Min, Compare_generic -> arity2 "caml_min"
+  | Min, Compare_ints -> arity2 "caml_int_min"
+  | Min, Compare_bools -> arity2 "caml_bool_min"
+  | Min, Compare_floats -> arity2 "caml_float_min"
+  | Min, Compare_strings -> arity2 "caml_string_min"
+  | Min, Compare_nativeints -> arity2 "caml_nativeint_min"
+  | Min, Compare_int32s -> arity2 "caml_int32_min"
+  | Min, Compare_int64s -> arity2 "caml_int64_min"
+  | Null, Compare_bytes
+  | Null, Compare_generic -> arity2 "caml_equal_null"
+  | Null, Compare_ints -> arity2 "caml_int_equal_null"
+  | Null, Compare_bools -> arity2 "caml_bool_equal_null"
+  | Null, Compare_floats -> arity2 "caml_float_equal_null"
+  | Null, Compare_strings -> arity2 "caml_string_equal_null"
+  | Null, Compare_nativeints -> arity2 "caml_nativeint_equal_null"
+  | Null, Compare_int32s -> arity2 "caml_int32_equal_null"
+  | Null, Compare_int64s -> arity2 "caml_int64_equal_null"
+  | Undefined, Compare_bytes
+  | Undefined, Compare_generic -> arity2 "caml_equal_undefined"
+  | Undefined, Compare_ints -> arity2 "caml_int_equal_undefined"
+  | Undefined, Compare_bools -> arity2 "caml_bool_equal_undefined"
+  | Undefined, Compare_floats -> arity2 "caml_float_equal_undefined"
+  | Undefined, Compare_strings -> arity2 "caml_string_equal_undefined"
+  | Undefined, Compare_nativeints -> arity2 "caml_nativeint_equal_undefined"
+  | Undefined, Compare_int32s -> arity2 "caml_int32_equal_undefined"
+  | Undefined, Compare_int64s -> arity2 "caml_int64_equal_undefined"
+  | Nullable, Compare_bytes
+  | Nullable, Compare_generic -> arity2 "caml_equal_nullable"
+  | Nullable, Compare_ints -> arity2 "caml_int_equal_nullable"
+  | Nullable, Compare_bools -> arity2 "caml_bool_equal_nullable"
+  | Nullable, Compare_floats -> arity2 "caml_float_equal_nullable"
+  | Nullable, Compare_strings -> arity2 "caml_string_equal_nullable"
+  | Nullable, Compare_nativeints -> arity2 "caml_nativeint_equal_nullable"
+  | Nullable, Compare_int32s -> arity2 "caml_int32_equal_nullable"
+  | Nullable, Compare_int64s -> arity2 "caml_int64_equal_nullable"
 
 let lambda_of_loc kind sloc =
   let loc = to_location sloc in
