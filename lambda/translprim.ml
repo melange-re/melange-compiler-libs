@@ -68,6 +68,7 @@ type comparison_kind =
   | Compare_nativeints
   | Compare_int32s
   | Compare_int64s
+  | Compare_bools
 
 type loc_kind =
   | Loc_FILE
@@ -374,7 +375,7 @@ let lookup_primitive_and_mark_used loc p env path =
   | External _ as e -> add_used_primitive loc env path; e
   | x -> x
 
-let simplify_constant_constructor = function
+let _simplify_constant_constructor = function
   | Equal -> true
   | Not_equal -> true
   | Less_equal -> false
@@ -407,7 +408,7 @@ let glb_array_type t1 t2 =
 
 (* Specialize a primitive from available type information. *)
 
-let specialize_primitive env ty ~has_constant_constructor prim =
+let specialize_primitive env ty prim =
   let param_tys =
     match is_function_type env ty with
     | None -> []
@@ -468,10 +469,13 @@ let specialize_primitive env ty ~has_constant_constructor prim =
       else None
     end
   | Comparison(comp, Compare_generic), p1 :: _ ->
+#if false then
     if (has_constant_constructor
         && simplify_constant_constructor comp) then begin
       Some (Comparison(comp, Compare_ints))
-    end else if (is_base_type env p1 Predef.path_int
+    end
+#end
+    if (is_base_type env p1 Predef.path_int
         || is_base_type env p1 Predef.path_char
         || (maybe_pointer_type env p1 = Immediate)) then begin
       Some (Comparison(comp, Compare_ints))
@@ -487,6 +491,8 @@ let specialize_primitive env ty ~has_constant_constructor prim =
       Some (Comparison(comp, Compare_int32s))
     end else if is_base_type env p1 Predef.path_int64 then begin
       Some (Comparison(comp, Compare_int64s))
+    end else if is_base_type env p1 Predef.path_bool then begin
+      Some (Comparison(comp, Compare_bools))
     end else begin
       None
     end
@@ -539,6 +545,10 @@ let comparison_primitive comparison comparison_kind =
   match comparison, comparison_kind with
   | Equal, Compare_generic -> Pccall caml_equal
   | Equal, Compare_ints -> Pintcomp Ceq
+  | Equal, Compare_bools ->
+      if not !Clflags.bs_only then Pintcomp Ceq
+      else Pccall (Primitive.simple ~name:"caml_bool_equal" ~arity:2
+                      ~alloc:false);
   | Equal, Compare_floats -> Pfloatcomp CFeq
   | Equal, Compare_strings -> Pccall caml_string_equal
   | Equal, Compare_bytes -> Pccall caml_bytes_equal
@@ -547,6 +557,10 @@ let comparison_primitive comparison comparison_kind =
   | Equal, Compare_int64s -> Pbintcomp(Pint64, Ceq)
   | Not_equal, Compare_generic -> Pccall caml_notequal
   | Not_equal, Compare_ints -> Pintcomp Cne
+  | Not_equal, Compare_bools ->
+      if not !Clflags.bs_only then Pintcomp Cne
+      else Pccall (Primitive.simple ~name:"caml_bool_notequal" ~arity:2
+                  ~alloc:false)
   | Not_equal, Compare_floats -> Pfloatcomp CFneq
   | Not_equal, Compare_strings -> Pccall caml_string_notequal
   | Not_equal, Compare_bytes -> Pccall caml_bytes_notequal
@@ -555,6 +569,10 @@ let comparison_primitive comparison comparison_kind =
   | Not_equal, Compare_int64s -> Pbintcomp(Pint64, Cne)
   | Less_equal, Compare_generic -> Pccall caml_lessequal
   | Less_equal, Compare_ints -> Pintcomp Cle
+  | Less_equal, Compare_bools ->
+    if not !Clflags.bs_only then Pintcomp Cle
+    else Pccall( Primitive.simple ~name:"caml_bool_lessequal" ~arity:2
+                    ~alloc:false);
   | Less_equal, Compare_floats -> Pfloatcomp CFle
   | Less_equal, Compare_strings -> Pccall caml_string_lessequal
   | Less_equal, Compare_bytes -> Pccall caml_bytes_lessequal
@@ -563,6 +581,11 @@ let comparison_primitive comparison comparison_kind =
   | Less_equal, Compare_int64s -> Pbintcomp(Pint64, Cle)
   | Less_than, Compare_generic -> Pccall caml_lessthan
   | Less_than, Compare_ints -> Pintcomp Clt
+  | Less_than, Compare_bools ->
+    if not !Clflags.bs_only then Pintcomp Clt
+    else Pccall (Primitive.simple ~name:"caml_bool_lessthan" ~arity:2
+                     ~alloc:false)
+
   | Less_than, Compare_floats -> Pfloatcomp CFlt
   | Less_than, Compare_strings -> Pccall caml_string_lessthan
   | Less_than, Compare_bytes -> Pccall caml_bytes_lessthan
@@ -571,6 +594,10 @@ let comparison_primitive comparison comparison_kind =
   | Less_than, Compare_int64s -> Pbintcomp(Pint64, Clt)
   | Greater_equal, Compare_generic -> Pccall caml_greaterequal
   | Greater_equal, Compare_ints -> Pintcomp Cge
+  | Greater_equal, Compare_bools ->
+    if not !Clflags.bs_only then Pintcomp Cge
+    else Pccall (Primitive.simple ~name:"caml_bool_greaterequal" ~arity:2
+                    ~alloc:false);
   | Greater_equal, Compare_floats -> Pfloatcomp CFge
   | Greater_equal, Compare_strings -> Pccall caml_string_greaterequal
   | Greater_equal, Compare_bytes -> Pccall caml_bytes_greaterequal
@@ -579,6 +606,10 @@ let comparison_primitive comparison comparison_kind =
   | Greater_equal, Compare_int64s -> Pbintcomp(Pint64, Cge)
   | Greater_than, Compare_generic -> Pccall caml_greaterthan
   | Greater_than, Compare_ints -> Pintcomp Cgt
+  | Greater_than, Compare_bools ->
+    if not !Clflags.bs_only then Pintcomp Cgt
+    else Pccall (Primitive.simple ~name:"caml_bool_greaterthan" ~arity:2
+            ~alloc:false);
   | Greater_than, Compare_floats -> Pfloatcomp CFgt
   | Greater_than, Compare_strings -> Pccall caml_string_greaterthan
   | Greater_than, Compare_bytes -> Pccall caml_bytes_greaterthan
@@ -587,6 +618,11 @@ let comparison_primitive comparison comparison_kind =
   | Greater_than, Compare_int64s -> Pbintcomp(Pint64, Cgt)
   | Compare, Compare_generic -> Pccall caml_compare
   | Compare, Compare_ints -> Pcompare_ints
+  | Compare, Compare_bools ->
+    if not !Clflags.bs_only then
+      Pcompare_ints
+    else
+      Pccall (Primitive.simple ~name: "caml_bool_compare" ~arity:2 ~alloc:false);
   | Compare, Compare_floats -> Pcompare_floats
   | Compare, Compare_strings -> Pccall caml_string_compare
   | Compare, Compare_bytes -> Pccall caml_bytes_compare
@@ -716,9 +752,8 @@ let check_primitive_arity loc p =
 
 let transl_primitive loc p env ty path =
   let prim = lookup_primitive_and_mark_used (to_location loc) p env path in
-  let has_constant_constructor = false in
   let prim =
-    match specialize_primitive env ty ~has_constant_constructor prim with
+    match specialize_primitive env ty prim with
     | None -> prim
     | Some prim -> prim
   in
@@ -787,30 +822,44 @@ let primitive_needs_event_after = function
 let transl_primitive_application loc p env ty path exp args arg_exps =
   let prim =
     lookup_primitive_and_mark_used (to_location loc) p env (Some path) in
-  let has_constant_constructor =
-    match arg_exps with
-    | [_; {exp_desc = Texp_construct(_, {cstr_tag = Cstr_constant _}, _)}]
-    | [{exp_desc = Texp_construct(_, {cstr_tag = Cstr_constant _}, _)}; _]
-    | [_; {exp_desc = Texp_variant(_, None)}]
-    | [{exp_desc = Texp_variant(_, None)}; _] -> true
-    | _ -> false
-  in
-  let prim =
-    match specialize_primitive env ty ~has_constant_constructor prim with
-    | None -> prim
+  let prim_name = p.prim_name in
+  let maybe_prim = match arg_exps with
+    | [arg1; _] when
+        is_base_type env arg1.exp_type Predef.path_bool
+        && Hashtbl.mem primitives_table prim_name
+        ->
+        specialize_primitive env ty (Hashtbl.find primitives_table prim_name)
+    | _ ->
+      let has_constant_constructor =
+        match arg_exps with
+        | [_; {exp_desc = Texp_construct(_, {cstr_tag = Cstr_constant _}, _)}]
+        | [{exp_desc = Texp_construct(_, {cstr_tag = Cstr_constant _}, _)}; _]
+        | [_; {exp_desc = Texp_variant(_, None)}]
+        | [{exp_desc = Texp_variant(_, None)}; _] -> true
+        | _ -> false
+      in
+      if has_constant_constructor then
+        match Hashtbl.find_opt primitives_table prim_name with
+        | Some prim -> specialize_primitive env ty prim
+        | None -> specialize_primitive env ty prim
+      else
+        specialize_primitive env ty prim
+    in
+    let prim = match maybe_prim with
     | Some prim -> prim
-  in
-  let lam = lambda_of_prim p.prim_name prim loc args (Some arg_exps) in
-  let lam =
-    if primitive_needs_event_after prim then begin
-      match exp with
-      | None -> lam
-      | Some exp -> event_after loc exp lam
-    end else begin
-      lam
-    end
-  in
-  lam
+    | None -> prim
+    in
+    let lam = lambda_of_prim prim_name prim loc args (Some arg_exps) in
+    let lam =
+      if primitive_needs_event_after prim then begin
+        match exp with
+        | None -> lam
+        | Some exp -> event_after loc exp lam
+      end else begin
+        lam
+      end
+    in
+    lam
 
 (* Error report *)
 
