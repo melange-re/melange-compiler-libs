@@ -352,14 +352,14 @@ let descriptions =
          arguments from being uncurried.",
     ["match-on-mutable-state-prevent-uncurry"];
 #if undefined BS_NO_COMPILER_PATCH then
-   101, "Unused bs attributes", ["unused-bs-attributes"];
-   102, "polymorphic comparison introduced (maybe unsafe)", ["polymorphic-comparison-introduced"];
-   103, "BuckleScript FFI warning: ", [ "bucklescript-ffi-warning" ];
-   104, "BuckleScript bs.deriving warning: ", [ "bucklescript-bs-deriving" ];
-   105, "BuckleScript fragile external warning ", [ "bucklescript-fragile-external" ];
-   106, "BuckleScript unimplemented primitive warning ", [ "bucklescript-unimplemented-primitive" ];
-   107, "BuckleScript literal integer overflow warning ", [ "bucklescript-literal-int-overflow" ];
-   109, "BuckleScript uninterpreted delimiters warning ", [ "bucklescript-uninterpreted-delimiters" ];
+   101, "BuckleScript warning: Unused bs attributes", ["unused-bs-attributes"];
+   102, "BuckleScript warning: polymorphic comparison introduced (maybe unsafe)", ["polymorphic-comparison-introduced"];
+   103, "BuckleScript warning: about fragile FFI definitions", [ "bucklescript-ffi-warning" ];
+   104, "BuckleScript warning: bs.deriving warning with customized message ", [ "bucklescript-bs-deriving" ];
+   105, "BuckleScript warning: the external name is inferred from val name is unsafe from refactoring when changing value name", [ "bucklescript-fragile-external" ];
+   106, "BuckleScript warning: Unimplemented primitive used:", [ "bucklescript-unimplemented-primitive" ];
+   107, "BuckleScript warning: Integer literal exceeds the range of representable integers of type int", [ "bucklescript-literal-int-overflow" ];
+   108, "BuckleScript warning: Uninterpreted delimiters (for unicode)", [ "bucklescript-uninterpreted-delimiters" ];
 #end
   ]
 ;;
