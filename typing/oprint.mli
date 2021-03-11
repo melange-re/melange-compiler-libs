@@ -17,9 +17,9 @@ open Format
 open Outcometree
 
 #if true then
-val out_ident : (formatter -> out_ident -> unit) ref
 val map_primitive_name : (string -> string) ref
 #end
+val out_ident : (formatter -> out_ident -> unit) ref
 val out_value : (formatter -> out_value -> unit) ref
 val out_label : (formatter -> string * bool * out_type -> unit) ref
 val out_type : (formatter -> out_type -> unit) ref

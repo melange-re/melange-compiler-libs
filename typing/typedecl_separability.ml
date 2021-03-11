@@ -652,7 +652,7 @@ let msig_of_context : decl_loc:Location.t -> parameters:type_expr list
       if rank mode > rank Ind then
         raise (Error (decl_loc, Non_separable_evar evar.text))
     in
-    TVarMap.iter check_existential context;
+    if not !Config.bs_only then TVarMap.iter check_existential context;
     mode_signature
 
 (** [check_def env def] returns the signature required

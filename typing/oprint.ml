@@ -23,13 +23,12 @@ let cautious f ppf arg =
     Ellipsis -> fprintf ppf "..."
 
 #if true then
-let out_ident = ref pp_print_string
 let map_primitive_name = ref (fun x -> x)
 #end
 
 let print_lident ppf = function
-  | "::" -> !out_ident ppf "(::)"
-  | s -> !out_ident ppf s
+  | "::" -> pp_print_string ppf "(::)"
+  | s -> pp_print_string ppf s
 
 let rec print_ident ppf =
   function

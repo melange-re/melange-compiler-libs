@@ -117,7 +117,7 @@ let prim_sys_argv =
 
 let arity2 name : Lambda.primitive = Lambda.Pccall (Primitive.simple ~name ~arity:2 ~alloc:true)
 
-let primitives_table =
+let primitives_table = lazy (
   if !Config.bs_only then
     create_hashtable 57 [
       "%bs_max", Comparison(Max, Compare_generic);
@@ -179,6 +179,8 @@ let primitives_table =
       "%leint", Primitive ((Pintcomp Cle), 2);
       "%gtint", Primitive ((Pintcomp Cgt), 2);
       "%geint", Primitive ((Pintcomp Cge), 2);
+      "%incr", Primitive ((Poffsetref(1)), 1);
+      "%decr", Primitive ((Poffsetref(-1)), 1);
       "%intoffloat", Primitive (Pintoffloat, 1);
       "%floatofint", Primitive (Pfloatofint, 1);
       "%negfloat", Primitive (Pnegfloat, 1);
@@ -530,9 +532,10 @@ let primitives_table =
       "%greaterthan", Comparison(Greater_than, Compare_generic);
       "%compare", Comparison(Compare, Compare_generic);
     ]
+)
 
 let lookup_primitive loc p =
-  match Hashtbl.find primitives_table p.prim_name with
+  match Hashtbl.find (Lazy.force primitives_table) p.prim_name with
   | prim -> prim
   | exception Not_found ->
       if String.length p.prim_name > 0 && p.prim_name.[0] = '%' then
@@ -1043,6 +1046,7 @@ let primitive_needs_event_after = function
   | Raise _ | Raise_with_backtrace | Loc _ -> false
 
 let transl_primitive_application loc p env ty path exp args arg_exps =
+  let primitives_table = Lazy.force primitives_table in
   let prim =
     lookup_primitive_and_mark_used (to_location loc) p env (Some path) in
   let prim_name = p.prim_name in
