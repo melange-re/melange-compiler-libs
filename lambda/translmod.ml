@@ -88,11 +88,11 @@ let rec apply_coercion loc strict restr arg =
       assert (List.length runtime_fields = List.length pos_cc_list);
       let names = Array.of_list runtime_fields in
       name_lambda strict arg (fun id ->
-        let get_field_i i pos = Lprim(Pfield (pos, Fld_module { name = names.(i) }),[Lvar id], loc) in
+        let get_field_i i pos = Lprim(Pfield (pos, Fld_module { name = Ident.name names.(i) }),[Lvar id], loc) in
         let get_field_name name pos =
             Lprim (Pfield (pos, Fld_module {name}), [Lvar id], loc) in
         let lam =
-          Lprim(Pmakeblock(0, Lambda.Blk_module runtime_fields, Immutable, None),
+          Lprim(Pmakeblock(0, Lambda.Blk_module (List.map Ident.name runtime_fields), Immutable, None),
                 List.mapi (fun i x -> apply_coercion_field loc (get_field_i i) x) pos_cc_list,
                 loc)
         in
@@ -585,11 +585,10 @@ and transl_structure ~scopes loc fields cc rootpath final_env = function
             let get_field pos =
               if pos < 0 then lambda_unit
               else Lvar v.(pos)
-            in
-            let ids = List.fold_right Ident.Set.add fields Ident.Set.empty in
+            and ids = List.fold_right Ident.Set.add fields Ident.Set.empty in
             let get_field_name _name = get_field in
-            let result = List.fold_right
-              (fun  (pos, cc) code ->
+            let result = List.fold_right2
+              (fun  (pos, cc) runtime_field code ->
                  begin match cc with
                  | Tcoerce_primitive p ->
                      (if is_top rootpath then
@@ -599,15 +598,21 @@ and transl_structure ~scopes loc fields cc rootpath final_env = function
                             p.pc_desc p.pc_env p.pc_type None
                        :: code)
                  | _ ->
-                     (if is_top rootpath then
-                        export_identifiers :=  if pos < 0 then !export_identifiers else v.(pos) :: !export_identifiers);
+                     (if is_top rootpath then begin
+                       let id = match cc with
+                       (* no runtime repr, pos is -1 *)
+                       | Tcoerce_alias _ -> runtime_field
+                       | _ -> v.(pos)
+                       in
+                       export_identifiers :=  id :: !export_identifiers
+                     end);
                      (apply_coercion loc Strict cc (get_field pos) :: code)
                  end)
-              pos_cc_list []
+              pos_cc_list runtime_fields []
             in
             let lam =
               Lprim(Pmakeblock(0,
-                (if is_top_root_path then Blk_module_export !export_identifiers else Blk_module runtime_fields),
+                (if is_top_root_path then Blk_module_export !export_identifiers else Blk_module (List.map Ident.name runtime_fields)),
                 Immutable, None),
                    result, loc)
             and id_pos_list =

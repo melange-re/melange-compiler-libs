@@ -377,16 +377,9 @@ and signatures ~loc env ~mark cxt subst sig1 sig2 =
       ([], 0) sig1 in
 
   let runtime_fields =
-    let get_id = function
-      | Sig_value (i,_, _)
-      | Sig_module (i,_,_, _, _)
-      | Sig_typext (i,_,_, _)
-      | Sig_modtype(i,_, _)
-      | Sig_class (i,_,_, _)
-      | Sig_class_type(i,_,_, _)
-      | Sig_type(i,_,_, _) -> Ident.name i in
      List.fold_right (fun item fields ->
-        if is_runtime_component item then get_id item :: fields else fields) sig2 [] in
+        if is_runtime_component item then
+          signature_item_id item :: fields else fields) sig2 [] in
 
   (* Build a table of the components of sig1, along with their positions.
      The table is indexed by kind and name of component *)
