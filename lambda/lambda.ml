@@ -744,7 +744,7 @@ let rec transl_address loc env path = function
       in
       Lprim(Pfield (pos, Fld_module { name }), [transl_address loc env path' addr], loc)
 
-and transl_path find loc env path =
+let transl_path find loc env path =
   match find path env with
   | exception Not_found ->
       fatal_error ("Cannot find address for: " ^ (Path.name path))
