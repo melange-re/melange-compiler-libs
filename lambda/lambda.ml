@@ -728,26 +728,27 @@ let rec patch_guarded patch = function
 
 (* Translate an access path *)
 
-
-let rec transl_address loc path = function
+let rec transl_address loc env path = function
   | Env.Aident id ->
       if Ident.global id
       then Lprim(Pgetglobal id, [], loc)
       else Lvar id
   | Env.Adot(addr, pos) ->
-      let  path, field_name = match path with
-        | Path.Pdot (path, s) -> path, s
-        | Path.Pident id -> path, Ident.name id
+      let loc' = Some (Debuginfo.Scoped_location.to_location loc) in
+      let path', name =
+        match Env.normalize_module_path loc' env path with
+        | Path.Pdot (path', s) -> path', s
+        | Path.Pident _
         | Path.Papply _ ->
             assert false
       in
-      Lprim(Pfield (pos, Fld_module { name = field_name}), [transl_address loc path addr], loc)
+      Lprim(Pfield (pos, Fld_module { name }), [transl_address loc env path' addr], loc)
 
-let transl_path find loc env path =
+and transl_path find loc env path =
   match find path env with
   | exception Not_found ->
       fatal_error ("Cannot find address for: " ^ (Path.name path))
-  | addr -> transl_address loc path addr
+  | addr -> transl_address loc env path addr
 
 (* Translation of identifiers *)
 
