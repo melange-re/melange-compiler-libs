@@ -1705,9 +1705,9 @@ let get_expr_args_constr ~scopes head (arg, _mut) rem =
       ->
         begin
           let from_option =
-            match head.pat_desc with
-            | Patterns.Head.Construct _
-              when Typeopt.cannot_inhabit_none_like_value head.pat_type head.pat_env
+            match head.pat_desc, head.pat_type.desc with
+            | Patterns.Head.Construct _, Tconstr (_, [ typ ], _)
+              when Typeopt.cannot_inhabit_none_like_value typ head.pat_env
               -> val_from_unnest_option_bs_primitive
             | _ -> val_from_option_bs_primitive in
           (Lprim (from_option, [arg], Scoped_location.of_location ~scopes head.pat_loc), Alias) :: rem
