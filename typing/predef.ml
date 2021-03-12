@@ -53,17 +53,10 @@ type test =
 
 let type_is_builtin_path_but_option (p : Path.t) : test  =
   match p with
-  | Pident ident ->
-      let stamp = Ident.stamp ident in
-      if
-        stamp >= Ident.stamp ident_int
-        && stamp  <= Ident.stamp ident_floatarray
-      then
-        if  (stamp = Ident.stamp ident_option)
-         || (stamp = Ident.stamp ident_unit) then
-          For_sure_no
-        else For_sure_yes
-      else NA
+  | Pident ident
+    when Ident.same ident ident_option || Ident.same ident ident_unit
+    -> For_sure_no
+  | Pident ident when Ident.is_predef ident -> For_sure_yes
   | _ -> NA
 
 let path_int = Pident ident_int
