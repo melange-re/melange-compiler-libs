@@ -717,12 +717,26 @@ and transl_structure ~scopes loc fields cc rootpath final_env = function
               in
               Llet(pure_module mb.mb_expr, Pgenval, id, module_body, body), size
           end
-      | Tstr_module ({mb_presence=Mp_absent} as mb) ->
+      | Tstr_module ({mb_presence=Mp_absent;mb_id = None} as mb) ->
           List.iter (Translattribute.check_attribute_on_module mb.mb_expr)
             mb.mb_attributes;
           List.iter (Translattribute.check_attribute_on_module mb.mb_expr)
             mb.mb_expr.mod_attributes;
           transl_structure ~scopes loc fields cc rootpath final_env rem
+      | Tstr_module ({mb_presence=Mp_absent; mb_id = Some id} as mb) ->
+          List.iter (Translattribute.check_attribute_on_module mb.mb_expr)
+            mb.mb_attributes;
+          List.iter (Translattribute.check_attribute_on_module mb.mb_expr)
+            mb.mb_expr.mod_attributes;
+          if !Config.bs_only then begin
+            let module_body = apply_coercion loc Alias Tcoerce_none lambda_module_alias in
+            let body, size =
+              transl_structure ~scopes loc fields cc rootpath final_env rem
+            in
+            Llet(pure_module mb.mb_expr, Pgenval, id, module_body, body), size
+          end else begin
+            transl_structure ~scopes loc fields cc rootpath final_env rem
+          end
       | Tstr_recmodule bindings ->
           let ext_fields =
             List.rev_append (List.filter_map (fun mb -> mb.mb_id) bindings)
