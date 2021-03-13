@@ -738,7 +738,7 @@ let rec transl_address loc env path = function
       let path', name =
         match Env.normalize_module_path loc' env path with
         | Path.Pdot (path', s) -> path', s
-        | Path.Pident _
+        | Path.Pident id -> path, Ident.name id
         | Path.Papply _ ->
             assert false
       in
