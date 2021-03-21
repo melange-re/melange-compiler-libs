@@ -2215,7 +2215,12 @@ let _super_trace ppf =
         fprintf ppf "Further expanded:@,"
       end;
       fprintf ppf
-        "@[<hov>%a@ vs@ %a@]%a"
+        "@[<v>\
+          @[%a@]@,\
+          vs@,\
+          @[%a@]\
+          %a\
+        @]"
         (super_type_expansion ~tag:(String_tag "error") t1) t1'
         (super_type_expansion ~tag:(String_tag "info") t2) t2'
         (super_trace false) rem;
