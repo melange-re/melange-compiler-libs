@@ -77,4 +77,3 @@ val create_package_mty:
     Location.t -> Env.t -> Parsetree.package_type ->
     (Longident.t Asttypes.loc * Parsetree.core_type) list *
       Parsetree.module_type
-
