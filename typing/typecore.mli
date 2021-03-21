@@ -191,10 +191,6 @@ type error =
 exception Error of Location.t * Env.t * error
 exception Error_forward of Location.error
 
-#if true then
-val super_report_error_no_wrap_printing_env: loc:Location.t -> Env.t -> error -> Location.error
-#end
-
 val report_error: loc:Location.t -> Env.t -> error -> Location.error
  (** @deprecated.  Use {!Location.error_of_exn}, {!Location.print_report}. *)
 
