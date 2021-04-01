@@ -13,7 +13,7 @@
  (public_name melange-compiler-libs)
  (flags -w -9)
  (libraries menhirLib melange-compiler-libs.wrapper)
- (modules_without_implementation annot cmo_format))
+ (modules_without_implementation annot))
 
 (ocamllex
  (modules lexer)
