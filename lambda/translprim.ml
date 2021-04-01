@@ -647,12 +647,6 @@ let specialize_primitive env ty prim =
       else None
     end
   | Comparison(comp, Compare_generic), p1 :: _ ->
-#if false then
-    if (has_constant_constructor
-        && simplify_constant_constructor comp) then begin
-      Some (Comparison(comp, Compare_ints))
-    end
-#end
     if (is_base_type env p1 Predef.path_int
         || is_base_type env p1 Predef.path_char
         || (maybe_pointer_type env p1 = Immediate)) then begin
@@ -857,9 +851,7 @@ let lambda_of_loc kind sloc =
   let loc = to_location sloc in
   let loc_start = loc.Location.loc_start in
   let (file, lnum, cnum) = Location.get_pos_info loc_start in
-#if true then
   let file = Filename.basename file in
-#end
   let file =
     if Filename.is_relative file then
       file
@@ -988,10 +980,8 @@ let transl_primitive loc p env ty path =
     else (Ident.create_local "prim", Pgenval) :: make_params (n-1)
   in
   let params = make_params p.prim_arity in
-#if undefined BS_NO_COMPILER_PATCH then
     if params = [] then lambda_of_prim p.prim_name prim loc [] None (* arity = 0 in Buckle? TODO: unneeded*)
       else
-#end
   let args = List.map (fun (id, _) -> Lvar id) params in
   let body = lambda_of_prim p.prim_name prim loc args None in
   match params with

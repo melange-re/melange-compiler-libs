@@ -235,9 +235,7 @@ let mod_prim name args loc =
 
 let undefined_location loc =
   let (fname, line, char) = Location.get_pos_info loc.Location.loc_start in
-#if true then
   let fname = Filename.basename fname in
-#end
   Lconst(Const_block(0, Blk_tuple,
                      [Const_base(Const_string (fname, loc, None), default_pointer_info);
                       const_int line;
@@ -704,10 +702,8 @@ and transl_structure ~scopes loc fields cc rootpath final_env = function
               size
           | Some id ->
               let module_body =
-#if true then
             if !Config.bs_only then module_body
             else
-#end
                 Levent (module_body, {
                   lev_loc = of_location ~scopes mb.mb_loc;
                   lev_kind = Lev_module_definition id;
@@ -755,10 +751,8 @@ and transl_structure ~scopes loc fields cc rootpath final_env = function
                       ~scopes:(enter_module_definition ~scopes id)
                       Tcoerce_none (field_path rootpath id) modl
                   in
-#if true then
                  if !Config.bs_only then module_body
                  else
-#end
                   Levent (module_body, {
                     lev_loc = of_location ~scopes loc;
                     lev_kind = Lev_module_definition id;
