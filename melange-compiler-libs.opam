@@ -1,0 +1,19 @@
+opam-version: "2.0"
+maintainer: "Antonio Monteiro <anmonteiro@gmail.com>"
+authors: [ "Antonio Monteiro <anmonteiro@gmail.com>" ]
+license: "LGPL-2.1-only with OCaml-LGPL-linking-exception"
+homepage: "https://github.com/melange-re/melange-compiler-libs"
+bug-reports: "https://github.com/melange-re/melange-compiler-libs"
+dev-repo: "git+https://github.com/melange-re/melange-compiler-libs"
+build: [
+  ["dune" "build" "-p" name "-j" jobs]
+]
+depends: [
+  "ocaml" {= "4.12"}
+  "dune" {>= "2.2"}
+  "menhir"
+]
+synopsis:
+  "Melange Compiler Libraries"
+description:
+  "Melange-specific compiler libaries that propagate information to compile to JavaScript"
