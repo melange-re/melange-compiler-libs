@@ -358,7 +358,7 @@ val cut_at : string -> char -> string * string
 
 (* Color handling *)
 module Color : sig
-  type color =
+  type color = Melange_wrapper.Misc.Color.color =
     | Black
     | Red
     | Green
@@ -389,7 +389,7 @@ module Color : sig
   val get_styles: unit -> styles
   val set_styles: styles -> unit
 
-  type setting = Auto | Always | Never
+  type setting = Melange_wrapper.Misc.Color.setting = Auto | Always | Never
 
   val default_setting : setting
 
@@ -404,7 +404,7 @@ end
 
 (* See the -error-style option *)
 module Error_style : sig
-  type setting =
+  type setting = Melange_wrapper.Misc.Error_style.setting =
     | Contextual
     | Short
 

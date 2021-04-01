@@ -290,7 +290,7 @@ let crc_of_unit penv f name =
     | Some crc -> crc
 
 let imports {imported_units; crc_units; _} =
-  let dont_record_crc_unit = !Clflags.dont_record_crc_unit in
+  let dont_record_crc_unit = !Bs_clflags.dont_record_crc_unit in
   match dont_record_crc_unit with
   | None -> Consistbl.extract (String.Set.elements !imported_units) crc_units
   | Some x ->
