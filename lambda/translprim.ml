@@ -35,7 +35,7 @@ exception Error of Location.t * error
 let event_before loc exp lam = match lam with
 | Lstaticraise (_,_) -> lam
 | _ ->
-  if !Clflags.record_event_when_debug && !Clflags.debug && not !Config.bs_only
+  if !Bs_clflags.record_event_when_debug && !Clflags.debug && not !Config.bs_only
   then Levent(lam, {lev_loc = loc;
                     lev_kind = Lev_before;
                     lev_repr = None;
@@ -43,7 +43,7 @@ let event_before loc exp lam = match lam with
   else lam
 
 let event_after loc exp lam =
-  if !Clflags.record_event_when_debug && !Clflags.debug && not !Config.bs_only
+  if !Bs_clflags.record_event_when_debug && !Clflags.debug && not !Config.bs_only
   then Levent(lam, {lev_loc = loc;
                     lev_kind = Lev_after exp.exp_type;
                     lev_repr = None;

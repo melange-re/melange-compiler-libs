@@ -165,7 +165,7 @@ let event_after ~scopes exp lam =
   Translprim.event_after (of_location ~scopes exp.exp_loc) exp lam
 
 let event_function ~scopes exp lam =
-  if !Clflags.record_event_when_debug && !Clflags.debug && not !Config.bs_only then
+  if !Bs_clflags.record_event_when_debug && !Clflags.debug && not !Config.bs_only then
     let repr = Some (ref 0) in
     let (info, body) = lam repr in
     (info,
@@ -562,7 +562,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
   | Texp_pack modl ->
       !transl_module ~scopes Tcoerce_none None modl
   | Texp_assert {exp_desc=Texp_construct(_, {cstr_name="false"}, _)} ->
-      if !Clflags.no_assert_false then
+      if !Bs_clflags.no_assert_false then
         Lambda.lambda_assert_false
       else
         assert_failed ~scopes e

@@ -5,5 +5,5 @@ in
 with pkgs;
 
 mkShell {
-  buildInputs = (with ocamlPackages; [ ocaml dune findlib ]);
+  buildInputs = (with ocamlPackages; [ ocaml dune findlib menhir ]);
 }

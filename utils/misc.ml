@@ -616,7 +616,7 @@ let cut_at s c =
 (* Color handling *)
 module Color = struct
   (* use ANSI color codes, see https://en.wikipedia.org/wiki/ANSI_escape_code *)
-  type color =
+  type color = Melange_wrapper.Misc.Color.color =
     | Black
     | Red
     | Green
@@ -722,7 +722,7 @@ module Color = struct
     && term <> ""
     && isatty stderr
 
-  type setting = Auto | Always | Never
+  type setting = Melange_wrapper.Misc.Color.setting = Auto | Always | Never
 
   let default_setting = Auto
 
@@ -749,7 +749,7 @@ module Color = struct
 end
 
 module Error_style = struct
-  type setting =
+  type setting = Melange_wrapper.Misc.Error_style.setting =
     | Contextual
     | Short
 

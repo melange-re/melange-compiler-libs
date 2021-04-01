@@ -202,7 +202,7 @@ let print_loc ppf loc =
   let endline = loc.loc_end.pos_lnum in
   let startchar = loc.loc_start.pos_cnum - loc.loc_start.pos_bol in
     let startchar =
-      if Clflags.bs_vscode then startchar + 1 else startchar in
+      if Bs_clflags.bs_vscode then startchar + 1 else startchar in
   let endchar = loc.loc_end.pos_cnum - loc.loc_end.pos_bol in
 
   let first = ref true in

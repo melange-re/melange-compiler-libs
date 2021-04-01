@@ -15,7 +15,9 @@
 (**************************************************************************)
 
 (* The main OCaml version string has moved to ../VERSION *)
-let version = Sys.ocaml_version
+(* NOTE(anmonteiro): our lexer reads the compiler version to check whether it
+   ends in `+BS`. So we add it here. *)
+let version = Sys.ocaml_version ^ "+BS"
 
 let standard_library_default = "/usr/local/lib/ocaml"
 
