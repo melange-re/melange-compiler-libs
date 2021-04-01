@@ -1,0 +1,5 @@
+(library
+ (name melange_wrapper)
+ (public_name melange-compiler-libs.wrapper)
+ (libraries compiler-libs.common)
+ (modules_without_implementation melange_wrapper))

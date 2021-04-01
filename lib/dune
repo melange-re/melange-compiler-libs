@@ -1,0 +1,16 @@
+(copy_files# ../file_formats/*)
+
+(copy_files# ../lambda/*)
+
+(copy_files# ../parsing/*)
+
+(copy_files# ../typing/*)
+
+(copy_files# ../utils/*)
+
+(library
+ (name melange_compiler_libs)
+ (public_name melange-compiler-libs)
+ (flags -w -9)
+ (libraries melange-compiler-libs.wrapper)
+ (modules_without_implementation annot cmo_format))

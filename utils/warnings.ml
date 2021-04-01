@@ -18,7 +18,7 @@
    - man/ocamlc.m
 *)
 
-type loc = {
+type loc = Melange_wrapper.Warnings.loc = {
   loc_start: Lexing.position;
   loc_end: Lexing.position;
   loc_ghost: bool;
@@ -110,7 +110,7 @@ type t =
    do NOT reuse one of the holes.
 *)
 
-type alert = {kind:string; message:string; def:loc; use:loc}
+type alert = Melange_wrapper.Warnings.alert = {kind:string; message:string; def:loc; use:loc}
 
 let number = function
   | Comment_start -> 1
@@ -879,7 +879,7 @@ let has_warnings = ref false ;;
 
 let nerrors = ref 0;;
 
-type reporting_information =
+type reporting_information = Melange_wrapper.Warnings.reporting_information =
   { id : string
   ; message : string
   ; is_error : bool

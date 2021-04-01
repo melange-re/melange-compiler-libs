@@ -70,7 +70,7 @@ let get_pos_info pos =
   (pos.pos_fname, pos.pos_lnum, pos.pos_cnum - pos.pos_bol)
 ;;
 
-type 'a loc = {
+type 'a loc = 'a Melange_wrapper.Location.loc = {
   txt : 'a;
   loc : t;
 }
@@ -637,20 +637,20 @@ type msg = (Format.formatter -> unit) loc
 let msg ?(loc = none) fmt =
   Format.kdprintf (fun txt -> { loc; txt }) fmt
 
-type report_kind =
+type report_kind = Melange_wrapper.Location.report_kind =
   | Report_error
   | Report_warning of string
   | Report_warning_as_error of string
   | Report_alert of string
   | Report_alert_as_error of string
 
-type report = {
+type report = Melange_wrapper.Location.report = {
   kind : report_kind;
   main : msg;
   sub : msg list;
 }
 
-type report_printer = {
+type report_printer = Melange_wrapper.Location.report_printer = {
   (* The entry point *)
   pp : report_printer ->
     Format.formatter -> report -> unit;
