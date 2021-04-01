@@ -64,7 +64,7 @@ val set_input_name: string -> unit
 val get_pos_info: Lexing.position -> string * int * int
 (** file, line, char *)
 
-type 'a loc = {
+type 'a loc = 'a Melange_wrapper.Location.loc = {
   txt : 'a;
   loc : t;
 }
@@ -125,20 +125,20 @@ type msg = (Format.formatter -> unit) loc
 
 val msg: ?loc:t -> ('a, Format.formatter, unit, msg) format4 -> 'a
 
-type report_kind =
+type report_kind = Melange_wrapper.Location.report_kind =
   | Report_error
   | Report_warning of string
   | Report_warning_as_error of string
   | Report_alert of string
   | Report_alert_as_error of string
 
-type report = {
+type report = Melange_wrapper.Location.report = {
   kind : report_kind;
   main : msg;
   sub : msg list;
 }
 
-type report_printer = {
+type report_printer = Melange_wrapper.Location.report_printer = {
   (* The entry point *)
   pp : report_printer ->
     Format.formatter -> report -> unit;

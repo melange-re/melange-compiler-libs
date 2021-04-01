@@ -20,7 +20,7 @@
 
 *)
 
-type loc = {
+type loc = Melange_wrapper.Warnings.loc = {
   loc_start: Lexing.position;
   loc_end: Lexing.position;
   loc_ghost: bool;
@@ -106,7 +106,7 @@ type t =
   | Bs_toplevel_expression_unit             (* 109 *)
 ;;
 
-type alert = {kind:string; message:string; def:loc; use:loc}
+type alert = Melange_wrapper.Warnings.alert = {kind:string; message:string; def:loc; use:loc}
 
 val parse_options : bool -> string -> unit;;
 
@@ -125,7 +125,7 @@ val is_error : t -> bool;;
 val defaults_w : string;;
 val defaults_warn_error : string;;
 
-type reporting_information =
+type reporting_information = Melange_wrapper.Warnings.reporting_information =
   { id : string
   ; message : string
   ; is_error : bool
