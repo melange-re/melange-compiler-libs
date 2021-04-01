@@ -201,10 +201,8 @@ let print_loc ppf loc =
   let startline = loc.loc_start.pos_lnum in
   let endline = loc.loc_end.pos_lnum in
   let startchar = loc.loc_start.pos_cnum - loc.loc_start.pos_bol in
-#if undefined BS_NO_COMPILER_PATCH then
     let startchar =
       if Clflags.bs_vscode then startchar + 1 else startchar in
-#end
   let endchar = loc.loc_end.pos_cnum - loc.loc_end.pos_bol in
 
   let first = ref true in

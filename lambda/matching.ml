@@ -3106,10 +3106,8 @@ let rec lower_bind v arg lam =
         bind Alias v arg lam
       else
         Llet (Alias, k, vv, lv, lower_bind v arg l)
-#if true then
-| Lvar u when Ident.same u v && Ident.name u = "*sth*" ->
-    arg (* eliminate let *sth* = from_option x in *sth* *)
-#end
+  | Lvar u when Ident.same u v && Ident.name u = "*sth*" ->
+      arg (* eliminate let *sth* = from_option x in *sth* *)
   | _ -> bind Alias v arg lam
 
 let bind_check str v arg lam =
@@ -3450,11 +3448,9 @@ let failure_handler ~scopes loc ~failer () =
     in
     let fname, line, char =
       Location.get_pos_info loc.Location.loc_start in
-#if true then
     let fname =
       Filename.basename fname
     in
-#end
     Lprim
       ( Praise Raise_regular,
         [ Lprim
@@ -3673,11 +3669,9 @@ let for_let ~scopes loc param pat body =
       let k = Typeopt.value_kind pat.pat_env pat.pat_type in
       Llet (Strict, k, id, param, body)
   | _ ->
-#if true then
       (* Turn off such optimization to reduce diff in the beginning*)
       if !Config.bs_only then simple_for_let ~scopes loc param pat body
       else
-#end
       let opt = ref false in
       let nraise = next_raise_count () in
       let catch_ids = pat_bound_idents_full pat in

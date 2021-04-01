@@ -23,7 +23,6 @@ let fatal_errorf fmt =
     Format.err_formatter
     ("@?>> Fatal error: " ^^ fmt ^^ "@.")
 
-#if true then
 let array_of_list_rev = function
     [] -> [||]
   | hd::tl ->
@@ -33,7 +32,6 @@ let array_of_list_rev = function
           [] -> a
         | hd::tl -> Array.unsafe_set a i hd; fill (i-1) tl in
       fill (len - 1) tl
-#end
 
 let fatal_error msg = fatal_errorf "%s" msg
 
@@ -634,9 +632,7 @@ module Color = struct
     | BG of color (* background *)
     | Bold
     | Reset
-#if undefined BS_NO_COMPILER_PATCH then
     | Dim
-#end
 
   let ansi_of_color = function
     | Black -> "0"
@@ -653,9 +649,7 @@ module Color = struct
     | BG c -> "4" ^ ansi_of_color c
     | Bold -> "1"
     | Reset -> "0"
-#if undefined BS_NO_COMPILER_PATCH then
     | Dim -> "2"
-#end
 
   let ansi_of_style_l l =
     let s = match l with
@@ -687,11 +681,9 @@ module Color = struct
     | Format.String_tag "error" -> (!cur_styles).error
     | Format.String_tag "warning" -> (!cur_styles).warning
     | Format.String_tag "loc" -> (!cur_styles).loc
-#if undefined BS_NO_COMPILER_PATCH then
     | Format.String_tag "info" -> [Bold; FG Yellow]
     | Format.String_tag "dim" -> [Dim]
     | Format.String_tag "filename" -> [FG Cyan]
-#end
     | _ -> raise Not_found
 
   let color_enabled = ref true

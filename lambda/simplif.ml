@@ -617,9 +617,9 @@ let rec emit_tail_infos is_tail lambda =
            different warnings depending on whether the native or
            bytecode compiler is used. *)
         let maybe_warn ~is_tail ~expect_tail =
-          if is_tail <> expect_tail then
-            Location.prerr_warning (to_location ap.ap_loc)
-              (Warnings.Wrong_tailcall_expectation expect_tail) in
+          if is_tail <> expect_tail then () in
+            (* Location.prerr_warning (to_location ap.ap_loc) *)
+              (* (Warnings.Wrong_tailcall_expectation expect_tail) in *)
         match ap.ap_tailcall with
         | Default_tailcall -> ()
         | Tailcall_expectation expect_tail ->
@@ -890,6 +890,6 @@ let simplify_lambda lam =
     |> simplify_lets
   in
   if !Clflags.annotations
-     || Warnings.is_active (Warnings.Wrong_tailcall_expectation true)
+     (* || Warnings.is_active (Warnings.Wrong_tailcall_expectation true) *)
   then emit_tail_infos true lam;
   lam

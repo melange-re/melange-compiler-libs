@@ -106,9 +106,8 @@ type error =
 exception Error of Location.t * Env.t * error
 exception Error_forward of Location.error
 
-#if true then
 let should_hide : (Typedtree.module_binding -> bool) ref = ref (fun _ -> false)
-#end
+
 open Typedtree
 
 let rec path_concat head p =
@@ -2649,12 +2648,8 @@ let type_implementation_more ?check_exists sourcefile outputprefix modulename in
       end else begin
         let sourceintf =
           Filename.remove_extension sourcefile ^ !Config.interface_suffix in
-#if undefined BS_NO_COMPILER_PATCH then
     let mli_status = !Clflags.assume_no_mli in
     if (mli_status = Clflags.Mli_na && Sys.file_exists sourceintf) || (mli_status = Clflags.Mli_exists) then begin
-#else
-    if Sys.file_exists sourceintf then begin
-#end
           let intf_file =
             try
               Load_path.find_uncap (modulename ^ ".cmi")
@@ -2777,12 +2772,8 @@ let package_units initial_env objfiles cmifile modulename =
   (* See if explicit interface is provided *)
   let prefix = Filename.remove_extension cmifile in
   let mlifile = prefix ^ !Config.interface_suffix in
-#if undefined BS_NO_COMPILER_PATCH then
   let mli_status = !Clflags.assume_no_mli in
   if (mli_status = Clflags.Mli_na && Sys.file_exists mlifile) || (mli_status = Clflags.Mli_exists) then begin
-#else
-  if Sys.file_exists mlifile then begin
-#end
     if not (Sys.file_exists cmifile) then begin
       raise(Error(Location.in_file mlifile, Env.empty,
                   Interface_not_compiled mlifile))

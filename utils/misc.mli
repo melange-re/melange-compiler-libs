@@ -20,9 +20,7 @@
 
 *)
 
-#if true then
 val array_of_list_rev : 'a list -> 'a array
-#end
 
 val fatal_error: string -> 'a
 val fatal_errorf: ('a, Format.formatter, unit, 'b) format4 -> 'a
@@ -376,9 +374,7 @@ module Color : sig
     | BG of color (* background *)
     | Bold
     | Reset
-#if undefined BS_NO_COMPILER_PATCH then
     | Dim
-#end
 
   val ansi_of_style_l : style list -> string
   (* ANSI escape sequence for the given style *)

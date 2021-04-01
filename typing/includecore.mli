@@ -65,16 +65,10 @@ type type_mismatch =
   | Unboxed_representation of position
   | Immediate of Type_immediacy.Violation.t
 
-#if undefined BS_NO_COMPILER_PATCH then
 val value_descriptions:
   loc:Location.t -> Env.t -> Ident.t ->
   value_description -> value_description -> module_coercion
-#else
 
-val value_descriptions:
-  loc:Location.t -> Env.t -> string ->
-  value_description -> value_description -> module_coercion
-#end
 val type_declarations:
   ?equality:bool ->
   loc:Location.t ->

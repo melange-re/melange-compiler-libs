@@ -188,11 +188,9 @@ let assert_failed ~scopes exp =
     Location.get_pos_info loc.Location.loc_start
   in
   let loc = of_location ~scopes exp.exp_loc in
-#if undefined BS_NO_COMPILER_PATCH then
   let fname =
     Filename.basename fname
   in
-#end
   Lprim(Praise Raise_regular, [event_after ~scopes exp
     (Lprim(Pmakeblock(0, Blk_extension, Immutable, None),
           [slot;
@@ -418,11 +416,9 @@ and transl_exp0 ~in_new_scope ~scopes e =
   | Texp_array expr_list ->
       let kind = array_kind e in
       let ll = transl_list ~scopes expr_list in
-#if true then
       if !Config.bs_only then
          Lprim(Pmakearray (kind, Mutable), ll, of_location ~scopes e.exp_loc)
       else
-#end
       begin try
         (* For native code the decision as to which compilation strategy to
            use is made later.  This enables the Flambda passes to lift certain
@@ -546,10 +542,8 @@ and transl_exp0 ~in_new_scope ~scopes e =
                 transl_exp ~scopes body)
   | Texp_letmodule(Some id, loc, Mp_present, modl, body) ->
       let defining_expr =
-#if true then
         if !Config.bs_only then !transl_module ~scopes Tcoerce_none None modl
         else
-#end
         let mod_scopes = enter_module_definition ~scopes id in
         Levent (!transl_module ~scopes:mod_scopes Tcoerce_none None modl, {
           lev_loc = of_location ~scopes loc.loc;
