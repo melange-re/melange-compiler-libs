@@ -19,6 +19,11 @@ open Path
 open Types
 open Btype
 
+let find_ident name =
+  Melange_wrapper.Predef.builtin_idents
+  |> List.find (fun (s, _) -> s = name)
+  |> snd
+
 let builtin_idents = ref []
 
 let wrap create s =
@@ -26,7 +31,7 @@ let wrap create s =
   builtin_idents := (s, id) :: !builtin_idents;
   id
 
-let ident_create = wrap Ident.create_predef
+let ident_create = wrap find_ident
 
 let ident_int = ident_create "int"
 and ident_char = ident_create "char"
