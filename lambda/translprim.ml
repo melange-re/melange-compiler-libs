@@ -975,13 +975,15 @@ let transl_primitive loc p env ty path =
     | None -> prim
     | Some prim -> prim
   in
-  let rec make_params n =
+  let rec make_params n total =
     if n <= 0 then []
-    else (Ident.create_local "prim", Pgenval) :: make_params (n-1)
+    else (Ident.create_local ("prim" ^ string_of_int (total - n)), Pgenval) :: make_params (n-1) total
   in
-  let params = make_params p.prim_arity in
-    if params = [] then lambda_of_prim p.prim_name prim loc [] None (* arity = 0 in Buckle? TODO: unneeded*)
-      else
+  let prim_arity = p.prim_arity in
+  if prim_arity = 0 then lambda_of_prim p.prim_name prim loc [] None(* Lprim (prim, [], loc) *) else
+  let params =
+    if prim_arity = 1 then [Ident.create_local "prim", Pgenval]
+    else make_params prim_arity prim_arity in
   let args = List.map (fun (id, _) -> Lvar id) params in
   let body = lambda_of_prim p.prim_name prim loc args None in
   match params with
