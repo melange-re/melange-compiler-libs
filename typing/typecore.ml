@@ -2068,6 +2068,8 @@ let rec final_subexpression exp =
 (* Generalization criterion for expressions *)
 
 let rec is_nonexpansive exp =
+  List.exists (function (({ attr_name = {txt = "internal.expansive"}; _}) : Parsetree.attribute) -> true | _ -> false)
+   exp.exp_attributes ||
   match exp.exp_desc with
   | Texp_ident _
   | Texp_constant _
