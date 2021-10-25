@@ -3,7 +3,7 @@ let
   overlays = /Users/anmonteiro/projects/nix-overlays;
 
 in
-import "${overlays}/sources.nix" {
+import "${overlays}/boot.nix" {
   overlays = [
     (import overlays)
     (self: super: {
