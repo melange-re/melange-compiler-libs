@@ -455,11 +455,6 @@ type dir_conditional =
 (*   | Dir_if_false -> "Dir_if_false" *)
 (*   | Dir_out -> "Dir_out" *)
 
-let is_elif (i : Parser.token ) =
-  match i with
-  | LIDENT "elif" -> true
-  | _ -> false (* avoid polymorphic equal *)
-
 
 (* The table of keywords *)
 
@@ -1260,14 +1255,10 @@ and skip_hash_bang = parse
                   end
               | IF ->
                   raise (Error (Unexpected_directive, Location.curr lexbuf))
-              | _ ->
-                  if is_elif token &&
-                     directive_parse token_with_comments lexbuf then
-                    begin
-                      update_if_then_else Dir_if_true;
-                      cont lexbuf
-                    end
-                  else skip_from_if_false ()
+              | LIDENT "elif" when directive_parse token_with_comments lexbuf ->
+                  update_if_then_else Dir_if_true;
+                  cont lexbuf
+              | _ -> skip_from_if_false ()
             end
           else skip_from_if_false () in
         if directive_parse token_with_comments lexbuf then
@@ -1283,7 +1274,8 @@ and skip_hash_bang = parse
       -> (* when the predicate is false, it will continue eating `elif` *)
         raise (Error(Unexpected_directive, Location.curr lexbuf))
     | (LIDENT "elif" | ELSE as token), Dir_if_true ->
-        (* looking for #end, however, it can not see #if anymore *)
+        (* looking for #end, however, it can not see #if anymore,
+           we need do some validation *)
         let rec skip_from_if_true else_seen =
           let token = token_with_comments lexbuf in
           if token = EOF then
@@ -1304,11 +1296,9 @@ and skip_hash_bang = parse
                     raise (Error (Unexpected_directive, Location.curr lexbuf))
                   else
                     skip_from_if_true true
-              | _ ->
-                  if else_seen && is_elif token then
-                    raise (Error (Unexpected_directive, Location.curr lexbuf))
-                  else
-                    skip_from_if_true else_seen
+              | LIDENT "elif" when else_seen ->
+                  raise (Error (Unexpected_directive, Location.curr lexbuf))
+              | _ -> skip_from_if_true else_seen
             end
           else skip_from_if_true else_seen in
         skip_from_if_true (token = ELSE)
