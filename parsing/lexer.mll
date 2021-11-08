@@ -108,20 +108,6 @@ let () =
   in
   replace_directive_built_in_value "OCAML_VERSION"
     (Dir_string version);
-  replace_directive_built_in_value "OCAML_PATCH"
-    (Dir_string
-       (match String.rindex version '+' with
-       | exception Not_found -> ""
-       | i ->
-           String.sub version (i + 1)
-             (String.length version - i - 1)))
-  ;
-  replace_directive_built_in_value "OS_TYPE"
-    (Dir_string Sys.os_type);
-  replace_directive_built_in_value "BIG_ENDIAN"
-    (Dir_bool Sys.big_endian);
-  replace_directive_built_in_value "WORD_SIZE"
-    (Dir_int Sys.word_size)
 
 let find_directive_built_in_value k =
   Hashtbl.find directive_built_in_values k
@@ -1243,7 +1229,7 @@ and skip_hash_bang = parse
             begin
               let token = token_with_comments lexbuf in
               match token with
-              | END ->
+              | END | LIDENT "endif" ->
                   begin
                     update_if_then_else Dir_out;
                     cont lexbuf
@@ -1284,7 +1270,7 @@ and skip_hash_bang = parse
             begin
               let token = token_with_comments lexbuf in
               match token with
-              | END ->
+              | END | LIDENT "endif" ->
                   begin
                     update_if_then_else Dir_out;
                     cont lexbuf
@@ -1305,10 +1291,10 @@ and skip_hash_bang = parse
     | ELSE, Dir_if_false
     | ELSE, Dir_out ->
         raise (Error(Unexpected_directive, Location.curr lexbuf))
-    | END, (Dir_if_false | Dir_if_true ) ->
+    | (END | LIDENT "endif"), (Dir_if_false | Dir_if_true) ->
         update_if_then_else  Dir_out;
         cont lexbuf
-    | END,  Dir_out  ->
+    | (END | LIDENT "endif"), Dir_out ->
         raise (Error(Unexpected_directive, Location.curr lexbuf))
     | token, (Dir_if_true | Dir_if_false | Dir_out) ->
         look_ahead token
