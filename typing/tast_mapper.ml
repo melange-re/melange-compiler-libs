@@ -360,7 +360,10 @@ let expr sub x =
     | Texp_apply (exp, list) ->
         Texp_apply (
           sub.expr sub exp,
-          List.map (tuple2 id (Option.map (sub.expr sub))) list
+          List.map (function
+            | (lbl, Arg exp) -> (lbl, Arg (sub.expr sub exp))
+            | (lbl, Omitted ()) -> (lbl, Omitted ()))
+            list
         )
     | Texp_match (exp, cases, eff_cases, p) ->
         Texp_match (
@@ -687,7 +690,10 @@ let class_expr sub x =
     | Tcl_apply (cl, args) ->
         Tcl_apply (
           sub.class_expr sub cl,
-          List.map (tuple2 id (Option.map (sub.expr sub))) args
+          List.map (function
+            | (lbl, Arg exp) -> (lbl, Arg (sub.expr sub exp))
+            | (lbl, Omitted ()) -> (lbl, Omitted ()))
+            args
         )
     | Tcl_let (rec_flag, value_bindings, ivars, cl) ->
         let (rec_flag, value_bindings) =
