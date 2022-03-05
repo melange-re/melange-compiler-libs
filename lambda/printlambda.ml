@@ -481,11 +481,13 @@ let name_of_primitive = function
   | Pint_as_pointer -> "Pint_as_pointer"
   | Popaque -> "Popaque"
 
-let function_attribute ppf { inline; specialise; local; is_a_functor; stub } =
+let function_attribute ppf { inline; specialise; local; is_a_functor; stub; return_unit } =
   if is_a_functor then
     fprintf ppf "is_a_functor@ ";
   if stub then
     fprintf ppf "stub@ ";
+  if return_unit then
+    fprintf ppf "void@ ";
   begin match inline with
   | Default_inline -> ()
   | Always_inline -> fprintf ppf "always_inline@ "

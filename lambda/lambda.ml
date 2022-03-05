@@ -358,6 +358,7 @@ type function_attribute = {
   local: local_attribute;
   is_a_functor: bool;
   stub: bool;
+  return_unit: bool;
 }
 type switch_names = {consts: string array; blocks: string array}
 
@@ -450,6 +451,7 @@ let default_function_attribute = {
   local = Default_local;
   is_a_functor = false;
   stub = false;
+  return_unit = false;
 }
 
 let default_stub_attribute =
