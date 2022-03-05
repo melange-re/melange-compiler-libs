@@ -800,11 +800,11 @@ and transl_curried_function
       then
         let kind = value_kind pat.pat_env pat.pat_type in
         let return_kind = function_return_value_kind exp_env exp_type in
-        let ((_, params, return), body) =
+        let ((_, params, return, return_unit), body) =
           loop ~scopes exp_loc return_kind ~arity:(arity + 1)
             partial' param' cases'
         in
-        ((Curried, (param, kind) :: params, return),
+        ((Curried, (param, kind) :: params, return, return_unit),
          Matching.for_function ~scopes loc None (Lvar param)
            [pat, body] partial)
       else begin
@@ -814,12 +814,33 @@ and transl_curried_function
             Match_on_mutable_state_prevent_uncurry
         | Partial -> ()
         end;
-        transl_tupled_function ~scopes ~arity
-          loc return repr partial param cases
+        let ((cf, params, return), body) =
+          transl_tupled_function ~scopes ~arity
+            loc return repr partial param cases
+        in
+        ((cf, params, return, false), body)
       end
-    | cases ->
-      transl_tupled_function ~scopes ~arity
-        loc return repr partial param cases
+
+
+    | {c_rhs = {exp_env; exp_type}; _} :: _ ->
+        let ((cf, params, return), body) =
+          transl_tupled_function ~scopes ~arity
+            loc return repr partial param cases
+        in
+        let return_unit = is_base_type exp_env exp_type Predef.path_unit in
+        ((cf, params, return, return_unit), body)
+                 (* Matching.for_function ~scopes loc None (Lvar param) *)
+                   (* [pat, body] partial) *)
+        (* ([param], *)
+         (* Matching.for_function loc None (Lvar param) *)
+           (* (transl_cases cases) partial, *)
+           (* ) *)
+    | _ -> assert false
+
+
+    (* | cases -> *)
+      (* transl_tupled_function ~scopes ~arity *)
+        (* loc return repr partial param cases *)
   in
   loop ~scopes loc return ~arity:1 partial param cases
 
@@ -888,7 +909,7 @@ and transl_function0
        (transl_cases ~scopes cases) partial)
 
 and transl_function ~scopes e param cases partial =
-  let ((kind, params, return), body) =
+  let ((kind, params, return, return_unit), body) =
     event_function ~scopes e
       (function repr ->
          let pl = push_defaults e.exp_loc [] cases partial in
@@ -896,7 +917,7 @@ and transl_function ~scopes e param cases partial =
          transl_curried_function ~scopes e.exp_loc return_kind
            repr partial param pl)
   in
-  let attr = default_function_attribute in
+  let attr = { default_function_attribute with return_unit } in
   let loc = of_location ~scopes e.exp_loc in
   let lam = Lfunction{kind; params; return; body; attr; loc} in
   Translattribute.add_function_attributes lam e.exp_loc e.exp_attributes
@@ -1190,13 +1211,13 @@ and transl_letop ~scopes loc env let_ ands param case partial =
   let exp = loop (transl_exp ~scopes let_.bop_exp) ands in
   let func =
     let return_kind = value_kind case.c_rhs.exp_env case.c_rhs.exp_type in
-    let (kind, params, return), body =
+    let (kind, params, return, return_unit), body =
       event_function ~scopes case.c_rhs
         (function repr ->
            transl_curried_function ~scopes case.c_rhs.exp_loc return_kind
              repr partial param [case])
     in
-    let attr = default_function_attribute in
+    let attr = { default_function_attribute with return_unit } in
     let loc = of_location ~scopes case.c_rhs.exp_loc in
     Lfunction{kind; params; return; body; attr; loc}
   in
