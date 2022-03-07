@@ -2899,8 +2899,6 @@ let combine_constructor sw_names loc arg pat_env cstr partial ctx def
                     Lprim(is_not_none_bs_primitve , [arg], loc)
                   else arg
                 in
-                (* TODO(anmonteiro): check if we can enable this in !bs_only.
-                 otherwise need to port to below branch too.*)
                 if !Clflags.native_code then
                   Lifthenelse(Lprim (Pisint, [ arg ], loc), act1, act2)
                 else
