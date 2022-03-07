@@ -5598,7 +5598,8 @@ let report_error ~loc env = function
             Printtyp.type_expr typ "maybe you forgot a `;'.";
       | Tconstr (Pdot (Pdot(Pident id,"Fn"),_),_, _) when Ident.name id = "Js" ->
           Location.errorf ~loc
-            "This function has uncurried type, it needs to be applied in ucurried style";
+            "This function has been declared as uncurried elsewhere; \
+            it needs to be applied in uncurried style";
       | _ ->
           Location.errorf ~loc "@[<v>@[<2>This expression has type@ %a@]@ %s@]"
             Printtyp.type_expr typ
