@@ -1,12 +1,14 @@
-(copy_files ../file_formats/*)
+(copy_files# ../file_formats/*)
 
-(copy_files ../lambda/*)
+(copy_files# ../lambda/*)
+
+;; the `#` directive breaks menhir
 
 (copy_files ../parsing/*)
 
-(copy_files ../typing/*)
+(copy_files# ../typing/*)
 
-(copy_files ../utils/*)
+(copy_files# ../utils/*)
 
 (library
  (name melange_compiler_libs)
@@ -24,9 +26,10 @@
  ; flag reference:
  ; https://github.com/ocaml/ocaml/blob/f0a1be6f0/Makefile.menhir#L76-L82
  (flags
+  --lalr
   --explain
   --dump
-  --lalr
+  --require-aliases
   --strict
   --table
   -lg

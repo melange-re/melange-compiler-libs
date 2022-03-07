@@ -108,12 +108,9 @@ type is_safe =
   | Unsafe
 
 type primitive =
-  | Pidentity
   | Pbytes_to_string
   | Pbytes_of_string
   | Pignore
-  | Prevapply
-  | Pdirapply
     (* Globals *)
   | Pgetglobal of Ident.t
   | Psetglobal of Ident.t
@@ -249,14 +246,7 @@ and raise_kind =
   | Raise_reraise
   | Raise_notrace
 
-let equal_boxed_integer x y =
-  match x, y with
-  | Pnativeint, Pnativeint
-  | Pint32, Pint32
-  | Pint64, Pint64 ->
-    true
-  | (Pnativeint | Pint32 | Pint64), _ ->
-    false
+let equal_boxed_integer = Primitive.equal_boxed_integer
 
 let equal_primitive =
   (* Should be implemented like [equal_value_kind] of [equal_boxed_integer],
@@ -335,12 +325,15 @@ type local_attribute =
   | Never_local (* [@local never] *)
   | Default_local (* [@local maybe] or no [@local] attribute *)
 
+type poll_attribute =
+  | Error_poll (* [@poll error] *)
+  | Default_poll (* no [@poll] attribute *)
+
 type function_kind = Curried | Tupled
 
-type let_kind = Strict | Alias | StrictOpt | Variable
+type let_kind = Strict | Alias | StrictOpt
 
 type public_info = string option (* label name *)
-
 type meth_kind = Self | Public of public_info | Cached
 
 let equal_meth_kind x y =
@@ -356,9 +349,11 @@ type function_attribute = {
   inline : inline_attribute;
   specialise : specialise_attribute;
   local: local_attribute;
+  return_unit: bool;
+  poll: poll_attribute;
   is_a_functor: bool;
   stub: bool;
-  return_unit: bool;
+  tmc_candidate: bool;
 }
 type switch_names = {consts: string array; blocks: string array}
 
@@ -366,10 +361,12 @@ type scoped_location = Debuginfo.Scoped_location.t
 
 type lambda =
     Lvar of Ident.t
+  | Lmutvar of Ident.t
   | Lconst of structured_constant
   | Lapply of lambda_apply
   | Lfunction of lfunction
   | Llet of let_kind * value_kind * Ident.t * lambda * lambda
+  | Lmutlet of value_kind * Ident.t * lambda * lambda
   | Lletrec of (Ident.t * lambda) list * lambda
   | Lprim of primitive * lambda list * scoped_location
   | Lswitch of lambda * lambda_switch * scoped_location
@@ -445,13 +442,25 @@ let lambda_unit = Lconst const_unit
 
 let lambda_module_alias = Lconst (const_int ~ptr_info:Pt_module_alias 0)
 
+let max_arity () =
+  if !Clflags.native_code then 126 else max_int
+  (* 126 = 127 (the maximal number of parameters supported in C--)
+           - 1 (the hidden parameter containing the environment) *)
+
+let lfunction ~kind ~params ~return ~body ~attr ~loc =
+  assert (List.length params <= max_arity ());
+  Lfunction { kind; params; return; body; attr; loc }
+
+
 let default_function_attribute = {
   inline = Default_inline;
   specialise = Default_specialise;
   local = Default_local;
+  return_unit = false;
+  poll = Default_poll;
   is_a_functor = false;
   stub = false;
-  return_unit = false;
+  tmc_candidate = false;
 }
 
 let default_stub_attribute =
@@ -463,11 +472,10 @@ let default_stub_attribute =
    For that reason, they should not include cycles.
 *)
 
-exception Not_simple
-
 let max_raw = 32
 
 let make_key e =
+  let exception Not_simple in
   let count = ref 0   (* Used for controlling size *)
   and make_key = Ident.make_key_generator () in
   (* make_key is used for normalizing let-bound variables *)
@@ -475,7 +483,8 @@ let make_key e =
     incr count ;
     if !count > max_raw then raise Not_simple ; (* Too big ! *)
     match e with
-    | Lvar id ->
+    | Lvar id
+    | Lmutvar id ->
       begin
         try Ident.find_same id env
         with Not_found -> e
@@ -498,6 +507,10 @@ let make_key e =
         let ex = tr_rec env ex in
         let y = make_key x in
         Llet (str,k,y,ex,tr_rec (Ident.add x (Lvar y) env) e)
+    | Lmutlet (k,x,ex,e) ->
+        let ex = tr_rec env ex in
+        let y = make_key x in
+        Lmutlet (k,y,ex,tr_rec (Ident.add x (Lmutvar y) env) e)
     | Lprim (p,es,_) ->
         Lprim (p,tr_recs env es, Loc_unknown)
     | Lswitch (e,sw,loc) ->
@@ -572,18 +585,18 @@ let iter_opt f = function
 
 let shallow_iter ~tail ~non_tail:f = function
     Lvar _
+  | Lmutvar _
   | Lconst _ -> ()
   | Lapply{ap_func = fn; ap_args = args} ->
       f fn; List.iter f args
   | Lfunction{body} ->
       f body
-  | Llet(_str, _k, _id, arg, body) ->
+  | Llet(_, _k, _id, arg, body)
+  | Lmutlet(_k, _id, arg, body) ->
       f arg; tail body
   | Lletrec(decl, body) ->
       tail body;
       List.iter (fun (_id, exp) -> f exp) decl
-  | Lprim (Pidentity, [l], _) ->
-      tail l
   | Lprim (Psequand, [l1; l2], _)
   | Lprim (Psequor, [l1; l2], _) ->
       f l1;
@@ -626,14 +639,16 @@ let iter_head_constructor f l =
   shallow_iter ~tail:f ~non_tail:f l
 
 let rec free_variables = function
-  | Lvar id -> Ident.Set.singleton id
+  | Lvar id
+  | Lmutvar id -> Ident.Set.singleton id
   | Lconst _ -> Ident.Set.empty
   | Lapply{ap_func = fn; ap_args = args} ->
       free_variables_list (free_variables fn) args
   | Lfunction{body; params} ->
       Ident.Set.diff (free_variables body)
         (Ident.Set.of_list (List.map fst params))
-  | Llet(_str, _k, id, arg, body) ->
+  | Llet(_, _k, id, arg, body)
+  | Lmutlet(_k, id, arg, body) ->
       Ident.Set.union
         (free_variables arg)
         (Ident.Set.remove id (free_variables body))
@@ -816,6 +831,14 @@ let subst update_env ?(freshen_bound_variables = false) s input_lam =
                 to [l]; it is a free variable of the input term. *)
              begin try Ident.Map.find id s with Not_found -> lam end
         end
+    | Lmutvar id as lam ->
+       begin match Ident.Map.find id l with
+          | id' -> Lmutvar id'
+          | exception Not_found ->
+             (* Note: a mutable [id] should not appear in [s].
+                Keeping the behavior of Lvar case for now. *)
+             begin try Ident.Map.find id s with Not_found -> lam end
+        end
     | Lconst _ as l -> l
     | Lapply ap ->
         Lapply{ap with ap_func = subst s l ap.ap_func;
@@ -826,6 +849,9 @@ let subst update_env ?(freshen_bound_variables = false) s input_lam =
     | Llet(str, k, id, arg, body) ->
         let id, l' = bind id l in
         Llet(str, k, id, subst s l arg, subst s l' body)
+    | Lmutlet(k, id, arg, body) ->
+        let id, l' = bind id l in
+        Lmutlet(k, id, subst s l arg, subst s l' body)
     | Lletrec(decl, body) ->
         let decl, l' = bind_many decl l in
         Lletrec(List.map (subst_decl s l') decl, subst s l' body)
@@ -919,6 +945,7 @@ let duplicate lam =
 
 let shallow_map f = function
   | Lvar _
+  | Lmutvar _
   | Lconst _ as lam -> lam
   | Lapply { ap_func; ap_args; ap_loc; ap_tailcall;
              ap_inlined; ap_specialised } ->
@@ -934,6 +961,8 @@ let shallow_map f = function
       Lfunction { kind; params; return; body = f body; attr; loc; }
   | Llet (str, k, v, e1, e2) ->
       Llet (str, k, v, f e1, f e2)
+  | Lmutlet (k, v, e1, e2) ->
+      Lmutlet (k, v, f e1, f e2)
   | Lletrec (idel, e2) ->
       Lletrec (List.map (fun (v, e) -> (v, f e)) idel, f e2)
   | Lprim (p, el, loc) ->
@@ -1049,10 +1078,24 @@ let function_is_curried func =
   | Curried -> true
   | Tupled -> false
 
-let max_arity () =
-  if !Clflags.native_code then 126 else max_int
-  (* 126 = 127 (the maximal number of parameters supported in C--)
-           - 1 (the hidden parameter containing the environment) *)
+let find_exact_application kind ~arity args =
+  match kind with
+  | Curried ->
+      if arity <> List.length args
+      then None
+      else Some args
+  | Tupled ->
+      begin match args with
+      | [Lprim(Pmakeblock _, tupled_args, _)] ->
+          if arity <> List.length tupled_args
+          then None
+          else Some tupled_args
+      | [Lconst(Const_block (_, _, const_args))] ->
+          if arity <> List.length const_args
+          then None
+          else Some (List.map (fun cst -> Lconst cst) const_args)
+      | _ -> None
+      end
 
 let reset () =
   raise_count := 0

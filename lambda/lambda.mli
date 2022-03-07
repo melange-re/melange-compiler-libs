@@ -141,12 +141,9 @@ type pointer_info =
   | Pt_na
 
 type primitive =
-  | Pidentity
   | Pbytes_to_string
   | Pbytes_of_string
   | Pignore
-  | Prevapply
-  | Pdirapply
     (* Globals *)
   | Pgetglobal of Ident.t
   | Psetglobal of Ident.t
@@ -171,7 +168,7 @@ type primitive =
   | Pandint | Porint | Pxorint
   | Plslint | Plsrint | Pasrint
   | Pintcomp of integer_comparison
-  (* Comparions that return int (not bool like above) for ordering *)
+  (* Comparisons that return int (not bool like above) for ordering *)
   | Pcompare_ints | Pcompare_floats | Pcompare_bints of boxed_integer
   | Poffsetint of int
   | Poffsetref of int
@@ -329,9 +326,13 @@ type local_attribute =
   | Never_local (* [@local never] *)
   | Default_local (* [@local maybe] or no [@local] attribute *)
 
+type poll_attribute =
+  | Error_poll (* [@poll error] *)
+  | Default_poll (* no [@poll] attribute *)
+
 type function_kind = Curried | Tupled
 
-type let_kind = Strict | Alias | StrictOpt | Variable
+type let_kind = Strict | Alias | StrictOpt
 (* Meaning of kinds for let x = e in e':
     Strict: e may have side-effects; always evaluate e first
       (If e is a simple expression, e.g. a variable or constant,
@@ -340,7 +341,6 @@ type let_kind = Strict | Alias | StrictOpt | Variable
       in e'
     StrictOpt: e does not have side-effects, but depend on the store;
       we can discard e if x does not appear in e'
-    Variable: the variable x is assigned later in e'
  *)
 
 type public_info = string option (* label name *)
@@ -355,9 +355,11 @@ type function_attribute = {
   inline : inline_attribute;
   specialise : specialise_attribute;
   local: local_attribute;
+  return_unit: bool;
+  poll: poll_attribute;
   is_a_functor: bool;
   stub: bool;
-  return_unit: bool;
+  tmc_candidate: bool;
 }
 
 type scoped_location = Debuginfo.Scoped_location.t
@@ -366,10 +368,12 @@ type switch_names = {consts: string array; blocks: string array}
 
 type lambda =
     Lvar of Ident.t
+  | Lmutvar of Ident.t
   | Lconst of structured_constant
   | Lapply of lambda_apply
   | Lfunction of lfunction
   | Llet of let_kind * value_kind * Ident.t * lambda * lambda
+  | Lmutlet of value_kind * Ident.t * lambda * lambda
   | Lletrec of (Ident.t * lambda) list * lambda
   | Lprim of primitive * lambda list * scoped_location
   | Lswitch of lambda * lambda_switch * scoped_location
@@ -391,7 +395,7 @@ type lambda =
   | Levent of lambda * lambda_event
   | Lifused of Ident.t * lambda
 
-and lfunction =
+and lfunction = private
   { kind: function_kind;
     params: (Ident.t * value_kind) list;
     return: value_kind;
@@ -449,12 +453,23 @@ type program =
 val make_key: lambda -> lambda option
 
 val const_unit: structured_constant
+
 val const_int : ?ptr_info:pointer_info -> int -> structured_constant
 val lambda_unit: lambda
 val lambda_assert_false: lambda
 val lambda_module_alias : lambda
 val name_lambda: let_kind -> lambda -> (Ident.t -> lambda) -> lambda
 val name_lambda_list: lambda list -> (lambda list -> lambda) -> lambda
+
+val lfunction :
+  kind:function_kind ->
+  params:(Ident.t * value_kind) list ->
+  return:value_kind ->
+  body:lambda ->
+  attr:function_attribute -> (* specified with [@inline] attribute *)
+  loc:scoped_location ->
+  lambda
+
 
 val iter_head_constructor: (lambda -> unit) -> lambda -> unit
 (** [iter_head_constructor f lam] apply [f] to only the first level of
@@ -531,6 +546,8 @@ val default_function_attribute : function_attribute
 val default_stub_attribute : function_attribute
 
 val function_is_curried : lfunction -> bool
+val find_exact_application :
+  function_kind -> arity:int -> lambda list -> lambda list option
 
 val max_arity : unit -> int
   (** Maximal number of parameters for a function, or in other words,
