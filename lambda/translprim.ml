@@ -950,7 +950,7 @@ let lambda_of_prim prim_name prim loc args arg_exps =
       Lsend(Self, meth, obj, [], loc)
   | Send_cache, [obj; meth; cache; pos] ->
       (* Cached mode only works in the native backend *)
-      if !Clflags.native_code then
+      if !Config.bs_only || !Clflags.native_code then
         Lsend(Cached, meth, obj, [cache; pos], loc)
       else
         Lsend(Public None, meth, obj, [], loc)
