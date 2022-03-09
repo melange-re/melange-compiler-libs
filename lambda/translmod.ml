@@ -121,16 +121,15 @@ and apply_coercion_result loc strict funct params args cc_res =
   | _ ->
       name_lambda strict funct
         (fun id ->
-           Lfunction
-             {
-               kind = Curried;
-               params = List.rev params;
-               return = Pgenval;
-               attr = { default_function_attribute with
+           lfunction
+             ~kind:Curried
+             ~params:(List.rev params)
+             ~return:Pgenval
+             ~attr:{ default_function_attribute with
                         is_a_functor = true;
-                        stub = true; };
-               loc = loc;
-               body = apply_coercion
+                        stub = true; }
+             ~loc
+             ~body:(apply_coercion
                    loc Strict cc_res
                    (Lapply{
                       ap_loc=loc;
@@ -139,7 +138,7 @@ and apply_coercion_result loc strict funct params args cc_res =
                       ap_tailcall=Default_tailcall;
                       ap_inlined=Default_inline;
                       ap_specialised=Default_specialise;
-                    })})
+                    })))
 
 and wrap_id_pos_list loc id_pos_list get_field lam =
   let fv = free_variables lam in
@@ -269,10 +268,10 @@ let init_shape id modl =
       [] -> []
     | Sig_value(subid, {val_kind=Val_reg; val_type=ty; val_loc=loc},_) :: rem ->
         let init_v =
-          match Ctype.expand_head env ty with
-            {desc = Tarrow(_,_,_,_)} ->
+          match get_desc (Ctype.expand_head env ty) with
+            Tarrow(_,_,_,_) ->
               const_int 0 ~ptr_info:(Pt_constructor{name = "Function"; const = cstr_const; non_const = cstr_non_const})(* camlinternalMod.Function *)
-          | {desc = Tconstr(p, _, _)} when Path.same p Predef.path_lazy_t ->
+          | Tconstr(p, _, _) when Path.same p Predef.path_lazy_t ->
               const_int 1 ~ptr_info:(Pt_constructor{name = "Lazy"; const = cstr_const; non_const = cstr_non_const }) (* camlinternalMod.Lazy *)
           | _ ->
               let not_a_function =
@@ -502,21 +501,22 @@ let rec compile_functor ~scopes mexp coercion root_path loc =
       ([], transl_module ~scopes res_coercion body_path body)
       functor_params_rev
   in
-  Lfunction {
-    kind = Curried;
-    params;
-    return = Pgenval;
-    attr = {
+  lfunction
+    ~kind:Curried
+    ~params
+    ~return:Pgenval
+    ~attr:{
       inline = inline_attribute;
       specialise = Default_specialise;
       local = Default_local;
+      poll = Default_poll;
       is_a_functor = true;
       stub = false;
+      tmc_candidate = false;
       return_unit = false;
-    };
-    loc;
-    body;
-  }
+    }
+    ~loc
+    ~body
 
 (* Compile a module expression *)
 
@@ -1756,7 +1756,7 @@ let explanation_submsg (id, unsafe_info) =
 
 let report_error loc = function
   | Circular_dependency cycle ->
-      let[@manual.ref "s:recursive-modules"] chapter, section = 8, 2 in
+      let[@manual.ref "s:recursive-modules"] chapter, section = 10, 2 in
       Location.errorf ~loc ~sub:(List.map explanation_submsg cycle)
         "Cannot safely evaluate the definition of the following cycle@ \
          of recursively-defined modules:@ %a.@ \

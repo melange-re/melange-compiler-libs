@@ -37,13 +37,13 @@ let c_compiler = "clang"
 let c_output_obj = "-o "
 let c_has_debug_prefix_map = true
 let as_has_debug_prefix_map = false
-let ocamlc_cflags = "-O2 -fno-strict-aliasing -fwrapv  "
-let ocamlc_cppflags = "-D_FILE_OFFSET_BITS=64 -D_REENTRANT "
+let ocamlc_cflags = "-O2 -fno-strict-aliasing -fwrapv -Qunused-arguments -pthread "
+let ocamlc_cppflags = "-D_FILE_OFFSET_BITS=64 "
 (* #7678: ocamlopt uses these only to compile .c files, and the behaviour for
           the two drivers should be identical. *)
-let ocamlopt_cflags = "-O2 -fno-strict-aliasing -fwrapv  "
-let ocamlopt_cppflags = "-D_FILE_OFFSET_BITS=64 -D_REENTRANT "
-let bytecomp_c_libraries = "-lm  -lpthread "
+let ocamlopt_cflags = "-O2 -fno-strict-aliasing -fwrapv -Qunused-arguments -pthread "
+let ocamlopt_cppflags = "-D_FILE_OFFSET_BITS=64 "
+let bytecomp_c_libraries = "-lm  -lpthread"
 (* bytecomp_c_compiler and native_c_compiler have been supported for a
    long time and are retained for backwards compatibility.
    For programs that don't need compatibility with older OCaml releases
@@ -57,58 +57,62 @@ let native_c_compiler =
 let native_c_libraries = "-lm "
 let native_pack_linker = "ld -r -o "
 let ranlib = "ranlib"
+let default_rpath = ""
+let mksharedlibrpath = ""
 let ar = "ar"
+let supports_shared_libraries = true
 let mkdll, mkexe, mkmaindll =
   (* @@DRA Cygwin - but only if shared libraries are enabled, which we
      should be able to detect? *)
-  if Sys.os_type = "Win32" then
+  if Sys.win32 || Sys.cygwin && supports_shared_libraries then
     try
       let flexlink =
         let flexlink = Sys.getenv "OCAML_FLEXLINK" in
         let f i =
           let c = flexlink.[i] in
-          if c = '/' then '\\' else c in
+          if c = '/' && Sys.win32 then '\\' else c in
         (String.init (String.length flexlink) f) ^ " " in
       flexlink ^ "",
       flexlink ^ " -exe",
       flexlink ^ " -maindll"
     with Not_found ->
-      "clang -shared -flat_namespace -undefined suppress                    -Wl,-no_compact_unwind", "clang -O2 -fno-strict-aliasing -fwrapv -Wall -Wdeclaration-after-statement -fno-common   -Wl,-no_compact_unwind", "clang -shared -flat_namespace -undefined suppress                    -Wl,-no_compact_unwind"
+      "clang -shared                    -flat_namespace -undefined suppress -Wl,-no_compact_unwind", "clang -O2 -fno-strict-aliasing -fwrapv -Qunused-arguments -pthread -Wall -Wdeclaration-after-statement -Werror -fno-common  -Wl,-no_compact_unwind", "clang -shared                    -flat_namespace -undefined suppress -Wl,-no_compact_unwind"
   else
-    "clang -shared -flat_namespace -undefined suppress                    -Wl,-no_compact_unwind", "clang -O2 -fno-strict-aliasing -fwrapv -Wall -Wdeclaration-after-statement -fno-common   -Wl,-no_compact_unwind", "clang -shared -flat_namespace -undefined suppress                    -Wl,-no_compact_unwind"
+    "clang -shared                    -flat_namespace -undefined suppress -Wl,-no_compact_unwind", "clang -O2 -fno-strict-aliasing -fwrapv -Qunused-arguments -pthread -Wall -Wdeclaration-after-statement -Werror -fno-common -Wl,-no_compact_unwind", "clang -shared                    -flat_namespace -undefined suppress -Wl,-no_compact_unwind"
 
-let flambda = true
+let flambda = false
 let with_flambda_invariants = false
+let with_cmm_invariants = false
 let safe_string = true
 let default_safe_string = true
 let windows_unicode = 0 != 0
-let supports_shared_libraries = true
+let naked_pointers = true
 
 let flat_float_array = true
 
 let function_sections = false
 let afl_instrument = false
 
-let exec_magic_number = "Caml1999X029"
+let exec_magic_number = "Caml1999X031"
     (* exec_magic_number is duplicated in runtime/caml/exec.h *)
-and cmi_magic_number = "Caml1999I029"
-and cmo_magic_number = "Caml1999O029"
-and cma_magic_number = "Caml1999A029"
+and cmi_magic_number = "Caml1999I031"
+and cmo_magic_number = "Caml1999O031"
+and cma_magic_number = "Caml1999A031"
 and cmx_magic_number =
   if flambda then
-    "Caml1999y029"
+    "Caml1999y031"
   else
-    "Caml1999Y029"
+    "Caml1999Y031"
 and cmxa_magic_number =
   if flambda then
-    "Caml1999z029"
+    "Caml1999z031"
   else
-    "Caml1999Z029"
-and ast_impl_magic_number = "Caml1999M029"
-and ast_intf_magic_number = "Caml1999N029"
-and cmxs_magic_number = "Caml1999D029"
-and cmt_magic_number = "Caml1999T029"
-and linear_magic_number = "Caml1999L029"
+    "Caml1999Z031"
+and ast_impl_magic_number = "Caml1999M031"
+and ast_intf_magic_number = "Caml1999N031"
+and cmxs_magic_number = "Caml1999D031"
+and cmt_magic_number = "Caml1999T031"
+and linear_magic_number = "Caml1999L031"
 
 let interface_suffix = ref ".mli"
 
@@ -122,12 +126,12 @@ let max_young_wosize = 256
 let stack_threshold = 256 (* see runtime/caml/config.h *)
 let stack_safety_margin = 60
 
-let architecture = "amd64"
+let architecture = "arm64"
 let model = "default"
 let system = "macosx"
 
 let asm = "as"
-let asm_cfi_supported = false
+let asm_cfi_supported = true
 let with_frame_pointers = false
 let profinfo = false
 let profinfo_width = 0
@@ -138,8 +142,8 @@ let ext_asm = ".s"
 let ext_lib = ".a"
 let ext_dll = ".so"
 
-let host = "x86_64-apple-darwin20.3.0"
-let target = "x86_64-apple-darwin20.3.0"
+let host = "aarch64-apple-darwin21.3.0"
+let target = "aarch64-apple-darwin21.3.0"
 
 let default_executable_name =
   match Sys.os_type with
@@ -202,6 +206,7 @@ let configuration_variables =
   p_bool "afl_instrument" afl_instrument;
   p_bool "windows_unicode" windows_unicode;
   p_bool "supports_shared_libraries" supports_shared_libraries;
+  p_bool "naked_pointers" naked_pointers;
 
   p "exec_magic_number" exec_magic_number;
   p "cmi_magic_number" cmi_magic_number;

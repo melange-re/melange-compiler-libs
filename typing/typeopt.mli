@@ -46,4 +46,3 @@ val cannot_inhabit_none_like_value:
   Types.type_expr ->
   Env.t ->
   bool
-
