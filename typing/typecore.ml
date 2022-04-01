@@ -6377,7 +6377,7 @@ and type_let ?check ?check_strict
       let new_env = add_pattern_variables new_env pvs in
       let pat_list =
         List.map
-          (fun pat -> {pat with pat_type = instance pat.pat_type})
+          (fun pat -> {pat with pat_type = instance pat.pat_type}, pat.pat_type)
           pat_list
       in
       (* Only bind pattern variables after generalizing *)
@@ -6394,9 +6394,9 @@ and type_let ?check ?check_strict
         in
         type_let_def_wrap_warnings ?check ?check_strict ~is_recursive
           ~exp_env ~new_env ~spat_sexp_list ~attrs_list ~pat_list ~pvs
-          (fun exp_env ({pvb_attributes; _} as vb) pat ->
+          (fun exp_env ({pvb_attributes; _} as vb) expected_ty ->
             let sexp = vb_exp_constraint vb in
-            match get_desc pat.pat_type with
+            match get_desc expected_ty with
             | Tpoly (ty, tl) ->
                 let vars, ty' =
                   with_local_level_generalize_structure_if_principal
@@ -6410,12 +6410,12 @@ and type_let ?check ?check_strict
             | _ ->
                 let exp =
                   Builtin_attributes.warning_scope pvb_attributes (fun () ->
-                    type_expect exp_env sexp (mk_expected pat.pat_type))
+                    type_expect exp_env sexp (mk_expected expected_ty))
                 in
                 exp, None)
       in
       List.iter2
-        (fun pat (attrs, exp) ->
+        (fun (pat, _) (attrs, exp) ->
           Builtin_attributes.warning_scope ~ppwarning:false attrs
             (fun () ->
               let case = Parmatch.typed_case (case pat exp) in
@@ -6428,7 +6428,7 @@ and type_let ?check ?check_strict
       (pat_list, exp_list, new_env, mvs)
     end
     ~before_generalize: begin fun (pat_list, exp_list, _, _) ->
-      List.iter2 (fun pat (exp, vars) ->
+      List.iter2 (fun (pat, _) (exp, vars) ->
         if maybe_expansive exp then begin
           lower_contravariant env pat.pat_type;
           if vars <> None then lower_contravariant env exp.exp_type
@@ -6437,13 +6437,13 @@ and type_let ?check ?check_strict
     end
   in
   List.iter2
-    (fun pat (exp, vars) ->
-      Option.iter (check_univars env "definition" exp pat.pat_type) vars)
+    (fun (_, expected_ty) (exp, vars) ->
+      Option.iter (check_univars env "definition" exp expected_ty) vars)
     pat_list exp_list;
   let l = List.combine pat_list exp_list in
   let l =
     List.map2
-      (fun (p, (e, _)) pvb ->
+      (fun ((p, _), (e, _)) pvb ->
         (* vb_rec_kind will be computed later for recursive bindings *)
         {vb_pat=p; vb_expr=e; vb_attributes=pvb.pvb_attributes;
          vb_loc=pvb.pvb_loc; vb_rec_kind = Dynamic;
@@ -6529,11 +6529,11 @@ and type_let_def_wrap_warnings
    *)
   let current_slot = ref None in
   let rec_needed = ref false in
-  let pat_slot_list =
+  let typ_slot_list =
     List.map2
-      (fun attrs pat ->
+      (fun attrs (pat, expected_ty) ->
         Builtin_attributes.warning_scope ~ppwarning:false attrs (fun () ->
-          if not warn_about_unused_bindings then pat, None
+          if not warn_about_unused_bindings then expected_ty, None
           else
             let some_used = ref false in
             (* has one of the identifier of this pattern been used? *)
@@ -6565,7 +6565,7 @@ and type_let_def_wrap_warnings
                   )
               )
               (Typedtree.pat_bound_idents pat);
-            pat, Some slot
+              expected_ty, Some slot
            ))
       attrs_list
       pat_list
@@ -6575,7 +6575,7 @@ and type_let_def_wrap_warnings
       (fun case (pat, slot) ->
         if is_recursive then current_slot := slot;
         type_def exp_env case pat)
-      spat_sexp_list pat_slot_list
+      spat_sexp_list typ_slot_list
   in
   current_slot := None;
   if is_recursive && not !rec_needed then begin
