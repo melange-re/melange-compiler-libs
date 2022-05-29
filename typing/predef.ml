@@ -31,7 +31,7 @@ let wrap create s =
   builtin_idents := (s, id) :: !builtin_idents;
   id
 
-let ident_create = wrap Ident.create_predef
+let ident_create = wrap find_ident
 
 let ident_int = ident_create "int"
 and ident_char = ident_create "char"
