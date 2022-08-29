@@ -768,7 +768,7 @@ ocamlsrcdir=${ocamlsrcdir%X}
 
 AS_CASE([$host],
   [*-*-mingw32*|*-pc-windows],
-    [ln='cp -pf'
+    [OCAML_CHECK_LN_ON_WINDOWS
     ocamlsrcdir="$(LC_ALL=C.UTF-8 cygpath -w -- "$ocamlsrcdir")"],
   [ln='ln -sf'])
 
