@@ -292,6 +292,7 @@ let directive_parse (token_with_comments : Lexing.lexbuf -> Parser.token) lexbuf
           | LESS -> ( < )
           | GREATER -> ( > )
           | INFIXOP0 "<=" -> ( <= )
+          | INFIXOP0 ">=" -> ( >= )
           | EQUAL -> ( = )
           | INFIXOP0 "<>" -> ( <> )
           | _ -> assert false
