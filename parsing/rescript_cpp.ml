@@ -37,6 +37,7 @@ type pp_error =
   | Unexpected_token_in_conditional
   | Expect_hash_then_in_conditional
   | Illegal_semver of string
+  | Illegal_version_tuple of directive_type
   | Unexpected_directive
   | Conditional_expr_expected_type of directive_type * directive_type
 
@@ -86,6 +87,8 @@ let prepare_pp_error loc = function
         (string_of_type_directive b)
   | Illegal_semver s ->
       Location.errorf ~loc "Illegal semantic version string %s" s
+  | Illegal_version_tuple ty ->
+      Location.errorf ~loc "The right-hand-side of a string-to-version-tuple comparison must be an (int, int, int) tuple, not %s" (string_of_type_directive ty)
 
 let () =
   Location.register_error_of_exn (function
@@ -204,6 +207,19 @@ let semver loc lhs str =
     | `Compatible -> major = l_major
     | `Exact -> lversion = version
 
+(** Specifically and only coerces [Dir_string] on the LHS into a [Dir_tuple] if the RHS is also a [Dir_tuple]. The value on the RHS {e must} be a semver-compatible string, i.e. [OCAML_VERSION]. *)
+let coerce_type (lexbuf : Lexing.lexbuf) (lhs : directive_value) (rhs : directive_value) =
+  match lhs, rhs with
+  | Dir_string s, Dir_tuple r_els ->
+    let ((l_major, l_minor, l_patch) as lversion), _ =
+      semantic_version_parse s 0 (String.length s - 1)
+    in
+    begin match r_els with
+    | [Dir_int _r_major; Dir_int _r_minor; Dir_int _r_patch] -> Dir_tuple [Dir_int l_major; Dir_int l_minor; Dir_int l_patch]
+    | _ -> raise (Pp_error (Illegal_version_tuple (type_of_directive rhs), Location.curr lexbuf))
+    end
+  | _ -> assert_same_type lexbuf lhs rhs
+
 let rec pp_directive_value fmt (x : directive_value) =
   let open Format in
   match x with
@@ -266,16 +282,6 @@ let define_key_value key v =
 
 let cvt_int_literal s = -int_of_string ("-" ^ s)
 
-let value_of_token loc (t : Parser.token) =
-  match t with
-  | INT (i, None) -> Dir_int (cvt_int_literal i)
-  | STRING (s, _, _) -> Dir_string s
-  | FLOAT (s, None) -> Dir_float (float_of_string s)
-  | TRUE -> Dir_bool true
-  | FALSE -> Dir_bool false
-  | UIDENT s -> query loc s
-  | _ -> raise (Pp_error (Unexpected_token_in_conditional, loc))
-
 let directive_parse (token_with_comments : Lexing.lexbuf -> Parser.token) lexbuf
     =
   let look_ahead = ref None in
@@ -299,7 +305,36 @@ let directive_parse (token_with_comments : Lexing.lexbuf -> Parser.token) lexbuf
     assert (!look_ahead = None);
     look_ahead := Some e
   in
-  let rec token_op calc ~no lhs =
+  let rec parse_tuple (els : directive_value list) () : directive_value list =
+    let curr_token = token () in
+    match curr_token with
+    | RPAREN as e ->
+        push e;
+        els
+    | COMMA -> parse_tuple els ()
+    | _ as e ->
+        push e;
+        let v = token_value () in
+        (v :: els)
+  and token_value () =
+    let loc = Location.curr lexbuf in
+    match token () with
+    | INT (i, None) -> Dir_int (cvt_int_literal i)
+    | STRING (s, _, _) -> Dir_string s
+    | FLOAT (s, None) -> Dir_float (float_of_string s)
+    | TRUE -> Dir_bool true
+    | FALSE -> Dir_bool false
+    | UIDENT s -> query loc s
+    | LPAREN -> (
+    let v = parse_tuple [] () in
+    match token () with
+    | RPAREN -> Dir_tuple v
+    | _ ->
+        raise
+          (Pp_error (Unterminated_paren_in_conditional, Location.curr lexbuf))
+    )
+    | t -> raise (Pp_error (Unexpected_token_in_conditional, loc))
+  and token_op calc ~no lhs =
     match token () with
     | (LESS | GREATER | INFIXOP0 "<=" | INFIXOP0 ">=" | EQUAL | INFIXOP0 "<>")
       as op ->
@@ -313,16 +348,15 @@ let directive_parse (token_with_comments : Lexing.lexbuf -> Parser.token) lexbuf
           | INFIXOP0 "<>" -> ( <> )
           | _ -> assert false
         in
-        let curr_loc = Location.curr lexbuf in
-        let rhs = value_of_token curr_loc (token ()) in
-        (not calc) || f lhs (assert_same_type lexbuf lhs rhs)
+        let rhs = token_value () in
+        (not calc) || f (coerce_type lexbuf lhs rhs) rhs
     | INFIXOP0 "=~" -> (
         (not calc)
         ||
         match lhs with
         | Dir_string s -> (
             let curr_loc = Location.curr lexbuf in
-            let rhs = value_of_token curr_loc (token ()) in
+            let rhs = token_value () in
             match rhs with
             | Dir_string rhs -> semver curr_loc s rhs
             | _ ->
