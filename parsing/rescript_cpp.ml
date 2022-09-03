@@ -27,6 +27,7 @@ type directive_type =
   | Dir_type_float
   | Dir_type_int
   | Dir_type_string
+  | Dir_type_tuple of directive_type list
   | Dir_type_null
 
 type pp_error =
@@ -46,22 +47,27 @@ type directive_value =
   | Dir_float of float
   | Dir_int of int
   | Dir_string of string
+  | Dir_tuple of directive_value list
   | Dir_null
 
-let type_of_directive x =
+let rec type_of_directive x =
   match x with
   | Dir_bool _ -> Dir_type_bool
   | Dir_float _ -> Dir_type_float
   | Dir_int _ -> Dir_type_int
   | Dir_string _ -> Dir_type_string
+  | Dir_tuple els -> Dir_type_tuple (List.map type_of_directive els)
   | Dir_null -> Dir_type_null
 
-let string_of_type_directive x =
+let rec string_of_type_directive x =
   match x with
   | Dir_type_bool -> "bool"
   | Dir_type_float -> "float"
   | Dir_type_int -> "int"
   | Dir_type_string -> "string"
+  | Dir_type_tuple els ->
+    let els = List.map string_of_type_directive els in
+    Printf.sprintf "(%s)" String.(concat ", " els)
   | Dir_type_null -> "null"
 
 let prepare_pp_error loc = function
@@ -198,13 +204,23 @@ let semver loc lhs str =
     | `Compatible -> major = l_major
     | `Exact -> lversion = version
 
-let pp_directive_value fmt (x : directive_value) =
+let rec pp_directive_value fmt (x : directive_value) =
+  let open Format in
   match x with
-  | Dir_bool b -> Format.pp_print_bool fmt b
-  | Dir_int b -> Format.pp_print_int fmt b
-  | Dir_float b -> Format.pp_print_float fmt b
-  | Dir_string s -> Format.fprintf fmt "%S" s
-  | Dir_null -> Format.pp_print_string fmt "null"
+  | Dir_bool b -> pp_print_bool fmt b
+  | Dir_int b -> pp_print_int fmt b
+  | Dir_float b -> pp_print_float fmt b
+  | Dir_string s -> fprintf fmt "%S" s
+  | Dir_tuple els ->
+    pp_open_box fmt 0;
+    pp_print_string fmt "(";
+    pp_print_list ~pp_sep:(fun fmt () ->
+      pp_print_string fmt ",";
+      pp_print_space fmt ()
+    ) pp_directive_value fmt els;
+    pp_print_string fmt ")";
+    pp_close_box fmt ()
+  | Dir_null -> pp_print_string fmt "null"
 
 let list_variables fmt =
   iter_directive_built_in_value (fun s dir_value ->
