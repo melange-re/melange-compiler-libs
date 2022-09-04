@@ -315,7 +315,7 @@ let directive_parse (token_with_comments : Lexing.lexbuf -> Parser.token) lexbuf
     | _ as e ->
         push e;
         let v = token_value () in
-        (v :: els)
+        parse_tuple (v :: els) ()
   and token_value () =
     let loc = Location.curr lexbuf in
     match token () with
