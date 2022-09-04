@@ -207,7 +207,7 @@ let semver loc lhs str =
     | `Compatible -> major = l_major
     | `Exact -> lversion = version
 
-(** Specifically and only coerces [Dir_string] on the LHS into a [Dir_tuple] if the RHS is also a [Dir_tuple]. The value on the RHS {e must} be a semver-compatible string, i.e. [OCAML_VERSION]. *)
+(** Specifically and only coerces [Dir_string] on the LHS into a [Dir_tuple] if the RHS is also a [Dir_tuple]. The value on the LHS {e must} be a semver-compatible string, i.e. [OCAML_VERSION]. *)
 let coerce_type (lexbuf : Lexing.lexbuf) (lhs : directive_value) (rhs : directive_value) =
   match lhs, rhs with
   | Dir_string s, Dir_tuple r_els ->
