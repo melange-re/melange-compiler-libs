@@ -221,12 +221,11 @@ let coerce_type (lexbuf : Lexing.lexbuf) (lhs : directive_value) (rhs : directiv
   | _ -> assert_same_type lexbuf lhs rhs
 
 let rec pp_directive_value fmt (x : directive_value) =
-  let open Format in
   match x with
-  | Dir_bool b -> pp_print_bool fmt b
-  | Dir_int b -> pp_print_int fmt b
-  | Dir_float b -> pp_print_float fmt b
-  | Dir_string s -> fprintf fmt "%S" s
+  | Dir_bool b -> Format.pp_print_bool fmt b
+  | Dir_int b -> Format.pp_print_int fmt b
+  | Dir_float b -> Format.pp_print_float fmt b
+  | Dir_string s -> Format.fprintf fmt "%S" s
   | Dir_tuple els ->
     pp_open_box fmt 0;
     pp_print_string fmt "(";
@@ -236,7 +235,7 @@ let rec pp_directive_value fmt (x : directive_value) =
     ) pp_directive_value fmt els;
     pp_print_string fmt ")";
     pp_close_box fmt ()
-  | Dir_null -> pp_print_string fmt "null"
+  | Dir_null -> Format.pp_print_string fmt "null"
 
 let list_variables fmt =
   iter_directive_built_in_value (fun s dir_value ->
@@ -306,8 +305,7 @@ let directive_parse (token_with_comments : Lexing.lexbuf -> Parser.token) lexbuf
     look_ahead := Some e
   in
   let rec parse_tuple (els : directive_value list) () : directive_value list =
-    let curr_token = token () in
-    match curr_token with
+    match token () with
     | RPAREN as e ->
         push e;
         List.rev els
