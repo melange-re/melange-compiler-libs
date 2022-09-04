@@ -310,7 +310,7 @@ let directive_parse (token_with_comments : Lexing.lexbuf -> Parser.token) lexbuf
     match curr_token with
     | RPAREN as e ->
         push e;
-        els
+        List.rev els
     | COMMA -> parse_tuple els ()
     | _ as e ->
         push e;
