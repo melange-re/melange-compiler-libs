@@ -12,6 +12,7 @@
  (authors "Antonio Nuno Monteiro <anmonteiro@gmail.com>")
  (homepage "https://github.com/melange-re/melange-compiler-libs")
  (bug_reports "https://github.com/melange-re/melange-compiler-libs/issues")
+ (license "LGPL-2.1-or-later WITH OCaml-LGPL-linking-exception")
  (source
   (github melange-re/melange-compiler-libs))
  (synopsis
