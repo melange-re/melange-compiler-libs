@@ -105,14 +105,19 @@ OCAMLROOT=$(echo "$OCAMLROOT" | cygpath -f - -m)
 
 if [[ $BOOTSTRAP_FLEXDLL = 'false' ]] ; then
   case "$PORT" in
-    cygwin*) ;;
-    *) export PATH="$FLEXDLLROOT:$PATH";;
+    cygwin*)
+      install_flexdll='false';;
+    *)
+      export PATH="$FLEXDLLROOT:$PATH"
+      install_flexdll='true';;
   esac
+else
+  install_flexdll='false'
 fi
 
 case "$1" in
   install)
-    if [[ $BOOTSTRAP_FLEXDLL = 'false' ]] ; then
+    if [[ $install_flexdll = 'true' ]] ; then
       mkdir -p "$FLEXDLLROOT"
       cd "$APPVEYOR_BUILD_FOLDER/../flexdll"
       # The objects are always built from the sources
@@ -189,7 +194,7 @@ case "$1" in
       run "$MAKE distclean" $MAKE distclean
     fi
 
-    if [[ $BOOTSTRAP_FLEXDLL = 'false' ]] ; then
+    if [[ $install_flexdll = 'true' ]] ; then
       tar -xzf "$APPVEYOR_BUILD_FOLDER/flexdll.tar.gz"
       cd "flexdll-$FLEXDLL_VERSION"
       $MAKE MSVC_DETECT=0 CHAINS=${PORT%32} support
