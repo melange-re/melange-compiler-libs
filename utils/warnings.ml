@@ -1122,9 +1122,6 @@ let message = function
       "Toplevel expression is expected to have unit type."
 ;;
 
-
-let has_warnings = ref false ;;
-
 let nerrors = ref 0;;
 
 type reporting_information = Melange_wrapper.Warnings.reporting_information =
