@@ -31,7 +31,6 @@ let standard_library =
     standard_library_default
 let bs_only = ref false
 let unsafe_empty_array = ref true
-let syntax_kind = ref `ml
 let ccomp_type = "cc"
 let c_compiler = "clang"
 let c_output_obj = "-o "

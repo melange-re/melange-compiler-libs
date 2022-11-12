@@ -29,8 +29,6 @@ val version: string
 val standard_library: string
 (** The directory containing the standard libraries *)
 
-val syntax_kind : [ `ml | `reason | `rescript ] ref
-
 val bs_only : bool ref
 
 val unsafe_empty_array: bool ref
