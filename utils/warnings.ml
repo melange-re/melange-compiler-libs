@@ -895,13 +895,8 @@ let message = function
       "this statement never returns (or has an unsound type.)"
   | Preprocessor s -> s
   | Useless_record_with ->
-     begin match !Config.syntax_kind with
-      | `ml ->
       "all the fields are explicitly listed in this record:\n\
        the 'with' clause is useless."
-      | `reason | `rescript ->
-        "All the fields are already explicitly listed in this record. You can remove the `...` spread."
-     end
   | Bad_module_name (modname) ->
       "bad source file name: \"" ^ modname ^ "\" is not a valid module name."
   | All_clauses_guarded ->
