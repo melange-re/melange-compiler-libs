@@ -1,8 +1,4 @@
-let
-  pkgs = import ./nix/sources.nix { };
-in
-
-with pkgs;
+{ mkShell, ocamlPackages }:
 
 mkShell {
   buildInputs = (with ocamlPackages; [ ocaml dune findlib menhir menhirLib ]);

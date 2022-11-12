@@ -1,17 +1,15 @@
-{ pkgs ? import ./sources.nix {}, doCheck ? false }:
+{ stdenv, lib, ocamlPackages }:
 
-{
-  native = pkgs.callPackage ./generic.nix {
-    inherit doCheck;
-  };
+with ocamlPackages;
 
-  musl64 =
-    let
-      pkgs' = pkgs.pkgsCross.musl64;
-    in
-    pkgs'.callPackage ./generic.nix {
-      static = true;
-      inherit doCheck;
-      ocamlPackages = pkgs'.ocamlPackages;
-    };
+buildDunePackage {
+  pname = "melange-compiler-libs";
+  version = "n/a";
+
+  src = ./..;
+
+  useDune2 = true;
+
+  nativeBuildInputs = [ ocaml dune findlib ];
+  propagatedBuildInputs = [ menhir menhirLib ];
 }
