@@ -177,10 +177,10 @@ let event_after ~scopes exp lam =
   Translprim.event_after (of_location ~scopes exp.exp_loc) exp lam
 
 let event_function ~scopes exp lam =
-  if !Bs_clflags.record_event_when_debug && !Clflags.debug && not !Config.bs_only then
+  if !Bs_clflags.record_event_when_debug && !Clflags.debug then
     let repr = Some (ref 0) in
     let (info, body) = lam repr in
-    (info,
+    (if !Config.bs_only then lam None else info,
      Levent(body, {lev_loc = of_location ~scopes exp.exp_loc;
                    lev_kind = Lev_function;
                    lev_repr = repr;
