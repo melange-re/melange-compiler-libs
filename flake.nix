@@ -6,6 +6,7 @@
   inputs.nixpkgs.url = "github:nix-ocaml/nix-overlays";
 
   outputs = { self, nixpkgs, flake-utils }:
+    { overlays.default = import ./nix/overlay.nix; } //
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages."${system}".extend (self: super: {
