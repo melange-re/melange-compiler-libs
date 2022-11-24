@@ -3019,8 +3019,7 @@ let type_implementation_more ?check_exists sourcefile outputprefix modulename in
       end else begin
         let sourceintf =
           Filename.remove_extension sourcefile ^ !Config.interface_suffix in
-        let mli_status = !Bs_clflags.assume_no_mli in
-        if (mli_status = Bs_clflags.Mli_na && Sys.file_exists sourceintf) || (mli_status = Bs_clflags.Mli_exists) then begin
+        if Sys.file_exists sourceintf then begin
           let intf_file =
             try
               Load_path.find_uncap (modulename ^ ".cmi")
@@ -3164,8 +3163,7 @@ let package_units initial_env objfiles cmifile modulename =
   in
   (* See if explicit interface is provided *)
   let mlifile = prefix ^ !Config.interface_suffix in
-  let mli_status = !Bs_clflags.assume_no_mli in
-  if (mli_status = Bs_clflags.Mli_na && Sys.file_exists mlifile) || (mli_status = Bs_clflags.Mli_exists) then begin
+  if Sys.file_exists mlifile then begin
     if not (Sys.file_exists cmifile) then begin
       raise(Error(Location.in_file mlifile, Env.empty,
                   Interface_not_compiled mlifile))
