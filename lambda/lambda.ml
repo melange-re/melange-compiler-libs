@@ -751,9 +751,8 @@ let rec transl_address loc env path = function
       then Lprim(Pgetglobal id, [], loc)
       else Lvar id
   | Env.Adot(addr, pos) ->
-      let loc' = Some (Debuginfo.Scoped_location.to_location loc) in
       let path', name =
-        match Env.normalize_module_path loc' env path with
+        match path with
         | Path.Pdot (path', s) -> path', s
         | Path.Pident id -> path, Ident.name id
         | Path.Papply _ ->
@@ -762,6 +761,10 @@ let rec transl_address loc env path = function
       Lprim(Pfield (pos, Fld_module { name }), [transl_address loc env path' addr], loc)
 
 let transl_path find loc env path =
+  let path =
+    let loc' = Some (Debuginfo.Scoped_location.to_location loc) in
+    Env.normalize_module_path loc' env path
+  in
   match find path env with
   | exception Not_found ->
       fatal_error ("Cannot find address for: " ^ (Path.name path))
