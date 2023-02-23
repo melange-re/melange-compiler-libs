@@ -7,5 +7,6 @@ ocamlPackages.buildDunePackage {
   src = ./..;
 
   duneVersion = "3";
+  nativeBuildInputs = [ ocamlPackages.menhir ];
   propagatedBuildInputs = with ocamlPackages; [ menhir menhirLib ];
 }
