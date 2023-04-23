@@ -1,0 +1,8 @@
+(copy_files# ../utils/*)
+
+(library
+ (name parsing0)
+ (public_name melange-compiler-libs.parsing0)
+ (flags -w -9)
+ (libraries melange-compiler-libs.wrapper)
+ (modules_without_implementation parsetree))
