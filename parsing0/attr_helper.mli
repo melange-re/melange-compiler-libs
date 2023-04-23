@@ -2,9 +2,9 @@
 (*                                                                        *)
 (*                                 OCaml                                  *)
 (*                                                                        *)
-(*             Xavier Leroy, projet Cristal, INRIA Rocquencourt           *)
+(*                  Jeremie Dimino, Jane Street Europe                    *)
 (*                                                                        *)
-(*   Copyright 2005 Institut National de Recherche en Informatique et     *)
+(*   Copyright 2015 Institut National de Recherche en Informatique et     *)
 (*     en Automatique.                                                    *)
 (*                                                                        *)
 (*   All rights reserved.  This file is distributed under the terms of    *)
@@ -13,7 +13,29 @@
 (*                                                                        *)
 (**************************************************************************)
 
-val record_event_when_debug : bool ref
-val dont_record_crc_unit : string option ref
-val bs_gentype : string option ref
-val no_assert_false : bool ref
+(** Helpers for attributes
+
+  {b Warning:} this module is unstable and part of
+  {{!Compiler_libs}compiler-libs}.
+
+*)
+
+open Asttypes
+open Parsetree
+
+type error =
+  | Multiple_attributes of string
+  | No_payload_expected of string
+
+(** The [string list] argument of the following functions is a list of
+    alternative names for the attribute we are looking for. For instance:
+
+    {[
+      ["foo"; "ocaml.foo"]
+    ]} *)
+val get_no_payload_attribute : string list -> attributes -> string loc option
+val has_no_payload_attribute : string list -> attributes -> bool
+
+exception Error of Location.t * error
+
+val report_error: Format.formatter -> error -> unit

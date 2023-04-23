@@ -8,14 +8,15 @@
 
 (copy_files# ../typing/*)
 
-(copy_files# ../utils/*)
-
 (library
  (name melange_compiler_libs)
  (public_name melange-compiler-libs)
- (flags -w -9)
- (libraries menhirLib melange-compiler-libs.wrapper)
- (modules_without_implementation annot))
+ (flags -w -9 -open Parsing0)
+ (libraries
+  menhirLib
+  melange-compiler-libs.wrapper
+  (re_export parsing0))
+ (modules_without_implementation annot outcometree))
 
 (ocamllex
  (modules lexer)
