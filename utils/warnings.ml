@@ -1097,8 +1097,8 @@ let message = function
        explicit."
   | Bs_unused_attribute s ->
       "Unused attribute: " ^ s ^ "\n\
-      This means such annotation is not annotated properly. \n\
-      for example, some annotations is only meaningful in externals \n"
+      This means such annotation is not annotated properly.\n\
+      for example, some annotations is only meaningful in externals\n"
   | Bs_polymorphic_comparison ->
       "Polymorphic comparison introduced (maybe unsafe)"
   | Bs_ffi_warning s ->

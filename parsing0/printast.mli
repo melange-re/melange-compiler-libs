@@ -2,9 +2,9 @@
 (*                                                                        *)
 (*                                 OCaml                                  *)
 (*                                                                        *)
-(*             Xavier Leroy, projet Cristal, INRIA Rocquencourt           *)
+(*              Damien Doligez, projet Para, INRIA Rocquencourt           *)
 (*                                                                        *)
-(*   Copyright 2005 Institut National de Recherche en Informatique et     *)
+(*   Copyright 1999 Institut National de Recherche en Informatique et     *)
 (*     en Automatique.                                                    *)
 (*                                                                        *)
 (*   All rights reserved.  This file is distributed under the terms of    *)
@@ -13,7 +13,20 @@
 (*                                                                        *)
 (**************************************************************************)
 
-val record_event_when_debug : bool ref
-val dont_record_crc_unit : string option ref
-val bs_gentype : string option ref
-val no_assert_false : bool ref
+(** Raw printer for {!Parsetree}
+
+  {b Warning:} this module is unstable and part of
+  {{!Compiler_libs}compiler-libs}.
+
+*)
+
+open Parsetree;;
+open Format;;
+
+val interface : formatter -> signature_item list -> unit;;
+val implementation : formatter -> structure_item list -> unit;;
+val top_phrase : formatter -> toplevel_phrase -> unit;;
+
+val expression: int -> formatter -> expression -> unit
+val structure: int -> formatter -> structure -> unit
+val payload: int -> formatter -> payload -> unit
