@@ -8,8 +8,7 @@ buildDunePackage {
 
   src = ./..;
 
-  useDune2 = true;
-
-  nativeBuildInputs = [ ocaml dune findlib ];
-  propagatedBuildInputs = [ menhir menhirLib ];
+  duneVersion = "3";
+  nativeBuildInputs = [ menhir ];
+  propagatedBuildInputs = [ menhirLib ];
 }
