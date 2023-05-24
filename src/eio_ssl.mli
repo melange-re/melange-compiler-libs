@@ -34,12 +34,12 @@ module Context : sig
   type t
 
   val create : ctx:Ssl.context -> #Eio.Flow.two_way -> t
-  val get_fd : t -> Eio.Net.stream_socket
+  val get_fd : t -> Eio.Flow.two_way
   val get_unix_fd : t -> Unix.file_descr
   val ssl_socket : t -> Ssl.socket
 end
 
-type t = private < Eio.Flow.two_way ; .. >
+type t = private #Eio.Flow.two_way
 
 val ssl_socket : t -> Ssl.socket
 
