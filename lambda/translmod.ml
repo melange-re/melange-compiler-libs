@@ -1774,6 +1774,7 @@ let () =
     )
 
 let reset () =
+  export_identifiers := [];
   primitive_declarations := [];
   transl_store_subst := Ident.Map.empty;
   aliased_idents := Ident.empty;
