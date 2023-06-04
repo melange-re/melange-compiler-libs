@@ -580,18 +580,7 @@ and transl_structure ~scopes loc fields cc rootpath final_env = function
               fields;
             Format.eprintf "@]@.";*)
             assert (List.length runtime_fields = List.length pos_cc_list);
-            let v =
-              let array_of_list_rev = function
-                  [] -> [||]
-                | hd::tl ->
-                    let len =  List.length tl in
-                    let a = Array.make (len + 1) hd in
-                    let rec fill i = function
-                        [] -> a
-                      | hd::tl -> Array.unsafe_set a i hd; fill (i-1) tl in
-                    fill (len - 1) tl
-              in
-              array_of_list_rev fields in
+            let v = Misc.array_of_list_rev fields in
             let get_field pos =
               if pos < 0 then lambda_unit
               else Lvar v.(pos)

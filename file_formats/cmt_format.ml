@@ -164,15 +164,9 @@ let record_value_dependency vd1 vd2 =
   if vd1.Types.val_loc <> vd2.Types.val_loc then
     value_deps := (vd1, vd2) :: !value_deps
 
-let output_to_bin_file_directly filename fn =
-  let oc = open_out_bin filename in
-  Misc.try_finally
-    ~always:(fun () -> close_out oc)
-    (fun () -> fn filename oc)
-
 let save_cmt filename modname binary_annots sourcefile initial_env cmi shape =
   if !Clflags.binary_annotations && not !Clflags.print_types then begin
-    (if !Config.bs_only then output_to_bin_file_directly else
+    (if !Config.bs_only then Misc.output_to_bin_file_directly else
       Misc.output_to_file_via_temporary
        ~mode:[Open_binary] ) filename
        (fun temp_file_name oc ->
