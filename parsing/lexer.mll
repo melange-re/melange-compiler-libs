@@ -581,7 +581,7 @@ rule token = parse
             { LETOP op }
   | "and" kwdopchar dotsymbolchar * as op
             { ANDOP op }
-  | eof { Rescript_cpp.eof_check lexbuf; EOF}
+  | eof { EOF }
   | (_ as illegal_char)
       { error lexbuf (Illegal_character illegal_char) }
 
@@ -831,10 +831,6 @@ and skip_hash_bang = parse
             | BlankLine -> BlankLine
           in
           loop lines' docs lexbuf
-      | HASH when Rescript_cpp.at_bol lexbuf ->
-          Rescript_cpp.interpret_directive lexbuf
-            ~cont:(fun lexbuf -> loop lines docs lexbuf)
-            ~token_with_comments
       | DOCSTRING doc ->
           Docstrings.register doc;
           add_docstring_comment doc;
@@ -858,10 +854,9 @@ and skip_hash_bang = parse
           attach lines docs (lexeme_start_p lexbuf);
           tok
     in
-      Rescript_cpp.check_sharp_look_ahead (fun _ -> loop NoLine Initial lexbuf)
+      loop NoLine Initial lexbuf
 
   let init () =
-    Rescript_cpp.init ();
     is_in_string := false;
     comment_start_loc := [];
     comment_list := [];
