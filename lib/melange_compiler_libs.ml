@@ -1,15 +1,26 @@
-include Parsing0
-
 (* can be roughly generated with the following script:
    ls _build/default/lib | grep \.mli | cut -f1 -d'.' | \
      awk '{ myvar = toupper( substr( $0, 1, 1 ) ) substr( $0, 2 ); print "module " myvar " = " myvar; }'
 *)
+
 module Annot = Annot
+module Ast_helper = Ast_helper
+module Ast_iterator = Ast_iterator
+module Ast_mapper = Ast_mapper
+module Attr_helper = Attr_helper
+module Bs_clflags = Bs_clflags
 module Btype = Btype
+module Builtin_attributes = Builtin_attributes
 module Cmi_format = Cmi_format
 module Cmt_format = Cmt_format
+module Config = Config
+module Consistbl = Consistbl
 module Ctype = Ctype
 module Datarepr = Datarepr
+module Depend = Depend
+module Diffing = Diffing
+module Diffing_with_keys = Diffing_with_keys
+module Docstrings = Docstrings
 module Env = Env
 module Envaux = Envaux
 module Errortrace = Errortrace
@@ -18,26 +29,31 @@ module Includecore = Includecore
 module Includemod = Includemod
 module Includemod_errorprinter = Includemod_errorprinter
 module Lambda = Lambda
+module Lazy_backtrack = Lazy_backtrack
 module Lexer = Lexer
+module Load_path = Load_path
+module Location = Location
 module Matching = Matching
+module Misc = Misc
 module Mtype = Mtype
 module Oprint = Oprint
 module Outcometree = Outcometree
 module Parmatch = Parmatch
 module Parse = Parse
 module Parser = Parser
+module Parsetree = Parsetree
 module Path = Path
 module Patterns = Patterns
 module Persistent_env = Persistent_env
 module Pprintast = Pprintast
 module Predef = Predef
 module Primitive = Primitive
+module Printast = Printast
 module Printlambda = Printlambda
 module Printpat = Printpat
 module Printtyp = Printtyp
 module Printtyped = Printtyped
 module Rec_check = Rec_check
-module Rescript_cpp = Rescript_cpp
 module Shape = Shape
 module Signature_group = Signature_group
 module Simplif = Simplif
@@ -68,3 +84,4 @@ module Typeopt = Typeopt
 module Types = Types
 module Typetexp = Typetexp
 module Untypeast = Untypeast
+module Warnings = Warnings
