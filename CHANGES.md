@@ -1,3 +1,9 @@
+0.2.0 2023-06-12
+--------------
+
+- Adapt to `eio` v0.10 ([#14](https://github.com/anmonteiro/eio-ssl/pull/14),
+  [#15](https://github.com/anmonteiro/eio-ssl/pull/15))
+
 0.1.1 2023-03-19
 --------------
 
