@@ -39,6 +39,10 @@ type annotation =
 
 let get_location ti =
   match ti with
+  | Ti_pat (_, p)   -> p.pat_loc
+  | Ti_expr e  -> e.exp_loc
+  | Ti_class c -> c.cl_loc
+  | Ti_mod m   -> m.mod_loc
   | An_call (l, _k) -> l
   | An_ident (l, _s, _k) -> l
 

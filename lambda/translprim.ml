@@ -285,6 +285,17 @@ let primitives_table = lazy (
       "%greaterequal", Comparison(Greater_equal, Compare_generic);
       "%greaterthan", Comparison(Greater_than, Compare_generic);
       "%compare", Comparison(Compare, Compare_generic);
+      (* check here *)
+      "%atomic_load",
+      Primitive ((Patomic_load {immediate_or_pointer=Pointer}), 1);
+      "%atomic_exchange", Primitive (Patomic_exchange, 2);
+      "%atomic_cas", Primitive (Patomic_cas, 3);
+      "%atomic_fetch_add", Primitive (Patomic_fetch_add, 2);
+      "%runstack", Primitive (Prunstack, 3);
+      "%reperform", Primitive (Preperform, 3);
+      "%perform", Primitive (Pperform, 1);
+      "%resume", Primitive (Presume, 3);
+      "%dls_get", Primitive (Pdls_get, 1);
     ]
   else
     create_hashtable 57 [
@@ -538,6 +549,17 @@ let primitives_table = lazy (
       "%greaterequal", Comparison(Greater_equal, Compare_generic);
       "%greaterthan", Comparison(Greater_than, Compare_generic);
       "%compare", Comparison(Compare, Compare_generic);
+      (* check here *)
+      "%atomic_load",
+      Primitive ((Patomic_load {immediate_or_pointer=Pointer}), 1);
+      "%atomic_exchange", Primitive (Patomic_exchange, 2);
+      "%atomic_cas", Primitive (Patomic_cas, 3);
+      "%atomic_fetch_add", Primitive (Patomic_fetch_add, 2);
+      "%runstack", Primitive (Prunstack, 3);
+      "%reperform", Primitive (Preperform, 3);
+      "%perform", Primitive (Pperform, 1);
+      "%resume", Primitive (Presume, 3);
+      "%dls_get", Primitive (Pdls_get, 1);
     ]
 )
 
@@ -1047,6 +1069,7 @@ let lambda_primitive_needs_event_after = function
   | Pbytes_load_64 _ | Pbytes_set_16 _ | Pbytes_set_32 _ | Pbytes_set_64 _
   | Pbigstring_load_16 _ | Pbigstring_load_32 _ | Pbigstring_load_64 _
   | Pbigstring_set_16 _ | Pbigstring_set_32 _ | Pbigstring_set_64 _
+  | Prunstack | Pperform | Preperform | Presume
   | Pbbswap _ -> true
 
   | Pbytes_to_string | Pbytes_of_string | Pignore | Psetglobal _
@@ -1059,7 +1082,9 @@ let lambda_primitive_needs_event_after = function
   | Pfloatcomp _ | Pstringlength | Pstringrefu | Pbyteslength | Pbytesrefu
   | Pbytessetu | Pmakearray ((Pintarray | Paddrarray | Pfloatarray), _)
   | Parraylength _ | Parrayrefu _ | Parraysetu _ | Pisint | Pisout
-  | Pintofbint _ | Pctconst _ | Pbswap16 | Pint_as_pointer | Popaque -> false
+  | Patomic_exchange | Patomic_cas | Patomic_fetch_add | Patomic_load _
+  | Pintofbint _ | Pctconst _ | Pbswap16 | Pint_as_pointer | Popaque | Pdls_get
+      -> false
 
 (* Determine if a primitive should be surrounded by an "after" debug event *)
 let primitive_needs_event_after = function
