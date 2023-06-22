@@ -936,10 +936,6 @@ and label_x_bool_x_core_type_list i ppf x =
   | Rinherit (ct) ->
       line i ppf "Rinherit\n";
       core_type (i+1) ppf ct
-<<<<<<< HEAD
-;;
-=======
->>>>>>> trunk/5.0
 
 let rec toplevel_phrase i ppf x =
   match x with
@@ -954,20 +950,6 @@ let rec toplevel_phrase i ppf x =
 
 and directive_argument i ppf x =
   match x.pdira_desc with
-<<<<<<< HEAD
-  | Pdir_string (s) -> line i ppf "Pdir_string \"%s\"\n" s;
-  | Pdir_int (n, None) -> line i ppf "Pdir_int %s\n" n;
-  | Pdir_int (n, Some m) -> line i ppf "Pdir_int %s%c\n" n m;
-  | Pdir_ident (li) -> line i ppf "Pdir_ident %a\n" fmt_longident li;
-  | Pdir_bool (b) -> line i ppf "Pdir_bool %s\n" (string_of_bool b);
-;;
-
-let interface ppf x = list 0 signature_item ppf x;;
-
-let implementation ppf x = list 0 structure_item ppf x;;
-
-let top_phrase ppf x = toplevel_phrase 0 ppf x;;
-=======
   | Pdir_string (s) -> line i ppf "Pdir_string \"%s\"\n" s
   | Pdir_int (n, None) -> line i ppf "Pdir_int %s\n" n
   | Pdir_int (n, Some m) -> line i ppf "Pdir_int %s%c\n" n m
@@ -979,4 +961,3 @@ let interface ppf x = list 0 signature_item ppf x
 let implementation ppf x = list 0 structure_item ppf x
 
 let top_phrase ppf x = toplevel_phrase 0 ppf x
->>>>>>> trunk/5.0

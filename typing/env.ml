@@ -2566,7 +2566,7 @@ let save_signature_with_imports ?check_exists ~alerts sg modname filename import
     ~alerts sg modname filename
 
 (* Make the initial environment *)
-let (initial_safe_string, initial_unsafe_string) =
+let initial =
   Predef.build_initial_env
     (add_type ~check:false)
     (add_extension ~check:false ~rebind:false)

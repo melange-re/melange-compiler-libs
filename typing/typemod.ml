@@ -1684,10 +1684,6 @@ and transl_signature env sg =
             mksig (Tsig_attribute x) env loc :: trem, rem, final_env
         | Psig_extension (ext, _attrs) ->
             raise (Error_forward (Builtin_attributes.error_of_extension ext))
-<<<<<<< HEAD
-
-=======
->>>>>>> trunk/5.0
   in
   let previous_saved_types = Cmt_format.get_saved_types () in
   Builtin_attributes.warning_scope []
@@ -3017,8 +3013,8 @@ let type_implementation_more ?check_exists sourcefile outputprefix modulename in
         { structure = str;
           coercion = Tcoerce_none;
           shape;
-          signature = simple_sg
-        } (* result is ignored by Compile.implementation *)
+          signature = simple_sg;
+        }, finalenv (* result is ignored by Compile.implementation *)
       end else begin
         let sourceintf =
           Filename.remove_extension sourcefile ^ !Config.interface_suffix in

@@ -379,6 +379,7 @@ module Color : sig
     | BG of color (* background *)
     | Bold
     | Reset
+    | Dim
 
   type Format.stag += Style of style list
 

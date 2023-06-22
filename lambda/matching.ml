@@ -3040,7 +3040,7 @@ let combine_variant names loc row arg partial ctx def (tag_lambda_list, total1, 
         | [ (_, (_, act1)) ], [ (_, (_, act2)) ] when fail = None ->
             test_int_or_block arg act1 act2
         | _, [] -> (
-            let lam = make_test_sequence_variant_constant fail arg consts in
+            let lam = !make_test_sequence_variant_constant fail arg consts in
             (* PR#11587: Switcher.test_sequence expects integer inputs, so
                if the type allows pointers we must filter them away. *)
             match fail with
