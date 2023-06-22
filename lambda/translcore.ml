@@ -193,7 +193,7 @@ let event_function ~scopes exp lam =
 let assert_failed ~scopes exp =
   let slot =
     transl_extension_path Loc_unknown
-      Env.initial_safe_string Predef.path_assert_failure
+      Env.initial Predef.path_assert_failure
   in
   let loc = exp.exp_loc in
   let (fname, line, char) =
@@ -210,7 +210,6 @@ let assert_failed ~scopes exp =
               [Const_base(Const_string (fname, exp.exp_loc, None), default_pointer_info);
                Const_base(Const_int line, default_pointer_info);
                Const_base(Const_int char, default_pointer_info)]))], loc))], loc)
-;;
 
 let rec cut n l =
   if n = 0 then ([],l) else

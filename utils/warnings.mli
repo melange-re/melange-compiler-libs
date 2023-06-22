@@ -26,6 +26,9 @@ type loc = Melange_wrapper.Warnings.loc = {
   loc_ghost: bool;
 }
 
+val ghost_loc_in_file : string -> loc
+(** Return an empty ghost range located in a given file *)
+
 type field_usage_warning =
   | Unused
   | Not_read
@@ -67,6 +70,7 @@ type t =
   | Wildcard_arg_to_constant_constr         (* 28 *)
   | Eol_in_string                           (* 29 *)
   | Duplicate_definitions of string * string * string * string (* 30 *)
+  (* TODO(EduardoRFS): why? *)
   (* | Module_linked_twice of string * string * string (* 31 *) *)
   | Unused_value_declaration of string      (* 32 *)
   | Unused_open of string                   (* 33 *)
@@ -87,6 +91,7 @@ type t =
   | Eliminated_optional_arguments of string list (* 48 *)
   | No_cmi_file of string * string option   (* 49 *)
   | Unexpected_docstring of bool            (* 50 *)
+  (* TODO(EduardoRFS): why? *)
   (* | Wrong_tailcall_expectation of bool      (* 51 *) *)
   | Fragile_literal_pattern                 (* 52 *)
   | Misplaced_attribute of string           (* 53 *)
@@ -94,6 +99,7 @@ type t =
   | Inlining_impossible of string           (* 55 *)
   | Unreachable_case                        (* 56 *)
   | Ambiguous_var_in_pattern_guard of string list (* 57 *)
+  (* TODO(EduardoRFS): why? *)
   (* | No_cmx_file of string                   (* 58 *) *)
   | Flambda_assignment_to_non_mutable_value (* 59 *)
   | Unused_module of string                 (* 60 *)
@@ -118,11 +124,10 @@ type t =
   | Bs_integer_literal_overflow              (* 107 *)
   | Bs_uninterpreted_delimiters of string   (* 108 *)
   | Bs_toplevel_expression_unit             (* 109 *)
-;;
 
-type alert = Melange_wrapper.Warnings.alert = {kind:string; message:string; def:loc; use:loc}
+type alert = {kind:string; message:string; def:loc; use:loc}
 
-val parse_options : bool -> string -> alert option;;
+val parse_options : bool -> string -> alert option
 
 val parse_alert_option: string -> unit
   (** Disable/enable alerts based on the parameter to the -alert
@@ -133,11 +138,11 @@ val parse_alert_option: string -> unit
 val without_warnings : (unit -> 'a) -> 'a
   (** Run the thunk with all warnings and alerts disabled. *)
 
-val is_active : t -> bool;;
-val is_error : t -> bool;;
+val is_active : t -> bool
+val is_error : t -> bool
 
-val defaults_w : string;;
-val defaults_warn_error : string;;
+val defaults_w : string
+val defaults_warn_error : string
 
 type reporting_information = Melange_wrapper.Warnings.reporting_information =
   { id : string
@@ -149,9 +154,9 @@ type reporting_information = Melange_wrapper.Warnings.reporting_information =
 val report : t -> [ `Active of reporting_information | `Inactive ]
 val report_alert : alert -> [ `Active of reporting_information | `Inactive ]
 
-exception Errors;;
+exception Errors
 
-val check_fatal : unit -> unit;;
+val check_fatal : unit -> unit
 val reset_fatal: unit -> unit
 
 val help_warnings: unit -> unit
@@ -164,13 +169,10 @@ val mk_lazy: (unit -> 'a) -> 'a Lazy.t
     (** Like [Lazy.of_fun], but the function is applied with
         the warning/alert settings at the time [mk_lazy] is called. *)
 
-val nerrors : int ref
-val message : t -> string
-val number: t -> int
-
 type description =
   { number : int;
     names : string list;
-    description : string; }
+    description : string;
+    since : Sys.ocaml_release_info option; }
 
 val descriptions : description list

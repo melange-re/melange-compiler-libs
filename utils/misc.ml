@@ -633,13 +633,13 @@ module Color = struct
     | Magenta
     | Cyan
     | White
-  ;;
 
   type style =
     | FG of color (* foreground *)
     | BG of color (* background *)
     | Bold
     | Reset
+    (* TODO(EduardoRFS): drop? *)
     | Dim
 
   let ansi_of_color = function

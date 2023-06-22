@@ -161,6 +161,7 @@ and 'k case =
     }
 
 and record_label_definition =
+  (* TODO(EduardoRFS): why mutable_flag removed? *)
   | Kept of Types.type_expr
   | Overridden of Longident.t loc * expression
 

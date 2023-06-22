@@ -281,7 +281,7 @@ let in_current_module = function
 
 let in_pervasives p =
   in_current_module p &&
-  try ignore (Env.find_type p Env.initial_safe_string); true
+  try ignore (Env.find_type p Env.initial); true
   with Not_found -> false
 
 let is_datatype decl=
@@ -382,15 +382,13 @@ let remove_object_name ty =
   | Tconstr (_, _, _) -> ()
   | _                 -> fatal_error "Ctype.remove_object_name"
 
-type row_fields = (Asttypes.label * Types.row_field) list
-type row_pairs = (Asttypes.label * Types.row_field * Types.row_field) list
-let sort_row_fields : row_fields -> row_fields = List.sort (fun (p,_) (q,_) -> compare (p : string) q)
-
                   (*******************************************)
                   (*  Miscellaneous operations on row types  *)
                   (*******************************************)
 
-let rec merge_rf (r1 : row_fields) (r2 : row_fields) (pairs : row_pairs) (fi1 : row_fields) (fi2 : row_fields) =
+let sort_row_fields = List.sort (fun (p,_) (q,_) -> compare p q)
+
+let rec merge_rf r1 r2 pairs fi1 fi2 =
   match fi1, fi2 with
     (l1,f1 as p1)::fi1', (l2,f2 as p2)::fi2' ->
       if l1 = l2 then merge_rf r1 r2 ((l1,f1,f2)::pairs) fi1' fi2' else
@@ -399,7 +397,7 @@ let rec merge_rf (r1 : row_fields) (r2 : row_fields) (pairs : row_pairs) (fi1 : 
   | [], _ -> (List.rev r1, List.rev_append r2 fi2, pairs)
   | _, [] -> (List.rev_append r1 fi1, List.rev r2, pairs)
 
-let merge_row_fields (fi1 : row_fields) (fi2 : row_fields) : row_fields * row_fields * row_pairs =
+let merge_row_fields fi1 fi2 =
   match fi1, fi2 with
     [], _ | _, [] -> (fi1, fi2, [])
   | [p1], _ when not (List.mem_assoc (fst p1) fi2) -> (fi1, fi2, [])
@@ -1195,28 +1193,32 @@ let existential_name cstr ty =
   | Tvar (Some name) -> "$" ^ cstr.cstr_name ^ "_'" ^ name
   | _ -> "$" ^ cstr.cstr_name
 
-let instance_constructor ?in_pattern cstr =
+type existential_treatment =
+  | Keep_existentials_flexible
+  | Make_existentials_abstract of { env: Env.t ref; scope: int }
+
+let instance_constructor existential_treatment cstr =
   For_copy.with_scope (fun scope ->
-    begin match in_pattern with
-    | None -> ()
-    | Some (env, fresh_constr_scope) ->
-        let process existential =
-          let decl = new_local_type () in
-          let name = existential_name cstr existential in
-          let (id, new_env) =
-            Env.enter_type (get_new_abstract_name name) decl !env
-              ~scope:fresh_constr_scope in
-          env := new_env;
-          let to_unify = newty (Tconstr (Path.Pident id,[],ref Mnil)) in
-          let tv = copy scope existential in
-          assert (is_Tvar tv);
-          link_type tv to_unify
-        in
-        List.iter process cstr.cstr_existentials
-    end;
+    let copy_existential =
+      match existential_treatment with
+      | Keep_existentials_flexible -> copy scope
+      | Make_existentials_abstract {env; scope = fresh_constr_scope} ->
+          fun existential ->
+            let decl = new_local_type () in
+            let name = existential_name cstr existential in
+            let (id, new_env) =
+              Env.enter_type (get_new_abstract_name name) decl !env
+                ~scope:fresh_constr_scope in
+            env := new_env;
+            let to_unify = newty (Tconstr (Path.Pident id,[],ref Mnil)) in
+            let tv = copy scope existential in
+            assert (is_Tvar tv);
+            link_type tv to_unify;
+            tv
+    in
+    let ty_ex = List.map copy_existential cstr.cstr_existentials in
     let ty_res = copy scope cstr.cstr_res in
     let ty_args = List.map (copy scope) cstr.cstr_args in
-    let ty_ex = List.map (copy scope) cstr.cstr_existentials in
     (ty_args, ty_res, ty_ex)
   )
 
@@ -1774,7 +1776,8 @@ let occur env ty0 ty =
   try
     while
       type_changed := false;
-      occur_rec env allow_recursive TypeSet.empty ty0 ty;
+      if not (eq_type ty0 ty) then
+        occur_rec env allow_recursive TypeSet.empty ty0 ty;
       !type_changed
     do () (* prerr_endline "changed" *) done;
     merge type_changed old
@@ -2704,7 +2707,7 @@ and unify3 env t1 t1' t2 t2' =
   | _ ->
     begin match !umode with
     | Expression ->
-        occur_for Unify !env t1' t2';
+        occur_for Unify !env t1' t2;
         link_type t1' t2
     | Pattern ->
         add_type_equality t1' t2'
@@ -2927,6 +2930,7 @@ and unify_row env row1 row2 =
            closed = row2_closed; name = row2_name} = row_repr row2 in
   if unify_eq rm1 rm2 then () else
   let r1, r2, pairs = merge_row_fields row1_fields row2_fields in
+  (* TODO(EduardoRFS): which hack is this? *)
   if not !Config.bs_only && (r1 <> [] && r2 <> []) then begin
     let ht = Hashtbl.create (List.length r1) in
     List.iter (fun (l,_) -> Hashtbl.add ht (hash_variant l) l) r1;

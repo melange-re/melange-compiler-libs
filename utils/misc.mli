@@ -20,6 +20,7 @@
 
 *)
 
+(* TODO(EduardoRFS): drop this? *)
 val array_of_list_rev : 'a list -> 'a array
 
 val fatal_error: string -> 'a
@@ -214,6 +215,7 @@ val string_of_file: in_channel -> string
         (* [string_of_file ic] reads the contents of file [ic] and copies
            them to a string. It stops when encountering EOF on [ic]. *)
 
+(* TODO(EduardoRFS): why? *)
 val output_to_bin_file_directly: string -> (string -> out_channel -> 'a) -> 'a
 
 val output_to_file_via_temporary:
@@ -371,14 +373,12 @@ module Color : sig
     | Magenta
     | Cyan
     | White
-  ;;
 
   type style =
     | FG of color (* foreground *)
     | BG of color (* background *)
     | Bold
     | Reset
-    | Dim
 
   type Format.stag += Style of style list
 

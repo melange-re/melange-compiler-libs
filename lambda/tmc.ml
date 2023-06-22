@@ -827,6 +827,7 @@ let rec choice ctx t =
     match prim with
     (* The important case is the construction case *)
     | Pmakeblock (tag, _tag_info, flag, shape) ->
+      (* TODO(EduardoRFS): pass tag_info to choice_makeblock *)
         choice_makeblock ctx ~tail (tag, flag, shape) primargs loc
 
     (* Some primitives have arguments in tail-position *)
@@ -868,6 +869,12 @@ let rec choice ctx t =
     | Pisint | Pisout
     | Pignore
     | Pcompare_ints | Pcompare_floats | Pcompare_bints _
+
+    (* we don't handle effect or DLS primitives *)
+    | Prunstack | Pperform | Presume | Preperform | Pdls_get
+
+    (* we don't handle atomic primitives *)
+    | Patomic_exchange | Patomic_cas | Patomic_fetch_add | Patomic_load _
 
     (* we don't handle array indices as destinations yet *)
     | (Pmakearray _ | Pduparray _)

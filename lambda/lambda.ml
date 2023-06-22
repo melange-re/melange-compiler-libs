@@ -123,7 +123,11 @@ type primitive =
   | Pfloatfield of int * field_dbg_info
   | Psetfloatfield of int * initialization_or_assignment * set_field_dbg_info
   | Pduprecord of Types.record_representation * int
-  (* Force lazy values *)
+  (* Context switches *)
+  | Prunstack
+  | Pperform
+  | Presume
+  | Preperform
   (* External call *)
   | Pccall of Primitive.description
   (* Exceptions *)
@@ -206,8 +210,15 @@ type primitive =
   | Pbbswap of boxed_integer
   (* Integer to external pointer *)
   | Pint_as_pointer
+  (* Atomic operations *)
+  | Patomic_load of {immediate_or_pointer : immediate_or_pointer}
+  | Patomic_exchange
+  | Patomic_cas
+  | Patomic_fetch_add
   (* Inhibition of optimisation *)
   | Popaque
+  (* Fetching domain-local state *)
+  | Pdls_get
 
 and integer_comparison =
     Ceq | Cne | Clt | Cgt | Cle | Cge

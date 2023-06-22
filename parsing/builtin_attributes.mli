@@ -57,6 +57,7 @@ val check_duplicated_labels:
   (Parsetree.label_declaration list ->
     string Asttypes.loc option
   ) ref
+
 val error_of_extension: Parsetree.extension -> Location.error
 
 val warning_attribute: ?ppwarning:bool -> Parsetree.attribute -> unit

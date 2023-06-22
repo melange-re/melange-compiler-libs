@@ -22,6 +22,7 @@ let cautious f ppf arg =
   try f ppf arg with
     Ellipsis -> fprintf ppf "..."
 
+(* TODO(EduardoRFS): maybe (assert false) *)
 let map_primitive_name = ref (fun x -> x)
 
 let print_lident ppf = function
