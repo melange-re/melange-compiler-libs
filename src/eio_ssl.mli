@@ -22,12 +22,7 @@
 
 module Exn : sig
   exception Too_many_polls
-
-  exception
-    Ssl_exception of
-      { ssl_error : Ssl.ssl_error
-      ; message : string
-      }
+  exception Ssl_exception of Ssl.Error.t
 end
 
 module Context : sig

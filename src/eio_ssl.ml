@@ -24,18 +24,13 @@ module Exn = struct
   exception Retry_read
   exception Retry_write
   exception Too_many_polls
-
-  exception
-    Ssl_exception of
-      { ssl_error : Ssl.ssl_error
-      ; message : string
-      }
+  exception Ssl_exception of Ssl.Error.t
 end
 
 module Unix_fd = struct
   let get_exn fd =
     let fd = Option.get (Eio_unix.Resource.fd_opt fd) in
-    Eio_unix.Fd.use_exn "Unix_fd.get_exn" fd (fun fd -> fd)
+    Eio_unix.Fd.use_exn "Unix_fd.get_exn" fd Fun.id
 end
 
 module Context = struct
@@ -84,8 +79,8 @@ module Raw = struct
          * performed on the connection and SSL_shutdown() must not be called.
          *)
         let exn =
-          Exn.Ssl_exception
-            { ssl_error = err; message = Ssl.get_error_string () }
+          let error = Ssl.Error.get_error () in
+          Exn.Ssl_exception error
         in
         t.state <- Shutdown (Some exn);
         raise exn
