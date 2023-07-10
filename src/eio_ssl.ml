@@ -25,6 +25,23 @@ module Exn = struct
   exception Retry_write
   exception Too_many_polls
   exception Ssl_exception of Ssl.Error.t
+
+  let () =
+    Printexc.register_printer (function
+        | Ssl_exception { Ssl.Error.library_number; lib; reason_code; reason }
+          ->
+          let libstring = match lib with Some lib -> lib | None -> "lib(0)" in
+          let reasonstring =
+            match reason with Some reason -> reason | None -> "reason(0)"
+          in
+          Some
+            (Format.sprintf
+               "Ssl_exception: %s(%d): (%d) %s"
+               libstring
+               library_number
+               reason_code
+               reasonstring)
+        | _ -> None)
 end
 
 module Unix_fd = struct
