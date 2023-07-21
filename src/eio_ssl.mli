@@ -32,6 +32,7 @@ module Context : sig
   val get_fd : t -> Eio.Flow.two_way
   val get_unix_fd : t -> Unix.file_descr
   val ssl_socket : t -> Ssl.socket
+  val ssl_context : t -> Ssl.context
 end
 
 type t = private #Eio.Flow.two_way

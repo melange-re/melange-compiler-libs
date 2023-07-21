@@ -30,17 +30,17 @@ module Exn = struct
     Printexc.register_printer (function
         | Ssl_exception { Ssl.Error.library_number; lib; reason_code; reason }
           ->
-          let libstring = match lib with Some lib -> lib | None -> "lib(0)" in
-          let reasonstring =
-            match reason with Some reason -> reason | None -> "reason(0)"
+          let lib_string =
+            match lib with
+            | Some lib -> Format.sprintf "%s(%d): " lib library_number
+            | None -> ""
           in
-          Some
-            (Format.sprintf
-               "Ssl_exception: %s(%d): (%d) %s"
-               libstring
-               library_number
-               reason_code
-               reasonstring)
+          let reason_string =
+            match reason with
+            | Some reason -> Format.sprintf "%s (%d)" reason reason_code
+            | None -> ""
+          in
+          Some (Format.sprintf "Ssl_exception: %s %s" lib_string reason_string)
         | _ -> None)
 end
 
@@ -76,6 +76,7 @@ module Context = struct
     | Connected -> Ssl.file_descr_of_socket t.ssl_socket
 
   let ssl_socket t = t.ssl_socket
+  let ssl_context t = t.ctx
 end
 
 module Raw = struct
