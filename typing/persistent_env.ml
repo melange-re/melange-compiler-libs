@@ -27,7 +27,6 @@ type error =
   | Illegal_renaming of modname * modname * filepath
   | Inconsistent_import of modname * filepath * filepath
   | Need_recursive_types of modname
-  | Depend_on_unsafe_string_unit of modname
 
 exception Error of error
 let error err = raise (Error err)
@@ -163,10 +162,9 @@ let save_pers_struct penv crc ps pm =
     (function
         | Rectypes -> ()
         | Alerts _ -> ()
-        | Unsafe_string -> ()
         | Opaque -> register_import_as_opaque penv modname)
     ps.ps_flags;
-  Consistbl.set crc_units modname crc ps.ps_filename;
+  Consistbl.check crc_units modname crc ps.ps_filename;
   add_import penv modname
 
 let acknowledge_pers_struct penv check modname pers_sig pm =
@@ -186,9 +184,6 @@ let acknowledge_pers_struct penv check modname pers_sig pm =
         | Rectypes ->
             if not !Clflags.recursive_types then
               error (Need_recursive_types(ps.ps_name))
-        | Unsafe_string ->
-            if Config.safe_string then
-              error (Depend_on_unsafe_string_unit(ps.ps_name));
         | Alerts _ -> ()
         | Opaque -> register_import_as_opaque penv modname)
     ps.ps_flags;
@@ -252,9 +247,6 @@ let check_pers_struct penv f ~loc name =
             Format.sprintf
               "%s uses recursive types"
               name
-        | Depend_on_unsafe_string_unit name ->
-            Printf.sprintf "%s uses -unsafe-string"
-              name
       in
       let warn = Warnings.No_cmi_file(name, Some msg) in
         Location.prerr_warning loc warn
@@ -290,14 +282,7 @@ let crc_of_unit penv f name =
     | Some crc -> crc
 
 let imports {imported_units; crc_units; _} =
-  let dont_record_crc_unit = !Bs_clflags.dont_record_crc_unit in
-  match dont_record_crc_unit with
-  | None -> Consistbl.extract (String.Set.elements !imported_units) crc_units
-  | Some x ->
-    Consistbl.extract
-      (String.Set.fold
-      (fun m acc -> if m = x then acc else m::acc)
-      !imported_units []) crc_units
+  Consistbl.extract (String.Set.elements !imported_units) crc_units
 
 let looked_up {persistent_structures; _} modname =
   Hashtbl.mem persistent_structures modname
@@ -362,11 +347,6 @@ let report_error ppf =
       fprintf ppf
         "@[<hov>Invalid import of %s, which uses recursive types.@ %s@]"
         import "The compilation flag -rectypes is required"
-  | Depend_on_unsafe_string_unit(import) ->
-      fprintf ppf
-        "@[<hov>Invalid import of %s, compiled with -unsafe-string.@ %s@]"
-        import "This compiler has been configured in strict \
-                                  safe-string mode (-force-safe-string)"
 
 let () =
   Location.register_error_of_exn

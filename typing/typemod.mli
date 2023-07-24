@@ -42,7 +42,7 @@ val type_toplevel_phrase:
 val should_hide : (Typedtree.module_binding -> bool) ref
 val type_implementation_more: ?check_exists:unit ->
   string -> string -> string -> Env.t -> Parsetree.structure ->
-  Typedtree.implementation * Env.t
+  Typedtree.implementation
 val type_implementation:
   string -> string -> string -> Env.t ->
   Parsetree.structure -> Typedtree.implementation
@@ -73,7 +73,7 @@ val package_units:
 
 (* Should be in Envaux, but it breaks the build of the debugger *)
 val initial_env:
-  loc:Location.t -> safe_string:bool ->
+  loc:Location.t ->
   initially_opened_module:string option ->
   open_implicit_modules:string list -> Env.t
 
@@ -121,8 +121,9 @@ type error =
   | With_changes_module_alias of Longident.t * Ident.t * Path.t
   | With_cannot_remove_constrained_type
   | Repeated_name of Sig_component_kind.t * string
-  | Non_generalizable of type_expr
-  | Non_generalizable_module of module_type
+  | Non_generalizable of { vars : type_expr list; expression : type_expr }
+  | Non_generalizable_module of
+      { vars : type_expr list; item : value_description; mty : module_type }
   | Implementation_is_required of string
   | Interface_not_compiled of string
   | Not_allowed_in_functor_body

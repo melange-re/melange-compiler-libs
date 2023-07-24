@@ -137,7 +137,7 @@ let constructor_descrs ~current_unit ty_path decl cstrs rep =
             | Variant_regular -> Record_inlined {tag = idx_nonconst; name = cstr_name; num_nonconsts = !num_nonconsts}
           in
           constructor_args ~current_unit decl.type_private cd_args cd_res
-            (Path.Pdot (ty_path, cstr_name)) representation
+            Path.(Pextra_ty (ty_path, Pcstr_ty cstr_name)) representation
         in
         let cstr =
           { cstr_name;
@@ -187,7 +187,7 @@ let extension_descr ~current_unit path_ext ext =
   in
   let existentials, cstr_args, cstr_inlined =
     constructor_args ~current_unit ext.ext_private ext.ext_args ext.ext_ret_type
-      path_ext (Record_extension path_ext)
+      Path.(Pextra_ty (path_ext, Pext_ty)) (Record_extension path_ext)
   in
     { cstr_name = Path.last path_ext;
       cstr_res = ty_res;
@@ -246,11 +246,11 @@ let rec find_constr tag num_const num_nonconst = function
     [] ->
       raise Constr_not_found
   | {cd_args = Cstr_tuple []; _} as c  :: rem ->
-      if Types.equal_tag tag  (Cstr_constant num_const)
+      if tag = Cstr_constant num_const
       then c
       else find_constr tag (num_const + 1) num_nonconst rem
   | c :: rem ->
-      if Types.equal_tag tag (Cstr_block num_nonconst) || tag = Cstr_unboxed
+      if tag = Cstr_block num_nonconst || tag = Cstr_unboxed
       then c
       else find_constr tag num_const (num_nonconst + 1) rem
 

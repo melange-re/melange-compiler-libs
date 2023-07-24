@@ -116,14 +116,18 @@ type primitive =
   | Psetglobal of Ident.t
   (* Operations on heap blocks *)
   | Pmakeblock of int * tag_info * mutable_flag * block_shape
-  | Pfield of int * field_dbg_info
+  | Pfield of int * immediate_or_pointer * mutable_flag * field_dbg_info
   | Pfield_computed
   | Psetfield of int * immediate_or_pointer * initialization_or_assignment * set_field_dbg_info
   | Psetfield_computed of immediate_or_pointer * initialization_or_assignment
   | Pfloatfield of int * field_dbg_info
   | Psetfloatfield of int * initialization_or_assignment * set_field_dbg_info
   | Pduprecord of Types.record_representation * int
-  (* Force lazy values *)
+  (* Context switches *)
+  | Prunstack
+  | Pperform
+  | Presume
+  | Preperform
   (* External call *)
   | Pccall of Primitive.description
   (* Exceptions *)
@@ -206,8 +210,15 @@ type primitive =
   | Pbbswap of boxed_integer
   (* Integer to external pointer *)
   | Pint_as_pointer
+  (* Atomic operations *)
+  | Patomic_load of {immediate_or_pointer : immediate_or_pointer}
+  | Patomic_exchange
+  | Patomic_cas
+  | Patomic_fetch_add
   (* Inhibition of optimisation *)
   | Popaque
+  (* Fetching domain-local state *)
+  | Pdls_get
 
 and integer_comparison =
     Ceq | Cne | Clt | Cgt | Cle | Cge
@@ -420,7 +431,6 @@ and lambda_event_kind =
   | Lev_after of Types.type_expr
   | Lev_function
   | Lev_pseudo
-  | Lev_module_definition of Ident.t
 
 type program =
   { module_ident : Ident.t;
@@ -438,8 +448,6 @@ let const_unit = const_int 0 ~ptr_info:(Pt_constructor{name = "()"; const = 1; n
 
 let lambda_assert_false = Lconst (const_int ~ptr_info:Pt_assertfalse 0)
 
-let lambda_unit = Lconst const_unit
-
 let lambda_module_alias = Lconst (const_int ~ptr_info:Pt_module_alias 0)
 
 let max_arity () =
@@ -451,6 +459,7 @@ let lfunction ~kind ~params ~return ~body ~attr ~loc =
   assert (List.length params <= max_arity ());
   Lfunction { kind; params; return; body; attr; loc }
 
+let lambda_unit = Lconst const_unit
 
 let default_function_attribute = {
   inline = Default_inline;
@@ -755,10 +764,12 @@ let rec transl_address loc env path = function
         match path with
         | Path.Pdot (path', s) -> path', s
         | Path.Pident id -> path, Ident.name id
+        | Path.Pextra_ty (path, Pcstr_ty name) -> path, name
+        | Path.Pextra_ty (_, Pext_ty)
         | Path.Papply _ ->
             assert false
       in
-      Lprim(Pfield (pos, Fld_module { name }), [transl_address loc env path' addr], loc)
+      Lprim(Pfield (pos, Pointer, Mutable, Fld_module { name }), [transl_address loc env path' addr], loc)
 
 let transl_path find loc env path =
   let path =

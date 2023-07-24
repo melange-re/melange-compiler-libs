@@ -1778,7 +1778,7 @@ let get_expr_args_constr ~scopes head (arg, _mut) rem =
       if pos > last_pos then
         argl
       else
-        (Lprim (Pfield (pos, fld_info), [ arg ], loc), binding_kind) :: make_args (pos + 1)
+        (Lprim (Pfield (pos, Pointer, Immutable, fld_info), [ arg ], loc), binding_kind) :: make_args (pos + 1)
     in
     make_args first_pos
   in
@@ -1819,7 +1819,7 @@ let get_expr_args_variant_constant = drop_expr_arg
 
 let get_expr_args_variant_nonconst ~scopes head (arg, _mut) rem =
   let loc = head_loc ~scopes head in
-  (Lprim (Pfield (1, Fld_poly_var_content), [ arg ], loc), Alias) :: rem
+  (Lprim (Pfield (1, Pointer, Immutable, Fld_poly_var_content), [ arg ], loc), Alias) :: rem
 
 let divide_variant ~scopes row ctx { cases = cl; args; default = def } =
   let rec divide = function
@@ -1887,7 +1887,7 @@ let get_mod_field modname field =
   lazy
     (let mod_ident = Ident.create_persistent modname in
      let env =
-       Env.add_persistent_structure mod_ident Env.initial_safe_string
+       Env.add_persistent_structure mod_ident Env.initial
      in
      match Env.open_pers_signature modname env with
      | Error `Not_found ->
@@ -1902,20 +1902,36 @@ let get_mod_field modname field =
 let code_force_lazy_block = get_mod_field "CamlinternalLazy" "force_lazy_block"
 
 let code_force_lazy = get_mod_field "CamlinternalLazy" "force"
+(* TODO(anmonteiro): migrate *)
+(* let code_force_lazy = get_mod_field "CamlinternalLazy" "force_gen" *)
 
-let code_force =
-    get_mod_field "CamlinternalLazy" "force"
-;;
+let code_force = get_mod_field "CamlinternalLazy" "force"
 
 (* inline_lazy_force inlines the beginning of the code of Lazy.force. When
    the value argument is tagged as:
    - forward, take field 0
-   - lazy, call the primitive that forces (without testing again the tag)
+   - lazy || forcing, call the primitive that forces
    - anything else, return it
 
    Using Lswitch below relies on the fact that the GC does not shortcut
    Forward(val_out_of_heap).
 *)
+
+let call_force_lazy_block varg loc =
+  (* The argument is wrapped with [Popaque] to prevent the rest of the compiler
+     from making any assumptions on its contents (see comments on
+     [CamlinternalLazy.force_gen], and discussions on PRs #9998 and #10909).
+     Alternatively, [ap_inlined] could be set to [Never_inline] to achieve a
+     similar result. *)
+  let force_fun = Lazy.force code_force_lazy_block in
+  Lapply
+    { ap_tailcall = Default_tailcall;
+      ap_loc = loc;
+      ap_func = force_fun;
+      ap_args = [ Lprim (Popaque, [ varg ], loc) ];
+      ap_inlined = Default_inline;
+      ap_specialised = Default_specialise
+    }
 
 let inline_lazy_force_cond arg loc =
   if !Config.bs_only then
@@ -1924,8 +1940,9 @@ let inline_lazy_force_cond arg loc =
   let idarg = Ident.create_local "lzarg" in
   let varg = Lvar idarg in
   let tag = Ident.create_local "tag" in
-  let tag_var = Lvar tag in
-  let force_fun = Lazy.force code_force_lazy_block in
+  let test_tag t =
+    Lprim(Pintcomp Ceq, [Lvar tag; Lconst(Const_base(Const_int t, default_pointer_info))], loc)
+  in
   Llet
     ( Strict,
       Pgenval,
@@ -1937,33 +1954,23 @@ let inline_lazy_force_cond arg loc =
           tag,
           Lprim (Pccall prim_obj_tag, [ varg ], loc),
           Lifthenelse
-            (* if (tag == Obj.forward_tag) then varg.(0) else ... *)
-            ( Lprim
-                ( Pintcomp Ceq,
-                  [ tag_var; Lconst (Const_base (Const_int Obj.forward_tag, default_pointer_info)) ],
-                  loc ),
-              Lprim (Pfield (0, fld_na), [ varg ], loc),
+            ( (* if (tag == Obj.forward_tag) then varg.(0) else ... *)
+              test_tag Obj.forward_tag,
+              Lprim (Pfield (0, Pointer, Mutable, fld_na), [ varg ], loc),
               Lifthenelse
-                (* if (tag == Obj.lazy_tag) then Lazy.force varg else ... *)
-                ( Lprim
-                    ( Pintcomp Ceq,
-                      [ tag_var; Lconst (Const_base (Const_int Obj.lazy_tag, default_pointer_info)) ],
-                      loc ),
-                  Lapply
-                    { ap_tailcall = Default_tailcall;
-                      ap_loc = loc;
-                      ap_func = force_fun;
-                      ap_args = [ varg ];
-                      ap_inlined = Default_inline;
-                      ap_specialised = Default_specialise
-                    },
+                (
+                  (* ... if tag == Obj.lazy_tag || tag == Obj.forcing_tag then
+                         Lazy.force varg
+                       else ... *)
+                  Lprim (Psequor,
+                       [test_tag Obj.lazy_tag; test_tag Obj.forcing_tag], loc),
+                  call_force_lazy_block varg loc,
                   (* ... arg *)
                   varg ) ) ) )
 
 let inline_lazy_force_switch arg loc =
   let idarg = Ident.create_local "lzarg" in
   let varg = Lvar idarg in
-  let force_fun = Lazy.force code_force_lazy_block in
   Llet
     ( Strict,
       Pgenval,
@@ -1973,22 +1980,16 @@ let inline_lazy_force_switch arg loc =
         ( Lprim (Pisint, [ varg ], loc),
           varg,
           Lswitch
-            ( varg,
-              { sw_numconsts = 0;
-                sw_consts = [];
-                sw_numblocks = 256;
+            ( Lprim (Pccall prim_obj_tag, [ varg ], loc),
+              { sw_numblocks = 0;
+                sw_blocks = [];
+                sw_numconsts = 256;
                 (* PR#6033 - tag ranges from 0 to 255 *)
-                sw_blocks =
-                  [ (Obj.forward_tag, Lprim (Pfield (0, fld_na), [ varg ], loc));
-                    ( Obj.lazy_tag,
-                      Lapply
-                        { ap_tailcall = Default_tailcall;
-                          ap_loc = loc;
-                          ap_func = force_fun;
-                          ap_args = [ varg ];
-                          ap_inlined = Default_inline;
-                          ap_specialised = Default_specialise
-                        } )
+                sw_consts =
+                  [ (Obj.forward_tag, Lprim (Pfield(0, Pointer, Mutable, fld_na),
+                                             [ varg ], loc));
+                    (Obj.lazy_tag, call_force_lazy_block varg loc);
+                    (Obj.forcing_tag, call_force_lazy_block varg loc)
                   ];
                 sw_failaction = Some varg;
                 sw_names = None
@@ -2005,7 +2006,7 @@ let inline_lazy_force arg loc =
       { ap_tailcall = Default_tailcall;
         ap_loc = loc;
         ap_func = Lazy.force code_force_lazy;
-        ap_args = [ arg ];
+        ap_args = [ Lconst (Const_base (Const_int 0, default_pointer_info)); arg ];
         ap_inlined = Default_inline;
         ap_specialised = Default_specialise
       }
@@ -2042,7 +2043,7 @@ let get_expr_args_tuple ~scopes head (arg, _mut) rem =
     if pos >= arity then
       rem
     else
-      (Lprim (Pfield (pos, Fld_tuple), [ arg ], loc), Alias) :: make_args (pos + 1)
+      (Lprim (Pfield (pos, Pointer, Immutable, Fld_tuple), [ arg ], loc), Alias) :: make_args (pos + 1)
   in
   make_args 0
 
@@ -2082,15 +2083,16 @@ let get_expr_args_record ~scopes head (arg, _mut) rem =
       rem
     else
       let lbl = all_labels.(pos) in
+      let ptr = Typeopt.maybe_pointer_type head.pat_env lbl.lbl_arg in
       let access =
         match lbl.lbl_repres with
         | Record_regular  ->
-          Lprim (Pfield (lbl.lbl_pos, !Lambda.fld_record lbl), [arg], loc)
+          Lprim (Pfield (lbl.lbl_pos, ptr, lbl.lbl_mut, !Lambda.fld_record lbl), [arg], loc)
         | Record_inlined _ ->
-          Lprim (Pfield (lbl.lbl_pos, Fld_record_inline { name = lbl.lbl_name}), [arg], loc)
+          Lprim (Pfield (lbl.lbl_pos, ptr, lbl.lbl_mut, Fld_record_inline { name = lbl.lbl_name}), [arg], loc)
         | Record_unboxed _ -> arg
         | Record_float -> Lprim (Pfloatfield (lbl.lbl_pos, !Lambda.fld_record lbl), [arg], loc)
-        | Record_extension _ -> Lprim (Pfield (lbl.lbl_pos + 1, Fld_record_extension { name = lbl.lbl_name }), [ arg ], loc)
+        | Record_extension _ -> Lprim (Pfield (lbl.lbl_pos + 1, ptr, lbl.lbl_mut, Fld_record_extension { name = lbl.lbl_name }), [ arg ], loc)
       in
       let str =
         match lbl.lbl_mut with
@@ -2404,11 +2406,29 @@ module SArg = struct
   let make_if cond ifso ifnot = Lifthenelse (cond, ifso, ifnot)
 
   let make_switch loc arg cases acts ~offset sw_names =
+    (* The [acts] array can contain arbitrary terms.
+       If several entries in the [cases] array point to the same action,
+       we must share it to avoid duplicating terms.
+       See PR#11893 on Github for an example where the other de-duplication
+       mechanisms do not apply. *)
+    let act_uses = Array.make (Array.length acts) 0 in
+    for i = 0 to Array.length cases - 1 do
+      act_uses.(cases.(i)) <- act_uses.(cases.(i)) + 1
+    done;
+    let wrapper = ref (fun lam -> lam) in
+    for j = 0 to Array.length acts - 1 do
+      if act_uses.(j) > 1 then begin
+        let nfail, wrap = make_catch_delayed acts.(j) in
+        acts.(j) <- make_exit nfail;
+        let prev_wrapper = !wrapper in
+        wrapper := (fun lam -> wrap (prev_wrapper lam))
+      end;
+    done;
     let l = ref [] in
     for i = Array.length cases - 1 downto 0 do
       l := (offset + i,acts.(cases.(i))) ::  !l
     done;
-    Lswitch
+    !wrapper (Lswitch
       ( arg,
         { sw_numconsts = Array.length cases;
           sw_consts = !l;
@@ -2417,7 +2437,7 @@ module SArg = struct
           sw_failaction = None;
           sw_names
         },
-        loc )
+        loc ))
 
   let make_catch = make_catch_delayed
 
@@ -2860,7 +2880,7 @@ let combine_constructor sw_names loc arg pat_env cstr partial ctx def
               if !Config.bs_only then
                 Llet(Alias, Pgenval,tag,  arg, tests)
               else
-                Llet(Alias, Pgenval,tag, Lprim(Pfield (0, Lambda.fld_na), [arg], loc), tests)
+                Llet(Alias, Pgenval,tag, Lprim(Pfield (0, Pointer, Immutable, Lambda.fld_na), [arg], loc), tests)
         in
         List.fold_right
           (fun (path, act) rem ->
@@ -2886,9 +2906,33 @@ let combine_constructor sw_names loc arg pat_env cstr partial ctx def
       let descr_lambda_list = fails @ descr_lambda_list in
       let consts, nonconsts =
         split_cases (List.map tag_lambda descr_lambda_list) in
+      (* Our duty below is to generate code, for matching on a list of
+         constructor+action cases, that is good for both bytecode and
+         native-code compilation. (Optimizations that only work well
+         for one backend should be done in the backend.)
+
+         The [Lswitch] construct is generally an excellent choice, as
+         it generates a single instruction in bytecode, and can be
+         turned into efficient, simpler control-flow constructs in
+         native-code. (The lambda/switch.ml module is precisely
+         responsible for efficiently compiling switches to simpler
+         tests.)
+
+         Some additional optimizations make sense here when they let
+         us generate better code, including in bytecode: the generated
+         code should still fit in one bytecode instruction or less.
+
+         [Lswitch] has the downside of always needing a byte per
+         constructor in the generated bytecode, even when many actions
+         are shared. For types with a lot of constructors, calling the
+         switcher directly can result in more compact code. This is
+         a reason to deviate from the one-instruction policy.
+      *)
       let lambda1 =
         match (fail_opt, same_actions descr_lambda_list) with
-        | None, Some act -> act (* Identical actions, no failure *)
+        | None, Some act ->
+            (* Identical actions, no failure: 0 control-flow instructions. *)
+            act
         | _ -> (
             match
               (cstr.cstr_consts, cstr.cstr_nonconsts, consts, nonconsts)
@@ -2899,19 +2943,23 @@ let combine_constructor sw_names loc arg pat_env cstr partial ctx def
                     Lprim(is_not_none_bs_primitve , [arg], loc)
                   else arg
                 in
+                (* This case is very frequent, it corresponds to
+                   options and lists. *)
+                (* Keeping the Pisint test would make the bytecode
+                   slightly worse, but it lets the native compiler generate
+                   better code -- see #10681. *)
                 if !Clflags.native_code then
                   Lifthenelse(Lprim (Pisint, [ arg ], loc), act1, act2)
                 else
-                  (* PR#10681: we use [arg] directly as the test here;
-                     it generates better bytecode for this common case
-                     (typically options and lists), but would prevent
-                     some optimizations with the native compiler. *)
                   Lifthenelse (arg, act2, act1)
             | (2,0, [(i1,act1); (_,act2)],[]) ->
               if i1 = 0 then Lifthenelse(arg, act2, act1)
               else Lifthenelse (arg,act1,act2)
             | n, 0, _, [] ->
-                (* The type defines constant constructors only *)
+                (* The matched type defines constant constructors only.
+                   (typically the constant cases are dense, so
+                   call_switcher will generate a Lswitch, still one
+                   instruction.) *)
                 call_switcher loc fail_opt arg 0 (n - 1) consts sw_names
             | n, _, _, _ -> (
                 let act0 =
@@ -2927,13 +2975,26 @@ let combine_constructor sw_names loc arg pat_env cstr partial ctx def
                 in
                 match act0 with
                 | Some act ->
+                    (* This case deviates from our policy, by typically
+                       generating three bytecode instructions.
+
+                       It can save a lot of bytecode space when matching
+                       on a type with many non-constant constructors,
+                       all sent to the same action. This pattern occurs
+                       several times in the compiler codebase
+                       (for example), due to code fragments such as the
+                       following:
+
+                           match token with SEMISEMI -> true | _ -> false
+
+                       (The type of tokens has more than 120 constructors.)
+                       *)
                     Lifthenelse
                       ( Lprim (Pisint, [ arg ], loc),
                         call_switcher loc fail_opt arg 0 (n - 1) consts sw_names,
                         act )
                 | None ->
-                    (* Emit a switch, as bytecode implements this sophisticated
-                      instruction *)
+                    (* In the general case, emit a switch. *)
                     let sw =
                       { sw_numconsts = cstr.cstr_consts;
                         sw_consts = consts;
@@ -2964,7 +3025,7 @@ let call_switcher_variant_constr loc fail arg int_lambda_list names =
     ( Alias,
       Pgenval,
       v,
-      Lprim (Pfield (0, Fld_poly_var_tag), [ arg ], loc),
+      Lprim (Pfield (0, Pointer, Immutable, Fld_poly_var_tag), [ arg ], loc),
       call_switcher loc fail (Lvar v) min_int max_int (List.map (fun (a,(_,c)) -> (a,c)) int_lambda_list) names)
 
 let call_switcher_variant_constant :
@@ -3018,7 +3079,7 @@ let combine_variant names loc row arg partial ctx def (tag_lambda_list, total1, 
     Lifthenelse (Lprim (Lazy.force is_poly_var_constant, [ arg ], loc), if_int, if_block)
   in
   let sig_complete = List.length tag_lambda_list = !num_constr
-  and one_action = same_actions tag_lambda_list in (* reduandant work under bs context *)
+  and one_action = same_actions tag_lambda_list in (* redundant work under bs context *)
   let fail, local_jumps =
     if
       sig_complete
@@ -3273,7 +3334,7 @@ let arg_to_var arg cls =
   match arg with
   | Lvar v -> (v, arg)
   | _ ->
-      let v = name_pattern "match" cls in
+      let v = name_pattern "*match*" cls in
       (v, Lvar v)
 
 (* To be set by Lam_compile *)
@@ -3542,7 +3603,7 @@ let failure_handler ~scopes loc ~failer () =
     let sloc = Scoped_location.of_location ~scopes loc in
     let slot =
       transl_extension_path sloc
-        Env.initial_safe_string Predef.path_match_failure
+        Env.initial Predef.path_match_failure
     in
     let fname, line, char =
       Location.get_pos_info loc.Location.loc_start in
@@ -3576,13 +3637,13 @@ let check_total ~scopes loc ~failer total lambda i =
 
 let toplevel_handler ~scopes loc ~failer partial args cases compile_fun =
   match partial with
-  | Total ->
+  | Total when not !Clflags.safer_matching ->
       let default = Default_environment.empty in
       let pm = { args; cases; default } in
       let (lam, total) = compile_fun Total pm in
       assert (Jumps.is_empty total);
       lam
-  | Partial ->
+  | Partial | Total (* when !Clflags.safer_matching *) ->
       let raise_num = next_raise_count () in
       let default =
         Default_environment.cons [ Patterns.omega_list args ] raise_num
@@ -3889,7 +3950,7 @@ let do_for_multiple_match ~scopes loc paraml pat_act_list partial =
     let size = List.length paraml
     and idl = List.map (function
       | Lvar id -> id
-      | _ -> Ident.create_local "match") paraml in
+      | _ -> Ident.create_local "*match*") paraml in
     let args = List.map (fun id -> (Lvar id, Alias)) idl in
     let flat_next = flatten_precompiled size args next
     and flat_nexts =
@@ -3908,7 +3969,7 @@ let do_for_multiple_match ~scopes loc paraml pat_act_list partial =
 let param_to_var param =
   match param with
   | Lvar v -> (v, None)
-  | _ -> (Ident.create_local "match", Some param)
+  | _ -> (Ident.create_local "*match*", Some param)
 
 let bind_opt (v, eo) k =
   match eo with
