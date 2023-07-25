@@ -1902,8 +1902,6 @@ let get_mod_field modname field =
 let code_force_lazy_block = get_mod_field "CamlinternalLazy" "force_lazy_block"
 
 let code_force_lazy = get_mod_field "CamlinternalLazy" "force"
-(* TODO(anmonteiro): migrate *)
-(* let code_force_lazy = get_mod_field "CamlinternalLazy" "force_gen" *)
 
 let code_force = get_mod_field "CamlinternalLazy" "force"
 
@@ -2006,7 +2004,7 @@ let inline_lazy_force arg loc =
       { ap_tailcall = Default_tailcall;
         ap_loc = loc;
         ap_func = Lazy.force code_force_lazy;
-        ap_args = [ Lconst (Const_base (Const_int 0, default_pointer_info)); arg ];
+        ap_args = [ arg ];
         ap_inlined = Default_inline;
         ap_specialised = Default_specialise
       }
