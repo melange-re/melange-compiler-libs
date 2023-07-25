@@ -3334,7 +3334,7 @@ let arg_to_var arg cls =
   match arg with
   | Lvar v -> (v, arg)
   | _ ->
-      let v = name_pattern "*match*" cls in
+      let v = name_pattern "match" cls in
       (v, Lvar v)
 
 (* To be set by Lam_compile *)
@@ -3950,7 +3950,7 @@ let do_for_multiple_match ~scopes loc paraml pat_act_list partial =
     let size = List.length paraml
     and idl = List.map (function
       | Lvar id -> id
-      | _ -> Ident.create_local "*match*") paraml in
+      | _ -> Ident.create_local "match") paraml in
     let args = List.map (fun id -> (Lvar id, Alias)) idl in
     let flat_next = flatten_precompiled size args next
     and flat_nexts =
@@ -3969,7 +3969,7 @@ let do_for_multiple_match ~scopes loc paraml pat_act_list partial =
 let param_to_var param =
   match param with
   | Lvar v -> (v, None)
-  | _ -> (Ident.create_local "*match*", Some param)
+  | _ -> (Ident.create_local "match", Some param)
 
 let bind_opt (v, eo) k =
   match eo with

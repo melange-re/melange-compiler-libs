@@ -754,21 +754,20 @@ let rec patch_guarded patch = function
 
 (* Translate an access path *)
 
+let rec path_and_name path =
+  match path with
+  | Path.Pdot (path', s) -> path', s
+  | Path.Pident id -> path, Ident.name id
+  | Path.Pextra_ty (path, _) -> path_and_name path
+  | Path.Papply _ -> assert false
+
 let rec transl_address loc env path = function
   | Env.Aident id ->
       if Ident.global id
       then Lprim(Pgetglobal id, [], loc)
       else Lvar id
   | Env.Adot(addr, pos) ->
-      let path', name =
-        match path with
-        | Path.Pdot (path', s) -> path', s
-        | Path.Pident id -> path, Ident.name id
-        | Path.Pextra_ty (path, Pcstr_ty name) -> path, name
-        | Path.Pextra_ty (_, Pext_ty)
-        | Path.Papply _ ->
-            assert false
-      in
+      let path', name = path_and_name path in
       Lprim(Pfield (pos, Pointer, Mutable, Fld_module { name }), [transl_address loc env path' addr], loc)
 
 let transl_path find loc env path =

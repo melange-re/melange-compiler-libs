@@ -79,7 +79,7 @@ exception Not_constant
 
 let extract_constant = function
     Lconst sc -> sc
-  | _ -> raise Not_constant
+  | _ -> raise_notrace Not_constant
 
 let extract_float = function
     Const_base(Const_float f, _) -> f
