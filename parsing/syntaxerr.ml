@@ -2,9 +2,9 @@
 (*                                                                        *)
 (*                                 OCaml                                  *)
 (*                                                                        *)
-(*                   Fabrice Le Fessant, INRIA Saclay                     *)
+(*             Xavier Leroy, projet Cristal, INRIA Rocquencourt           *)
 (*                                                                        *)
-(*   Copyright 2012 Institut National de Recherche en Informatique et     *)
+(*   Copyright 1997 Institut National de Recherche en Informatique et     *)
 (*     en Automatique.                                                    *)
 (*                                                                        *)
 (*   All rights reserved.  This file is distributed under the terms of    *)
@@ -13,40 +13,33 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open Misc
-
-type pers_flags =
-  | Rectypes
-  | Alerts of alerts
-  | Opaque
-
-type cmi_infos = {
-    cmi_name : modname;
-    cmi_sign : Types.signature_item list;
-    cmi_crcs : crcs;
-    cmi_flags : pers_flags list;
-}
-
-(* write the magic + the cmi information *)
-val output_cmi : string -> out_channel -> cmi_infos -> Digest.t
-
-val create_cmi : ?check_exists:unit -> string -> cmi_infos -> Digest.t
-
-(* read the cmi information (the magic is supposed to have already been read) *)
-val input_cmi : in_channel -> cmi_infos
-
-(* read a cmi from a filename, checking the magic *)
-val read_cmi : string -> cmi_infos
-
-(* Error report *)
+(* Auxiliary type for reporting syntax errors *)
 
 type error =
-  | Not_an_interface of filepath
-  | Wrong_version_interface of filepath * string
-  | Corrupted_interface of filepath
+    Unclosed of Location.t * string * Location.t * string
+  | Expecting of Location.t * string
+  | Not_expecting of Location.t * string
+  | Applicative_path of Location.t
+  | Variable_in_scope of Location.t * string
+  | Other of Location.t
+  | Ill_formed_ast of Location.t * string
+  | Invalid_package_type of Location.t * string
+  | Removed_string_set of Location.t
 
 exception Error of error
+exception Escape_error
 
-open Format
+let location_of_error = function
+  | Unclosed(l,_,_,_)
+  | Applicative_path l
+  | Variable_in_scope(l,_)
+  | Other l
+  | Not_expecting (l, _)
+  | Ill_formed_ast (l, _)
+  | Invalid_package_type (l, _)
+  | Expecting (l, _)
+  | Removed_string_set l -> l
 
-val report_error: formatter -> error -> unit
+
+let ill_formed_ast loc s =
+  raise (Error (Ill_formed_ast (loc, s)))

@@ -92,7 +92,7 @@ let value_descriptions ~loc env name
           let pc =
             { pc_desc = p; pc_type = vd2.Types.val_type;
               pc_env = env; pc_loc = vd1.Types.val_loc;
-              pc_id = name; }
+              pc_id = name}
           in
           Tcoerce_primitive pc
       | (_, Val_prim _) -> raise (Dont_match Not_a_primitive)
@@ -133,6 +133,20 @@ type privacy_mismatch =
   | Private_record_type
   | Private_extensible_variant
   | Private_row_type
+
+type type_kind =
+  | Kind_abstract
+  | Kind_record
+  | Kind_variant
+  | Kind_open
+
+let of_kind = function
+  | Type_abstract -> Kind_abstract
+  | Type_record (_, _) -> Kind_record
+  | Type_variant (_, _) -> Kind_variant
+  | Type_open -> Kind_open
+
+type kind_mismatch = type_kind * type_kind
 
 type label_mismatch =
   | Type of Errortrace.equality_error
@@ -178,7 +192,7 @@ type variant_change =
 type type_mismatch =
   | Arity
   | Privacy of privacy_mismatch
-  | Kind
+  | Kind of kind_mismatch
   | Constraint of Errortrace.equality_error
   | Manifest of Errortrace.equality_error
   | Private_variant of type_expr * type_expr * private_variant_mismatch
@@ -379,6 +393,19 @@ let report_private_object_mismatch env ppf err =
   | Missing s -> pr "The implementation is missing the method %s" s
   | Types err -> report_type_inequality env ppf err
 
+let report_kind_mismatch first second ppf (kind1, kind2) =
+  let pr fmt = Format.fprintf ppf fmt in
+  let kind_to_string = function
+  | Kind_abstract -> "abstract"
+  | Kind_record -> "a record"
+  | Kind_variant -> "a variant"
+  | Kind_open -> "an extensible variant" in
+  pr "%s is %s, but %s is %s."
+    (String.capitalize_ascii first)
+    (kind_to_string kind1)
+    second
+    (kind_to_string kind2)
+
 let report_type_mismatch first second decl env ppf err =
   let pr fmt = Format.fprintf ppf fmt in
   pr "@ ";
@@ -387,8 +414,8 @@ let report_type_mismatch first second decl env ppf err =
       pr "They have different arities."
   | Privacy err ->
       report_privacy_mismatch ppf err
-  | Kind ->
-      pr "Their kinds differ."
+  | Kind err ->
+      report_kind_mismatch first second ppf err
   | Constraint err ->
       (* This error can come from implicit parameter disagreement or from
          explicit `constraint`s.  Both affect the parameters, hence this choice
@@ -453,20 +480,13 @@ module Record_diffing = struct
             loc
             ld1.ld_attributes ld2.ld_attributes
             (Ident.name ld1.ld_id);
-          let field_mismatch = !Builtin_attributes.check_bs_attributes_inclusion
-            ld1.ld_attributes ld2.ld_attributes
-            (Ident.name ld1.ld_id) in
-          match field_mismatch with
-          | Some (a,b) -> false
+          match compare_labels env params1 params2 ld1 ld2 with
+          | Some _ -> false
+          (* add arguments to the parameters, cf. PR#7378 *)
           | None ->
-            begin match compare_labels env params1 params2 ld1 ld2 with
-            | Some _ -> false
-            (* add arguments to the parameters, cf. PR#7378 *)
-            | None ->
               equal ~loc env
                 (ld1.ld_type::params1) (ld2.ld_type::params2)
                 rem1 rem2
-            end
         end
 
   module Defs = struct
@@ -929,7 +949,7 @@ let type_declarations ?(equality = false) ~loc env ~mark name
           labels1 labels2
           rep1 rep2
     | (Type_open, Type_open) -> None
-    | (_, _) -> Some Kind
+    | (_, _) -> Some (Kind (of_kind decl1.type_kind, of_kind decl2.type_kind))
   in
   if err <> None then err else
   let abstr = decl2.type_kind = Type_abstract && decl2.type_manifest = None in
@@ -960,8 +980,8 @@ let type_declarations ?(equality = false) ~loc env ~mark name
         (if abstr then (imp co1 co2 && imp cn1 cn2)
          else if opn || constrained ty then (co1 = co2 && cn1 = cn2)
          else true) &&
-        let (p1,n1,i1,j1) = get_lower v1 and (p2,n2,i2,j2) = get_lower v2 in
-        imp abstr (imp p2 p1 && imp n2 n1 && imp i2 i1 && imp j2 j1))
+        let (p1,n1,j1) = get_lower v1 and (p2,n2,j2) = get_lower v2 in
+        imp abstr (imp p2 p1 && imp n2 n1 && imp j2 j1))
       decl2.type_params (List.combine decl1.type_variance decl2.type_variance)
   then None else Some Variance
 

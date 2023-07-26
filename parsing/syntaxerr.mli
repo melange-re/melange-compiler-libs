@@ -2,9 +2,9 @@
 (*                                                                        *)
 (*                                 OCaml                                  *)
 (*                                                                        *)
-(*           Damien Doligez, projet Moscova, INRIA Rocquencourt           *)
+(*             Xavier Leroy, projet Cristal, INRIA Rocquencourt           *)
 (*                                                                        *)
-(*   Copyright 2003 Institut National de Recherche en Informatique et     *)
+(*   Copyright 1997 Institut National de Recherche en Informatique et     *)
 (*     en Automatique.                                                    *)
 (*                                                                        *)
 (*   All rights reserved.  This file is distributed under the terms of    *)
@@ -13,23 +13,26 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(* Recording and dumping (partial) type information *)
+(** Auxiliary type for reporting syntax errors
 
-(* Clflags.save_types must be true *)
+  {b Warning:} this module is unstable and part of
+  {{!Compiler_libs}compiler-libs}.
 
-open Typedtree
+*)
 
-type annotation =
-  | Ti_pat : 'k pattern_category * 'k general_pattern -> annotation
-  | Ti_expr  of expression
-  | Ti_class of class_expr
-  | Ti_mod   of module_expr
-  | An_call of Location.t * Annot.call
-  | An_ident of Location.t * string * Annot.ident
+type error =
+    Unclosed of Location.t * string * Location.t * string
+  | Expecting of Location.t * string
+  | Not_expecting of Location.t * string
+  | Applicative_path of Location.t
+  | Variable_in_scope of Location.t * string
+  | Other of Location.t
+  | Ill_formed_ast of Location.t * string
+  | Invalid_package_type of Location.t * string
+  | Removed_string_set of Location.t
 
-val record : annotation -> unit
-val record_phrase : Location.t -> unit
-val dump : string option -> unit
+exception Error of error
+exception Escape_error
 
-val get_location : annotation -> Location.t
-val get_info : unit -> annotation list
+val location_of_error: error -> Location.t
+val ill_formed_ast: Location.t -> string -> 'a

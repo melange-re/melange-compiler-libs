@@ -58,12 +58,12 @@ let mkappl (func, args) =
     ap_tailcall=Default_tailcall;
     ap_inlined=Default_inline;
     ap_specialised=Default_specialise;
-  };;
+  }
 
 let lsequence l1 l2 =
   if l2 = lambda_unit then l1 else Lsequence(l1, l2)
 
-let lfield ~fld_info v i = Lprim(Pfield (i, fld_info), [Lvar v], Loc_unknown)
+let lfield ~fld_info v i = Lprim(Pfield (i, Pointer, Mutable, fld_info), [Lvar v], Loc_unknown)
 
 let transl_label l = share (Const_immstring l)
 
@@ -133,7 +133,7 @@ let rec build_object_init ~scopes cl_table obj params inh_init obj_init cl =
       let env =
         match envs with None -> []
         | Some envs ->
-            [Lprim(Pfield (List.length inh_init + 1, Lambda.fld_na),
+            [Lprim(Pfield (List.length inh_init + 1, Pointer, Mutable, Lambda.fld_na),
                    [Lvar envs],
                    Loc_unknown)]
       in
@@ -279,8 +279,8 @@ let rec build_class_init ~scopes cla cstr super inh_init cl_init msubst top cl =
       | (_, path_lam, obj_init)::inh_init ->
           (inh_init,
            Llet (Strict, Pgenval, obj_init,
-                 mkappl(Lprim(Pfield (1, Fld_tuple), [path_lam], Loc_unknown), Lvar cla ::
-                        if top then [Lprim(Pfield (3, Fld_tuple), [path_lam], Loc_unknown)]
+                 mkappl(Lprim(Pfield (1, Pointer, Mutable, Fld_tuple), [path_lam], Loc_unknown), Lvar cla ::
+                        if top then [Lprim(Pfield (3, Pointer, Mutable, Fld_tuple), [path_lam], Loc_unknown)]
                         else []),
                  bind_super cla super cl_init))
       | _ ->
@@ -546,7 +546,7 @@ let rec builtin_meths self env env2 body =
     | p when const_path p -> "const", [p]
     | Lprim(Parrayrefu _, [Lvar s; Lvar n], _) when List.mem s self ->
         "var", [Lvar n]
-    | Lprim(Pfield (n, _), [Lvar e], _) when Ident.same e env ->
+    | Lprim(Pfield (n, _, _, _), [Lvar e], _) when Ident.same e env ->
         "env", [Lvar env2; Lconst(const_int n)]
     | Lsend(Self, met, Lvar s, [], _) when List.mem s self ->
         "meth", [met]
@@ -845,7 +845,7 @@ let transl_class ~scopes ids cl_id pub_meths cl vflag =
           Loc_unknown)
   and linh_envs =
     List.map
-      (fun (_, path_lam, _) -> Lprim(Pfield (3, Fld_tuple), [path_lam], Loc_unknown))
+      (fun (_, path_lam, _) -> Lprim(Pfield (3, Pointer, Mutable, Fld_tuple), [path_lam], Loc_unknown))
       (List.rev inh_init)
   in
   let make_envs lam =
@@ -865,7 +865,7 @@ let transl_class ~scopes ids cl_id pub_meths cl vflag =
   in
   let inh_keys =
     List.map
-      (fun (_, path_lam, _) -> Lprim(Pfield (1, Fld_tuple), [path_lam], Loc_unknown))
+      (fun (_, path_lam, _) -> Lprim(Pfield (1, Pointer, Mutable, Fld_tuple), [path_lam], Loc_unknown))
       inh_paths
   in
   let lclass lam =

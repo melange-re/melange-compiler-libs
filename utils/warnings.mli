@@ -26,6 +26,9 @@ type loc = Melange_wrapper.Warnings.loc = {
   loc_ghost: bool;
 }
 
+val ghost_loc_in_file : string -> loc
+(** Return an empty ghost range located in a given file *)
+
 type field_usage_warning =
   | Unused
   | Not_read
@@ -67,7 +70,6 @@ type t =
   | Wildcard_arg_to_constant_constr         (* 28 *)
   | Eol_in_string                           (* 29 *)
   | Duplicate_definitions of string * string * string * string (* 30 *)
-  (* | Module_linked_twice of string * string * string (* 31 *) *)
   | Unused_value_declaration of string      (* 32 *)
   | Unused_open of string                   (* 33 *)
   | Unused_type_declaration of string       (* 34 *)
@@ -109,6 +111,7 @@ type t =
   | Missing_mli                             (* 70 *)
   | Unused_tmc_attribute                    (* 71 *)
   | Tmc_breaks_tailcall                     (* 72 *)
+  | Generative_application_expects_unit     (* 73 *)
   | Bs_unused_attribute of string           (* 101 *)
   | Bs_polymorphic_comparison               (* 102 *)
   | Bs_ffi_warning of string                (* 103 *)
@@ -122,7 +125,7 @@ type t =
 
 type alert = Melange_wrapper.Warnings.alert = {kind:string; message:string; def:loc; use:loc}
 
-val parse_options : bool -> string -> alert option;;
+val parse_options : bool -> string -> alert option
 
 val parse_alert_option: string -> unit
   (** Disable/enable alerts based on the parameter to the -alert
@@ -133,11 +136,12 @@ val parse_alert_option: string -> unit
 val without_warnings : (unit -> 'a) -> 'a
   (** Run the thunk with all warnings and alerts disabled. *)
 
-val is_active : t -> bool;;
-val is_error : t -> bool;;
 
-val defaults_w : string;;
-val defaults_warn_error : string;;
+val is_active : t -> bool
+val is_error : t -> bool
+
+val defaults_w : string
+val defaults_warn_error : string
 
 type reporting_information = Melange_wrapper.Warnings.reporting_information =
   { id : string
@@ -149,9 +153,9 @@ type reporting_information = Melange_wrapper.Warnings.reporting_information =
 val report : t -> [ `Active of reporting_information | `Inactive ]
 val report_alert : alert -> [ `Active of reporting_information | `Inactive ]
 
-exception Errors;;
+exception Errors
 
-val check_fatal : unit -> unit;;
+val check_fatal : unit -> unit
 val reset_fatal: unit -> unit
 
 val help_warnings: unit -> unit
@@ -171,6 +175,7 @@ val number: t -> int
 type description =
   { number : int;
     names : string list;
-    description : string; }
+    description : string;
+    since : Sys.ocaml_release_info option; }
 
 val descriptions : description list

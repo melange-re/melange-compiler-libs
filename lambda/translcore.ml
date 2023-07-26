@@ -86,26 +86,19 @@ let extract_float = function
   | _ -> fatal_error "Translcore.extract_float"
 
 (* Push the default values under the functional abstractions *)
-(* Also push bindings of module patterns, since this sound *)
-
-type binding =
-  | Bind_value of value_binding list
-  | Bind_module of Ident.t * string option loc * module_presence * module_expr
 
 let wrap_bindings bindings exp =
   List.fold_left
     (fun exp binds ->
-      {exp with exp_desc =
-       match binds with
-       | Bind_value binds -> Texp_let(Nonrecursive, binds, exp)
-       | Bind_module (id, name, pres, mexpr) ->
-           Texp_letmodule (Some id, name, pres, mexpr, exp)})
+      {exp with exp_desc = Texp_let(Nonrecursive, binds, exp)})
     exp bindings
 
 let rec trivial_pat pat =
   match pat.pat_desc with
     Tpat_var _
   | Tpat_any -> true
+  | Tpat_alias (p, _, _) ->
+      trivial_pat p
   | Tpat_construct (_, cd, [], _) ->
       not cd.cstr_generalized && cd.cstr_consts = 1 && cd.cstr_nonconsts = 0
   | Tpat_tuple patl ->
@@ -126,15 +119,7 @@ let rec push_defaults loc bindings use_lhs cases partial =
              exp_desc = Texp_let
                (Nonrecursive, binds,
                 ({exp_desc = Texp_function _} as e2))}}] ->
-      push_defaults loc (Bind_value binds :: bindings) true
-                   [{c_lhs=pat;c_guard=None;c_rhs=e2}]
-                   partial
-  | [{c_lhs=pat; c_guard=None;
-      c_rhs={exp_attributes=[{Parsetree.attr_name = {txt="#modulepat"};_}];
-             exp_desc = Texp_letmodule
-               (Some id, name, pres, mexpr,
-                ({exp_desc = Texp_function _} as e2))}}] ->
-      push_defaults loc (Bind_module (id, name, pres, mexpr) :: bindings) true
+      push_defaults loc (binds :: bindings) true
                    [{c_lhs=pat;c_guard=None;c_rhs=e2}]
                    partial
   | [{c_lhs=pat; c_guard=None; c_rhs=exp} as case]
@@ -190,19 +175,15 @@ let event_function ~scopes exp lam =
 
 (* Assertions *)
 
-let assert_failed ~scopes exp =
+let assert_failed loc ~scopes exp =
   let slot =
     transl_extension_path Loc_unknown
-      Env.initial_safe_string Predef.path_assert_failure
+      Env.initial Predef.path_assert_failure
   in
-  let loc = exp.exp_loc in
   let (fname, line, char) =
     Location.get_pos_info loc.Location.loc_start
   in
   let loc = of_location ~scopes exp.exp_loc in
-  let fname =
-    Filename.basename fname
-  in
   Lprim(Praise Raise_regular, [event_after ~scopes exp
     (Lprim(Pmakeblock(0, Blk_extension, Immutable, None),
           [slot;
@@ -210,7 +191,6 @@ let assert_failed ~scopes exp =
               [Const_base(Const_string (fname, exp.exp_loc, None), default_pointer_info);
                Const_base(Const_int line, default_pointer_info);
                Const_base(Const_int char, default_pointer_info)]))], loc))], loc)
-;;
 
 let rec cut n l =
   if n = 0 then ([],l) else
@@ -402,14 +382,14 @@ and transl_exp0 ~in_new_scope ~scopes e =
       let targ = transl_exp ~scopes arg in
       begin match lbl.lbl_repres with
           Record_regular ->
-          Lprim (Pfield (lbl.lbl_pos, !Lambda.fld_record lbl), [targ], of_location ~scopes e.exp_loc)
+          Lprim (Pfield (lbl.lbl_pos, maybe_pointer e, lbl.lbl_mut, !Lambda.fld_record lbl), [targ], of_location ~scopes e.exp_loc)
         | Record_inlined _ ->
-          Lprim (Pfield (lbl.lbl_pos, Fld_record_inline { name = lbl.lbl_name }), [targ],
+          Lprim (Pfield (lbl.lbl_pos, maybe_pointer e, lbl.lbl_mut, Fld_record_inline { name = lbl.lbl_name }), [targ],
                  of_location ~scopes e.exp_loc)
         | Record_unboxed _ -> targ
         | Record_float -> Lprim (Pfloatfield (lbl.lbl_pos, !Lambda.fld_record lbl), [targ], of_location ~scopes e.exp_loc)
         | Record_extension _ ->
-          Lprim (Pfield (lbl.lbl_pos + 1, Fld_record_extension { name = lbl.lbl_name }), [targ], of_location ~scopes e.exp_loc)
+          Lprim (Pfield (lbl.lbl_pos + 1, maybe_pointer e, lbl.lbl_mut, Fld_record_extension { name = lbl.lbl_name }), [targ], of_location ~scopes e.exp_loc)
       end
   | Texp_setfield(arg, _, lbl, newval) ->
       let access =
@@ -521,7 +501,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
       Lapply{
         ap_loc=loc;
         ap_func=
-          Lprim(Pfield (0, Fld_tuple), [transl_class_path loc e.exp_env cl], loc);
+          Lprim(Pfield (0, Pointer, Mutable, Fld_tuple), [transl_class_path loc e.exp_env cl], loc);
         ap_args=[lambda_unit];
         ap_tailcall=Default_tailcall;
         ap_inlined=Default_inline;
@@ -560,17 +540,12 @@ and transl_exp0 ~in_new_scope ~scopes e =
       let lam = !transl_module ~scopes Tcoerce_none None modl in
       Lsequence(Lprim(Pignore, [lam], of_location ~scopes loc.loc),
                 transl_exp ~scopes body)
-  | Texp_letmodule(Some id, loc, Mp_present, modl, body) ->
+  | Texp_letmodule(Some id, _loc, Mp_present, modl, body) ->
       let defining_expr =
         if !Config.bs_only then !transl_module ~scopes Tcoerce_none None modl
         else
         let mod_scopes = enter_module_definition ~scopes id in
-        Levent (!transl_module ~scopes:mod_scopes Tcoerce_none None modl, {
-          lev_loc = of_location ~scopes loc.loc;
-          lev_kind = Lev_module_definition id;
-          lev_repr = None;
-          lev_env = Env.empty;
-        })
+        !transl_module ~scopes:mod_scopes Tcoerce_none None modl
       in
       Llet(Strict, Pgenval, id, defining_expr, transl_exp ~scopes body)
   | Texp_letmodule(_, _, Mp_absent, _, body) ->
@@ -581,16 +556,16 @@ and transl_exp0 ~in_new_scope ~scopes e =
            transl_exp ~scopes body)
   | Texp_pack modl ->
       !transl_module ~scopes Tcoerce_none None modl
-  | Texp_assert {exp_desc=Texp_construct(_, {cstr_name="false"}, _)} ->
+  | Texp_assert ({exp_desc=Texp_construct(_, {cstr_name="false"}, _)}, loc) ->
       if !Bs_clflags.no_assert_false then
         Lambda.lambda_assert_false
       else
-        assert_failed ~scopes e
-  | Texp_assert (cond) ->
+        assert_failed loc ~scopes e
+  | Texp_assert (cond, loc) ->
       if !Clflags.noassert
       then lambda_unit
       else Lifthenelse (transl_exp ~scopes cond, lambda_unit,
-                        assert_failed ~scopes e)
+                        assert_failed loc ~scopes e)
   | Texp_lazy e ->
       (* when e needs no computation (constants, identifiers, ...), we
          optimize the translation just as Lazy.lazy_from_val would
@@ -662,7 +637,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
           let body, _ =
             List.fold_left (fun (body, pos) id ->
               Llet(Alias, Pgenval, id,
-                   Lprim(Pfield (pos, Fld_module { name = Ident.name id }), [Lvar oid],
+                   Lprim(Pfield (pos, Pointer, Mutable, Fld_module { name = Ident.name id }), [Lvar oid],
                          of_location ~scopes od.open_loc), body),
               pos + 1
             ) (transl_exp ~scopes e, 0)
@@ -697,7 +672,7 @@ and transl_guard ~scopes guard rhs =
         (Lifthenelse(transl_exp ~scopes cond, expr, staticfail))
 
 and transl_case ~scopes {c_lhs; c_guard; c_rhs} =
-  c_lhs, transl_guard ~scopes c_guard c_rhs
+  (c_lhs, transl_guard ~scopes c_guard c_rhs)
 
 and transl_cases ~scopes cases =
   let cases =
@@ -931,7 +906,19 @@ and transl_function ~scopes e param cases partial =
   let attr = { default_function_attribute with return_unit } in
   let loc = of_location ~scopes e.exp_loc in
   let lam = lfunction ~kind ~params ~return ~body ~attr ~loc in
-  Translattribute.add_function_attributes lam e.exp_loc e.exp_attributes
+  let attrs =
+    (* Collect attributes from the Pexp_newtype node for locally abstract types.
+       Otherwise we'd ignore the attribute in, e.g.:
+           fun [@inline] (type a) x -> ...
+    *)
+    List.fold_left
+      (fun attrs (extra_exp, _, extra_attrs) ->
+         match extra_exp with
+         | Texp_newtype _ -> extra_attrs @ attrs
+         | (Texp_constraint _ | Texp_coerce _ | Texp_poly _) -> attrs)
+      e.exp_attributes e.exp_extra
+  in
+  Translattribute.add_function_attributes lam e.exp_loc attrs
 
 (* Like transl_exp, but used when a new scope was just introduced. *)
 and transl_scoped_exp ~scopes expr =
@@ -1010,14 +997,14 @@ and transl_record ~scopes loc env fields repres opt_init_expr =
       Array.mapi
         (fun i (lbl, definition) ->
            match definition with
-           | Kept typ ->
+           | Kept (typ, mut) ->
                let field_kind = value_kind env typ in
                let access =
                  match repres with
-                   Record_regular ->   Pfield (i, !Lambda.fld_record lbl)
-                 | Record_inlined _ -> Pfield (i, Fld_record_inline { name = lbl.lbl_name })
+                   Record_regular ->   Pfield (i, maybe_pointer_type env typ, mut, !Lambda.fld_record lbl)
+                 | Record_inlined _ -> Pfield (i, maybe_pointer_type env typ, mut, Fld_record_inline { name = lbl.lbl_name })
                  | Record_unboxed _ -> assert false
-                 | Record_extension _ -> Pfield (i + 1, Fld_record_extension { name = lbl.lbl_name })
+                 | Record_extension _ -> Pfield (i + 1, maybe_pointer_type env typ, mut, Fld_record_extension { name = lbl.lbl_name })
                  | Record_float -> Pfloatfield (i, !Lambda.fld_record lbl) in
                Lprim(access, [Lvar init_id],
                      of_location ~scopes loc),
@@ -1073,7 +1060,7 @@ and transl_record ~scopes loc env fields repres opt_init_expr =
     let copy_id = Ident.create_local "newrecord" in
     let update_field cont (lbl, definition) =
       match definition with
-      | Kept _type -> cont
+      | Kept _ -> cont
       | Overridden (_lid, expr) ->
           let upd =
             match repres with
