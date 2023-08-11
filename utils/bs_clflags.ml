@@ -14,6 +14,5 @@
 (**************************************************************************)
 
 let record_event_when_debug = ref true (* turned off in BuckleScript*)
-let dont_record_crc_unit : string option ref = ref None
 let bs_gentype = ref None
 let no_assert_false = ref false
