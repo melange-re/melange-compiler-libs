@@ -14,6 +14,5 @@
 (**************************************************************************)
 
 val record_event_when_debug : bool ref
-val dont_record_crc_unit : string option ref
 val bs_gentype : string option ref
 val no_assert_false : bool ref
