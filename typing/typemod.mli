@@ -40,9 +40,6 @@ val type_toplevel_phrase:
   Env.t
 
 val should_hide : (Typedtree.module_binding -> bool) ref
-val type_implementation_more: ?check_exists:unit ->
-  string -> string -> string -> Env.t -> Parsetree.structure ->
-  Typedtree.implementation * Env.t
 val type_implementation:
   string -> string -> string -> Env.t ->
   Parsetree.structure -> Typedtree.implementation

@@ -2989,7 +2989,7 @@ let gen_annot outputprefix sourcefile annots =
   Cmt2annot.gen_annot (Some (outputprefix ^ ".annot"))
     ~sourcefile:(Some sourcefile) ~use_summaries:false annots
 
-let type_implementation_more ?check_exists sourcefile outputprefix modulename initial_env ast =
+let type_implementation sourcefile outputprefix modulename initial_env ast =
   Cmt_format.clear ();
   Misc.try_finally (fun () ->
       Typecore.reset_delayed_checks ();
@@ -3088,11 +3088,6 @@ let type_implementation_more ?check_exists sourcefile outputprefix modulename in
           annots (Some sourcefile) initial_env None None;
         gen_annot outputprefix sourcefile annots
       )
-
-let type_implementation sourcefile outputprefix modulename initial_env ast =
-  let impl, _env =
-    type_implementation_more sourcefile outputprefix modulename initial_env ast in
-  impl
 
 let save_signature modname tsg outputprefix source_file initial_env cmi =
   Cmt_format.save_cmt  (outputprefix ^ ".cmti") modname
