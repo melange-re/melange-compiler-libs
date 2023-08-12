@@ -5895,10 +5895,10 @@ let report_error ~loc env = function
           in
           report_too_many_arg_error ~funct ~func_ty ~previous_arg_loc
             ~extra_arg_loc ~returns_unit loc
-      | Tconstr (Pdot (Pdot(Pident id,"Fn"),_),_, _) when Ident.name id = "Js" ->
+      | Tconstr (Pdot (Pdot(Pident id,"Fn"),_),_, _)
+        when (Ident.name id = "Js__Js_internal") || (Ident.name id = "Js") ->
           Location.errorf ~loc
-            "This function has been declared as uncurried elsewhere; \
-            it needs to be applied in uncurried style";
+            "This function is uncurried; it needs to be applied in uncurried style";
       | _ ->
           Location.errorf ~loc "@[<v>@[<2>This expression has type@ %a@]@ %s@]"
             Printtyp.type_expr func_ty
@@ -6031,7 +6031,8 @@ let report_error ~loc env = function
       ) ()
   | Not_a_function (ty, explanation) ->
         begin match get_desc ty with
-        | Tconstr (Pdot (Pdot(Pident name,"Fn"),_),_,_) when Ident.name name = "Js" ->
+        | Tconstr (Pdot (Pdot(Pident name,"Fn"),_),_,_)
+          when (Ident.name name = "Js__Js_internal") || (Ident.name name = "Js") ->
           Location.errorf ~loc
             "This expression is expected to have an uncurried function"
         | _ ->

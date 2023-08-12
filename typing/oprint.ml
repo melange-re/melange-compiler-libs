@@ -296,8 +296,9 @@ and print_simple_out_type ppf =
   function
     Otyp_class (id, tyl) ->
       fprintf ppf "@[%a#%a@]" print_typargs tyl print_ident id
-  | Otyp_constr (Oide_dot (Oide_dot (Oide_ident { printed_name = "Js" }, "Fn"), name),
+  | Otyp_constr (Oide_dot (Oide_dot (Oide_ident { printed_name }, "Fn"), name),
                  [tyl])
+    when printed_name = "Js__Js_internal" || printed_name = "Js"
     ->
       let res =
         if name = "arity0" then
