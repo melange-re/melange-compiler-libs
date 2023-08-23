@@ -343,10 +343,10 @@ and transl_exp0 ~in_new_scope ~scopes e =
           let ptr_info = match lid.txt with
             | Longident.Lident ("false"|"true") -> Pt_builtin_boolean
             | Longident.Ldot (Longident.Lident "*predef*", "None")
-            | Longident.Lident "None"
-               when Datarepr.constructor_has_optional_shape cstr
-              -> Pt_shape_none
-            | _ -> (Lambda.Pt_constructor {name = cstr.cstr_name; const = cstr.cstr_consts; non_const = cstr.cstr_nonconsts})
+            | _ ->
+              if Datarepr.constructor_has_optional_shape cstr
+              then Pt_shape_none
+              else (Lambda.Pt_constructor {name = cstr.cstr_name; const = cstr.cstr_consts; non_const = cstr.cstr_nonconsts})
           in
           Lconst(const_int ~ptr_info n)
       | Cstr_unboxed ->
