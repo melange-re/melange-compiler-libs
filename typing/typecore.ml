@@ -5674,7 +5674,13 @@ let type_expression env sexp =
   let exp =
     with_local_level begin fun () ->
       Typetexp.TyVarEnv.reset();
-      type_exp env sexp
+      let exp = type_exp env sexp in
+      if Warnings.is_active Bs_toplevel_expression_unit then
+        (try unify env exp.exp_type
+          (instance Predef.type_unit) with
+        | Unify _
+        | Tags _  -> Location.prerr_warning sexp.pexp_loc Bs_toplevel_expression_unit);
+      exp
     end
     ~post:(may_lower_contravariant_then_generalize env)
   in
