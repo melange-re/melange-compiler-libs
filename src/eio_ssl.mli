@@ -28,16 +28,18 @@ end
 module Context : sig
   type t
 
-  val create : ctx:Ssl.context -> #Eio.Flow.two_way -> t
-  val get_fd : t -> Eio.Flow.two_way
+  val create :
+     ctx:Ssl.context
+    -> Eio_unix.Net.stream_socket_ty Eio.Net.stream_socket
+    -> t
+
+  val get_fd : t -> Eio_unix.Net.stream_socket_ty Eio.Net.stream_socket
   val get_unix_fd : t -> Unix.file_descr
   val ssl_socket : t -> Ssl.socket
   val ssl_context : t -> Ssl.context
 end
 
-type t = private #Eio.Flow.two_way
-
-val ssl_socket : t -> Ssl.socket
+type t = Eio_unix.Net.stream_socket_ty Eio.Net.stream_socket
 
 val accept : Context.t -> t
 (** Accept a TLS Connection from a client *)

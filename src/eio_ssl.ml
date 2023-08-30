@@ -57,22 +57,21 @@ module Context = struct
     | Shutdown of exn option
 
   type t =
-    { flow : Eio.Flow.two_way
+    { socket : Eio_unix.Net.stream_socket_ty Eio.Net.stream_socket
     ; ctx : Ssl.context
     ; ssl_socket : Ssl.socket
     ; mutable state : state
     }
 
-  let create ~ctx flow =
-    let flow = (flow :> Eio.Flow.two_way) in
-    let ssl_socket = Ssl.embed_socket (Unix_fd.get_exn flow) ctx in
-    { flow; ctx; ssl_socket; state = Uninitialized }
+  let create ~ctx socket =
+    let ssl_socket = Ssl.embed_socket (Unix_fd.get_exn socket) ctx in
+    { socket; ctx; ssl_socket; state = Uninitialized }
 
-  let get_fd t = t.flow
+  let get_fd t = t.socket
 
   let get_unix_fd t =
     match t.state with
-    | Uninitialized | Shutdown _ -> Unix_fd.get_exn t.flow
+    | Uninitialized | Shutdown _ -> Unix_fd.get_exn t.socket
     | Connected -> Ssl.file_descr_of_socket t.ssl_socket
 
   let ssl_socket t = t.ssl_socket
@@ -117,21 +116,21 @@ module Raw = struct
           Eio_unix.await_writable (Unix_fd.get_exn flow);
           inner (polls_remaining - 1) flow f
     in
-    inner 64 t.flow f
+    inner 64 t.socket f
 
   let accept t =
-    Unix.set_nonblock (Unix_fd.get_exn t.flow);
+    Unix.set_nonblock (Unix_fd.get_exn t.socket);
     repeat_call t ~f:(fun () -> Ssl.accept t.ssl_socket)
 
   let connect t =
-    Unix.set_nonblock (Unix_fd.get_exn t.flow);
+    Unix.set_nonblock (Unix_fd.get_exn t.socket);
     repeat_call t ~f:(fun () -> Ssl.connect t.ssl_socket)
 
   let read t buf =
-    let { flow; state; ssl_socket; _ } = t in
+    let { socket; state; ssl_socket; _ } = t in
     match state with
     | Shutdown (Some _) -> raise End_of_file
-    | Uninitialized | Shutdown None -> Eio.Flow.single_read flow buf
+    | Uninitialized | Shutdown None -> Eio.Flow.single_read socket buf
     | Connected ->
       if buf.len = 0
       then 0
@@ -173,16 +172,17 @@ module Raw = struct
         0
         bufs
 
-  let copy t src =
+  let copy t ~src:(Eio.Resource.T (src, src_ops) as src_t) =
     let do_rsb rsb =
       try
         while true do
-          rsb (writev t)
+          rsb src (writev t)
         done
       with
       | End_of_file -> ()
     in
-    match Eio.Flow.read_methods src with
+    let module Src = (val Eio.Resource.get src_ops Eio.Flow.Pi.Source) in
+    match Src.read_methods with
     | Eio.Flow.Read_source_buffer rsb :: _
     | _ :: Eio.Flow.Read_source_buffer rsb :: _ ->
       do_rsb rsb
@@ -197,7 +197,7 @@ module Raw = struct
         (try
            while true do
              let buf = Cstruct.create 4096 in
-             let got = Eio.Flow.single_read src buf in
+             let got = Eio.Flow.single_read src_t buf in
              ignore (writev t [ Cstruct.sub buf 0 got ] : int)
            done
          with
@@ -213,16 +213,32 @@ module Raw = struct
         if Ssl.close_notify t.ssl_socket then t.state <- Shutdown None)
 end
 
-type t = < Eio.Flow.two_way ; t : Context.t >
+type t = Eio_unix.Net.stream_socket_ty Eio.Net.stream_socket
+
+module Pi = struct
+  type tag =
+    [ `Generic
+    | `Unix
+    ]
+
+  type t = Context.t
+
+  (* Eio.Flow.Pi.SOURCE *)
+  let read_methods = []
+  let single_read = Raw.read
+
+  (* Eio.Flow.Pi.SINK *)
+  let copy = Raw.copy
+  let single_write = Raw.writev
+
+  (* Eio.Flow.Pi.SHUTDOWN *)
+  let shutdown = Raw.shutdown
+  let close t = shutdown t `All
+end
 
 let of_t t =
-  object
-    inherit Eio.Flow.two_way
-    method read_into = Raw.read t
-    method copy = Raw.copy t
-    method shutdown = Raw.shutdown t
-    method t = t
-  end
+  let ops = Eio.Net.Pi.stream_socket (module Pi) in
+  Eio.Resource.T (t, ops)
 
 let accept (t : Context.t) =
   assert (t.state = Uninitialized);
@@ -233,5 +249,3 @@ let connect (t : Context.t) =
   assert (t.state = Uninitialized);
   Raw.connect t;
   of_t { t with state = Connected }
-
-let ssl_socket t = Context.ssl_socket t#t
