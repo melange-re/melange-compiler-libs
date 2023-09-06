@@ -97,6 +97,14 @@ val fld_record :
   (Types.label_description ->
   field_dbg_info) ref
 
+val fld_record_inline :
+  (Types.label_description ->
+  field_dbg_info) ref
+
+val fld_record_extension :
+  (Types.label_description ->
+  field_dbg_info) ref
+
 val ref_field_info : field_dbg_info
 
 val fld_na : field_dbg_info
@@ -110,6 +118,14 @@ type set_field_dbg_info =
 val ref_field_set_info : set_field_dbg_info
 
 val fld_record_set :
+  (Types.label_description ->
+  set_field_dbg_info) ref
+
+val fld_record_inline_set :
+  (Types.label_description ->
+  set_field_dbg_info) ref
+
+val fld_record_extension_set :
   (Types.label_description ->
   set_field_dbg_info) ref
 

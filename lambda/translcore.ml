@@ -404,12 +404,12 @@ and transl_exp0 ~in_new_scope ~scopes e =
           Record_regular ->
           Lprim (Pfield (lbl.lbl_pos, !Lambda.fld_record lbl), [targ], of_location ~scopes e.exp_loc)
         | Record_inlined _ ->
-          Lprim (Pfield (lbl.lbl_pos, Fld_record_inline { name = lbl.lbl_name }), [targ],
+          Lprim (Pfield (lbl.lbl_pos, !Lambda.fld_record_inline lbl), [targ],
                  of_location ~scopes e.exp_loc)
         | Record_unboxed _ -> targ
         | Record_float -> Lprim (Pfloatfield (lbl.lbl_pos, !Lambda.fld_record lbl), [targ], of_location ~scopes e.exp_loc)
         | Record_extension _ ->
-          Lprim (Pfield (lbl.lbl_pos + 1, Fld_record_extension { name = lbl.lbl_name }), [targ], of_location ~scopes e.exp_loc)
+          Lprim (Pfield (lbl.lbl_pos + 1, !Lambda.fld_record_extension lbl), [targ], of_location ~scopes e.exp_loc)
       end
   | Texp_setfield(arg, _, lbl, newval) ->
       let access =
@@ -417,11 +417,11 @@ and transl_exp0 ~in_new_scope ~scopes e =
         | Record_regular ->
           Psetfield(lbl.lbl_pos, maybe_pointer newval, Assignment, !Lambda.fld_record_set lbl)
         | Record_inlined _ ->
-          Psetfield(lbl.lbl_pos, maybe_pointer newval, Assignment, Fld_record_inline_set lbl.lbl_name)
+          Psetfield(lbl.lbl_pos, maybe_pointer newval, Assignment, !Lambda.fld_record_inline_set lbl)
         | Record_unboxed _ -> assert false
         | Record_float -> Psetfloatfield (lbl.lbl_pos, Assignment, !Lambda.fld_record_set lbl)
         | Record_extension _ ->
-          Psetfield (lbl.lbl_pos + 1, maybe_pointer newval, Assignment, Fld_record_extension_set lbl.lbl_name)
+          Psetfield (lbl.lbl_pos + 1, maybe_pointer newval, Assignment, !Lambda.fld_record_extension_set lbl)
       in
       Lprim(access, [transl_exp ~scopes arg; transl_exp ~scopes newval],
             of_location ~scopes e.exp_loc)
@@ -1015,9 +1015,9 @@ and transl_record ~scopes loc env fields repres opt_init_expr =
                let access =
                  match repres with
                    Record_regular ->   Pfield (i, !Lambda.fld_record lbl)
-                 | Record_inlined _ -> Pfield (i, Fld_record_inline { name = lbl.lbl_name })
+                 | Record_inlined _ -> Pfield (i, !Lambda.fld_record_inline lbl)
                  | Record_unboxed _ -> assert false
-                 | Record_extension _ -> Pfield (i + 1, Fld_record_extension { name = lbl.lbl_name })
+                 | Record_extension _ -> Pfield (i + 1, !Lambda.fld_record_extension lbl)
                  | Record_float -> Pfloatfield (i, !Lambda.fld_record lbl) in
                Lprim(access, [Lvar init_id],
                      of_location ~scopes loc),
@@ -1080,11 +1080,11 @@ and transl_record ~scopes loc env fields repres opt_init_expr =
             | Record_regular ->
               Psetfield(lbl.lbl_pos, maybe_pointer expr, Assignment, !Lambda.fld_record_set lbl)
             | Record_inlined _ ->
-                Psetfield(lbl.lbl_pos, maybe_pointer expr, Assignment, Fld_record_inline_set lbl.lbl_name)
+                Psetfield(lbl.lbl_pos, maybe_pointer expr, Assignment, !Lambda.fld_record_inline_set lbl)
             | Record_unboxed _ -> assert false
             | Record_float -> Psetfloatfield (lbl.lbl_pos, Assignment, !Lambda.fld_record_set lbl)
             | Record_extension _ ->
-                Psetfield(lbl.lbl_pos + 1, maybe_pointer expr, Assignment, Fld_record_extension_set lbl.lbl_name)
+                Psetfield(lbl.lbl_pos + 1, maybe_pointer expr, Assignment, !Lambda.fld_record_extension_set lbl)
           in
           Lsequence(Lprim(upd, [Lvar copy_id; transl_exp ~scopes expr],
                           of_location ~scopes loc),
