@@ -2087,10 +2087,10 @@ let get_expr_args_record ~scopes head (arg, _mut) rem =
         | Record_regular  ->
           Lprim (Pfield (lbl.lbl_pos, ptr, lbl.lbl_mut, !Lambda.fld_record lbl), [arg], loc)
         | Record_inlined _ ->
-          Lprim (Pfield (lbl.lbl_pos, ptr, lbl.lbl_mut, Fld_record_inline { name = lbl.lbl_name}), [arg], loc)
+          Lprim (Pfield (lbl.lbl_pos, ptr, lbl.lbl_mut, !Lambda.fld_record_inline lbl), [arg], loc)
         | Record_unboxed _ -> arg
         | Record_float -> Lprim (Pfloatfield (lbl.lbl_pos, !Lambda.fld_record lbl), [arg], loc)
-        | Record_extension _ -> Lprim (Pfield (lbl.lbl_pos + 1, ptr, lbl.lbl_mut, Fld_record_extension { name = lbl.lbl_name }), [ arg ], loc)
+        | Record_extension _ -> Lprim (Pfield (lbl.lbl_pos + 1, ptr, lbl.lbl_mut, !Lambda.fld_record_extension lbl), [ arg ], loc)
       in
       let str =
         match lbl.lbl_mut with
