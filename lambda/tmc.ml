@@ -77,6 +77,7 @@ module Constr : sig
      a placeholder. *)
   type t = {
     tag : int;
+    tag_info : tag_info;
     flag: Asttypes.mutable_flag;
     shape : block_shape;
     before: lambda list;
@@ -110,6 +111,7 @@ module Constr : sig
 end = struct
   type t = {
     tag : int;
+    tag_info : tag_info;
     flag: Asttypes.mutable_flag;
     shape : block_shape;
     before: lambda list;
@@ -119,7 +121,7 @@ end = struct
 
   let apply constr t =
     let block_args = List.append constr.before @@ t :: constr.after in
-    Lprim (Pmakeblock (constr.tag, default_tag_info, constr.flag, constr.shape),
+    Lprim (Pmakeblock (constr.tag, constr.tag_info, constr.flag, constr.shape),
            block_args, constr.loc)
 
   let tmc_placeholder =
@@ -127,11 +129,36 @@ end = struct
        reconizable. *)
     Lconst (Const_base ((Const_int (0xBBBB / 2)), default_pointer_info))
 
+  (* XXX(anmonteiro): This is a bit terrible, and it's leaking Melange
+     implementation details. There's currently no way of propagating the name
+     of the property being set, though. *)
+  let field ~constr_name pos =
+    match constr_name with
+    | "::" ->
+      (match pos with
+      | 0 -> "hd"
+      | 1 -> "tl"
+      | _ -> "_" ^ Int.to_string pos)
+    | _ -> "_" ^ Int.to_string pos
+
   let with_placeholder constr (body : offset destination -> lambda) =
     let k_with_placeholder =
       apply { constr with flag = Mutable } tmc_placeholder in
     let placeholder_pos = List.length constr.before in
-    let placeholder_pos_lam = Lconst (Const_base ((Const_int placeholder_pos), default_pointer_info)) in
+    let placeholder_pos_lam =
+      let placeholder_pos_lam =
+        Lconst (Const_base ((Const_int placeholder_pos), default_pointer_info))
+      in
+      if not !Config.bs_only then placeholder_pos_lam
+      else
+        match constr.tag_info with
+        | Blk_constructor { name = constr_name; _ } ->
+          Lconst
+            (Const_base
+              (Const_string
+                (field ~constr_name placeholder_pos, Debuginfo.Scoped_location.to_location constr.loc, None), default_pointer_info))
+        | _ -> placeholder_pos_lam
+    in
     let block_var = Ident.create_local "block" in
     Llet (Strict, Pgenval, block_var, k_with_placeholder,
           body {
@@ -734,11 +761,11 @@ let rec choice ctx t =
         direct = (fun () -> Lapply apply_no_bailout);
       }
 
-  and choice_makeblock ctx ~tail:_ (tag, flag, shape) blockargs loc =
+  and choice_makeblock ctx ~tail:_ (tag, tag_info, flag, shape) blockargs loc =
     let choices = List.map (choice ctx ~tail:false) blockargs in
     match Choice.find_nonambiguous_tmc_call choices with
     | Choice.No_tmc_call args ->
-        Choice.lambda @@ Lprim (Pmakeblock (tag, default_tag_info, flag, shape), args, loc)
+        Choice.lambda @@ Lprim (Pmakeblock (tag, tag_info, flag, shape), args, loc)
     | Choice.Ambiguous { explicit; subterms = ambiguous_subterms } ->
         (* An ambiguous term should not lead to an error if it not
            used in TMC position. Consider for example:
@@ -775,7 +802,7 @@ let rec choice ctx t =
         *)
         let term_choice =
           let+ args = Choice.list choices in
-          Lprim (Pmakeblock(tag, default_tag_info, flag, shape), args, loc)
+          Lprim (Pmakeblock(tag, tag_info, flag, shape), args, loc)
         in
         { term_choice with
           Choice.dps = Dps.make (fun ~tail:_ ~dst:_ ->
@@ -795,6 +822,7 @@ let rec choice ctx t =
     | Choice.Nonambiguous { Choice.rev_before; choice; after } ->
         let constr = Constr.{
             tag;
+            tag_info;
             flag;
             shape;
             before = List.rev rev_before;
@@ -826,8 +854,8 @@ let rec choice ctx t =
   and choice_prim ctx ~tail prim primargs loc =
     match prim with
     (* The important case is the construction case *)
-    | Pmakeblock (tag, _tag_info, flag, shape) ->
-        choice_makeblock ctx ~tail (tag, flag, shape) primargs loc
+    | Pmakeblock (tag, tag_info, flag, shape) ->
+        choice_makeblock ctx ~tail (tag, tag_info, flag, shape) primargs loc
 
     (* Some primitives have arguments in tail-position *)
     | Popaque ->
