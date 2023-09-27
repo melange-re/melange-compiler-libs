@@ -135,8 +135,7 @@ end = struct
     let placeholder_pos = List.length constr.before in
     let placeholder_pos_lam =
       let pointer_info =
-        if not !Config.bs_only then default_pointer_info
-        else  match constr.tag_info with
+        match constr.tag_info with
         | Blk_constructor { name = constr_name; _ } ->
           Pt_constructor_access {cstr_name=constr_name}
         | _ -> assert false
