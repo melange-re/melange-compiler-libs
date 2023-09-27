@@ -129,18 +129,6 @@ end = struct
        reconizable. *)
     Lconst (Const_base ((Const_int (0xBBBB / 2)), default_pointer_info))
 
-  (* XXX(anmonteiro): This is a bit terrible, and it's leaking Melange
-     implementation details. There's currently no way of propagating the name
-     of the property being set, though. *)
-  let field ~constr_name pos =
-    match constr_name with
-    | "::" ->
-      (match pos with
-      | 0 -> "hd"
-      | 1 -> "tl"
-      | _ -> "_" ^ Int.to_string pos)
-    | _ -> "_" ^ Int.to_string pos
-
   let with_placeholder constr (body : offset destination -> lambda) =
     let k_with_placeholder =
       apply { constr with flag = Mutable } tmc_placeholder in
@@ -155,8 +143,7 @@ end = struct
         | Blk_constructor { name = constr_name; _ } ->
           Lconst
             (Const_base
-              (Const_string
-                (field ~constr_name placeholder_pos, Debuginfo.Scoped_location.to_location constr.loc, None), default_pointer_info))
+              ((Const_int placeholder_pos), Pt_constructor_access {cstr_name=constr_name}))
         | _ -> placeholder_pos_lam
     in
     let block_var = Ident.create_local "block" in
