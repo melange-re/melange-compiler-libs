@@ -136,8 +136,8 @@ end = struct
     let placeholder_pos_lam =
       let pointer_info =
         match constr.tag_info with
-        | Blk_constructor { name = constr_name; _ } ->
-          Pt_constructor_access {cstr_name=constr_name}
+        | Blk_constructor { name; _ } ->
+          Pt_constructor_access { cstr_name = name }
         | _ -> assert false
       in
       Lconst (Const_base ((Const_int placeholder_pos), pointer_info))
