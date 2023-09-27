@@ -134,17 +134,14 @@ end = struct
       apply { constr with flag = Mutable } tmc_placeholder in
     let placeholder_pos = List.length constr.before in
     let placeholder_pos_lam =
-      let placeholder_pos_lam =
-        Lconst (Const_base ((Const_int placeholder_pos), default_pointer_info))
-      in
-      if not !Config.bs_only then placeholder_pos_lam
-      else
-        match constr.tag_info with
+      let pointer_info =
+        if not !Config.bs_only then default_pointer_info
+        else  match constr.tag_info with
         | Blk_constructor { name = constr_name; _ } ->
-          Lconst
-            (Const_base
-              ((Const_int placeholder_pos), Pt_constructor_access {cstr_name=constr_name}))
-        | _ -> placeholder_pos_lam
+          Pt_constructor_access {cstr_name=constr_name}
+        | _ -> assert false
+      in
+      Lconst (Const_base ((Const_int placeholder_pos), pointer_info))
     in
     let block_var = Ident.create_local "block" in
     Llet (Strict, Pgenval, block_var, k_with_placeholder,
