@@ -1207,7 +1207,7 @@ let message = function
   | Bs_fragile_external s ->
       s ^ " : the external name is inferred from val name is unsafe from refactoring when changing value name"
   | Bs_unimplemented_primitive s ->
-      "Unimplemented primitive used:" ^ s
+      "Unimplemented primitive used:" ^ s ^ ", make sure your library is using the `melange.ppx` preprocessor"
   | Bs_integer_literal_overflow ->
       "Integer literal exceeds the range of representable integers of type int"
   | Bs_uninterpreted_delimiters s ->
