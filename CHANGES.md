@@ -1,3 +1,9 @@
+Unreleased
+--------------
+
+- Handle EOF from OpenSSL more gracefully
+  ([#23](https://github.com/anmonteiro/eio-ssl/pull/23))
+
 0.2.0 2023-06-12
 --------------
 
