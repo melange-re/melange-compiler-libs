@@ -28,20 +28,19 @@ module Exn = struct
 
   let () =
     Printexc.register_printer (function
-        | Ssl_exception { Ssl.Error.library_number; lib; reason_code; reason }
-          ->
-          let lib_string =
-            match lib with
-            | Some lib -> Format.sprintf "%s(%d): " lib library_number
-            | None -> ""
-          in
-          let reason_string =
-            match reason with
-            | Some reason -> Format.sprintf "%s (%d)" reason reason_code
-            | None -> ""
-          in
-          Some (Format.sprintf "Ssl_exception: %s %s" lib_string reason_string)
-        | _ -> None)
+      | Ssl_exception { Ssl.Error.library_number; lib; reason_code; reason } ->
+        let lib_string =
+          match lib with
+          | Some lib -> Format.sprintf "%s(%d): " lib library_number
+          | None -> ""
+        in
+        let reason_string =
+          match reason with
+          | Some reason -> Format.sprintf "%s (%d)" reason reason_code
+          | None -> ""
+        in
+        Some (Format.sprintf "Ssl_exception: %s %s" lib_string reason_string)
+      | _ -> None)
 end
 
 module Unix_fd = struct
@@ -81,27 +80,36 @@ end
 module Raw = struct
   open Context
 
-  let wrap_call ~f t =
-    try f () with
-    | ( Ssl.Connection_error err
-      | Ssl.Accept_error err
-      | Ssl.Read_error err
-      | Ssl.Write_error err ) as e ->
-      (match err with
-      | Ssl.Error_want_read -> raise_notrace Exn.Retry_read
-      | Ssl.Error_want_write -> raise_notrace Exn.Retry_write
-      | Ssl.Error_syscall | Ssl.Error_ssl ->
-        (* From https://www.openssl.org/docs/man1.1.1/man3/SSL_get_error.html:
-         * If this error occurs then no further I/O operations should be
-         * performed on the connection and SSL_shutdown() must not be called.
-         *)
-        let exn =
-          let error = Ssl.Error.get_error () in
-          Exn.Ssl_exception error
-        in
-        t.state <- Shutdown (Some exn);
-        raise exn
-      | _ -> raise e)
+  let wrap_call =
+    let reason_code_is_eof = function
+      | { Ssl.Error.reason_code = 294; _ } ->
+        (* https://github.com/openssl/openssl/blob/143ca66cf00c88950d689a8aa0c89888052669f4/include/openssl/sslerr.h#L329 *)
+        true
+      | _ -> false
+    in
+    fun ~f t ->
+      try f () with
+      | ( Ssl.Connection_error err
+        | Ssl.Accept_error err
+        | Ssl.Read_error err
+        | Ssl.Write_error err ) as e ->
+        (match err with
+        | Ssl.Error_want_read -> raise_notrace Exn.Retry_read
+        | Ssl.Error_want_write -> raise_notrace Exn.Retry_write
+        | Ssl.Error_syscall | Ssl.Error_ssl ->
+          (* From https://www.openssl.org/docs/man1.1.1/man3/SSL_get_error.html:
+           * If this error occurs then no further I/O operations should be
+           * performed on the connection and SSL_shutdown() must not be called.
+           *)
+          let exn =
+            let error = Ssl.Error.get_error () in
+            match reason_code_is_eof error with
+            | true -> End_of_file
+            | false -> Exn.Ssl_exception error
+          in
+          t.state <- Shutdown (Some exn);
+          raise exn
+        | _ -> raise e)
 
   let repeat_call ~f t =
     let rec inner polls_remaining flow f =
@@ -129,35 +137,34 @@ module Raw = struct
   let read t buf =
     let { socket; state; ssl_socket; _ } = t in
     match state with
-    | Shutdown (Some _) -> raise End_of_file
+    | Shutdown (Some exn) -> raise exn
     | Uninitialized | Shutdown None -> Eio.Flow.single_read socket buf
     | Connected ->
       if buf.len = 0
       then 0
       else
         repeat_call t ~f:(fun () ->
-            match
-              Ssl.read_into_bigarray ssl_socket buf.buffer buf.off buf.len
-            with
-            | n -> n
-            | exception Ssl.Read_error Ssl.Error_zero_return ->
-              (* From https://www.openssl.org/docs/man1.1.1/man3/SSL_get_error.html:
-               *
-               *   SSL_ERROR_ZERO_RETURN
-               *     The TLS/SSL peer has closed the connection for writing by
-               *     sending the close_notify alert. No more data can be read
-               *)
-              raise End_of_file)
+          match
+            Ssl.read_into_bigarray ssl_socket buf.buffer buf.off buf.len
+          with
+          | n -> n
+          | exception Ssl.Read_error Error_zero_return ->
+            (* From https://www.openssl.org/docs/man1.1.1/man3/SSL_get_error.html:
+             *
+             *   SSL_ERROR_ZERO_RETURN
+             *     The TLS/SSL peer has closed the connection for writing by
+             *     sending the close_notify alert. No more data can be read
+             *)
+            raise End_of_file)
 
   let writev t bufs =
-    let { ssl_socket; _ } = t in
+    let { ssl_socket; state; _ } = t in
     let rec do_write buf ~off ~len =
       match
         repeat_call t ~f:(fun () ->
-            match Ssl.write_bigarray ssl_socket buf off len with
-            | n -> n
-            | exception Ssl.Write_error Ssl.Error_zero_return ->
-              raise End_of_file)
+          match Ssl.write_bigarray ssl_socket buf off len with
+          | n -> n
+          | exception Ssl.Write_error Ssl.Error_zero_return -> raise End_of_file)
       with
       | n when n < len -> n + do_write buf ~off:(off + n) ~len:(len - n)
       | n -> n
@@ -166,11 +173,14 @@ module Raw = struct
     if Cstruct.lenv bufs = 0
     then 0
     else
-      List.fold_left
-        (fun acc (buf : Cstruct.t) ->
-          acc + do_write buf.buffer ~off:buf.off ~len:buf.len)
-        0
-        bufs
+      match state with
+      | Shutdown (Some exn) -> raise exn
+      | Uninitialized | Shutdown None | Connected ->
+        List.fold_left
+          (fun acc (buf : Cstruct.t) ->
+             acc + do_write buf.buffer ~off:buf.off ~len:buf.len)
+          0
+          bufs
 
   let copy t ~src:(Eio.Resource.T (src, src_ops) as src_t) =
     let do_rsb rsb =
