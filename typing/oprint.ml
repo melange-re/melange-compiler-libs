@@ -305,7 +305,7 @@ and print_simple_out_type ppf =
           Otyp_arrow ("", Otyp_constr (Oide_ident { printed_name = "unit" }, []),tyl)
         else tyl
       in
-          fprintf ppf "@[<0>(%a@ [@bs])@]" print_out_type_1 res
+          fprintf ppf "@[<0>(%a@ [@u])@]" print_out_type_1 res
   | Otyp_constr (Oide_dot (Oide_dot (Oide_ident { printed_name = "Js_OO" }, "Meth" ),name),
         [tyl])
     ->
@@ -314,11 +314,11 @@ and print_simple_out_type ppf =
           Otyp_arrow ("", Otyp_constr (Oide_ident { printed_name = "unit" }, []),tyl)
         else tyl
       in
-      fprintf ppf "@[<0>(%a@ [@bs.meth])@]" print_out_type_1 res
+      fprintf ppf "@[<0>(%a@ [@mel.meth])@]" print_out_type_1 res
   | Otyp_constr (Oide_dot (Oide_dot (Oide_ident { printed_name = "Js_OO" }, "Callback" ), _),
                  [tyl])
     ->
-      fprintf ppf "@[<0>(%a@ [@bs.this])@]" print_out_type_1 tyl
+      fprintf ppf "@[<0>(%a@ [@mel.this])@]" print_out_type_1 tyl
   | Otyp_constr (id, tyl) ->
       pp_open_box ppf 0;
       print_typargs ppf tyl;
