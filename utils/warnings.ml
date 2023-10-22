@@ -109,15 +109,15 @@ type t =
   | Unused_tmc_attribute                    (* 71 *)
   | Tmc_breaks_tailcall                     (* 72 *)
   | Generative_application_expects_unit     (* 73 *)
-  | Bs_unused_attribute of string           (* 101 *)
-  | Bs_polymorphic_comparison               (* 102 *)
-  | Bs_ffi_warning of string                (* 103 *)
-  | Bs_derive_warning of string             (* 104 *)
-  | Bs_fragile_external of string           (* 105 *)
-  | Bs_unimplemented_primitive of string    (* 106 *)
-  | Bs_integer_literal_overflow              (* 107 *)
-  | Bs_uninterpreted_delimiters of string   (* 108 *)
-  | Bs_toplevel_expression_unit             (* 109 *)
+  | Mel_unused_attribute of string           (* 101 *)
+  | Mel_polymorphic_comparison               (* 102 *)
+  | Mel_ffi_warning of string                (* 103 *)
+  | Mel_derive_warning of string             (* 104 *)
+  | Mel_fragile_external of string           (* 105 *)
+  | Mel_unimplemented_primitive of string    (* 106 *)
+  | Mel_integer_literal_overflow              (* 107 *)
+  | Mel_uninterpreted_delimiters of string   (* 108 *)
+  | Mel_toplevel_expression_unit             (* 109 *)
 ;;
 
 (* If you remove a warning, leave a hole in the numbering.  NEVER change
@@ -200,15 +200,15 @@ let number = function
   | Unused_tmc_attribute -> 71
   | Tmc_breaks_tailcall -> 72
   | Generative_application_expects_unit -> 73
-  | Bs_unused_attribute _ -> 101
-  | Bs_polymorphic_comparison -> 102
-  | Bs_ffi_warning _ -> 103
-  | Bs_derive_warning _ -> 104
-  | Bs_fragile_external _ -> 105
-  | Bs_unimplemented_primitive _ -> 106
-  | Bs_integer_literal_overflow -> 107
-  | Bs_uninterpreted_delimiters _ -> 108
-  | Bs_toplevel_expression_unit -> 109
+  | Mel_unused_attribute _ -> 101
+  | Mel_polymorphic_comparison -> 102
+  | Mel_ffi_warning _ -> 103
+  | Mel_derive_warning _ -> 104
+  | Mel_fragile_external _ -> 105
+  | Mel_unimplemented_primitive _ -> 106
+  | Mel_integer_literal_overflow -> 107
+  | Mel_uninterpreted_delimiters _ -> 108
+  | Mel_toplevel_expression_unit -> 109
 ;;
 
 (* DO NOT REMOVE the ;; above: it is used by
@@ -555,8 +555,8 @@ let descriptions = [
                    (struct end) rather than to ().";
     since = since 5 1 };
   { number = 101;
-    names = ["unused-bs-attributes"];
-    description = "Unused bs attributes";
+    names = ["unused-mel-attributes"];
+    description = "Unused mel attributes";
     since = None };
 
   { number = 102;
@@ -564,31 +564,31 @@ let descriptions = [
     description = "Polymorphic comparison introduced (maybe unsafe)";
     since = None };
   { number = 103;
-    names = [ "bucklescript-ffi-warning" ];
+    names = [ "melange-ffi-warning" ];
     description = "Fragile FFI definitions";
     since = None };
   { number = 104;
-    names = [ "bucklescript-bs-deriving" ];
-    description = "bs.deriving warning with customized message ";
+    names = [ "melange-mel-deriving" ];
+    description = "mel.deriving warning with customized message ";
     since = None };
   { number = 105;
-    names = [ "bucklescript-fragile-external" ];
+    names = [ "melange-fragile-external" ];
     description = "External name is inferred from val name is unsafe from refactoring when changing value name";
     since = None };
   { number = 106;
-    names = [ "bucklescript-unimplemented-primitive" ];
+    names = [ "melange-unimplemented-primitive" ];
     description = "Unimplemented primitive used:";
     since = None };
   { number = 107;
-    names = [ "bucklescript-literal-int-overflow" ];
+    names = [ "melange-literal-int-overflow" ];
     description = "Integer literal exceeds the range of representable integers of type int";
     since = None };
   { number = 108;
-    names = [ "bucklescript-uninterpreted-delimiters" ];
+    names = [ "melange-uninterpreted-delimiters" ];
     description = "Uninterpreted delimiters (for unicode)";
     since = None };
   { number = 109;
-    names = [ "bucklescript-toplevel-expr-unit" ];
+    names = [ "melange-toplevel-expr-unit" ];
     description = "Toplevel expression has unit type";
     since = None };
 ]
@@ -1194,25 +1194,25 @@ let message = function
   | Generative_application_expects_unit ->
       "A generative functor\n\
        should be applied to '()'; using '(struct end)' is deprecated."
-  | Bs_unused_attribute s ->
+  | Mel_unused_attribute s ->
       "Unused attribute: " ^ s ^ "\n\
       This means such annotation is not annotated properly.\n\
       for example, some annotations is only meaningful in externals\n"
-  | Bs_polymorphic_comparison ->
+  | Mel_polymorphic_comparison ->
       "Polymorphic comparison introduced (maybe unsafe)"
-  | Bs_ffi_warning s ->
+  | Mel_ffi_warning s ->
       "FFI warning: " ^ s
-  | Bs_derive_warning s ->
-      "bs.deriving warning: " ^ s
-  | Bs_fragile_external s ->
+  | Mel_derive_warning s ->
+      "mel.deriving warning: " ^ s
+  | Mel_fragile_external s ->
       s ^ " : the external name is inferred from val name is unsafe from refactoring when changing value name"
-  | Bs_unimplemented_primitive s ->
+  | Mel_unimplemented_primitive s ->
       "Unimplemented primitive used:" ^ s
-  | Bs_integer_literal_overflow ->
+  | Mel_integer_literal_overflow ->
       "Integer literal exceeds the range of representable integers of type int"
-  | Bs_uninterpreted_delimiters s ->
+  | Mel_uninterpreted_delimiters s ->
       "Uninterpreted delimiters " ^ s
-  | Bs_toplevel_expression_unit ->
+  | Mel_toplevel_expression_unit ->
       "Toplevel expression is expected to have unit type."
 ;;
 
