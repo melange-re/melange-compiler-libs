@@ -27,7 +27,11 @@ type compile_time_constant =
   | Backend_type
 
 type tag_info =
-  | Blk_constructor of {name : string ; num_nonconst : int}
+  | Blk_constructor of
+      { name : string
+      ; num_nonconst : int
+      ; attributes: Parsetree.attributes
+      }
   | Blk_tuple
   | Blk_array
   | Blk_poly_var of string
@@ -284,7 +288,12 @@ let equal_value_kind x y =
   | (Pgenval | Pfloatval | Pboxedintval _ | Pintval), _ -> false
 
 type pointer_info =
-  | Pt_constructor of {name : string; const : int ; non_const : int }
+  | Pt_constructor of
+    { name: string
+    ; const: int
+    ; non_const : int
+    ; attributes: Parsetree.attributes
+    }
   | Pt_constructor_access of {cstr_name : string}
   | Pt_variant of {name : string}
   | Pt_module_alias
@@ -452,10 +461,17 @@ type program =
 let const_int ?(ptr_info=Pt_na) n = Const_base (Const_int n, ptr_info)
 
 (* This is actually a dummy value
-    not necessary "()", it can be used as a place holder for module
-    alias etc.
-*)
-let const_unit = const_int 0 ~ptr_info:(Pt_constructor{name = "()"; const = 1; non_const = 0})
+   not necessary "()", it can be used as a place holder for module
+   alias etc. *)
+let const_unit =
+  const_int
+    ~ptr_info:(Pt_constructor
+      { name = "()"
+      ; const = 1
+      ; non_const = 0
+      ; attributes = []
+      })
+    0
 
 let lambda_assert_false = Lconst (const_int ~ptr_info:Pt_assertfalse 0)
 
