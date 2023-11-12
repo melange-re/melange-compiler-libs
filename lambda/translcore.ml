@@ -346,7 +346,12 @@ and transl_exp0 ~in_new_scope ~scopes e =
             | _ ->
               if Datarepr.constructor_has_optional_shape cstr
               then Pt_shape_none
-              else (Lambda.Pt_constructor {name = cstr.cstr_name; const = cstr.cstr_consts; non_const = cstr.cstr_nonconsts})
+              else (Lambda.Pt_constructor
+                     { name = cstr.cstr_name
+                     ; const = cstr.cstr_consts
+                     ; non_const = cstr.cstr_nonconsts
+                     ; attributes = cstr.cstr_attributes
+                     })
           in
           Lconst(const_int ~ptr_info n)
       | Cstr_unboxed ->
@@ -363,7 +368,13 @@ and transl_exp0 ~in_new_scope ~scopes e =
                 | _ ->
                     Blk_some
               end
-            else (Lambda.Blk_constructor { name = cstr.cstr_name; num_nonconst = cstr.cstr_nonconsts}) in
+            else
+              (Lambda.Blk_constructor
+                { name = cstr.cstr_name
+                ; num_nonconst = cstr.cstr_nonconsts
+                ; attributes = cstr.cstr_attributes
+                })
+          in
           begin try
             Lconst(Const_block(n, tag_info, List.map extract_constant ll))
           with Not_constant ->

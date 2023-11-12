@@ -28,7 +28,11 @@ type compile_time_constant =
   | Backend_type
 
 type tag_info =
-  | Blk_constructor of {name : string ; num_nonconst : int}
+  | Blk_constructor of
+      { name : string
+      ; num_nonconst : int
+      ; attributes: Parsetree.attributes
+      }
   | Blk_tuple
   | Blk_array
   | Blk_poly_var of string
@@ -148,7 +152,12 @@ type is_safe =
   | Unsafe
 
 type pointer_info =
-  | Pt_constructor of {name : string; const : int ; non_const :  int}
+  | Pt_constructor of
+    { name: string
+    ; const: int
+    ; non_const : int
+    ; attributes: Parsetree.attributes
+    }
   | Pt_constructor_access of {cstr_name : string}
     (* associated with a Const_int pointer for dynamic constructor lookup
        in TMC *)

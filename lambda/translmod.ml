@@ -256,7 +256,13 @@ let init_shape id modl =
         raise (Initialization_failure
                 (Unsafe {reason=Unsafe_module_binding;loc;subid}))
     | Mty_signature sg ->
-        let module_tag_info : Lambda.tag_info = Blk_constructor { name = "Module"; num_nonconst = 2} in
+        let module_tag_info : Lambda.tag_info =
+          Blk_constructor
+            { name = "Module"
+            ; num_nonconst = 2
+            ; attributes = []
+            }
+        in
         Const_block(0, module_tag_info,
           [Const_block(0, Blk_array, init_shape_struct env sg)])
     | Mty_functor _ ->
@@ -270,9 +276,21 @@ let init_shape id modl =
         let init_v =
           match get_desc (Ctype.expand_head env ty) with
             Tarrow(_,_,_,_) ->
-              const_int 0 ~ptr_info:(Pt_constructor{name = "Function"; const = cstr_const; non_const = cstr_non_const})(* camlinternalMod.Function *)
+              const_int 0
+                ~ptr_info:(Pt_constructor
+                  { name = "Function"
+                  ; const = cstr_const
+                  ; non_const = cstr_non_const
+                  ; attributes = []
+                  }) (* camlinternalMod.Function *)
           | Tconstr(p, _, _) when Path.same p Predef.path_lazy_t ->
-              const_int 1 ~ptr_info:(Pt_constructor{name = "Lazy"; const = cstr_const; non_const = cstr_non_const }) (* camlinternalMod.Lazy *)
+              const_int 1
+                ~ptr_info:(Pt_constructor
+                  { name = "Lazy"
+                  ; const = cstr_const
+                  ; non_const = cstr_non_const
+                  ; attributes = []
+                  }) (* camlinternalMod.Lazy *)
           | _ ->
               let not_a_function =
                 Unsafe {reason=Unsafe_non_function; loc; subid }
@@ -298,7 +316,14 @@ let init_shape id modl =
     | Sig_modtype(id, minfo, _) :: rem ->
         init_shape_struct (Env.add_modtype id minfo env) rem
     | Sig_class (id, _, _, _) :: rem ->
-        (add_name (const_int ~ptr_info:(Pt_constructor{name = "Class"; const = cstr_const; non_const = cstr_non_const}) 2) id) (* camlinternalMod.Class *)
+        (add_name
+          (const_int 2
+            ~ptr_info:(Pt_constructor
+              { name = "Class"
+              ; const = cstr_const
+              ; non_const = cstr_non_const
+              ; attributes = []
+              })) id) (* camlinternalMod.Class *)
         :: init_shape_struct env rem
     | Sig_class_type _ :: rem ->
         init_shape_struct env rem
