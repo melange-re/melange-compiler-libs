@@ -271,6 +271,18 @@ let primitives_table = lazy (
       "%int64_to_int32", Primitive ((Pcvtbint(Pint64, Pint32)), 1);
       "%int64_of_nativeint", Primitive ((Pcvtbint(Pnativeint, Pint64)), 1);
       "%int64_to_nativeint", Primitive ((Pcvtbint(Pint64, Pnativeint)), 1);
+      "%caml_string_get16", Primitive ((Pstring_load_16(false)), 2);
+      "%caml_string_get16u", Primitive ((Pstring_load_16(true)), 2);
+      "%caml_string_get32", Primitive ((Pstring_load_32(false)), 2);
+      "%caml_string_get32u", Primitive ((Pstring_load_32(true)), 2);
+      "%caml_string_get64", Primitive ((Pstring_load_64(false)), 2);
+      "%caml_string_get64u", Primitive ((Pstring_load_64(true)), 2);
+      "%caml_string_set16", Primitive ((Pbytes_set_16(false)), 3);
+      "%caml_string_set16u", Primitive ((Pbytes_set_16(true)), 3);
+      "%caml_string_set32", Primitive ((Pbytes_set_32(false)), 3);
+      "%caml_string_set32u", Primitive ((Pbytes_set_32(true)), 3);
+      "%caml_string_set64", Primitive ((Pbytes_set_64(false)), 3);
+      "%caml_string_set64u", Primitive ((Pbytes_set_64(true)), 3);
       "%caml_bytes_get16", Primitive ((Pbytes_load_16(false)), 2);
       "%caml_bytes_get16u", Primitive ((Pbytes_load_16(true)), 2);
       "%caml_bytes_get32", Primitive ((Pbytes_load_32(false)), 2);
