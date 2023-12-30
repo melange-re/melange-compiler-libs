@@ -1412,6 +1412,7 @@ module Domain         = Domain
     "The Domain interface may change in incompatible ways in the future."
 ]
 module Dynarray       = Dynarray
+module Pqueue         = Pqueue
 module Effect         = Effect
 [@@alert "-unstable"]
 [@@alert unstable
