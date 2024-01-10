@@ -55,6 +55,7 @@ module Printtyp = Printtyp
 module Printtyped = Printtyped
 module Rec_check = Rec_check
 module Shape = Shape
+module Syntaxerr = Syntaxerr
 module Signature_group = Signature_group
 module Simplif = Simplif
 module Stypes = Stypes
