@@ -3089,6 +3089,11 @@ let type_implementation sourcefile outputprefix modulename initial_env ast =
         gen_annot outputprefix sourcefile annots
       )
 
+let type_implementation sourcefile outputprefix modulename initial_env ast =
+  let impl, _env =
+    type_implementation sourcefile outputprefix modulename initial_env ast in
+  impl
+
 let save_signature modname tsg outputprefix source_file initial_env cmi =
   Cmt_format.save_cmt  (outputprefix ^ ".cmti") modname
     (Cmt_format.Interface tsg) (Some source_file) initial_env (Some cmi) None

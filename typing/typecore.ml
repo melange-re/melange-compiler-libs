@@ -5592,12 +5592,10 @@ let report_error ~loc env = function
   | Apply_non_function typ ->
       begin match get_desc typ with
         Tarrow _ ->
-          let returns_unit = match get_desc res_ty with
-            | Tconstr (p, _, _) -> Path.same p Predef.path_unit
-            | _ -> false
-          in
-          report_too_many_arg_error ~funct ~func_ty ~previous_arg_loc
-            ~extra_arg_loc ~returns_unit loc
+          Location.errorf ~loc
+            "@[<v>@[<2>This function has type@ %a@]\
+             @ @[It is applied to too many arguments;@ %s@]@]"
+            Printtyp.type_expr typ "maybe you forgot a `;'.";
       | Tconstr (Pdot (Pdot(Pident id,"Fn"),_),_, _)
         when (Ident.name id = "Js__Js_internal") || (Ident.name id = "Js") ->
           Location.errorf ~loc
