@@ -300,13 +300,12 @@ and print_simple_out_type ppf =
                  [tyl])
     when printed_name = "Js__Js_internal" || printed_name = "Js"
     ->
-      let res, attr =
+      let res =
         if name = "arity0" then
-          Otyp_arrow ("", Otyp_constr (Oide_ident { printed_name = "unit" }, []),tyl),
-          "@u0"
-        else tyl, "@u"
+          Otyp_arrow ("", Otyp_constr (Oide_ident { printed_name = "unit" }, []),tyl)
+        else tyl
       in
-      fprintf ppf "@[<0>(%a@ [%s])@]" print_out_type_1 res attr
+          fprintf ppf "@[<0>(%a@ [@u])@]" print_out_type_1 res
   | Otyp_constr (Oide_dot (Oide_dot ((Oide_ident { printed_name = "Js__Js_OO" }), "Meth" ),name),
         [tyl])
   | Otyp_constr (Oide_dot (Oide_dot (Oide_dot (Oide_dot (Oide_ident { printed_name = "Js" }, "Private" ), "Js_OO" ), "Meth" ),name),
