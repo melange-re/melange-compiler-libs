@@ -99,6 +99,11 @@ OC_DLL_LDFLAGS=@oc_dll_ldflags@
 
 MKEXE_VIA_CC=$(CC) @mkexe_via_cc_ldflags@ @mkexe_via_cc_extra_cmd@
 
+# How to build sak
+SAK_CC=@SAK_CC@
+SAK_CFLAGS=@SAK_CFLAGS@
+SAK_LINK=@SAK_LINK@
+
 # Which tool to use to display differences between files
 DIFF=@DIFF@
 # Which flags to pass to the diff tool
