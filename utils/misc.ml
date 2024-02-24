@@ -659,13 +659,14 @@ module Style = struct
   (* map a tag to a style, if the tag is known.
      @raise Not_found otherwise *)
   let style_of_tag s = match s with
-    | Format.String_tag "error" -> (!cur_styles).error
-    | Format.String_tag "warning" -> (!cur_styles).warning
+    | Format.String_tag "error" ->  (!cur_styles).error
+    | Format.String_tag "warning" ->(!cur_styles).warning
     | Format.String_tag "loc" -> (!cur_styles).loc
+    | Format.String_tag "hint" -> (!cur_styles).hint
+    | Format.String_tag "inline_code" -> (!cur_styles).inline_code
     | Format.String_tag "info" -> no_markup [Bold; FG Yellow]
     | Format.String_tag "dim" -> no_markup [Dim]
     | Format.String_tag "filename" -> no_markup [FG Cyan]
-    | Format.String_tag "hint" -> (!cur_styles).hint
     | Style s -> no_markup s
     | _ -> raise Not_found
 
