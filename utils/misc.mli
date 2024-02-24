@@ -79,6 +79,9 @@ val reraise_preserving_backtrace : exn -> (unit -> unit) -> 'a
 val map_end: ('a -> 'b) -> 'a list -> 'b list -> 'b list
        (** [map_end f l t] is [map f l @ t], just more efficient. *)
 
+val rev_map_end: ('a -> 'b) -> 'a list -> 'b list -> 'b list
+       (** [map_end f l t] is [map f (rev l) @ t], just more efficient. *)
+
 val map_left_right: ('a -> 'b) -> 'a list -> 'b list
        (** Like [List.map], with guaranteed left-to-right evaluation order *)
 
@@ -130,10 +133,20 @@ module Stdlib : sig
         If [l1] is of length n and [l2 = h2 @ t2] with h2 of length n,
         r1 is [List.map2 f l1 h1] and r2 is t2. *)
 
+    val iteri2 : (int -> 'a -> 'b -> unit) -> 'a list -> 'b list -> unit
+    (** Same as {!List.iter2}, but the function is applied to the index of
+        the element as first argument (counting from 0) *)
+
     val split_at : int -> 'a t -> 'a t * 'a t
     (** [split_at n l] returns the pair [before, after] where [before] is
         the [n] first elements of [l] and [after] the remaining ones.
         If [l] has less than [n] elements, raises Invalid_argument. *)
+
+    val chunks_of : int -> 'a t -> 'a t t
+    (** [chunks_of n t] returns a list of nonempty lists whose
+        concatenation is equal to the original list. Every list has [n]
+        elements, except for possibly the last list, which may have fewer.
+        [chunks_of] raises if [n <= 0]. *)
 
     val is_prefix
        : equal:('a -> 'a -> bool)
@@ -206,10 +219,13 @@ val find_in_path: string list -> string -> string
 val find_in_path_rel: string list -> string -> string
        (** Search a relative file in a list of directories. *)
 
-val find_in_path_uncap: string list -> string -> string
-       (** Same, but search also for uncapitalized name, i.e.
-           if name is [Foo.ml], allow [/path/Foo.ml] and [/path/foo.ml]
-           to match. *)
+ (** Normalize file name [Foo.ml] to [foo.ml] *)
+val normalized_unit_filename: string -> string
+
+val find_in_path_normalized: string list -> string -> string
+(** Same as {!find_in_path_rel} , but search also for normalized unit filename,
+    i.e. if name is [Foo.ml], allow [/path/Foo.ml] and [/path/foo.ml] to
+    match. *)
 
 val remove_file: string -> unit
        (** Delete the given file if it exists and is a regular file.
@@ -301,6 +317,8 @@ val no_overflow_mul: int -> int -> bool
 val no_overflow_lsl: int -> int -> bool
        (** [no_overflow_lsl n k] returns [true] if the computation of
            [n lsl k] does not overflow. *)
+
+val letter_of_int : int -> string
 
 module Int_literal_converter : sig
   val int : string -> int
@@ -411,25 +429,6 @@ val snd4: 'a * 'b * 'c * 'd -> 'b
 val thd4: 'a * 'b * 'c * 'd -> 'c
 val for4: 'a * 'b * 'c * 'd -> 'd
 
-(** {1 Long strings} *)
-
-(** ``Long strings'' are mutable arrays of characters that are not limited
-    in length to {!Sys.max_string_length}. *)
-
-module LongString :
-  sig
-    type t = bytes array
-    val create : int -> t
-    val length : t -> int
-    val get : t -> int -> char
-    val set : t -> int -> char -> unit
-    val blit : t -> int -> t -> int -> int -> unit
-    val blit_string : string -> int -> t -> int -> int -> unit
-    val output : out_channel -> t -> int -> int -> unit
-    val input_bytes_into : t -> in_channel -> int -> unit
-    val input_bytes : in_channel -> int -> t
-  end
-
 (** {1 Spell checking and ``did you mean'' suggestions} *)
 
 val edit_distance : string -> string -> int -> int option
@@ -463,10 +462,20 @@ val did_you_mean : Format.formatter -> (unit -> string list) -> unit
     the failure even if producing the hint is slow.
 *)
 
-(** {1 Colored terminal output } *)
+(** {1 Color support detection }*)
+module Color: sig
 
-module Color : sig
-  type color = Melange_wrapper.Misc.Color.color =
+  type setting = Melange_wrapper.Misc.Color.setting = Auto | Always | Never
+
+  val default_setting : setting
+
+end
+
+
+(** {1 Styling handling for terminal output } *)
+
+module Style : sig
+  type color = Melange_wrapper.Misc.Style.color =
     | Black
     | Red
     | Green
@@ -488,27 +497,33 @@ module Color : sig
   val ansi_of_style_l : style list -> string
   (* ANSI escape sequence for the given style *)
 
-  type styles = {
-    error: style list;
-    warning: style list;
-    loc: style list;
-    hint: style list;
+  type tag_style ={
+    ansi: style list;
+    text_open:string;
+    text_close:string
   }
+
+  type styles = {
+    error: tag_style;
+    warning: tag_style;
+    loc: tag_style;
+    hint: tag_style;
+    inline_code: tag_style;
+  }
+
+  val as_inline_code: (Format.formatter -> 'a -> unit as 'printer) -> 'printer
+  val inline_code: Format.formatter -> string -> unit
 
   val default_styles: styles
   val get_styles: unit -> styles
   val set_styles: styles -> unit
 
-  type setting = Melange_wrapper.Misc.Color.setting = Auto | Always | Never
-
-  val default_setting : setting
-
-  val setup : setting option -> unit
+  val setup : Color.setting option -> unit
   (* [setup opt] will enable or disable color handling on standard formatters
      according to the value of color setting [opt].
      Only the first call to this function has an effect. *)
 
-  val set_color_tag_handling : Format.formatter -> unit
+  val set_tag_handling : Format.formatter -> unit
   (* adds functions to support color tags to the given formatter. *)
 end
 

@@ -34,12 +34,17 @@ let error err = raise (Error err)
 module Persistent_signature = struct
   type t =
     { filename : string;
-      cmi : Cmi_format.cmi_infos }
+      cmi : Cmi_format.cmi_infos;
+      visibility : Load_path.visibility }
 
-  let load = ref (fun ~unit_name ->
-      match Load_path.find_uncap (unit_name ^ ".cmi") with
-      | filename -> Some { filename; cmi = read_cmi filename }
-      | exception Not_found -> None)
+  let load = ref (fun ~allow_hidden ~unit_name ->
+    match Load_path.find_normalized_with_visibility (unit_name ^ ".cmi") with
+    | filename, visibility when allow_hidden ->
+      Some { filename; cmi = read_cmi filename; visibility}
+    | filename, Visible ->
+      Some { filename; cmi = read_cmi filename; visibility = Visible}
+    | _, Hidden
+    | exception Not_found -> None)
 end
 
 type can_load_cmis =
@@ -51,6 +56,7 @@ type pers_struct = {
   ps_crcs: (string * Digest.t option) list;
   ps_filename: string;
   ps_flags: pers_flags list;
+  ps_visibility: Load_path.visibility;
 }
 
 module String = Misc.Stdlib.String
@@ -168,7 +174,7 @@ let save_pers_struct penv crc ps pm =
   add_import penv modname
 
 let acknowledge_pers_struct penv check modname pers_sig pm =
-  let { Persistent_signature.filename; cmi } = pers_sig in
+  let { Persistent_signature.filename; cmi; visibility } = pers_sig in
   let name = cmi.cmi_name in
   let crcs = cmi.cmi_crcs in
   let flags = cmi.cmi_flags in
@@ -176,6 +182,7 @@ let acknowledge_pers_struct penv check modname pers_sig pm =
              ps_crcs = crcs;
              ps_filename = filename;
              ps_flags = flags;
+             ps_visibility = visibility;
            } in
   if ps.ps_name <> modname then
     error (Illegal_renaming(modname, ps.ps_name, filename));
@@ -192,29 +199,33 @@ let acknowledge_pers_struct penv check modname pers_sig pm =
   Hashtbl.add persistent_structures modname (Found (ps, pm));
   ps
 
-let read_pers_struct penv val_of_pers_sig check modname filename =
+let read_pers_struct penv val_of_pers_sig check cmi =
+  let modname = Unit_info.Artifact.modname cmi in
+  let filename = Unit_info.Artifact.filename cmi in
   add_import penv modname;
   let cmi = read_cmi filename in
-  let pers_sig = { Persistent_signature.filename; cmi } in
+  let pers_sig = { Persistent_signature.filename; cmi; visibility = Visible } in
   let pm = val_of_pers_sig pers_sig in
   let ps = acknowledge_pers_struct penv check modname pers_sig pm in
   (ps, pm)
 
-let find_pers_struct penv val_of_pers_sig check name =
+let find_pers_struct ~allow_hidden penv val_of_pers_sig check name =
   let {persistent_structures; _} = penv in
   if name = "*predef*" then raise Not_found;
   match Hashtbl.find persistent_structures name with
-  | Found (ps, pm) -> (ps, pm)
+  | Found (ps, pm) when allow_hidden || ps.ps_visibility = Load_path.Visible ->
+    (ps, pm)
+  | Found _ -> raise Not_found
   | Missing -> raise Not_found
   | exception Not_found ->
     match can_load_cmis penv with
     | Cannot_load_cmis _ -> raise Not_found
     | Can_load_cmis ->
         let psig =
-          match !Persistent_signature.load ~unit_name:name with
+          match !Persistent_signature.load ~allow_hidden ~unit_name:name with
           | Some psig -> psig
           | None ->
-            Hashtbl.add persistent_structures name Missing;
+            if allow_hidden then Hashtbl.add persistent_structures name Missing;
             raise Not_found
         in
         add_import penv name;
@@ -222,10 +233,11 @@ let find_pers_struct penv val_of_pers_sig check name =
         let ps = acknowledge_pers_struct penv check name psig pm in
         (ps, pm)
 
+module Style = Misc.Style
 (* Emits a warning if there is no valid cmi for name *)
-let check_pers_struct penv f ~loc name =
+let check_pers_struct ~allow_hidden penv f ~loc name =
   try
-    ignore (find_pers_struct penv f false name)
+    ignore (find_pers_struct ~allow_hidden penv f false name)
   with
   | Not_found ->
       let warn = Warnings.No_cmi_file(name, None) in
@@ -240,24 +252,26 @@ let check_pers_struct penv f ~loc name =
         | Illegal_renaming(name, ps_name, filename) ->
             Format.asprintf
               " %a@ contains the compiled interface for @ \
-               %s when %s was expected"
-              Location.print_filename filename ps_name name
+               %a when %a was expected"
+              (Style.as_inline_code Location.print_filename) filename
+              Style.inline_code ps_name
+              Style.inline_code name
         | Inconsistent_import _ -> assert false
         | Need_recursive_types name ->
-            Format.sprintf
-              "%s uses recursive types"
-              name
+            Format.asprintf
+              "%a uses recursive types"
+              Style.inline_code name
       in
       let warn = Warnings.No_cmi_file(name, Some msg) in
         Location.prerr_warning loc warn
 
-let read penv f modname filename =
-  snd (read_pers_struct penv f true modname filename)
+let read penv f a =
+  snd (read_pers_struct penv f true a)
 
-let find penv f name =
-  snd (find_pers_struct penv f true name)
+let find ~allow_hidden penv f name =
+  snd (find_pers_struct ~allow_hidden penv f true name)
 
-let check penv f ~loc name =
+let check ~allow_hidden penv f ~loc name =
   let {persistent_structures; _} = penv in
   if not (Hashtbl.mem persistent_structures name) then begin
     (* PR#6843: record the weak dependency ([add_import]) regardless of
@@ -266,11 +280,11 @@ let check penv f ~loc name =
     add_import penv name;
     if (Warnings.is_active (Warnings.No_cmi_file("", None))) then
       !add_delayed_check_forward
-        (fun () -> check_pers_struct penv f ~loc name)
+        (fun () -> check_pers_struct ~allow_hidden penv f ~loc name)
   end
 
 let crc_of_unit penv f name =
-  let (ps, _pm) = find_pers_struct penv f true name in
+  let (ps, _pm) = find_pers_struct ~allow_hidden:true penv f true name in
   let crco =
     try
       List.assoc name ps.ps_crcs
@@ -310,7 +324,7 @@ let make_cmi penv modname sign alerts =
   }
 
 let save_cmi ?check_exists penv psig pm =
-  let { Persistent_signature.filename; cmi } = psig in
+  let { Persistent_signature.filename; cmi; visibility } = psig in
   Misc.try_finally (fun () ->
       let {
         cmi_name = modname;
@@ -327,6 +341,7 @@ let save_cmi ?check_exists penv psig pm =
           ps_crcs = (cmi.cmi_name, Some crc) :: imports;
           ps_filename = filename;
           ps_flags = flags;
+          ps_visibility = visibility
         } in
       save_pers_struct penv crc ps pm
     )
@@ -337,16 +352,22 @@ let report_error ppf =
   function
   | Illegal_renaming(modname, ps_name, filename) -> fprintf ppf
       "Wrong file naming: %a@ contains the compiled interface for@ \
-       %s when %s was expected"
-      Location.print_filename filename ps_name modname
+       %a when %a was expected"
+      (Style.as_inline_code Location.print_filename) filename
+      Style.inline_code ps_name
+      Style.inline_code modname
   | Inconsistent_import(name, source1, source2) -> fprintf ppf
       "@[<hov>The files %a@ and %a@ \
-              make inconsistent assumptions@ over interface %s@]"
-      Location.print_filename source1 Location.print_filename source2 name
+              make inconsistent assumptions@ over interface %a@]"
+      (Style.as_inline_code Location.print_filename) source1
+      (Style.as_inline_code Location.print_filename) source2
+      Style.inline_code name
   | Need_recursive_types(import) ->
       fprintf ppf
-        "@[<hov>Invalid import of %s, which uses recursive types.@ %s@]"
-        import "The compilation flag -rectypes is required"
+        "@[<hov>Invalid import of %a, which uses recursive types.@ \
+         The compilation flag %a is required@]"
+        Style.inline_code import
+        Style.inline_code "-rectypes"
 
 let () =
   Location.register_error_of_exn

@@ -41,8 +41,8 @@ val type_toplevel_phrase:
 
 val should_hide : (Typedtree.module_binding -> bool) ref
 val type_implementation:
-  string -> string -> string -> Env.t ->
-  Parsetree.structure -> Typedtree.implementation
+  Unit_info.t -> Env.t -> Parsetree.structure ->
+  Typedtree.implementation
 val type_interface:
         Env.t -> Parsetree.signature -> Typedtree.signature
 val transl_signature:
@@ -62,11 +62,11 @@ val modtype_of_package:
 val path_of_module : Typedtree.module_expr -> Path.t option
 
 val save_signature:
-  string -> Typedtree.signature -> string -> string ->
-  Env.t -> Cmi_format.cmi_infos -> unit
+  Unit_info.t -> Typedtree.signature -> Env.t ->
+  Cmi_format.cmi_infos -> unit
 
 val package_units:
-  Env.t -> string list -> string -> string -> Typedtree.module_coercion
+  Env.t -> string list -> Unit_info.Artifact.t -> Typedtree.module_coercion
 
 (* Should be in Envaux, but it breaks the build of the debugger *)
 val initial_env:
@@ -78,6 +78,8 @@ module Sig_component_kind : sig
   type t =
     | Value
     | Type
+    | Constructor
+    | Label
     | Module
     | Module_type
     | Extension_constructor
