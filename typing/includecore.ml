@@ -480,13 +480,20 @@ module Record_diffing = struct
             loc
             ld1.ld_attributes ld2.ld_attributes
             (Ident.name ld1.ld_id);
-          match compare_labels env params1 params2 ld1 ld2 with
-          | Some _ -> false
-          (* add arguments to the parameters, cf. PR#7378 *)
+          let field_mismatch = !Builtin_attributes.check_bs_attributes_inclusion
+            ld1.ld_attributes ld2.ld_attributes
+            (Ident.name ld1.ld_id) in
+          match field_mismatch with
+          | Some (a,b) -> false
           | None ->
+            begin match compare_labels env params1 params2 ld1 ld2 with
+            | Some _ -> false
+            (* add arguments to the parameters, cf. PR#7378 *)
+            | None ->
               equal ~loc env
                 (ld1.ld_type::params1) (ld2.ld_type::params2)
                 rem1 rem2
+            end
         end
 
   module Defs = struct
