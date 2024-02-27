@@ -81,9 +81,9 @@ let mknoloc txt = mkloc txt none
 (******************************************************************************)
 (* Input info *)
 
-let input_name = ref "_none_"
-let input_lexbuf = ref (None : lexbuf option)
-let input_phrase_buffer = ref (None : Buffer.t option)
+let input_name = Melange_wrapper.Location.input_name
+let input_lexbuf = Melange_wrapper.Location.input_lexbuf
+let input_phrase_buffer = Melange_wrapper.Location.input_phrase_buffer
 
 (******************************************************************************)
 
