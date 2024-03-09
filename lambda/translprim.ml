@@ -883,6 +883,7 @@ let lambda_of_loc kind sloc =
   let loc = to_location sloc in
   let loc_start = loc.Location.loc_start in
   let (file, lnum, cnum) = Location.get_pos_info loc_start in
+  let file = Filename.basename file in
   let file =
     if Filename.is_relative file then
       file

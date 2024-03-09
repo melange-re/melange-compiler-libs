@@ -200,6 +200,9 @@ let assert_failed ~scopes exp =
     Location.get_pos_info loc.Location.loc_start
   in
   let loc = of_location ~scopes exp.exp_loc in
+  let fname =
+    Filename.basename fname
+  in
   Lprim(Praise Raise_regular, [event_after ~scopes exp
     (Lprim(Pmakeblock(0, Blk_extension, Immutable, None),
           [slot;
