@@ -164,10 +164,6 @@ val mk_lazy: (unit -> 'a) -> 'a Lazy.t
     (** Like [Lazy.of_fun], but the function is applied with
         the warning/alert settings at the time [mk_lazy] is called. *)
 
-val nerrors : int ref
-val message : t -> string
-val number: t -> int
-
 type description =
   { number : int;
     names : string list;

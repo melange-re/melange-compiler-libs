@@ -376,7 +376,7 @@ module Functor_suberror = struct
     let elt (x,param) =
       let sty = Diffing.(style @@ classify x) in
       Format.dprintf "%a%t%a"
-        Format.pp_open_stag (Misc.Color.Style (Obj.magic sty))
+        Format.pp_open_stag (Misc.Color.Style sty)
         (printer param)
         Format.pp_close_stag ()
     in
@@ -709,7 +709,16 @@ let rec module_type ~expansion_token ~eqmode ~env ~before ~ctx diff =
       functor_params ~expansion_token ~env ~before ~ctx d
   | _ ->
       let inner = if eqmode then eq_module_types else module_types in
-      let next = dwith_context_and_elision ctx inner diff in
+      let next =
+        match diff.symptom with
+        | Mt_core _ ->
+            (* In those cases, the refined error messages for the current error
+               will at most add some minor comments on the current error.
+               It is thus better to avoid eliding the current error message.
+            *)
+            dwith_context ctx (inner diff)
+        | _ -> dwith_context_and_elision ctx inner diff
+      in
       let before = next :: before in
       module_type_symptom ~eqmode ~expansion_token ~env ~before ~ctx
         diff.symptom
