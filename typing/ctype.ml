@@ -1748,7 +1748,7 @@ let rec occur_rec env allow_recursive visited ty0 ty =
         let visited = TypeSet.add ty visited in
         iter_type_expr (occur_rec env allow_recursive visited ty0) ty
       with Occur -> try
-        let ty' = try_expand_head try_expand_once env ty in
+        let ty' = try_expand_head try_expand_safe env ty in
         (* This call used to be inlined, but there seems no reason for it.
            Message was referring to change in rev. 1.58 of the CVS repo. *)
         occur_rec env allow_recursive visited ty0 ty'
@@ -1774,7 +1774,8 @@ let occur env ty0 ty =
   try
     while
       type_changed := false;
-      occur_rec env allow_recursive TypeSet.empty ty0 ty;
+      if not (eq_type ty0 ty) then
+        occur_rec env allow_recursive TypeSet.empty ty0 ty;
       !type_changed
     do () (* prerr_endline "changed" *) done;
     merge type_changed old
@@ -2704,7 +2705,7 @@ and unify3 env t1 t1' t2 t2' =
   | _ ->
     begin match !umode with
     | Expression ->
-        occur_for Unify !env t1' t2';
+        occur_for Unify !env t1' t2;
         link_type t1' t2
     | Pattern ->
         add_type_equality t1' t2'

@@ -55,7 +55,6 @@ let native_c_compiler =
   c_compiler ^ " " ^ ocamlopt_cflags ^ " " ^ ocamlopt_cppflags
 let native_c_libraries = "-lm "
 let native_pack_linker = "ld -r -o "
-let ranlib = "ranlib"
 let default_rpath = ""
 let mksharedlibrpath = ""
 let ar = "ar"
@@ -178,7 +177,6 @@ let configuration_variables =
   p "bytecomp_c_libraries" bytecomp_c_libraries;
   p "native_c_libraries" native_c_libraries;
   p "native_pack_linker" native_pack_linker;
-  p "ranlib" ranlib;
   p "architecture" architecture;
   p "model" model;
   p_int "int_size" Sys.int_size;

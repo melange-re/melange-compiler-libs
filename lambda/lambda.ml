@@ -478,7 +478,6 @@ let lfunction ~kind ~params ~return ~body ~attr ~loc =
   assert (List.length params <= max_arity ());
   Lfunction { kind; params; return; body; attr; loc }
 
-
 let default_function_attribute = {
   inline = Default_inline;
   specialise = Default_specialise;
