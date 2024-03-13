@@ -86,7 +86,7 @@ type t =
   | Eliminated_optional_arguments of string list (* 48 *)
   | No_cmi_file of string * string option   (* 49 *)
   | Unexpected_docstring of bool            (* 50 *)
-  (* | Wrong_tailcall_expectation of bool      (* 51 *) *)
+  | Wrong_tailcall_expectation of bool      (* 51 *)
   | Fragile_literal_pattern                 (* 52 *)
   | Misplaced_attribute of string           (* 53 *)
   | Duplicated_attribute of string          (* 54 *)
@@ -177,7 +177,7 @@ let number = function
   | Eliminated_optional_arguments _ -> 48
   | No_cmi_file _ -> 49
   | Unexpected_docstring _ -> 50
-  (* | Wrong_tailcall_expectation _ -> 51 *)
+  | Wrong_tailcall_expectation _ -> 51
   | Fragile_literal_pattern -> 52
   | Misplaced_attribute _ -> 53
   | Duplicated_attribute _ -> 54
@@ -1089,9 +1089,9 @@ let message = function
   | Unexpected_docstring unattached ->
       if unattached then "unattached documentation comment (ignored)"
       else "ambiguous documentation comment"
-  (* | Wrong_tailcall_expectation b -> *)
-      (* Printf.sprintf "expected %s" *)
-        (* (if b then "tailcall" else "non-tailcall") *)
+  | Wrong_tailcall_expectation b ->
+      Printf.sprintf "expected %s"
+        (if b then "tailcall" else "non-tailcall")
   | Fragile_literal_pattern ->
       let[@manual.ref "ss:warn52"] ref_manual = [ 13; 5; 3 ] in
       Format.asprintf
