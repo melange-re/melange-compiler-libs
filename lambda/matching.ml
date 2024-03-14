@@ -3738,9 +3738,6 @@ let failure_handler ~scopes loc ~failer () =
     in
     let fname, line, char =
       Location.get_pos_info loc.Location.loc_start in
-    let fname =
-      Filename.basename fname
-    in
     Lprim
       ( Praise Raise_regular,
         [ Lprim
