@@ -293,9 +293,8 @@ and print_simple_out_type ppf =
     Otyp_class (ng, id, tyl) ->
       fprintf ppf "@[%a%s#%a@]" print_typargs tyl (if ng then "_" else "")
         print_ident id
-  | Otyp_constr (Oide_dot (Oide_dot (Oide_ident { printed_name }, "Fn"), name),
+  | Otyp_constr (Oide_dot (Oide_dot (Oide_ident { printed_name = "Js" }, "Fn"), name),
                  [tyl])
-    when printed_name = "Js__Js_internal" || printed_name = "Js"
     ->
       let res =
         if name = "arity0" then
@@ -305,7 +304,7 @@ and print_simple_out_type ppf =
           fprintf ppf "@[<0>(%a@ [@u])@]" print_out_type_1 res
   | Otyp_constr (Oide_dot (Oide_dot ((Oide_ident { printed_name = "Js__Js_OO" }), "Meth" ),name),
         [tyl])
-  | Otyp_constr (Oide_dot (Oide_dot (Oide_dot (Oide_dot (Oide_ident { printed_name = "Js" }, "Private" ), "Js_OO" ), "Meth" ),name),
+  | Otyp_constr (Oide_dot (Oide_dot (Oide_dot (Oide_ident { printed_name = "Js" }, "OO" ) , "Meth" ),name),
         [tyl])
     ->
       let res =
@@ -316,7 +315,7 @@ and print_simple_out_type ppf =
       fprintf ppf "@[<0>(%a@ [@mel.meth])@]" print_out_type_1 res
   | Otyp_constr (Oide_dot (Oide_dot ((Oide_ident { printed_name = "Js__Js_OO" }), "Callback" ),_),
         [tyl])
-  | Otyp_constr (Oide_dot (Oide_dot (Oide_dot (Oide_dot (Oide_ident { printed_name = "Js" }, "Private" ), "Js_OO" ), "Callback" ), _),
+  | Otyp_constr (Oide_dot (Oide_dot (Oide_dot (Oide_ident { printed_name = "Js" }, "OO" ), "Callback" ), _),
       [tyl])
     ->
       fprintf ppf "@[<0>(%a@ [@mel.this])@]" print_out_type_1 tyl
