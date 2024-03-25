@@ -2,10 +2,9 @@
 (*                                                                        *)
 (*                                 OCaml                                  *)
 (*                                                                        *)
-(*             Xavier Leroy, projet Cristal, INRIA Rocquencourt           *)
+(*               Jeremy Yallop, University of Cambridge                   *)
 (*                                                                        *)
-(*   Copyright 1996 Institut National de Recherche en Informatique et     *)
-(*     en Automatique.                                                    *)
+(*   Copyright 2017 Jeremy Yallop                                         *)
 (*                                                                        *)
 (*   All rights reserved.  This file is distributed under the terms of    *)
 (*   the GNU Lesser General Public License version 2.1, with the          *)
@@ -13,15 +12,9 @@
 (*                                                                        *)
 (**************************************************************************)
 
+val is_valid_recursive_expression :
+  Ident.t list ->
+  Typedtree.expression ->
+  Value_rec_types.recursive_binding_kind option
 
-
-val pretty_const
-  : Asttypes.constant -> string
-val pretty_val : Format.formatter -> 'k Typedtree.general_pattern -> unit
-
-val pretty_pat
-    : Format.formatter -> 'k Typedtree.general_pattern -> unit
-val pretty_line
-    : Format.formatter -> 'k Typedtree.general_pattern list -> unit
-val pretty_matrix
-    : Format.formatter -> 'k Typedtree.general_pattern list list -> unit
+val is_valid_class_expr : Ident.t list -> Typedtree.class_expr -> bool
