@@ -227,7 +227,7 @@ case "$1" in
         set -o pipefail
         # For an explanation of the sed command, see
         # https://github.com/appveyor/ci/issues/1824
-        build="-C ../$BUILD_PREFIX-$PORT world.opt"
+        build="-C ../$BUILD_PREFIX-$PORT"
         script --quiet --return --command \
           "if ! $MAKE -j $build; then $MAKE $build; exit 1; fi" \
           "../$BUILD_PREFIX-$PORT/build.log" |
