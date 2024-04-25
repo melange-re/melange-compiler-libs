@@ -305,7 +305,7 @@ and boxed_integer = Primitive.boxed_integer =
 
 and bigarray_kind =
     Pbigarray_unknown
-  | Pbigarray_float32 | Pbigarray_float64
+  | Pbigarray_float16 | Pbigarray_float32 | Pbigarray_float64
   | Pbigarray_sint8 | Pbigarray_uint8
   | Pbigarray_sint16 | Pbigarray_uint16
   | Pbigarray_int32 | Pbigarray_int64
@@ -399,7 +399,14 @@ type function_attribute = {
   is_a_functor: bool;
   stub: bool;
   tmc_candidate: bool;
+  (* [simplif.ml] (in the `simplif` function within `simplify_lets`) attempts to
+     fuse nested functions, rewriting e.g. [fun x -> fun y -> e] to
+     [fun x y -> e]. This fusion is allowed only when the [may_fuse_arity] field
+     on *both* functions involved is [true]. *)
+  may_fuse_arity: bool;
   return_unit: bool;
+  smuggled_lambda: bool;
+    (* indicates that this isn't really an `lfunction`, but instead a generic letrec *)
 }
 
 type scoped_location = Debuginfo.Scoped_location.t
@@ -414,7 +421,7 @@ type lambda =
   | Lfunction of lfunction
   | Llet of let_kind * value_kind * Ident.t * lambda * lambda
   | Lmutlet of value_kind * Ident.t * lambda * lambda
-  | Lletrec of (Ident.t * lambda) list * lambda
+  | Lletrec of rec_binding list * lambda
   | Lprim of primitive * lambda list * scoped_location
   | Lswitch of lambda * lambda_switch * scoped_location
 (* switch on strings, clauses are sorted by string order,
@@ -434,6 +441,14 @@ type lambda =
   | Lsend of meth_kind * lambda * lambda * lambda list * scoped_location
   | Levent of lambda * lambda_event
   | Lifused of Ident.t * lambda
+
+and rec_binding = {
+  id : Ident.t;
+  def : lfunction;
+  (* Generic recursive bindings have been removed from Lambda in 5.2.
+     [Value_rec_compiler.compile_letrec] deals with transforming generic
+     definitions into basic Lambda code. *)
+}
 
 and lfunction = private
   { kind: function_kind;
@@ -497,6 +512,10 @@ val const_int : ?ptr_info:pointer_info -> int -> structured_constant
 val lambda_unit: lambda
 val lambda_assert_false: lambda
 val lambda_module_alias : lambda
+
+(** [dummy_constant] produces a plecholder value with a recognizable
+    bit pattern (currently 0xBBBB in its tagged form) *)
+val dummy_constant: lambda
 val name_lambda: let_kind -> lambda -> (Ident.t -> lambda) -> lambda
 val name_lambda_list: lambda list -> (lambda list -> lambda) -> lambda
 
@@ -508,6 +527,15 @@ val lfunction :
   attr:function_attribute -> (* specified with [@inline] attribute *)
   loc:scoped_location ->
   lambda
+
+val lfunction' :
+  kind:function_kind ->
+  params:(Ident.t * value_kind) list ->
+  return:value_kind ->
+  body:lambda ->
+  attr:function_attribute -> (* specified with [@inline] attribute *)
+  loc:scoped_location ->
+  lfunction
 
 
 val iter_head_constructor: (lambda -> unit) -> lambda -> unit
@@ -561,12 +589,15 @@ val rename : Ident.t Ident.Map.t -> lambda -> lambda
 (** A version of [subst] specialized for the case where we're just renaming
     idents. *)
 
-val duplicate : lambda -> lambda
+val duplicate_function : lfunction -> lfunction
 (** Duplicate a term, freshening all locally-bound identifiers. *)
 
 val map : (lambda -> lambda) -> lambda -> lambda
   (** Bottom-up rewriting, applying the function on
       each node from the leaves to the root. *)
+
+val map_lfunction : (lambda -> lambda) -> lfunction -> lfunction
+  (** Apply the given transformation on the function's body *)
 
 val shallow_map  : (lambda -> lambda) -> lambda -> lambda
   (** Rewrite each immediate sub-term with the function. *)

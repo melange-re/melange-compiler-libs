@@ -31,7 +31,8 @@ let lfunction params body =
   if params = [] then body else
   match body with
   | Lfunction {kind = Curried; params = params'; body = body'; attr; loc}
-    when List.length params + List.length params' <= Lambda.max_arity() ->
+    when attr.may_fuse_arity &&
+         List.length params + List.length params' <= Lambda.max_arity() ->
       lfunction ~kind:Curried ~params:(params @ params')
                 ~return:Pgenval
                 ~body:body'
@@ -405,10 +406,11 @@ let rec build_class_lets ~scopes cl =
   match cl.cl_desc with
     Tcl_let (rec_flag, defs, _vals, cl') ->
       let env, wrap = build_class_lets ~scopes cl' in
-      (env, fun x ->
-          Translcore.transl_let ~scopes rec_flag defs (wrap x))
+      (env, fun lam_and_kind ->
+          let lam, rkind = wrap lam_and_kind in
+          Translcore.transl_let ~scopes rec_flag defs lam, rkind)
   | _ ->
-      (cl.cl_env, fun x -> x)
+      (cl.cl_env, fun lam_and_kind -> lam_and_kind)
 
 let rec get_class_meths cl =
   match cl.cl_desc with
@@ -662,7 +664,7 @@ let free_methods l =
     | Lmutlet(_k, id, _arg, _body) ->
         fv := Ident.Set.remove id !fv
     | Lletrec(decl, _body) ->
-        List.iter (fun (id, _exp) -> fv := Ident.Set.remove id !fv) decl
+        List.iter (fun { id } -> fv := Ident.Set.remove id !fv) decl
     | Lstaticcatch(_e1, (_,vars), _e2) ->
         List.iter (fun (id, _) -> fv := Ident.Set.remove id !fv) vars
     | Ltrywith(_e1, exn, _e2) ->
@@ -677,9 +679,10 @@ let free_methods l =
   in free l; !fv
 
 let transl_class ~scopes ids cl_id pub_meths cl vflag =
+  let open Value_rec_types in
   (* First check if it is not only a rebind *)
   let rebind = transl_class_rebind ~scopes cl vflag in
-  if rebind <> lambda_unit then rebind else
+  if rebind <> lambda_unit then rebind, Dynamic else
 
   (* Prepare for heavy environment handling *)
   let scopes = enter_class_definition ~scopes cl_id in
@@ -786,21 +789,27 @@ let transl_class ~scopes ids cl_id pub_meths cl vflag =
                    mkappl (Lvar obj_init, [lambda_unit])))
   in
   (* Simplest case: an object defined at toplevel (ids=[]) *)
-  if top && ids = [] then llets (ltable cla (ldirect obj_init)) else
+  if top && ids = [] then llets (ltable cla (ldirect obj_init), Dynamic) else
 
   let concrete = (vflag = Concrete)
-  and lclass lam =
-    let cl_init = llets (Lambda.lfunction
-                           ~kind:Curried
-                           ~attr:default_function_attribute
-                           ~loc:Loc_unknown
-                           ~return:Pgenval
-                           ~params:[cla, Pgenval] ~body:cl_init) in
-    Llet(Strict, Pgenval, class_init, cl_init, lam (free_variables cl_init))
+  and lclass mk_lam_and_kind =
+    let cl_init, _ =
+      llets (Lambda.lfunction
+               ~kind:Curried
+               ~attr:default_function_attribute
+               ~loc:Loc_unknown
+               ~return:Pgenval
+               ~params:[cla, Pgenval]
+               ~body:cl_init,
+            Dynamic (* Placeholder, real kind is computed in [lbody] below *))
+    in
+    let lam, rkind = mk_lam_and_kind (free_variables cl_init) in
+    Llet(Strict, Pgenval, class_init, cl_init, lam), rkind
   and lbody fv =
     if List.for_all (fun id -> not (Ident.Set.mem id fv)) ids then
       mkappl (oo_prim "make_class",[transl_meth_list pub_meths;
-                                    Lvar class_init])
+                                    Lvar class_init]),
+      Dynamic
     else
       ltable table (
       Llet(
@@ -810,7 +819,8 @@ let transl_class ~scopes ids cl_id pub_meths cl vflag =
       Lprim(Pmakeblock(0, Lambda.Blk_class, Immutable, None),
             [mkappl (Lvar env_init, [lambda_unit]);
              Lvar class_init; Lvar env_init; lambda_unit],
-            Loc_unknown))))
+            Loc_unknown)))),
+      Static
   and lbody_virt lenvs =
     Lprim(Pmakeblock(0, Lambda.Blk_class, Immutable, None),
           [lambda_unit; Lambda.lfunction
@@ -820,7 +830,8 @@ let transl_class ~scopes ids cl_id pub_meths cl vflag =
                           ~return:Pgenval
                           ~params:[cla, Pgenval] ~body:cl_init;
            lambda_unit; lenvs],
-         Loc_unknown)
+         Loc_unknown),
+    Static
   in
   (* Still easy: a class defined at toplevel *)
   if top && concrete then lclass lbody else
@@ -848,12 +859,13 @@ let transl_class ~scopes ids cl_id pub_meths cl vflag =
       (fun (_, path_lam, _) -> Lprim(Pfield (3, Pointer, Mutable, Fld_tuple), [path_lam], Loc_unknown))
       (List.rev inh_init)
   in
-  let make_envs lam =
+  let make_envs (lam, rkind) =
     Llet(StrictOpt, Pgenval, envs,
          (if linh_envs = [] then lenv else
          Lprim(Pmakeblock(0, Lambda.Blk_array, Immutable, None),
                lenv :: linh_envs, Loc_unknown)),
-         lam)
+         lam),
+    rkind
   and def_ids cla lam =
     Llet(StrictOpt, Pgenval, env2,
          mkappl (oo_prim "new_variable", [Lvar cla; transl_label ""]),
@@ -876,13 +888,6 @@ let transl_class ~scopes ids cl_id pub_meths cl vflag =
                    ~attr:default_function_attribute
                    ~loc:Loc_unknown
                    ~body:(def_ids cla cl_init), lam)
-  and lcache lam =
-    if inh_keys = [] then Llet(Alias, Pgenval, cached, Lvar tables, lam) else
-    Llet(Strict, Pgenval, cached,
-         mkappl (oo_prim "lookup_tables",
-                [Lvar tables; Lprim(Pmakeblock(0, Lambda.Blk_array, Immutable, None),
-                                    inh_keys, Loc_unknown)]),
-         lam)
   and lset cached lam =
     Lprim(Psetfield(0, Pointer, Assignment, Lambda.Fld_record_inline_set "key"),
           [Lvar cached; lam], Loc_unknown)
@@ -916,12 +921,27 @@ let transl_class ~scopes ids cl_id pub_meths cl vflag =
       lupdate_cache
     else
       Lifthenelse(lfield ~fld_info:(Fld_record_inline {name = "key"}) cached 0, lambda_unit, lupdate_cache) in
+  let lcache (lam, rkind) =
+    let lam = Lsequence (lcheck_cache, lam) in
+    let lam =
+      if inh_keys = []
+      then Llet(Alias, Pgenval, cached, Lvar tables, lam)
+      else
+        Llet(Strict, Pgenval, cached,
+             mkappl (oo_prim "lookup_tables",
+                     [Lvar tables; Lprim(Pmakeblock(0, Blk_array, Immutable, None),
+                                         inh_keys, Loc_unknown)]),
+             lam)
+    in
+    lam, rkind
+  in
   llets (
   lcache (
-  Lsequence(lcheck_cache,
   make_envs (
-  if ids = [] then mkappl (lfield ~fld_info:(Fld_record_inline {name = "key"}) cached 0, [lenvs]) else
-  Lprim(Pmakeblock(0, Lambda.Blk_class, Immutable, None),
+  if ids = []
+  then mkappl (lfield ~fld_info:(Fld_record_inline {name = "key"}) cached 0, [lenvs]), Dynamic
+  else
+    Lprim(Pmakeblock(0, Blk_class, Immutable, None),
         (if concrete then
           [mkappl (lfield ~fld_info:(Fld_record_inline {name = "key"}) cached 0, [lenvs]);
            lfield ~fld_info:(Fld_record_inline {name = "data"}) cached 1;
@@ -929,7 +949,8 @@ let transl_class ~scopes ids cl_id pub_meths cl vflag =
            lenvs]
         else [lambda_unit; lfield ~fld_info:(Fld_record_inline {name = "key"}) cached 0; lambda_unit; lenvs]),
         Loc_unknown
-       )))))
+       ),
+    Static)))
 
 (* Wrapper for class compilation *)
 (*
@@ -942,20 +963,24 @@ let transl_class ~scopes ids cl_id pub_meths cl vflag =
 *)
 
 let transl_class ~scopes ids id pub_meths cl vf =
-  oo_wrap cl.cl_env false (transl_class ~scopes ids id pub_meths cl) vf
+  oo_wrap_gen cl.cl_env false (transl_class ~scopes ids id pub_meths cl) vf
 
 let () =
   transl_object := (fun ~scopes id meths cl ->
-    transl_class ~scopes [] id meths cl Concrete)
+    let lam, _rkind = transl_class ~scopes [] id meths cl Concrete in
+    lam)
 
 (* Error report *)
 
 open Format
+module Style = Misc.Style
 
 let report_error ppf = function
   | Tags (lab1, lab2) ->
-      fprintf ppf "Method labels `%s' and `%s' are incompatible.@ %s"
-        lab1 lab2 "Change one of them."
+      fprintf ppf "Method labels %a and %a are incompatible.@ %s"
+        Style.inline_code lab1
+        Style.inline_code lab2
+        "Change one of them."
 
 let () =
   Location.register_error_of_exn

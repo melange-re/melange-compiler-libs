@@ -127,7 +127,8 @@ and apply_coercion_result loc strict funct params args cc_res =
              ~return:Pgenval
              ~attr:{ default_function_attribute with
                         is_a_functor = true;
-                        stub = true; }
+                        stub = true;
+                        may_fuse_arity = true; }
              ~loc
              ~body:(apply_coercion
                    loc Strict cc_res
@@ -473,7 +474,8 @@ let transl_class_bindings ~scopes cl_list =
   (ids,
    List.map
      (fun ({ci_id_class=id; ci_expr=cl; ci_virt=vf}, meths) ->
-       (id, transl_class ~scopes ids id meths cl vf))
+       let def, rkind = transl_class ~scopes ids id meths cl vf in
+       (id, rkind, def))
      cl_list)
 
 (* Compile one or more functors, merging curried functors to produce
@@ -551,7 +553,9 @@ let rec compile_functor ~scopes mexp coercion root_path loc =
       is_a_functor = true;
       stub = false;
       tmc_candidate = false;
+      may_fuse_arity = true;
       return_unit = false;
+      smuggled_lambda = false;
     }
     ~loc
     ~body
@@ -559,8 +563,6 @@ let rec compile_functor ~scopes mexp coercion root_path loc =
 (* Compile a module expression *)
 
 and transl_module ~scopes cc rootpath mexp =
-  List.iter (Translattribute.check_attribute_on_module mexp)
-    mexp.mod_attributes;
   let loc = of_location ~scopes mexp.mod_loc in
   match mexp.mod_desc with
   | Tmod_ident (path,_) ->
@@ -582,8 +584,8 @@ and transl_module ~scopes cc rootpath mexp =
       apply_coercion loc Strict cc (Translcore.transl_exp ~scopes arg)
 
 and transl_apply ~scopes ~loc ~cc mod_env funct translated_arg =
-  let inlined_attribute, funct =
-    Translattribute.get_and_remove_inlined_attribute_on_module funct
+  let inlined_attribute =
+    Translattribute.get_inlined_attribute_on_module funct
   in
   oo_wrap mod_env true
     (apply_coercion loc Strict cc)
@@ -748,17 +750,9 @@ and transl_structure ~scopes loc fields cc rootpath final_env = function
           | Some id ->
               Llet(pure_module mb.mb_expr, Pgenval, id, module_body, body), size
           end
-      | Tstr_module ({mb_presence=Mp_absent;mb_id = None} as mb) ->
-          List.iter (Translattribute.check_attribute_on_module mb.mb_expr)
-            mb.mb_attributes;
-          List.iter (Translattribute.check_attribute_on_module mb.mb_expr)
-            mb.mb_expr.mod_attributes;
+      | Tstr_module ({mb_presence=Mp_absent;mb_id = None}) ->
           transl_structure ~scopes loc fields cc rootpath final_env rem
       | Tstr_module ({mb_presence=Mp_absent; mb_id = Some id} as mb) ->
-          List.iter (Translattribute.check_attribute_on_module mb.mb_expr)
-            mb.mb_attributes;
-          List.iter (Translattribute.check_attribute_on_module mb.mb_expr)
-            mb.mb_expr.mod_attributes;
           if !Config.bs_only then begin
             let module_body = apply_coercion loc Alias Tcoerce_none lambda_module_alias in
             let body, size =
@@ -793,7 +787,7 @@ and transl_structure ~scopes loc fields cc rootpath final_env = function
             transl_structure ~scopes loc (List.rev_append ids fields)
               cc rootpath final_env rem
           in
-          Lletrec(class_bindings, body), size
+          !Value_rec_compiler.compile_letrec class_bindings body, size
       | Tstr_include incl ->
           let ids = bound_value_identifiers incl.incl_type in
           let modl = incl.incl_mod in
@@ -1140,10 +1134,7 @@ let transl_store_structure ~scopes glob map prims aliases str =
               transl_store ~scopes rootpath subst cont rem
             )
         | Tstr_module{mb_id=Some id;mb_loc=loc;mb_presence=Mp_present;
-                      mb_expr={mod_desc = Tmod_structure str} as mexp;
-                      mb_attributes} ->
-            List.iter (Translattribute.check_attribute_on_module mexp)
-              mb_attributes;
+                      mb_expr={mod_desc = Tmod_structure str}} ->
             let loc = of_location ~scopes loc in
             let lam =
               transl_store
@@ -1167,14 +1158,11 @@ let transl_store_structure ~scopes glob map prims aliases str =
             mb_id=Some id;mb_loc=loc;mb_presence=Mp_present;
             mb_expr= {
               mod_desc = Tmod_constraint (
-                  {mod_desc = Tmod_structure str} as mexp, _, _,
-                  (Tcoerce_structure (map, _, _) as _cc))};
-            mb_attributes
+                  {mod_desc = Tmod_structure str}, _, _,
+                  (Tcoerce_structure (map, _, _) as _cc))}
           } ->
             (*    Format.printf "coerc id %s: %a@." (Ident.unique_name id)
                                 Includemod.print_coercion cc; *)
-            List.iter (Translattribute.check_attribute_on_module mexp)
-              mb_attributes;
             let loc = of_location ~scopes loc in
             let lam =
               transl_store
@@ -1215,11 +1203,7 @@ let transl_store_structure ~scopes glob map prims aliases str =
                            transl_store ~scopes rootpath
                              (add_ident true id subst)
                              cont rem))
-        | Tstr_module ({mb_presence=Mp_absent} as mb) ->
-            List.iter (Translattribute.check_attribute_on_module mb.mb_expr)
-              mb.mb_attributes;
-            List.iter (Translattribute.check_attribute_on_module mb.mb_expr)
-              mb.mb_expr.mod_attributes;
+        | Tstr_module ({mb_presence=Mp_absent}) ->
             transl_store ~scopes rootpath subst cont rem
         | Tstr_recmodule bindings ->
             let ids = List.filter_map (fun mb -> mb.mb_id) bindings in
@@ -1240,7 +1224,8 @@ let transl_store_structure ~scopes glob map prims aliases str =
         | Tstr_class cl_list ->
             let (ids, class_bindings) = transl_class_bindings ~scopes cl_list in
             let lam =
-              Lletrec(class_bindings, store_idents Loc_unknown ids)
+              !Value_rec_compiler.compile_letrec class_bindings
+                (store_idents Loc_unknown ids)
             in
             Lsequence(Lambda.subst no_env_update subst lam,
                       transl_store ~scopes rootpath (add_idents false ids subst)
@@ -1250,16 +1235,11 @@ let transl_store_structure ~scopes glob map prims aliases str =
             incl_loc=loc;
             incl_mod= {
               mod_desc = Tmod_constraint (
-                  ({mod_desc = Tmod_structure str} as mexp), _, _,
+                  ({mod_desc = Tmod_structure str}), _, _,
                   (Tcoerce_structure _ | Tcoerce_none))}
-            | ({ mod_desc = Tmod_structure str} as mexp);
-            incl_attributes;
+            | ({ mod_desc = Tmod_structure str});
             incl_type;
           } as incl) ->
-            List.iter (Translattribute.check_attribute_on_module mexp)
-              incl_attributes;
-            (* Shouldn't we use mod_attributes instead of incl_attributes?
-               Same question for the Tstr_module cases above, btw. *)
             let lam =
               transl_store ~scopes None subst lambda_unit str.str_items
                 (* It is tempting to pass rootpath instead of None
@@ -1610,7 +1590,8 @@ let transl_toplevel_item ~scopes item =
          be a value named identically *)
       let (ids, class_bindings) = transl_class_bindings ~scopes cl_list in
       List.iter set_toplevel_unique_name ids;
-      Lletrec(class_bindings, make_sequence toploop_setvalue_id ids)
+      !Value_rec_compiler.compile_letrec class_bindings
+        (make_sequence toploop_setvalue_id ids)
   | Tstr_include incl ->
       let ids = bound_value_identifiers incl.incl_type in
       let modl = incl.incl_mod in
@@ -1650,11 +1631,7 @@ let transl_toplevel_item ~scopes item =
                transl_module ~scopes Tcoerce_none None od.open_expr,
                set_idents 0 ids)
       end
-  | Tstr_module ({mb_presence=Mp_absent} as mb) ->
-      List.iter (Translattribute.check_attribute_on_module mb.mb_expr)
-        mb.mb_attributes;
-      List.iter (Translattribute.check_attribute_on_module mb.mb_expr)
-        mb.mb_expr.mod_attributes;
+  | Tstr_module ({mb_presence=Mp_absent}) ->
       lambda_unit
   | Tstr_modtype _
   | Tstr_type _
@@ -1765,6 +1742,7 @@ let transl_store_package component_names target_name coercion =
 (* Error report *)
 
 open Format
+module Style = Misc.Style
 
 let print_cycle ppf cycle =
   let print_ident ppf (x,_) = Format.pp_print_string ppf (Ident.name x) in
@@ -1780,15 +1758,17 @@ let explanation_submsg (id, unsafe_info) =
   | Unnamed -> assert false (* can't be part of a cycle. *)
   | Unsafe {reason;loc;subid} ->
       let print fmt =
-        let printer = Format.dprintf fmt (Ident.name id) (Ident.name subid) in
+        let printer = Format.dprintf fmt
+            Style.inline_code (Ident.name id)
+            Style.inline_code (Ident.name subid) in
         Location.mkloc printer loc in
       match reason with
       | Unsafe_module_binding ->
-          print "Module %s defines an unsafe module, %s ."
-      | Unsafe_functor -> print "Module %s defines an unsafe functor, %s ."
+          print "Module %a defines an unsafe module, %a ."
+      | Unsafe_functor -> print "Module %a defines an unsafe functor, %a ."
       | Unsafe_typext ->
-          print "Module %s defines an unsafe extension constructor, %s ."
-      | Unsafe_non_function -> print "Module %s defines an unsafe value, %s ."
+          print "Module %a defines an unsafe extension constructor, %a ."
+      | Unsafe_non_function -> print "Module %a defines an unsafe value, %a ."
 
 let report_error loc = function
   | Circular_dependency cycle ->
@@ -1799,7 +1779,8 @@ let report_error loc = function
          There are no safe modules in this cycle@ %a."
         print_cycle cycle Misc.print_see_manual manual_ref
   | Conflicting_inline_attributes ->
-      Location.errorf "@[Conflicting 'inline' attributes@]"
+      Location.errorf "@[Conflicting %a attributes@]"
+        Style.inline_code "inline"
 
 let () =
   Location.register_error_of_exn

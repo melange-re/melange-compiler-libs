@@ -127,7 +127,7 @@ end = struct
   let tmc_placeholder =
     (* we choose a placeholder whose tagged representation will be
        reconizable. *)
-    Lconst (Const_base ((Const_int (0xBBBB / 2)), default_pointer_info))
+    Lambda.dummy_constant
 
   let with_placeholder constr (body : offset destination -> lambda) =
     let k_with_placeholder =
@@ -292,7 +292,10 @@ end = struct
 
   let lambda (v : lambda) : lambda t = {
     code = (fun ~delayed ~tail:_ ~dst ->
-      write_to_dst dst delayed v
+      match v with
+      | Lstaticraise _ when !Config.bs_only ->
+        List.fold_left (fun t constr -> Constr.apply constr t) v delayed
+      | _ -> write_to_dst dst delayed v
     );
     delayed_use_count = 1;
   }
@@ -652,10 +655,11 @@ let rec choice ctx t =
     | Ltrywith (l1, id, l2) ->
         (* in [try l1 with id -> l2], the term [l1] is
            not in tail-call position (after it returns
-           we need to remove the exception handler),
-           so it is not transformed here *)
-        let l1 = traverse ctx l1 in
-        let+ l2 = choice ctx ~tail l2 in
+           we need to remove the exception handler) *)
+        let+ l1 = choice ctx ~tail:false l1
+        and+ l2 = choice ctx ~tail l2 in
+        (* let l1 = traverse ctx l1 in *)
+        (* let+ l2 = choice ctx ~tail l2 in *)
         Ltrywith (l1, id, l2)
     | Lstaticcatch (l1, ids, l2) ->
         (* In [static-catch l1 with ids -> l2],
@@ -847,13 +851,6 @@ let rec choice ctx t =
           | _ -> invalid_arg "choice_prim" in
         let+ l1 = choice ctx ~tail l1 in
         Lprim (Popaque, [l1], loc)
-    | (Psequand | Psequor) as shortcutop ->
-        let l1, l2 = match primargs with
-          |  [l1; l2] -> l1, l2
-          | _ -> invalid_arg "choice_prim" in
-        let l1 = traverse ctx l1 in
-        let+ l2 = choice ctx ~tail l2 in
-        Lprim (shortcutop, [l1; l2], loc)
 
     (* in common cases we just return *)
     | Pbytes_to_string | Pbytes_of_string
@@ -913,6 +910,7 @@ let rec choice ctx t =
     | Pbswap16
     | Pbbswap _
     | Pint_as_pointer
+    | Psequand | Psequor
       ->
         let primargs = traverse_list ctx primargs in
         Choice.lambda (Lprim (prim, primargs, loc))
@@ -937,20 +935,43 @@ and traverse ctx = function
   | lam ->
       shallow_map (traverse ctx) lam
 
+and traverse_lfunction ctx lfun =
+  map_lfunction (traverse ctx) lfun
+
 and traverse_let outer_ctx var def =
   let inner_ctx = declare_binding outer_ctx (var, def) in
-  let bindings = traverse_binding outer_ctx inner_ctx (var, def) in
+  let bindings =
+    traverse_let_binding outer_ctx inner_ctx var def
+  in
   inner_ctx, bindings
 
 and traverse_letrec ctx bindings =
-  let ctx = List.fold_left declare_binding ctx bindings in
-  let bindings = List.concat_map (traverse_binding ctx ctx) bindings in
+  let ctx =
+    List.fold_left (fun ctx { id; def } ->
+        declare_binding ctx (id, Lfunction def)
+      ) ctx bindings
+  in
+  let bindings =
+    List.concat_map (traverse_letrec_binding ctx) bindings
+  in
   ctx, bindings
 
-and traverse_binding outer_ctx inner_ctx (var, def) =
+and traverse_let_binding outer_ctx inner_ctx var def =
   match find_candidate def with
-  | None -> [(var, traverse outer_ctx def)]
+  | None -> [ var, traverse outer_ctx def ]
   | Some lfun ->
+      let functions = make_dps_variant var inner_ctx outer_ctx lfun in
+      List.map (fun (var, lfun) -> var, Lfunction lfun) functions
+
+and traverse_letrec_binding ctx { id; def } =
+  if def.attr.tmc_candidate
+  then
+    let functions = make_dps_variant id ctx ctx def in
+    List.map (fun (id, def) -> { id; def }) functions
+  else
+    [ { id; def = traverse_lfunction ctx def } ]
+
+and make_dps_variant var inner_ctx outer_ctx (lfun : lfunction) =
   let special = Ident.Map.find var inner_ctx.specialized in
   let fun_choice = choice outer_ctx ~tail:true lfun.body in
   if fun_choice.Choice.tmc_calls = [] then
@@ -960,7 +981,7 @@ and traverse_binding outer_ctx inner_ctx (var, def) =
   let direct =
     let { kind; params; return; body = _; attr; loc } = lfun in
     let body = Choice.direct fun_choice in
-    lfunction ~kind ~params ~return ~body ~attr ~loc in
+    lfunction' ~kind ~params ~return ~body ~attr ~loc in
   let dps =
     let dst_param = {
       var = Ident.create_local "dst";
@@ -968,7 +989,7 @@ and traverse_binding outer_ctx inner_ctx (var, def) =
       loc = lfun.loc;
     } in
     let dst = { dst_param with offset = Offset (Lvar dst_param.offset) } in
-    Lambda.duplicate @@ lfunction
+    Lambda.duplicate_function @@ lfunction'
       ~kind:
         (* Support of Tupled function: see [choice_apply]. *)
         Curried
@@ -979,7 +1000,7 @@ and traverse_binding outer_ctx inner_ctx (var, def) =
       ~loc:lfun.loc
   in
   let dps_var = special.dps_id in
-  [(var, direct); (dps_var, dps)]
+  [var, direct; dps_var, dps]
 
 and traverse_list ctx terms =
   List.map (traverse ctx) terms
@@ -988,6 +1009,8 @@ let rewrite t =
   let ctx = { specialized = Ident.Map.empty } in
   traverse ctx t
 
+module Style = Misc.Style
+
 let () =
   Location.register_error_of_exn
     (function
@@ -995,13 +1018,16 @@ let () =
                Ambiguous_constructor_arguments
                  { explicit = false; arguments }) ->
           let print_msg ppf =
-            Format.pp_print_text ppf
-              "[@tail_mod_cons]: this constructor application may be \
-               TMC-transformed in several different ways. Please \
-               disambiguate by adding an explicit [@tailcall] \
-               attribute to the call that should be made \
-               tail-recursive, or a [@tailcall false] attribute on \
-               calls that should not be transformed."
+            Format.fprintf ppf
+              "%a:@ this@ constructor@ application@ may@ be@ \
+               TMC-transformed@ in@ several@ different@ ways.@ \
+               Please@ disambiguate@ by@ adding@ an@ explicit@ %a \
+               attribute@ to@ the@ call@ that@ should@ be@ made@ \
+               tail-recursive,@ or@ a@ %a attribute@ on@ \
+               calls@ that@ should@ not@ be@ transformed."
+              Style.inline_code "[@tail_mod_cons]"
+              Style.inline_code "[@tailcall]"
+              Style.inline_code "[@tailcall false]"
           in
           let submgs =
             let sub (info : tmc_call_information) =
@@ -1017,13 +1043,14 @@ let () =
                Ambiguous_constructor_arguments
                  { explicit = true; arguments }) ->
           let print_msg ppf =
-            Format.pp_print_text ppf
-              "[@tail_mod_cons]: this constructor application may be \
-               TMC-transformed in several different ways. Only one of \
-               the arguments may become a TMC call, but several \
-               arguments contain calls that are explicitly marked as \
-               tail-recursive. Please fix the conflict by reviewing \
-               and fixing the conflicting annotations."
+            Format.fprintf ppf
+              "%a:@ this@ constructor@ application@ may@ be@ \
+               TMC-transformed@ in@ several@ different@ ways.@ Only@ one@ of@ \
+               the@ arguments@ may@ become@ a@ TMC@ call,@ but@ several@ \
+               arguments@ contain@ calls@ that@ are@ explicitly@ marked@ as@ \
+               tail-recursive.@ Please@ fix@ the@ conflict@ by@ reviewing@ \
+               and@ fixing@ the@ conflicting@ annotations."
+              Style.inline_code "[@tail_mod_cons]"
           in
           let submgs =
             let sub (info : tmc_call_information) =

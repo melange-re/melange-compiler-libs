@@ -20,19 +20,19 @@ open Format
 
 val transl_type_decl:
     Env.t -> Asttypes.rec_flag -> Parsetree.type_declaration list ->
-    Typedtree.type_declaration list * Env.t
+    Typedtree.type_declaration list * Env.t * Shape.t list
 
 val transl_exception:
     Env.t -> Parsetree.extension_constructor ->
-    Typedtree.extension_constructor * Env.t
+    Typedtree.extension_constructor * Env.t * Shape.t
 
 val transl_type_exception:
     Env.t ->
-    Parsetree.type_exception -> Typedtree.type_exception * Env.t
+    Parsetree.type_exception -> Typedtree.type_exception * Env.t * Shape.t
 
 val transl_type_extension:
     bool -> Env.t -> Location.t -> Parsetree.type_extension ->
-    Typedtree.type_extension * Env.t
+    Typedtree.type_extension * Env.t * Shape.t list
 
 val transl_value_decl:
     Env.t -> Location.t ->
@@ -45,6 +45,9 @@ val transl_with_constraint:
     sig_env:Env.t -> sig_decl:Types.type_declaration ->
     outer_env:Env.t -> Parsetree.type_declaration ->
     Typedtree.type_declaration
+
+val transl_package_constraint:
+  loc:Location.t -> Env.t -> type_expr -> Types.type_declaration
 
 val abstract_type_decl: injective:bool -> int -> type_declaration
 val approx_type_decl:

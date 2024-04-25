@@ -1,4 +1,5 @@
-#2 "utils/config.mlp"
+(* @configure_input@ *)
+#3 "utils/config.common.ml.in"
 (**************************************************************************)
 (*                                                                        *)
 (*                                 OCaml                                  *)
@@ -69,26 +70,20 @@ let flexdll_dirs = []
 
 let ar_supports_response_files = true
 
-let exec_magic_number = "Caml1999X033"
+let tsan = false
+
+let exec_magic_number = {magic|Caml1999X034|magic}
     (* exec_magic_number is duplicated in runtime/caml/exec.h *)
-and cmi_magic_number = "Caml1999I033"
-and cmo_magic_number = "Caml1999O033"
-and cma_magic_number = "Caml1999A033"
-and cmx_magic_number =
-  if flambda then
-    "Caml1999y033"
-  else
-    "Caml1999Y033"
-and cmxa_magic_number =
-  if flambda then
-    "Caml1999z033"
-  else
-    "Caml1999Z033"
-and ast_impl_magic_number = "Caml1999M033"
-and ast_intf_magic_number = "Caml1999N033"
-and cmxs_magic_number = "Caml1999D033"
-and cmt_magic_number = "Caml1999T033"
-and linear_magic_number = "Caml1999L033"
+and cmi_magic_number = {magic|Caml1999I034|magic}
+and cmo_magic_number = {magic|Caml1999O034|magic}
+and cma_magic_number = {magic|Caml1999A034|magic}
+and cmx_magic_number = {magic|Caml1999Y034|magic}
+and cmxa_magic_number = {magic|Caml1999Z034|magic}
+and ast_impl_magic_number = {magic|Caml1999M034|magic}
+and ast_intf_magic_number = {magic|Caml1999N034|magic}
+and cmxs_magic_number = {magic|Caml1999D034|magic}
+and cmt_magic_number = {magic|Caml1999T034|magic}
+and linear_magic_number = {magic|Caml1999L034|magic}
 
 let safe_string = true
 let default_safe_string = true
@@ -135,6 +130,7 @@ let bytecomp_c_compiler =
 let native_c_compiler =
   c_compiler ^ " " ^ ocamlopt_cflags ^ " " ^ ocamlopt_cppflags
 let native_c_libraries = {|   -lpthread|}
+let native_ldflags = {||}
 let native_pack_linker = {|ld -r -o |}
 let default_rpath = {||}
 let mksharedlibrpath = {||}
@@ -188,6 +184,7 @@ let configuration_variables () =
   p "native_c_compiler" native_c_compiler;
   p "bytecomp_c_libraries" bytecomp_c_libraries;
   p "native_c_libraries" native_c_libraries;
+  p "native_ldflags" native_ldflags;
   p "native_pack_linker" native_pack_linker;
   p_bool "native_compiler" native_compiler;
   p "architecture" architecture;
@@ -214,6 +211,7 @@ let configuration_variables () =
   p_bool "flat_float_array" flat_float_array;
   p_bool "function_sections" function_sections;
   p_bool "afl_instrument" afl_instrument;
+  p_bool "tsan" tsan;
   p_bool "windows_unicode" windows_unicode;
   p_bool "supports_shared_libraries" supports_shared_libraries;
   p_bool "native_dynlink" native_dynlink;

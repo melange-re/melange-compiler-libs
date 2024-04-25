@@ -2,9 +2,9 @@
 (*                                                                        *)
 (*                                 OCaml                                  *)
 (*                                                                        *)
-(*               Jeremy Yallop, University of Cambridge                   *)
+(*                       Vincent Laviron, OCamlPro                        *)
 (*                                                                        *)
-(*   Copyright 2017 Jeremy Yallop                                         *)
+(*   Copyright 2023 OCamlPro SAS                                          *)
 (*                                                                        *)
 (*   All rights reserved.  This file is distributed under the terms of    *)
 (*   the GNU Lesser General Public License version 2.1, with the          *)
@@ -12,8 +12,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-exception Illegal_expr
-
-val is_valid_recursive_expression : Ident.t list -> Typedtree.expression -> bool
-
-val is_valid_class_expr : Ident.t list -> Typedtree.class_expr -> bool
+val compile_letrec :
+  ((Ident.t * Value_rec_types.recursive_binding_kind * Lambda.lambda) list ->
+    Lambda.lambda ->
+      Lambda.lambda) ref
