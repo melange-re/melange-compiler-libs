@@ -23,6 +23,8 @@ type id_or_ignore_loc =
   | Id of Ident.t
   | Ignore_loc of Lambda.scoped_location
 
+val mangle_ident : (Ident.t -> string) ref
+
 val eval_rec_bindings:
      ((id_or_ignore_loc * (Lambda.lambda * Lambda.lambda) option *
        Lambda.lambda)

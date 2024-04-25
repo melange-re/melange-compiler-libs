@@ -247,12 +247,21 @@ let undefined_location loc =
 
 exception Initialization_failure of unsafe_info
 
+let mangle_ident = ref Ident.name
+
 let cstr_const = 3
 let cstr_non_const = 2
 let init_shape id modl =
   let add_name x id =
     if !Config.bs_only then
-      Const_block (0, Blk_tuple, [x; Const_base (Const_string (Ident.name id, Location.none, None), Lambda.default_pointer_info)])
+      Const_block
+        (0
+        , Blk_tuple
+        , [ x
+          ; Const_base
+             ( Const_string (!mangle_ident id, Location.none, None)
+             , Lambda.default_pointer_info )
+          ])
     else x in
   let rec init_shape_mod subid loc env mty =
     match Mtype.scrape env mty with
