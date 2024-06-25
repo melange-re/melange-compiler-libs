@@ -1,4 +1,4 @@
-Unreleased
+0.3.0 2024-06-24
 --------------
 
 - Handle EOF from OpenSSL more gracefully
