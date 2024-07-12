@@ -423,9 +423,9 @@ let x_eq_y : (int R.t, string R.t) eql = Refl
 let boom = let module U = Uninj(R) in print_endline (coerce (U.uninj x_eq_y) 0)
 ;;
 [%%expect{|
-Line 1, characters 18-21:
+Line 1, characters 18-19:
 1 | let x_eq_y : (int R.t, string R.t) eql = Refl
-                      ^^^
+                      ^
 Error: Unbound module "R"
 |}]
 

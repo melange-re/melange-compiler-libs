@@ -176,9 +176,9 @@ type u = F(X)(Z).t
 module F :
   (X : sig type x end) (Y : sig type y end) (Z : sig type z end) ->
     sig type t = X of X.x | Y of Y.y | Z of Z.z end
-Line 4, characters 9-18:
+Line 4, characters 9-16:
 4 | type u = F(X)(Z).t
-             ^^^^^^^^^
+             ^^^^^^^
 Error: The functor application "F(X)(Z)" is ill-typed.
        These arguments:
          X Z
@@ -581,9 +581,9 @@ module M = struct
 end
 [%%expect {|
 module F : (X : a) -> sig type t end
-Line 6, characters 13-19:
+Line 6, characters 13-17:
 6 |     type t = F(X).t
-                 ^^^^^^
+                 ^^^^
 Error: Modules do not match: a is not included in a/2
 Line 3, characters 2-15:
   Definition of module type "a"
@@ -1051,9 +1051,9 @@ module type Arg =
     module X : Honorificabilitudinitatibus
     module Y : A
   end
-Line 14, characters 11-29:
+Line 14, characters 11-27:
 14 |   type u = G(X)(Y)(X)(Y)(X).t
-                ^^^^^^^^^^^^^^^^^^
+                ^^^^^^^^^^^^^^^^
 Error: The functor application "G(X)(Y)(X)(Y)(X)" is ill-typed.
        These arguments:
          A.X A.Y A.X A.Y A.X
@@ -1613,9 +1613,9 @@ type fine = Bar(A)(FiveArgsExt)(B)(AExt).a
 
 type broken1 = Bar(B)(FiveArgsExt)(B)(AExt).a
 [%%expect{|
-Line 1, characters 15-45:
+Line 1, characters 15-43:
 1 | type broken1 = Bar(B)(FiveArgsExt)(B)(AExt).a
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Error: The functor application "Bar(B)(FiveArgsExt)(B)(AExt)" is ill-typed.
        These arguments:
          B FiveArgsExt B AExt
@@ -1633,9 +1633,9 @@ Error: The functor application "Bar(B)(FiveArgsExt)(B)(AExt)" is ill-typed.
 
 type broken2 = Bar(A)(FiveArgsExt)(TY)(TY)(TY)(TY)(TY).a
 [%%expect{|
-Line 1, characters 15-56:
+Line 1, characters 15-54:
 1 | type broken2 = Bar(A)(FiveArgsExt)(TY)(TY)(TY)(TY)(TY).a
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Error: The functor application "Bar(A)(FiveArgsExt)(TY)(TY)(TY)(TY)(TY)" is ill-typed.
        These arguments:
          A FiveArgsExt TY TY TY TY TY
@@ -2022,9 +2022,9 @@ Error: This module is not a functor, it cannot be applied.
 
 let f (x:Set.Make(Set)(A).t) = x
 [%%expect {|
-Line 1, characters 9-27:
+Line 1, characters 9-25:
 1 | let f (x:Set.Make(Set)(A).t) = x
-             ^^^^^^^^^^^^^^^^^^
+             ^^^^^^^^^^^^^^^^
 Error: The functor application "Set.Make(Set)(A)" is ill-typed.
        These arguments:
          Set A
