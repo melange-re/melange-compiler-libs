@@ -1333,8 +1333,7 @@ end) = struct
           (fun () -> Format_doc.asprintf "%a" Printtyp.Doc.type_path tpath)
       in
       warn lid.loc
-        (Warnings.Name_out_of_scope
-          (path_s, [Longident.last lid.txt], false))
+        (Warnings.Name_out_of_scope (path_s, [Longident.last lid.txt], false))
     end
 
   (* warn if the selected name is not the last introduced in scope
@@ -1506,9 +1505,7 @@ let disambiguate_label_by_ids closed ids labels  : (_, _) result =
 
 (* Only issue warnings once per record constructor/pattern *)
 let disambiguate_lid_a_list loc closed env usage expected_type lid_a_list =
-  let ids =
-    List.map (fun (lid, _) -> Longident.last lid.txt) lid_a_list
-  in
+  let ids = List.map (fun (lid, _) -> Longident.last lid.txt) lid_a_list in
   let w_pr = ref false and w_amb = ref []
   and w_scope = ref [] and w_scope_ty = ref "" in
   let warn loc msg =
@@ -5706,7 +5703,8 @@ and type_argument ?explanation ?recarg env sarg ty_expected' ty_expected =
          pat_loc = Location.none; pat_env = env},
         {exp_type = ty; exp_loc = Location.none; exp_env = exp_env;
          exp_extra = []; exp_attributes = [];
-         exp_desc = Texp_ident(Path.Pident id, mknoloc (Longident.Lident name), desc)}
+         exp_desc =
+         Texp_ident(Path.Pident id, mknoloc (Longident.Lident name), desc)}
       in
       let eta_pat, eta_var = var_pair "eta" ty_arg in
       let func texp =

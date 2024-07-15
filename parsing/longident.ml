@@ -20,6 +20,23 @@ type t =
   | Lapply of t loc * t loc
 
 
+let rec same t t' =
+  t == t'
+  || match t, t' with
+  | Lident s, Lident s' ->
+      String.equal s s'
+  | Ldot ({ txt = t; _ }, { txt = s; _ }),
+    Ldot ({ txt = t'; _ }, { txt = s'; _ }) ->
+      if String.equal s s' then
+        same t t'
+      else
+        false
+  | Lapply ({ txt = tl; _ }, { txt = tr; _ }),
+    Lapply ({ txt = tl'; _ }, { txt = tr'; _ }) ->
+      same tl tl' && same tr tr'
+  | _, _ -> false
+
+
 let rec flat accu = function
     Lident s -> s :: accu
   | Ldot({ txt = lid; _ }, { txt = s; _ }) -> flat (s :: accu) lid
