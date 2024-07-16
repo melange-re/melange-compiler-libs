@@ -2052,7 +2052,7 @@ let modtype_of_package env loc p fl =
      module type are at generic_level. *)
   let mty =
     package_constraints env loc (Mty_ident p)
-      (List.map (fun (n, t) -> Longident.flatten n, Ctype.duplicate_type t) fl)
+      (List.map (fun (n, t) -> n, Ctype.duplicate_type t) fl)
   in
   Subst.modtype Keep Subst.identity mty
 
@@ -2982,7 +2982,7 @@ let type_package env m p fl =
       let fl' =
         List.fold_right
           (fun (lid, _t) fl ->
-             match type_path lid with
+             match type_path (Longident.unflatten lid |> Option.get) with
              | exception Not_found -> fl
              | path -> begin
                  match Env.find_type path env with
@@ -3007,7 +3007,8 @@ let type_package env m p fl =
     (fun (n, ty) ->
       try Ctype.unify env ty (Ctype.newvar ())
       with Ctype.Unify _ ->
-        raise (Error(modl.mod_loc, env, Scoping_pack (n,ty))))
+        let lid = Longident.unflatten n |> Option.get in
+        raise (Error(modl.mod_loc, env, Scoping_pack (lid,ty))))
     fl';
   let modl = wrap_constraint_package env true modl mty Tmodtype_implicit in
   modl, fl'

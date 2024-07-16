@@ -590,7 +590,7 @@ let is_unambiguous path env =
       List.for_all (fun p -> Path.same (normalize p) p') rem ||
       (* also allow repeatedly defining and opening (for toplevel) *)
       let id = lid_of_path p in
-      List.for_all (fun p -> Longident.same (lid_of_path p) (*arg*) id) rem &&
+      List.for_all (fun p -> Longident.same (lid_of_path p) id) rem &&
       Path.same p (fst (Env.find_type_by_name id env))
 
 let rec get_best_path r =
@@ -1203,7 +1203,7 @@ and tree_of_typfields mode rest = function
 and tree_of_pack_fields mode fl =
   List.map
     (fun (li, ty) -> (
-      String.concat "." (Longident.flatten li),
+      String.concat "." li,
       tree_of_typexp mode ty
     )) fl
 
