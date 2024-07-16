@@ -629,7 +629,16 @@ AS_IF([test x"$enable_ocamldoc" = "xno"],
 AS_IF(
   [test x"$host" = x"$target"],
     [cross_compiler=false],
-    [cross_compiler=true])
+    [# We require a non-cross compiler of the same version
+    AC_MSG_CHECKING(m4_normalize([if the installed OCaml compiler can build the
+      cross compiler]))
+    already_installed_version="$(ocamlc -vnum)"
+    AS_IF([test x"AC_PACKAGE_VERSION" = x"$already_installed_version"],
+      [AC_MSG_RESULT([yes (AC_PACKAGE_VERSION)])],
+      [AC_MSG_RESULT(m4_normalize([no (AC_PACKAGE_VERSION vs
+        $already_installed_version)]))
+      AC_MSG_ERROR([exiting])])
+    cross_compiler=true])
 
 # Initialization of libtool
 # Allow the MSVC linker to be found even if ld isn't installed.
