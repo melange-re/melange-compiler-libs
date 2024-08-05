@@ -376,6 +376,10 @@ Working version
 - #13314: Comment the code of Translclass
   (Vincent Laviron and Nathanaëlle Courant, review by Olivier Nicole)
 
+- #13362: reimplement Floatarray.concat in C (`caml_floatarray_concat`),
+  matching the implementation of Array.concat.
+  (Gabriel Scherer, review by Nicolás Ojeda Bär)
+
 - #13624: Added location to exception definitions and type extensions
   (Samuel Vivien, review by Gabriel Scherer)
 
