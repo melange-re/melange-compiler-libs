@@ -125,6 +125,7 @@ AC_SUBST([CC])
 AC_SUBST([SAK_CC])
 AC_SUBST([SAK_CFLAGS])
 AC_SUBST([SAK_LINK])
+AC_SUBST([encode_C_literal])
 AC_SUBST([DIFF_FLAGS])
 AC_SUBST([CSC])
 AC_SUBST([CSCFLAGS])
@@ -880,6 +881,13 @@ AS_IF(
     SAK_CFLAGS="$CFLAGS_FOR_BUILD $CPPFLAGS_FOR_BUILD"
     # Note that *-pc-windows is not supported for _build_ so we can use '-o'
     SAK_LINK='$(SAK_CC) $(SAK_CFLAGS) -o $(1) $(2)'])
+
+# sak command to use to encode C literal strings
+
+AS_CASE([$target],
+  [*-*-mingw32*|*-pc-windows],
+    [encode_C_literal="encode-C-utf16-literal"],
+  [encode_C_literal="encode-C-utf8-literal"])
 
 # Checks for programs
 

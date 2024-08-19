@@ -104,6 +104,9 @@ SAK_CC=@SAK_CC@
 SAK_CFLAGS=@SAK_CFLAGS@
 SAK_LINK=@SAK_LINK@
 
+# sak command to encode C literals
+ENCODE_C_LITERAL=@encode_C_literal@
+
 # Which tool to use to display differences between files
 DIFF=@DIFF@
 # Which flags to pass to the diff tool

@@ -1389,7 +1389,7 @@ $(SAK): runtime/sak.$(O)
 runtime/sak.$(O): runtime/sak.c runtime/caml/misc.h runtime/caml/config.h
 	$(V_CC)$(SAK_CC) $(SAK_CFLAGS) $(OUTPUTOBJ)$@ -c $<
 
-C_LITERAL = $(shell $(SAK) encode-C-literal '$(1)')
+C_LITERAL = $(shell $(SAK) $(ENCODE_C_LITERAL) '$(1)')
 
 runtime/build_config.h: $(ROOTDIR)/Makefile.config $(SAK)
 	$(V_GEN)echo '/* This file is generated from $(ROOTDIR)/Makefile.config */' > $@ && \
