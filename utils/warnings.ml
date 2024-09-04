@@ -52,7 +52,7 @@ type t =
   | Implicit_public_methods of string list  (* 15 *)
   | Unerasable_optional_argument            (* 16 *)
   | Undeclared_virtual_method of string     (* 17 *)
-  | Not_principal of string                 (* 18 *)
+  | Not_principal of Format_doc.t           (* 18 *)
   | Non_principal_labels of string          (* 19 *)
   | Ignored_extra_argument                  (* 20 *)
   | Nonreturning_statement                  (* 21 *)
@@ -985,7 +985,9 @@ let message = function
       ^ String.concat " " l ^ "."
   | Unerasable_optional_argument -> "this optional argument cannot be erased."
   | Undeclared_virtual_method m -> "the virtual method "^m^" is not declared."
-  | Not_principal s -> s^" is not principal."
+  | Not_principal msg ->
+      Format_doc.asprintf "%a is not principal."
+        Format_doc.pp_doc msg
   | Non_principal_labels s -> s^" without principality."
   | Ignored_extra_argument -> "this argument will not be used by the function."
   | Nonreturning_statement ->
@@ -1099,7 +1101,7 @@ let message = function
         "Code should not depend on the actual values of\n\
          this constructor's arguments. They are only for information\n\
          and may change in future versions. %a"
-        Misc.print_see_manual ref_manual
+        (Format_doc.compat Misc.print_see_manual) ref_manual
   | Unreachable_case ->
       "this match case is unreachable.\n\
        Consider replacing it with a refutation case '<pat> -> .'"
@@ -1130,7 +1132,7 @@ let message = function
          %s.\n\
          Only the first match will be used to evaluate the guard expression.\n\
          %a"
-        vars_explanation Misc.print_see_manual ref_manual
+        vars_explanation (Format_doc.compat Misc.print_see_manual) ref_manual
   (* | No_cmx_file name -> *)
       (* Printf.sprintf *)
         (* "no cmx file was found in path for module %s, \ *)
@@ -1155,7 +1157,7 @@ let message = function
   | Erroneous_printed_signature s ->
       "The printed interface differs from the inferred interface.\n\
        The inferred interface contained items which could not be printed\n\
-       properly due to name collisions between identifiers."
+       properly due to name collisions between identifiers.\n"
      ^ s
      ^ "\nBeware that this warning is purely informational and will not catch\n\
         all instances of erroneous printed interface."

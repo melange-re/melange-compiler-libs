@@ -658,8 +658,6 @@ let rec choice ctx t =
            we need to remove the exception handler) *)
         let+ l1 = choice ctx ~tail:false l1
         and+ l2 = choice ctx ~tail l2 in
-        (* let l1 = traverse ctx l1 in *)
-        (* let+ l2 = choice ctx ~tail l2 in *)
         Ltrywith (l1, id, l2)
     | Lstaticcatch (l1, ids, l2) ->
         (* In [static-catch l1 with ids -> l2],
@@ -911,6 +909,7 @@ let rec choice ctx t =
     | Pbbswap _
     | Pint_as_pointer
     | Psequand | Psequor
+    | Ppoll
       ->
         let primargs = traverse_list ctx primargs in
         Choice.lambda (Lprim (prim, primargs, loc))
@@ -1018,7 +1017,7 @@ let () =
                Ambiguous_constructor_arguments
                  { explicit = false; arguments }) ->
           let print_msg ppf =
-            Format.fprintf ppf
+            Format_doc.fprintf ppf
               "%a:@ this@ constructor@ application@ may@ be@ \
                TMC-transformed@ in@ several@ different@ ways.@ \
                Please@ disambiguate@ by@ adding@ an@ explicit@ %a \
@@ -1043,7 +1042,7 @@ let () =
                Ambiguous_constructor_arguments
                  { explicit = true; arguments }) ->
           let print_msg ppf =
-            Format.fprintf ppf
+            Format_doc.fprintf ppf
               "%a:@ this@ constructor@ application@ may@ be@ \
                TMC-transformed@ in@ several@ different@ ways.@ Only@ one@ of@ \
                the@ arguments@ may@ become@ a@ TMC@ call,@ but@ several@ \

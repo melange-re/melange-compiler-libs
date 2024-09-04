@@ -233,6 +233,8 @@ type primitive =
   | Popaque
   (* Fetching domain-local state *)
   | Pdls_get
+  (* Poll for runtime actions *)
+  | Ppoll
 
 and integer_comparison =
     Ceq | Cne | Clt | Cgt | Cle | Cge
@@ -487,6 +489,8 @@ let lambda_module_alias = Lconst (const_int ~ptr_info:Pt_module_alias 0)
 
 let dummy_constant = Lconst (const_int (0xBBBB / 2))
 
+let dummy_constant = Lconst (const_int (0xBBBB / 2))
+
 let max_arity () =
   if !Clflags.native_code then 126 else max_int
   (* 126 = 127 (the maximal number of parameters supported in C--)
@@ -696,6 +700,10 @@ let shallow_iter ~tail ~non_tail:f = function
 
 let iter_head_constructor f l =
   shallow_iter ~tail:f ~non_tail:f l
+
+let is_evaluated = function
+  | Lconst _ | Lvar _ | Lfunction _ -> true
+  | _ -> false
 
 let rec free_variables = function
   | Lvar id
