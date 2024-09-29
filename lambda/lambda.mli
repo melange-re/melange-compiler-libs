@@ -54,7 +54,12 @@ type tag_info =
   | Blk_na of string (* This string only for debugging*)
   | Blk_some
   | Blk_some_not_nested (* ['a option] where ['a] can not inhabit a non-like value *)
-  | Blk_record_inlined of { name : string ; num_nonconst :  int ; fields : string array}
+  | Blk_record_inlined of
+      { name : string
+      ; num_nonconst :  int
+      ; fields : string array
+      ; attributes: Parsetree.attributes
+      }
   | Blk_record_ext of string array
   | Blk_lazy_general
   | Blk_class (* ocaml style class *)
@@ -76,6 +81,7 @@ val blk_record_inlined :
     (Types.label_description* Typedtree.record_label_definition) array ->
     string ->
     int ->
+    Parsetree.attributes ->
     tag_info
   ) ref
 
@@ -411,7 +417,24 @@ type function_attribute = {
 
 type scoped_location = Debuginfo.Scoped_location.t
 
-type switch_names = {consts: string array; blocks: string array}
+type as_modifier =
+  | String of string
+  | Int of int
+
+type cstr_name =
+  { name: string
+  ; as_modifier: as_modifier option
+  }
+
+type block =
+  { cstr_name: cstr_name
+  ; tag_name: string option
+  }
+
+type switch_names =
+  { consts: cstr_name array
+  ; blocks: cstr_name array
+  }
 
 type lambda =
     Lvar of Ident.t

@@ -1049,7 +1049,7 @@ and transl_record ~scopes loc env fields repres opt_init_expr =
         let cl = List.map extract_constant ll in
         match repres with
         | Record_regular -> Lconst(Const_block(0, !Lambda.blk_record fields, cl))
-        | Record_inlined {tag;name;num_nonconsts} -> Lconst(Const_block(tag, !Lambda.blk_record_inlined fields name num_nonconsts, cl))
+        | Record_inlined {tag;name;num_nonconsts;attributes} -> Lconst(Const_block(tag, !Lambda.blk_record_inlined fields name num_nonconsts attributes, cl))
         | Record_unboxed _ -> Lconst(match cl with [v] -> v | _ -> assert false)
         | Record_float ->
             if !Config.bs_only then Lconst(Const_block(0, !Lambda.blk_record fields, cl))
@@ -1062,8 +1062,8 @@ and transl_record ~scopes loc env fields repres opt_init_expr =
         match repres with
           Record_regular ->
             Lprim(Pmakeblock(0, !Lambda.blk_record fields, mut, Some shape), ll, loc)
-        | Record_inlined {tag;name; num_nonconsts} ->
-            Lprim(Pmakeblock(tag, !Lambda.blk_record_inlined fields name num_nonconsts, mut, Some shape), ll, loc)
+        | Record_inlined {tag;name; num_nonconsts; attributes} ->
+            Lprim(Pmakeblock(tag, !Lambda.blk_record_inlined fields name num_nonconsts attributes, mut, Some shape), ll, loc)
         | Record_unboxed _ -> (match ll with [v] -> v | _ -> assert false)
         | Record_float ->
             if !Config.bs_only then Lprim(Pmakeblock(0, !Lambda.blk_record fields, mut, Some shape), ll, loc)
