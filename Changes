@@ -35,6 +35,11 @@ Working version
   other backends already carried these directives.
   (David Allsopp, review by Tim McGilchrist and Miod Vallat)
 
+* #13497: Correct implementation of caml_stat_strdup_to_utf16 to raise
+  Out_of_memory instead of returning of NULL (the behaviour of
+  caml_stat_strdup_to_os was inconsistent between Unix/Windows).
+  (David Allsopp, review by Nick Barnes, Antonin Décimo and Miod Vallat)
+
 - #13500: Add frame pointers support for ARM64 on Linux and macOS.
   (Tim McGilchrist, review by KC Sivaramakrishnan, Fabrice Buoro
    and Miod Vallat)
