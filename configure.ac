@@ -258,6 +258,7 @@ AC_SUBST([build_libraries_manpages])
 AC_SUBST([compute_deps])
 AC_SUBST([ocaml_bindir])
 AC_SUBST([ocaml_libdir])
+AC_SUBST([TARGET_LIBDIR])
 AC_SUBST([QS])
 AC_SUBST([ar_supports_response_files])
 
@@ -523,6 +524,10 @@ AC_ARG_ENABLE([cmm-invariants],
 
 AC_ARG_VAR([TARGET_BINDIR],
   [location of the runtime binaries on the target system])
+
+AC_ARG_VAR([TARGET_LIBDIR],
+  [location of the libraries on the target system, to be used for dynlink;
+  defaults to the value of libdir])
 
 AC_ARG_WITH([target-sh],
   [AS_HELP_STRING([--with-target-sh],
@@ -2720,6 +2725,9 @@ AC_CONFIG_COMMANDS_PRE([cclibs="$cclibs $mathlib $DLLIBS $PTHREAD_LIBS"])
 
 AS_IF([test x"$libdir" = x'${exec_prefix}/lib'],
   [libdir="$libdir"/ocaml])
+
+AS_IF([test x"$TARGET_LIBDIR" = x],
+  [TARGET_LIBDIR="$libdir"])
 
 AS_IF([test x"$mandir" = x'${datarootdir}/man'],
   [mandir='${prefix}/man'])
