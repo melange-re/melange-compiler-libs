@@ -116,6 +116,7 @@ type t =
   | Unused_tmc_attribute                    (* 71 *)
   | Tmc_breaks_tailcall                     (* 72 *)
   | Generative_application_expects_unit     (* 73 *)
+  | Degraded_to_partial_match               (* 74 *)
   | Mel_unused_attribute of string          (* 101 *)
   | Mel_polymorphic_comparison              (* 102 *)
   | Mel_ffi_warning of string               (* 103 *)
