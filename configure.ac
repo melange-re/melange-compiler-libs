@@ -1394,14 +1394,6 @@ AS_IF([test x"$supports_shared_libraries" = 'xtrue'],
     [[i[3456]86-*-gnu*]], [natdynlink=true],
     [x86_64-*-gnu*], [natdynlink=true])])
 
-AS_CASE([$enable_native_toplevel,$natdynlink],
-  [yes,false],
-    [AC_MSG_ERROR(m4_normalize([
-      The native toplevel requires native dynlink support]))],
-  [yes,*],
-    [install_ocamlnat=true],
-  [install_ocamlnat=false])
-
 # Try to work around the Skylake/Kaby Lake processor bug.
 AS_CASE(["$ocaml_cc_vendor,$host"],
   [*gcc*,x86_64-*|*gcc*,i686-*],
@@ -1560,6 +1552,14 @@ AS_IF([$natdynlink], [cmxs="cmxs"], [cmxs="cmx"])
 AS_IF([$natdynlink],
   [natdynlink_archive="dynlink.cmxa"],
   [natdynlink_archive=""])
+
+AS_CASE([$enable_native_toplevel,$natdynlink],
+  [yes,false],
+    [AC_MSG_ERROR(m4_normalize([
+      The native toplevel requires native dynlink support]))],
+  [yes,*],
+    [install_ocamlnat=true],
+  [install_ocamlnat=false])
 
 AC_DEFINE_UNQUOTED([OCAML_OS_TYPE], ["$ostype"])
 
