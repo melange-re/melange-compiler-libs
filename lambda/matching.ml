@@ -3346,7 +3346,12 @@ let combine_constructor sw_names loc arg pat_env cstr partial ctx def
             match
               (cstr.cstr_consts, cstr.cstr_nonconsts, consts, nonconsts)
             with
-            | 1, 1, [ (0, act1) ], [ (0, act2) ] ->
+            | 1, 1, [ (0, act1) ], [ (0, act2) ]
+              when
+                cstr.cstr_name = "::"
+                || cstr.cstr_name = "[]"
+                || Datarepr.constructor_has_optional_shape cstr
+             ->
                 let arg =
                   if !Config.bs_only && Datarepr.constructor_has_optional_shape cstr then
                     Lprim(is_not_none_bs_primitve , [arg], loc)
@@ -3355,10 +3360,11 @@ let combine_constructor sw_names loc arg pat_env cstr partial ctx def
                 (* This case is very frequent, it corresponds to
                    options and lists. *)
                 transl_match_on_option arg loc ~if_none:act1 ~if_some:act2
-            | (2,0, [(i1,act1); (_,act2)],[]) ->
+            | 2, 0, [ (i1, act1); (_, act2)], [] when
+                !Env.same_constr pat_env cstr.cstr_res Predef.type_bool ->
               if i1 = 0 then Lifthenelse(arg, act2, act1)
               else Lifthenelse (arg,act1,act2)
-            | n, 0, _, [] ->
+            | n, 0, _, [] when false (* relies on tag being an int *) -> (* The type defines constant constructors only *)
                 (* The matched type defines constant constructors only.
                    (typically the constant cases are dense, so
                    call_switcher will generate a Lswitch, still one
@@ -3377,7 +3383,7 @@ let combine_constructor sw_names loc arg pat_env cstr partial ctx def
                   | None, _ -> same_actions nonconsts
                 in
                 match act0 with
-                | Some act ->
+                | Some act when false (* relies on tag being an int *) ->
                     (* This case deviates from our policy, by typically
                        generating three bytecode instructions.
 
@@ -3396,7 +3402,7 @@ let combine_constructor sw_names loc arg pat_env cstr partial ctx def
                       ( Lprim (Pisint, [ arg ], loc),
                         call_switcher loc fail_opt arg 0 (n - 1) consts sw_names,
                         act )
-                | None ->
+                | Some _ | None ->
                     (* In the general case, emit a switch. *)
                     let sw =
                       { sw_numconsts = cstr.cstr_consts;

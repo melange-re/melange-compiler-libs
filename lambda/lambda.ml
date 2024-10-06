@@ -43,7 +43,12 @@ type tag_info =
   | Blk_na of string
   | Blk_some
   | Blk_some_not_nested (* ['a option] where ['a] can not inhabit a non-like value *)
-  | Blk_record_inlined of { name : string ; num_nonconst :  int ; fields : string array}
+  | Blk_record_inlined of
+      { name : string
+      ; num_nonconst :  int
+      ; fields : string array
+      ; attributes: Parsetree.attributes
+      }
   | Blk_record_ext of string array
   | Blk_lazy_general
   | Blk_class (* Ocaml style class*)
@@ -59,9 +64,9 @@ let blk_record_ext =  ref (fun fields ->
     Blk_record_ext all_labels_info
   )
 
-let blk_record_inlined = ref (fun fields name num_nonconst ->
+let blk_record_inlined = ref (fun fields name num_nonconst attributes ->
   let fields = fields |> Array.map (fun (x,_) -> x.Types.lbl_name) in
-  Blk_record_inlined {fields; name; num_nonconst}
+  Blk_record_inlined {fields; name; num_nonconst; attributes }
 )
 
 let ref_tag_info : tag_info = Blk_record [| "contents" |]
@@ -391,7 +396,25 @@ type function_attribute = {
   smuggled_lambda: bool;
     (* indicates that this isn't really an `lfunction`, but instead a generic letrec *)
 }
-type switch_names = {consts: string array; blocks: string array}
+
+type as_modifier =
+  | String of string
+  | Int of int
+
+type cstr_name =
+  { name: string
+  ; as_modifier: as_modifier option
+  }
+
+type block =
+  { cstr_name: cstr_name
+  ; tag_name: string option
+  }
+
+type switch_names =
+  { consts: cstr_name array
+  ; blocks: cstr_name array
+  }
 
 type scoped_location = Debuginfo.Scoped_location.t
 

@@ -135,7 +135,7 @@ let constructor_descrs ~current_unit ty_path decl cstrs rep =
           let representation =
             match rep with
             | Variant_unboxed -> Record_unboxed true
-            | Variant_regular -> Record_inlined {tag = idx_nonconst; name = cstr_name; num_nonconsts = !num_nonconsts}
+            | Variant_regular -> Record_inlined {tag = idx_nonconst; name = cstr_name; num_nonconsts = !num_nonconsts; attributes = cd_attributes}
           in
           constructor_args ~current_unit decl.type_private cd_args cd_res
             Path.(Pextra_ty (ty_path, Pcstr_ty cstr_name)) representation
