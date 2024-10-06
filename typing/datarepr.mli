@@ -22,14 +22,14 @@ val constructor_has_optional_shape:
   Types.constructor_description -> bool
 
 val extension_descr:
-  current_unit:string -> Path.t -> extension_constructor ->
+  current_unit:(Unit_info.t option) -> Path.t -> extension_constructor ->
   constructor_description
 
 val labels_of_type:
   Path.t -> type_declaration ->
   (Ident.t * label_description) list
 val constructors_of_type:
-  current_unit:string -> Path.t -> type_declaration ->
+  current_unit:(Unit_info.t option) -> Path.t -> type_declaration ->
   (Ident.t * constructor_description) list
 
 

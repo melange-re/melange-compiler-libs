@@ -72,18 +72,18 @@ let ar_supports_response_files = true
 
 let tsan = false
 
-let exec_magic_number = {magic|Caml1999X034|magic}
+let exec_magic_number = {magic|Caml1999X035|magic}
     (* exec_magic_number is duplicated in runtime/caml/exec.h *)
-and cmi_magic_number = {magic|Caml1999I034|magic}
-and cmo_magic_number = {magic|Caml1999O034|magic}
-and cma_magic_number = {magic|Caml1999A034|magic}
-and cmx_magic_number = {magic|Caml1999Y034|magic}
-and cmxa_magic_number = {magic|Caml1999Z034|magic}
-and ast_impl_magic_number = {magic|Caml1999M034|magic}
-and ast_intf_magic_number = {magic|Caml1999N034|magic}
-and cmxs_magic_number = {magic|Caml1999D034|magic}
-and cmt_magic_number = {magic|Caml1999T034|magic}
-and linear_magic_number = {magic|Caml1999L034|magic}
+and cmi_magic_number = {magic|Caml1999I035|magic}
+and cmo_magic_number = {magic|Caml1999O035|magic}
+and cma_magic_number = {magic|Caml1999A035|magic}
+and cmx_magic_number = {magic|Caml1999y035|magic}
+and cmxa_magic_number = {magic|Caml1999z035|magic}
+and ast_impl_magic_number = {magic|Caml1999M035|magic}
+and ast_intf_magic_number = {magic|Caml1999N035|magic}
+and cmxs_magic_number = {magic|Caml1999D035|magic}
+and cmt_magic_number = {magic|Caml1999T035|magic}
+and linear_magic_number = {magic|Caml1999L035|magic}
 
 let safe_string = true
 let default_safe_string = true
@@ -118,6 +118,11 @@ let ocamlc_cppflags = {| -D_FILE_OFFSET_BITS=64 |}
           the two drivers should be identical. *)
 let ocamlopt_cflags = {|-O2 -fno-strict-aliasing -fwrapv -Qunused-arguments -pthread|}
 let ocamlopt_cppflags = {| -D_FILE_OFFSET_BITS=64 |}
+let bytecode_cflags = ocamlc_cflags
+let bytecode_cppflags = ocamlc_cppflags
+let native_cflags = ocamlopt_cflags
+let native_cppflags = ocamlopt_cppflags
+
 let bytecomp_c_libraries = {|   -lpthread|}
 (* bytecomp_c_compiler and native_c_compiler have been supported for a
    long time and are retained for backwards compatibility.
@@ -176,10 +181,14 @@ let configuration_variables () =
   p "standard_library" standard_library;
   p "ccomp_type" ccomp_type;
   p "c_compiler" c_compiler;
-  p "ocamlc_cflags" ocamlc_cflags;
-  p "ocamlc_cppflags" ocamlc_cppflags;
-  p "ocamlopt_cflags" ocamlopt_cflags;
-  p "ocamlopt_cppflags" ocamlopt_cppflags;
+  p "bytecode_cflags" bytecode_cflags;
+  p "ocamlc_cflags" bytecode_cflags;
+  p "bytecode_cppflags" bytecode_cppflags;
+  p "ocamlc_cppflags" bytecode_cppflags;
+  p "native_cflags" native_cflags;
+  p "ocamlopt_cflags" native_cflags;
+  p "native_cppflags" native_cppflags;
+  p "ocamlopt_cppflags" native_cppflags;
   p "bytecomp_c_compiler" bytecomp_c_compiler;
   p "native_c_compiler" native_c_compiler;
   p "bytecomp_c_libraries" bytecomp_c_libraries;

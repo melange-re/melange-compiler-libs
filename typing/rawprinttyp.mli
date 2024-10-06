@@ -2,9 +2,9 @@
 (*                                                                        *)
 (*                                 OCaml                                  *)
 (*                                                                        *)
-(*             Florian Angeletti, projet Cambium, Inria Paris             *)
+(*  Jacques Garrigue, Graduate School of Mathematics, Nagoya University   *)
 (*                                                                        *)
-(*   Copyright 2021 Institut National de Recherche en Informatique et     *)
+(*   Copyright 2003 Institut National de Recherche en Informatique et     *)
 (*     en Automatique.                                                    *)
 (*                                                                        *)
 (*   All rights reserved.  This file is distributed under the terms of    *)
@@ -13,7 +13,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
-val err_msgs: Includemod.explanation Format_doc.printer
-val coercion_in_package_subtype:
-  Env.t -> Types.module_type -> Typedtree.module_coercion -> Format_doc.doc
-val register: unit -> unit
+(** This module provides function(s) for printing the internal representation of
+    type expressions. It is targetted at internal use when debbuging the
+    compiler itself. *)
+
+val type_expr: Format.formatter -> Types.type_expr -> unit
