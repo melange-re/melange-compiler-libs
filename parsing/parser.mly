@@ -95,6 +95,8 @@ let mkcf ~loc ?attrs ?docs d =
 let mkrhs rhs loc = mkloc rhs (make_loc loc)
 let ghrhs rhs loc = mkloc rhs (ghost_loc loc)
 
+let ldot lid lid_loc name loc = Ldot (mkrhs lid lid_loc, mkrhs name loc)
+
 let push_loc x acc =
   if x.Location.loc_ghost
   then acc
@@ -345,8 +347,8 @@ let builtin_arraylike_name loc _ ~assign paren_kind n =
          | Two -> "Array2"
          | Three -> "Array3"
          | Many -> "Genarray" in
-       Ldot(Lident "Bigarray", submodule_name) in
-   ghloc ~loc (Ldot(prefix,opname))
+       Ldot(mknoloc (Lident "Bigarray"), mknoloc submodule_name) in
+   ghloc ~loc (Ldot(mknoloc prefix, mknoloc opname))
 
 let builtin_arraylike_index loc paren_kind index = match paren_kind with
     | Paren | Bracket -> One, [Nolabel, index]
@@ -376,7 +378,7 @@ let user_indexing_operator_name loc (prefix,ext) ~assign paren_kind n =
     String.concat "" ["."; ext; left; mid; right; assign] in
   let lid = match prefix with
     | None -> Lident name
-    | Some p -> Ldot(p,name) in
+    | Some p -> Ldot(mknoloc p,mknoloc name) in
   ghloc ~loc lid
 
 let user_index loc _ index =
@@ -405,9 +407,9 @@ let indexop_unclosed_error loc_s s loc_e =
   let left, right = paren_to_strings s in
   unclosed left loc_s right loc_e
 
-let lapply ~loc p1 p2 =
+let lapply ~loc p1 loc_p1 p2 loc_p2 =
   if !Clflags.applicative_functors
-  then Lapply(p1, p2)
+  then Lapply(mkrhs p1 loc_p1, mkrhs p2 loc_p2)
   else raise (Syntaxerr.Error(
                   Syntaxerr.Applicative_path (make_loc loc)))
 
@@ -4050,13 +4052,13 @@ constr_ident:
 ;
 constr_longident:
     mod_longident       %prec below_DOT  { $1 } /* A.B.x vs (A).B.x */
-  | mod_longident DOT constr_extra_ident { Ldot($1,$3) }
+  | mod_longident DOT constr_extra_ident { ldot $1 $loc($1) $3 $loc($3) }
   | constr_extra_ident                   { Lident $1 }
   | constr_extra_nonprefix_ident         { Lident $1 }
 ;
 mk_longident(prefix,final):
    | final            { Lident $1 }
-   | prefix DOT final { Ldot($1,$3) }
+   | prefix DOT final { ldot $1 $loc($1) $3 $loc($3) }
 ;
 val_longident:
     mk_longident(mod_longident, val_ident) { $1 }
@@ -4073,7 +4075,7 @@ mod_longident:
 mod_ext_longident:
     mk_longident(mod_ext_longident, UIDENT) { $1 }
   | mod_ext_longident LPAREN mod_ext_longident RPAREN
-      { lapply ~loc:$sloc $1 $3 }
+      { lapply ~loc:$sloc $1 $loc($1) $3 $loc($3) }
   | mod_ext_longident LPAREN error
       { expecting $loc($3) "module path" }
 ;

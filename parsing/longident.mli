@@ -23,10 +23,12 @@
 
 *)
 
+open Location
+
 type t =
     Lident of string
-  | Ldot of t * string
-  | Lapply of t * t
+  | Ldot of t loc * string loc
+  | Lapply of t loc * t loc
 
 val flatten: t -> string list
 val unflatten: string list -> t option

@@ -381,9 +381,9 @@ let rec rewrite_double_underscore_paths env p =
     | Some i ->
       let better_lid =
         Ldot
-          (Lident (String.sub name 0 i),
-           Unit_info.modulize
-             (String.sub name (i + 2) (String.length name - i - 2)))
+          (Location.mknoloc (Lident (String.sub name 0 i)),
+          (Location.mknoloc (Unit_info.modulize
+             (String.sub name (i + 2) (String.length name - i - 2)))))
       in
       match Env.find_module_by_name better_lid env with
       | exception Not_found -> p
@@ -572,9 +572,10 @@ let rec lid_of_path = function
     Path.Pident id ->
       Longident.Lident (Ident.name id)
   | Path.Pdot (p1, s) | Path.Pextra_ty (p1, Pcstr_ty s)  ->
-      Longident.Ldot (lid_of_path p1, s)
+      Longident.Ldot (Location.mknoloc (lid_of_path p1), Location.mknoloc s)
   | Path.Papply (p1, p2) ->
-      Longident.Lapply (lid_of_path p1, lid_of_path p2)
+      Longident.Lapply
+        (Location.mknoloc (lid_of_path p1), Location.mknoloc (lid_of_path p2))
   | Path.Pextra_ty (p, Pext_ty) -> lid_of_path p
 
 let is_unambiguous path env =

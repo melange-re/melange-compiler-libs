@@ -392,7 +392,7 @@ let show_prim to_sig ppf lid =
     let s =
       match lid with
       | Longident.Lident s -> s
-      | Longident.Ldot (_,s) -> s
+      | Longident.Ldot (_,{ txt = s; _ }) -> s
       | Longident.Lapply _ ->
           fprintf ppf "Invalid path %a@." Printtyp.longident lid;
           raise Exit
