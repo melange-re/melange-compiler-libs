@@ -359,6 +359,10 @@ Working version
   (Gabriel Scherer, review by Vincent Laviron and David Allsopp,
    suggested by David Allsopp)
 
+- #13302: Store locations of longidents components
+  (Ulysse Gérard and Jules Aguillon, review by Jules Aguillon
+   and Florian Angeletti)
+
 ### Build system:
 
 - #13431: Simplify github action responsible for flagging PRs with
