@@ -290,6 +290,10 @@ type primitive =
   | Popaque
   (* Fetching domain-local state *)
   | Pdls_get
+  (* Poll for runtime actions. May run pending actions such as signal
+     handlers, finalizers, memprof callbacks, etc, as well as GCs and
+     GC slices, so should not be moved or optimised away. *)
+  | Ppoll
 
 and integer_comparison =
     Ceq | Cne | Clt | Cgt | Cle | Cge
@@ -581,6 +585,10 @@ val transl_prim: string -> string -> lambda
       transl_internal_value "CamlinternalLazy" "force"
     ]}
 *)
+
+val is_evaluated : lambda -> bool
+(** [is_evaluated lam] returns [true] if [lam] is either a constant, a variable
+    or a function abstract. *)
 
 val free_variables: lambda -> Ident.Set.t
 

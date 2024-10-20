@@ -34,6 +34,7 @@ module Printast = Printast
 module Printlambda = Printlambda
 module Printpat = Printpat
 module Printtyp = Printtyp
+module Out_type = Out_type
 module Printtyped = Printtyped
 module Value_rec_check = Value_rec_check
 module Value_rec_compiler = Value_rec_compiler
