@@ -172,6 +172,7 @@ CAMLextern wchar_t* caml_stat_wcsdup_noexc(const wchar_t *s);
    implementation of the Windows-only functions
    caml_stat_char_array_{to,from}_utf16.
 */
+CAMLmalloc(caml_stat_free, 1, 2) CAMLreturns_nonnull()
 CAMLextern caml_stat_string caml_stat_memdup(const char *s, asize_t size,
                                              asize_t *out_size);
 

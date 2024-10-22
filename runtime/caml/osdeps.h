@@ -175,6 +175,7 @@ extern unsigned short caml_win32_revision;
    If allocation fails, this returns NULL. This function never raises any
    exceptions when [s] is valid UTF-8 but may raise [Sys_error] if it is not.
 */
+CAMLalloc(caml_stat_free, 1)
 CAMLextern wchar_t* caml_stat_strdup_noexc_to_utf16(const char *s);
 
 /* [caml_stat_strdup_to_utf16(s)] returns a NUL-terminated copy of [s],
@@ -188,6 +189,7 @@ CAMLextern wchar_t* caml_stat_strdup_noexc_to_utf16(const char *s);
    If allocation fails, this raises Out_of_memory. This function may also raise
    [Sys_error] if [s] is not valid UTF-8.
 */
+CAMLalloc(caml_stat_free, 1) CAMLreturns_nonnull()
 CAMLextern wchar_t* caml_stat_strdup_to_utf16(const char *s);
 
 /* [caml_stat_strdup_noexc_of_utf16(s)] returns a NUL-terminated copy of [s],
@@ -200,6 +202,7 @@ CAMLextern wchar_t* caml_stat_strdup_to_utf16(const char *s);
    If allocation fails, this returns NULL. This function never raises any
    exceptions when [s] is valid UTF-16 but may raise [Sys_error] if it is not.
 */
+CAMLalloc(caml_stat_free, 1)
 CAMLextern char* caml_stat_strdup_noexc_of_utf16(const wchar_t *s);
 
 /* [caml_stat_strdup_of_utf16(s)] returns a NUL-terminated copy of [s],
@@ -212,6 +215,7 @@ CAMLextern char* caml_stat_strdup_noexc_of_utf16(const wchar_t *s);
    If allocation fails, this raises Out_of_memory. This function may also raise
    [Sys_error] if [s] is not valid UTF-16.
 */
+CAMLalloc(caml_stat_free, 1) CAMLreturns_nonnull()
 CAMLextern char* caml_stat_strdup_of_utf16(const wchar_t *s);
 
 /* [caml_stat_char_array_to_utf16(s, size, &out_size)] returns a copy of the
@@ -230,6 +234,7 @@ CAMLextern char* caml_stat_strdup_of_utf16(const wchar_t *s);
    If allocation fails, this raises Out_of_memory. This function may also raise
    [Sys_error] if [s] is not valid UTF-8.
 */
+CAMLmalloc(caml_stat_free, 1, 2) CAMLreturns_nonnull()
 CAMLextern wchar_t *caml_stat_char_array_to_utf16(const char *s, size_t size,
                                                   size_t *out_size);
 
@@ -248,6 +253,7 @@ CAMLextern wchar_t *caml_stat_char_array_to_utf16(const char *s, size_t size,
    If allocation fails, this raises Out_of_memory. This function may also raise
    [Sys_error] if [s] is not valid UTF-16.
 */
+CAMLalloc(caml_stat_free, 1) CAMLreturns_nonnull()
 CAMLextern char *caml_stat_char_array_of_utf16(const wchar_t *s, size_t size,
                                                size_t *out_size);
 
