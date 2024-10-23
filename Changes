@@ -167,6 +167,10 @@ Working version
   (Romain Beauxis, review by Gabriel Scherer and Antonin Décimo)
 
 - #13576: Introduce internal helpers to convert between time representations.
+  On Windows, prevent erroneously waiting for an unbounded time in Unix.select
+  if more than 64 file descriptors per lists are watched, or if watching
+  non-socket file descriptors, and a timeout longer than $2^{32}$ milliseconds
+  is used. Cap the timeout to $2^{32}$ milliseconds.
   (Antonin Décimo, review by Gabriel Scherer and Miod Vallat)
 
 ### Tools:

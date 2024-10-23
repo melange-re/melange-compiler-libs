@@ -1067,7 +1067,8 @@ CAMLprim value caml_unix_select(value readfds, value writefds, value exceptfds,
 
       if (tm_sec >= 0.0)
         {
-          tm_msec = (DWORD)(tm_sec * MSEC_PER_SEC);
+          double msec = tm_sec * MSEC_PER_SEC;
+          tm_msec = msec < INFINITE ? (DWORD) msec : INFINITE - 1;
           DEBUG_PRINT("Will wait %d ms", tm_msec);
         }
       else
