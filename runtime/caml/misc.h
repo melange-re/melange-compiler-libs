@@ -771,6 +771,26 @@ CAMLextern int caml_snwprintf(wchar_t * buf,
 #define CAML_GENSYM_2(name, l) CAML_GENSYM_3(name, l)
 #define CAML_GENSYM(name) CAML_GENSYM_2(name, __LINE__)
 
+#define MSEC_PER_SEC  UINT64_C(1000)
+#define USEC_PER_SEC  UINT64_C(1000000)
+#define NSEC_PER_USEC UINT64_C(1000)
+#define NSEC_PER_MSEC UINT64_C(1000000)
+#define NSEC_PER_SEC  UINT64_C(1000000000)
+
+#include <time.h>
+
+Caml_inline struct timespec caml_timespec_of_nsec(uint64_t nsec)
+{
+  return (struct timespec)
+    { .tv_sec = (time_t) (nsec / NSEC_PER_SEC),
+#if __STDC_VERSION__ >= 202311L
+      .tv_nsec = (typeof((struct timespec){0}.tv_nsec))
+#else
+      .tv_nsec = (long)
+#endif
+        (nsec % NSEC_PER_SEC) };
+}
+
 #endif /* CAML_INTERNALS */
 
 /* The [backtrace_slot] type represents values stored in

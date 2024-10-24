@@ -545,19 +545,19 @@ double caml_sys_time_include_children_unboxed(value include_children)
 {
 #ifdef HAS_GETRUSAGE
   struct rusage ru;
-  double acc = 0.;
+  double sec = 0.;
 
   getrusage (RUSAGE_SELF, &ru);
-  acc += ru.ru_utime.tv_sec + ru.ru_utime.tv_usec / 1e6
-    + ru.ru_stime.tv_sec + ru.ru_stime.tv_usec / 1e6;
+  sec += ru.ru_utime.tv_sec + (double) ru.ru_utime.tv_usec / USEC_PER_SEC
+      +  ru.ru_stime.tv_sec + (double) ru.ru_stime.tv_usec / USEC_PER_SEC;
 
   if (Bool_val(include_children)) {
     getrusage (RUSAGE_CHILDREN, &ru);
-    acc += ru.ru_utime.tv_sec + ru.ru_utime.tv_usec / 1e6
-      + ru.ru_stime.tv_sec + ru.ru_stime.tv_usec / 1e6;
+    sec += ru.ru_utime.tv_sec + (double) ru.ru_utime.tv_usec / USEC_PER_SEC
+        +  ru.ru_stime.tv_sec + (double) ru.ru_stime.tv_usec / USEC_PER_SEC;
   }
 
-  return acc;
+  return sec;
 #else
   #ifdef HAS_TIMES
     #ifndef CLK_TCK

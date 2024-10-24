@@ -469,34 +469,27 @@ void caml_mem_unmap(void* mem, uintnat size)
 #endif
 }
 
-#define POW10_3       1000
-#define POW10_4      10000
-#define POW10_6    1000000
-#define POW10_9 1000000000
+#define Min_sleep_nsec  (10 * NSEC_PER_USEC) /* 10 usec */
+#define Slow_sleep_nsec  (1 * NSEC_PER_MSEC) /*  1 msec */
+#define Max_sleep_nsec   (1 * NSEC_PER_SEC)  /*  1 sec  */
 
-#define Min_sleep_ns  POW10_4 /* 10 us */
-#define Slow_sleep_ns POW10_6 /*  1 ms */
-#define Max_sleep_ns  POW10_9 /*  1 s  */
-
-unsigned caml_plat_spin_back_off(unsigned sleep_ns,
+unsigned caml_plat_spin_back_off(unsigned sleep_nsec,
                                  const struct caml_plat_srcloc* loc)
 {
-  if (sleep_ns < Min_sleep_ns) sleep_ns = Min_sleep_ns;
-  if (sleep_ns > Max_sleep_ns) sleep_ns = Max_sleep_ns;
-  unsigned next_sleep_ns = sleep_ns + sleep_ns / 4;
-  if (sleep_ns < Slow_sleep_ns && Slow_sleep_ns <= next_sleep_ns) {
+  if (sleep_nsec < Min_sleep_nsec) sleep_nsec = Min_sleep_nsec;
+  if (sleep_nsec > Max_sleep_nsec) sleep_nsec = Max_sleep_nsec;
+  unsigned next_sleep_nsec = sleep_nsec + sleep_nsec / 4;
+  if (sleep_nsec < Slow_sleep_nsec && Slow_sleep_nsec <= next_sleep_nsec) {
     caml_gc_log("Slow spin-wait loop in %s at %s:%d",
                 loc->function, loc->file, loc->line);
   }
 #ifdef _WIN32
-  Sleep(sleep_ns / POW10_6);
+  Sleep(sleep_nsec / NSEC_PER_MSEC);
 #elif defined (HAS_NANOSLEEP)
-  const struct timespec req = {
-    .tv_sec = sleep_ns / POW10_9,
-    .tv_nsec = sleep_ns % POW10_9 };
+  const struct timespec req = caml_timespec_of_nsec(sleep_nsec);
   nanosleep(&req, NULL);
 #else
-  usleep(sleep_ns / POW10_3);
+  usleep(sleep_nsec / NSEC_PER_USEC);
 #endif
-  return next_sleep_ns;
+  return next_sleep_nsec;
 }

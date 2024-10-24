@@ -430,14 +430,14 @@ uint64_t caml_time_counter(void)
   struct timespec t;
   clock_gettime(CLOCK_MONOTONIC, &t);
   return
-    (uint64_t)t.tv_sec  * (uint64_t)1000000000 +
-    (uint64_t)t.tv_nsec;
+    (uint64_t) t.tv_sec  * NSEC_PER_SEC +
+    (uint64_t) t.tv_nsec;
 #elif defined(HAS_GETTIMEOFDAY)
   struct timeval t;
   gettimeofday(&t, 0);
   return
-    (uint64_t)t.tv_sec  * (uint64_t)1000000000 +
-    (uint64_t)t.tv_usec * (uint64_t)1000;
+    (uint64_t) t.tv_sec  * NSEC_PER_SEC +
+    (uint64_t) t.tv_usec * NSEC_PER_USEC;
 #else
 # error "No timesource available"
 #endif
