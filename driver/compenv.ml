@@ -451,7 +451,7 @@ let read_one_param ppf position name v =
     end
   | "dump-into-file" -> Clflags.dump_into_file := true
   | "dump-dir" -> Clflags.dump_dir := Some v
-
+  | "keywords"  -> Clflags.keyword_edition := Some v
   | _ ->
     if not (List.mem name !can_discard) then begin
       can_discard := name :: !can_discard;
