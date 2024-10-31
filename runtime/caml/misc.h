@@ -45,7 +45,7 @@
 
 /* Deprecation warnings */
 
-#if defined(__GNUC__) || defined(__clang__)
+#if __has_attribute(deprecated) || defined(__GNUC__)
   /* Supported since at least GCC 3.1 */
   #define CAMLdeprecated_typedef(name, type) \
     typedef type name __attribute__ ((deprecated))
@@ -56,9 +56,7 @@
   #define CAMLdeprecated_typedef(name, type) typedef type name
 #endif
 
-#if defined(__GNUC__)                                           \
-    && defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L \
-    || defined(_MSC_VER) && _MSC_VER >= 1925
+#if defined(__GNUC__) || defined(__llvm__) || defined(_MSC_VER)
 
 #define CAML_STRINGIFY(x) #x
 #ifdef _MSC_VER
@@ -219,6 +217,72 @@ CAMLdeprecated_typedef(addr, char *);
   #define fallthrough ((void) 0)
 #endif
 #endif /* CAML_INTERNALS */
+
+/* Function attributes to give hints to the C compiler about optimizations and
+   static analysis. Intended for functions allocating and deallocating memory,
+   or opening and closing resources.
+   https://clang.llvm.org/docs/AttributeReference.html#function-attributes
+   https://gcc.gnu.org/onlinedocs/gcc-14.2.0/gcc/Common-Function-Attributes.html
+*/
+#if __has_attribute(malloc) && __has_attribute(warn_unused_result) &&   \
+    __has_attribute(alloc_size) && __has_attribute(alloc_align) &&      \
+    __has_attribute(returns_nonnull) &&                                 \
+    ((defined(__GNUC__) && __GNUC__ >= 14) || /* false-positives in GCC<14 */ \
+     defined(__llvm__))
+
+/* Indicates that a particular function always returns a non-null pointer. */
+#define CAMLreturns_nonnull() __attribute__ ((returns_nonnull))
+
+/* [CAMLrealloc(n)] indicates that the function is [realloc]-like, and implies
+   that the [n]-th argument number equals the number of available bytes at the
+   returned pointer. */
+#define CAMLrealloc(alloc_size_N,...)                           \
+  __attribute__ ((warn_unused_result,alloc_size(alloc_size_N)))
+
+/* [CAMLalloc(dealloc, p)] indicates that the function allocates a resource,
+   which must be deallocated by passing it as the [p]-th argument of the
+   function [dealloc]. */
+#if defined(__GNUC__) && !defined(__llvm__)
+#define CAMLalloc(deallocator,ptr_index,...)                            \
+  __attribute__ ((malloc,malloc(deallocator,ptr_index),warn_unused_result))
+#else
+#define CAMLalloc(deallocator,ptr_index,...)    \
+  __attribute__ ((malloc,warn_unused_result))
+#endif
+
+/* [CAMLmalloc(dealloc, p, n)] indicates that the function is [malloc]-like, and
+   implies that it allocates a memory block whose size is set by the function's
+   [n]-th argument, and which must be deallocated by passing it as the [p]-th
+   argument of the function [dealloc]. */
+#define CAMLmalloc(deallocator,ptr_index,alloc_size_N,...)      \
+  CAMLalloc(deallocator,ptr_index)                              \
+    __attribute__ ((alloc_size(alloc_size_N)))
+
+/* [CAMLcalloc(dealloc, p, n, m)] indicates that the function is [calloc]-like,
+   and implies that it allocates a memory block whose size is set by the product
+   of the function's [n]-th and [m]-th arguments, and which must be deallocated
+   by passing it as the [p]-th argument of the function [dealloc]. */
+#define CAMLcalloc(deallocator,ptr_index,alloc_size_N,alloc_size_M,...) \
+  CAMLalloc(deallocator,ptr_index)                                      \
+    __attribute__ ((alloc_size(alloc_size_N,alloc_size_M)))
+
+/* [CAMLaligned_alloc(dealloc, p, n, a)] indicates that the function is
+   [aligned_alloc]-like, and implies that it allocates a memory block whose size
+   is set by the function's [n]-th argument, aligned on a boundary given by the
+   function's [a]-th argument, and which must be deallocated by passing it as
+   the [p]-th argument of the function [dealloc]. */
+#define CAMLaligned_alloc(deallocator,ptr_index,alloc_size_N,alloc_align_,...) \
+  CAMLmalloc(deallocator,ptr_index,alloc_size_N)                        \
+    __attribute__ ((alloc_align(alloc_align_)))
+
+#else
+#define CAMLreturns_nonnull()
+#define CAMLrealloc(...)
+#define CAMLalloc(...)
+#define CAMLmalloc(...)
+#define CAMLcalloc(...)
+#define CAMLaligned_alloc(...)
+#endif
 
 /* GC timing hooks. These can be assigned by the user. These hooks
    must not allocate, change any heap value, nor call OCaml code. They
@@ -549,19 +613,70 @@ CAMLextern int caml_read_directory(char_os * dirname,
 
 #ifdef CAML_INTERNALS
 
-/* GC flags and messages */
+/* runtime message flags. Settable with v= in OCAMLRUNPARAM */
 
 extern atomic_uintnat caml_verb_gc;
+
+/* Bits which may be set in caml_verb_gc. The quotations are from the
+ * OCaml manual. */
+
+/* "Start and end of major GC cycle" (unused) */
+#define CAML_GC_MSG_MAJOR           0x0001
+/* "Minor collection and major GC slice" (unused) */
+#define CAML_GC_MSG_MINOR           0x0002
+/* "Growing and shrinking of the heap" */
+#define CAML_GC_MSG_HEAPSIZE        0x0004
+/* "Resizing of stacks and memory manager tables" */
+#define CAML_GC_MSG_STACKSIZE       0x0008
+/* "Heap compaction" (unused) */
+#define CAML_GC_MSG_COMPACT         0x0010
+/* "Change of GC parameters" */
+#define CAML_GC_MSG_PARAMS          0x0020
+/* "Computation of major GC slice size" */
+#define CAML_GC_MSG_SLICESIZE       0x0040
+/* "Calling of finalization functions" */
+#define CAML_GC_MSG_FINALIZE        0x0080
+/* "Startup messages" */
+#define CAML_GC_MSG_STARTUP         0x0100
+/* "Computation of compaction-triggering condition" (unused) */
+#define CAML_GC_MSG_COMPACT_TRIGGER 0x0200
+/* "Output GC statistics at program exit" */
+#define CAML_GC_MSG_STATS           0x0400
+/* "GC debugging messages */
+#define CAML_GC_MSG_DEBUG           0x0800
+/* "Address space reservation changes" */
+#define CAML_GC_MSG_ADDRSPACE       0x1000
+
+/* Default set of messages when runtime invoked with -v */
+
+#define CAML_GC_MSG_VERBOSE (CAML_GC_MSG_MAJOR     | \
+                             CAML_GC_MSG_HEAPSIZE  | \
+                             CAML_GC_MSG_STACKSIZE | \
+                             CAML_GC_MSG_COMPACT   | \
+                             CAML_GC_MSG_PARAMS)
+
+/* Use to control messages which should be output at any non-zero verbosity */
+
+#define CAML_GC_MSG_ANY (-1)
+
+/* output message if caml_verb_gc includes any bits in `category`. */
+
+void caml_gc_message (int category, const char *, ...)
+#if __has_attribute(format) || defined(__GNUC__)
+  __attribute__ ((format (printf, 2, 3)))
+#endif
+;
+
+/* Short-hand for calls to `caml_gc_message` */
+
+#define CAML_GC_MESSAGE(category, ...) \
+    caml_gc_message(CAML_GC_MSG_ ## category, __VA_ARGS__)
+
+/* Output message if CAML_GC_MSG_DEBUG is set */
 
 void caml_gc_log (const char *, ...)
 #if __has_attribute(format) || defined(__GNUC__)
   __attribute__ ((format (printf, 1, 2)))
-#endif
-;
-
-void caml_gc_message (int, const char *, ...)
-#if __has_attribute(format) || defined(__GNUC__)
-  __attribute__ ((format (printf, 2, 3)))
 #endif
 ;
 
@@ -629,8 +744,10 @@ CAMLextern int caml_snwprintf(wchar_t * buf,
 
 /* Macro used to deactivate address sanitizer on some functions. */
 #define CAMLno_asan
-/* __has_feature is Clang-specific, but GCC defines __SANITIZE_ADDRESS__ and
- * __SANITIZE_THREAD__. */
+/* `__has_feature` is present in Clang and recent GCCs (14 and later). Older
+   GCCs define `__SANITIZE_ADDRESS__`. In addition, starting from version 14
+   GCC supports the Clang-originating syntax `no_sanitize("address")`.
+   This should select the right attribute in all circumstances. */
 #if defined(__has_feature)
 #  if __has_feature(address_sanitizer)
 #    undef CAMLno_asan

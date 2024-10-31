@@ -167,7 +167,7 @@ gc_phase_t caml_gc_phase;
    We know of two situations in the runtime that could run in parallel
    with a phase update, and cannot safely access the gc phase:
 
-   - The domain_terminate logic runs after the thread has un-registered
+   - The caml_domain_terminate logic runs after the thread has un-registered
      itself as a STW participant, so it may race with a STW section.
 
    - Opportunistic collections may happen while a domain is waiting on
@@ -459,7 +459,8 @@ void caml_orphan_finalisers (caml_domain_state* domain_state)
     atomic_fetch_add_verify_ge0(&num_domains_orphaning_finalisers, -1);
   }
 
-  /* [caml_orphan_finalisers] is called in a while loop in [domain_terminate].
+  /* [caml_orphan_finalisers] is called in a while loop in
+     [caml_domain_terminate].
      We take care to decrement the [num_domains_to_final_update*] counters only
      if we have not already decremented it for the current cycle. */
   if(!f->updated_first) {
@@ -576,6 +577,14 @@ static inline intnat diffmod (uintnat x1, uintnat x2)
   return (intnat) (x1 - x2);
 }
 
+/* The [log_events] parameter is used to disable writing to the ring for two
+   reasons:
+   1. To prevent spamming the ring with numerous events generated during
+      an opportunistic GC slice.
+   2. To avoid logging events when the calling domain is not part of the
+      Stop-The-World (STW) participant set. If the domain is not part of
+      the STW set, the ring could be torn down concurrently while this domain
+      attempts to write to it. */
 static void
 update_major_slice_work(intnat howmuch,
                         int may_access_gc_phase,
@@ -660,30 +669,30 @@ update_major_slice_work(intnat howmuch,
 
   extra_work = (intnat) (my_extra_count * (double) total_cycle_work);
 
-  caml_gc_message (0x40, "heap_words = %"
-                         ARCH_INTNAT_PRINTF_FORMAT "u\n",
-                   (uintnat)heap_words);
-  caml_gc_message (0x40, "allocated_words = %"
-                         ARCH_INTNAT_PRINTF_FORMAT "u\n",
+  CAML_GC_MESSAGE(SLICESIZE,
+                  "heap_words = %" ARCH_INTNAT_PRINTF_FORMAT "u\n",
+                  (uintnat)heap_words);
+  CAML_GC_MESSAGE(SLICESIZE,
+                  "allocated_words = %" ARCH_INTNAT_PRINTF_FORMAT "u\n",
                    my_alloc_count);
-  caml_gc_message (0x40, "allocated_words_direct = %"
-                         ARCH_INTNAT_PRINTF_FORMAT "u\n",
+  CAML_GC_MESSAGE(SLICESIZE,
+                  "allocated_words_direct = %" ARCH_INTNAT_PRINTF_FORMAT "u\n",
                    my_alloc_direct_count);
-  caml_gc_message (0x40, "alloc work-to-do = %"
-                         ARCH_INTNAT_PRINTF_FORMAT "d\n",
+  CAML_GC_MESSAGE(SLICESIZE,
+                  "alloc work-to-do = %" ARCH_INTNAT_PRINTF_FORMAT "d\n",
                    alloc_work);
-  caml_gc_message (0x40, "dependent_words = %"
-                         ARCH_INTNAT_PRINTF_FORMAT "u\n",
+  CAML_GC_MESSAGE(SLICESIZE,
+                  "dependent_words = %" ARCH_INTNAT_PRINTF_FORMAT "u\n",
                    my_dependent_count);
-  caml_gc_message (0x40, "dependent work-to-do = %"
-                         ARCH_INTNAT_PRINTF_FORMAT "d\n",
-                   dependent_work);
-  caml_gc_message (0x40, "extra_heap_resources = %"
-                         ARCH_INTNAT_PRINTF_FORMAT "uu\n",
-                   (uintnat) (my_extra_count * 1000000));
-  caml_gc_message (0x40, "extra work-to-do = %"
-                         ARCH_INTNAT_PRINTF_FORMAT "d\n",
-                   extra_work);
+  CAML_GC_MESSAGE(SLICESIZE,
+                  "dependent work-to-do = %" ARCH_INTNAT_PRINTF_FORMAT "d\n",
+                  dependent_work);
+  CAML_GC_MESSAGE(SLICESIZE,
+                  "extra_heap_resources = %" ARCH_INTNAT_PRINTF_FORMAT "uu\n",
+                  (uintnat) (my_extra_count * 1000000));
+  CAML_GC_MESSAGE(SLICESIZE,
+                  "extra work-to-do = %" ARCH_INTNAT_PRINTF_FORMAT "d\n",
+                  extra_work);
 
   new_work = max3 (alloc_work, dependent_work, extra_work);
   atomic_fetch_add (&work_counter, dom_st->major_work_done_between_slices);
@@ -721,7 +730,6 @@ update_major_slice_work(intnat howmuch,
               );
 
   if (log_events) {
-    /* Avoid spamming the ring when doing opportunistic slices */
     CAML_EV_COUNTER(EV_C_MAJOR_HEAP_WORDS, (uintnat)heap_words);
     CAML_EV_COUNTER(EV_C_MAJOR_ALLOCATED_WORDS, my_alloc_count);
     CAML_EV_COUNTER(EV_C_MAJOR_ALLOCATED_WORK, alloc_work);
@@ -1335,9 +1343,9 @@ static void cycle_major_heap_from_stw_single(
               (long unsigned int)caml_major_cycles_completed);
 
   caml_major_cycles_completed++;
-  caml_gc_message(0x40, "Starting major GC cycle\n");
+  CAML_GC_MESSAGE(SLICESIZE, "Starting major GC cycle\n");
 
-  if (atomic_load_relaxed(&caml_verb_gc) & 0x400) {
+  if (atomic_load_relaxed(&caml_verb_gc) & CAML_GC_MSG_STATS) {
     struct gc_stats s;
     intnat heap_words, not_garbage_words, swept_words;
 
@@ -1656,7 +1664,8 @@ static void major_collection_slice(intnat howmuch,
   int may_access_gc_phase = (mode != Slice_opportunistic);
 
   int log_events = mode != Slice_opportunistic ||
-                   (atomic_load_relaxed(&caml_verb_gc) & 0x40);
+                   (atomic_load_relaxed(&caml_verb_gc) &
+                    CAML_GC_MSG_SLICESIZE);
 
   update_major_slice_work(howmuch, may_access_gc_phase, log_events);
 
@@ -2124,8 +2133,10 @@ void caml_teardown_major_gc(void) {
    so we may not access the gc phase. */
   int may_access_gc_phase = 0;
 
-  /* account for latest allocations */
-  update_major_slice_work (0, may_access_gc_phase, 1);
+  /* Account for latest allocations, but do not write to the event ring since
+     we are out of the STW participant set; the ring may be torn down
+     concurrently. */
+  update_major_slice_work (0, may_access_gc_phase, 0);
   CAMLassert(!caml_addrmap_iter_ok(&d->mark_stack->compressed_stack,
                                    d->mark_stack->compressed_stack_iter));
   caml_addrmap_clear(&d->mark_stack->compressed_stack);
@@ -2133,9 +2144,4 @@ void caml_teardown_major_gc(void) {
   caml_stat_free(d->mark_stack->stack);
   caml_stat_free(d->mark_stack);
   d->mark_stack = NULL;
-}
-
-void caml_finalise_heap (void)
-{
-  return;
 }

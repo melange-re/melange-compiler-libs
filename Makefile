@@ -2053,6 +2053,8 @@ manpages:
 	$(MAKE) -C api_docgen man
 
 partialclean::
+	rm -f ocamldoc/ocamldoc ocamldoc/ocamldoc.exe
+	rm -f ocamldoc/ocamldoc.opt ocamldoc/ocamldoc.opt.exe
 	rm -f ocamldoc/\#*\#
 	rm -f ocamldoc/*.cm[aiotx] ocamldoc/*.cmxa ocamldoc/*.cmti \
 	  ocamldoc/*.a ocamldoc/*.lib ocamldoc/*.o ocamldoc/*.obj

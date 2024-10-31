@@ -105,6 +105,24 @@ void caml_plat_mutex_free(caml_plat_mutex* m)
   check_err("mutex_free", pthread_mutex_destroy(m));
 }
 
+CAMLexport void caml_plat_mutex_reinit(caml_plat_mutex *m)
+{
+#ifdef DEBUG
+  /* The following logic is needed to let caml_plat_assert_all_locks_unlocked()
+     behave correctly in child processes after a fork operation. */
+  if (caml_plat_try_lock(m)) {
+    /* lock was not held at fork time */
+    caml_plat_unlock(m);
+  } else {
+    /* lock was held at fork time, parent process still holds it, but we
+       don't and need to fix lock count */
+    DEBUG_UNLOCK(m);
+  }
+#endif
+  caml_plat_mutex_init(m);
+}
+
+/* Condition variables */
 static void caml_plat_cond_init_aux(caml_plat_cond *cond)
 {
   pthread_condattr_t attr;
@@ -117,7 +135,6 @@ static void caml_plat_cond_init_aux(caml_plat_cond *cond)
   pthread_cond_init(cond, &attr);
 }
 
-/* Condition variables */
 void caml_plat_cond_init(caml_plat_cond* cond)
 {
   caml_plat_cond_init_aux(cond);
@@ -400,13 +417,15 @@ void* caml_mem_map(uintnat size, int reserve_only)
   void* mem = caml_plat_mem_map(size, reserve_only);
 
   if (mem == 0) {
-    caml_gc_message(0x1000, "mmap %" ARCH_INTNAT_PRINTF_FORMAT "d bytes failed",
-                            size);
+    CAML_GC_MESSAGE(ADDRSPACE,
+                    "mmap %" ARCH_INTNAT_PRINTF_FORMAT "d bytes failed",
+                    size);
     return 0;
   }
 
-  caml_gc_message(0x1000, "mmap %" ARCH_INTNAT_PRINTF_FORMAT "d"
-                          " bytes at %p for heaps\n", size, mem);
+  CAML_GC_MESSAGE(ADDRSPACE,
+                  "mmap %" ARCH_INTNAT_PRINTF_FORMAT "d"
+                  " bytes at %p for heaps\n", size, mem);
 
 #ifdef DEBUG
   caml_lf_skiplist_insert(&mmap_blocks, (uintnat)mem, size);
@@ -418,16 +437,18 @@ void* caml_mem_map(uintnat size, int reserve_only)
 void* caml_mem_commit(void* mem, uintnat size)
 {
   CAMLassert(Is_page_aligned(size));
-  caml_gc_message(0x1000, "commit %" ARCH_INTNAT_PRINTF_FORMAT "d"
-                          " bytes at %p for heaps\n", size, mem);
+  CAML_GC_MESSAGE(ADDRSPACE,
+                  "commit %" ARCH_INTNAT_PRINTF_FORMAT "d"
+                  " bytes at %p for heaps\n", size, mem);
   return caml_plat_mem_commit(mem, size);
 }
 
 void caml_mem_decommit(void* mem, uintnat size)
 {
   if (size) {
-    caml_gc_message(0x1000, "decommit %" ARCH_INTNAT_PRINTF_FORMAT "d"
-                            " bytes at %p for heaps\n", size, mem);
+    CAML_GC_MESSAGE(ADDRSPACE,
+                    "decommit %" ARCH_INTNAT_PRINTF_FORMAT "d"
+                    " bytes at %p for heaps\n", size, mem);
     caml_plat_mem_decommit(mem, size);
   }
 }
@@ -439,17 +460,23 @@ void caml_mem_unmap(void* mem, uintnat size)
   CAMLassert(caml_lf_skiplist_find(&mmap_blocks, (uintnat)mem, &data) != 0);
   CAMLassert(data == size);
 #endif
-  caml_gc_message(0x1000, "munmap %" ARCH_INTNAT_PRINTF_FORMAT "d"
-                          " bytes at %p for heaps\n", size, mem);
+  CAML_GC_MESSAGE(ADDRSPACE,
+                  "munmap %" ARCH_INTNAT_PRINTF_FORMAT "d"
+                  " bytes at %p for heaps\n", size, mem);
   caml_plat_mem_unmap(mem, size);
 #ifdef DEBUG
   caml_lf_skiplist_remove(&mmap_blocks, (uintnat)mem);
 #endif
 }
 
-#define Min_sleep_ns       10000 // 10 us
-#define Slow_sleep_ns    1000000 //  1 ms
-#define Max_sleep_ns  1000000000 //  1 s
+#define POW10_3       1000
+#define POW10_4      10000
+#define POW10_6    1000000
+#define POW10_9 1000000000
+
+#define Min_sleep_ns  POW10_4 /* 10 us */
+#define Slow_sleep_ns POW10_6 /*  1 ms */
+#define Max_sleep_ns  POW10_9 /*  1 s  */
 
 unsigned caml_plat_spin_back_off(unsigned sleep_ns,
                                  const struct caml_plat_srcloc* loc)
@@ -462,9 +489,14 @@ unsigned caml_plat_spin_back_off(unsigned sleep_ns,
                 loc->function, loc->file, loc->line);
   }
 #ifdef _WIN32
-  Sleep(sleep_ns/1000000);
+  Sleep(sleep_ns / POW10_6);
+#elif defined (HAS_NANOSLEEP)
+  const struct timespec req = {
+    .tv_sec = sleep_ns / POW10_9,
+    .tv_nsec = sleep_ns % POW10_9 };
+  nanosleep(&req, NULL);
 #else
-  usleep(sleep_ns/1000);
+  usleep(sleep_ns / POW10_3);
 #endif
   return next_sleep_ns;
 }

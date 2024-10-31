@@ -680,10 +680,16 @@ void caml_empty_minor_heap_promote(caml_domain_state* domain,
   CAML_EV_COUNTER(EV_C_MINOR_ALLOCATED, minor_allocated_bytes);
 
   CAML_EV_END(EV_MINOR);
-  caml_gc_log ("Minor collection of domain %d completed: %2.0f%% of %u KB live",
-               domain->id,
-               100.0 * (double)st.live_bytes / (double)minor_allocated_bytes,
-               (unsigned)(minor_allocated_bytes + 512)/1024);
+  if (minor_allocated_bytes == 0)
+    caml_gc_log ("Minor collection of domain %d completed:"
+                 " no minor bytes allocated",
+                 domain->id);
+  else
+    caml_gc_log ("Minor collection of domain %d completed:"
+                 " %2.0f%% of %u KB live",
+                 domain->id,
+                 100.0 * (double)st.live_bytes / (double)minor_allocated_bytes,
+                 (unsigned)(minor_allocated_bytes + 512)/1024);
 
   /* leave the barrier */
   if( participating_count > 1 ) {
@@ -755,7 +761,8 @@ int caml_do_opportunistic_major_slice
   int work_available = caml_opportunistic_major_work_available(domain_state);
   if (work_available) {
     /* NB: need to put guard around the ev logs to prevent spam when we poll */
-    uintnat log_events = atomic_load_relaxed(&caml_verb_gc) & 0x40;
+    uintnat log_events =
+        atomic_load_relaxed(&caml_verb_gc) & CAML_GC_MSG_SLICESIZE;
     if (log_events) CAML_EV_BEGIN(EV_MAJOR_MARK_OPPORTUNISTIC);
     caml_opportunistic_major_collection_slice(Major_slice_work_min);
     if (log_events) CAML_EV_END(EV_MAJOR_MARK_OPPORTUNISTIC);
@@ -867,12 +874,16 @@ void caml_empty_minor_heaps_once (void)
   CAMLassert(!caml_domain_is_in_stw());
   #endif
 
+  CAML_EV_BEGIN(EV_EMPTY_MINOR);
+
   /* To handle the case where multiple domains try to execute a minor gc
      STW section */
   do {
     caml_try_empty_minor_heap_on_all_domains();
   } while (saved_minor_cycle ==
            atomic_load_relaxed(&caml_minor_cycles_started));
+
+  CAML_EV_END(EV_EMPTY_MINOR);
 }
 
 /* Called by minor allocations when [Caml_state->young_ptr] reaches
@@ -967,7 +978,7 @@ static void realloc_generic_table
                          element_size);
   }else if (tbl->limit == tbl->threshold){
     CAML_EV_COUNTER (ev_counter_name, 1);
-    caml_gc_message (0x08, msg_threshold, 0);
+    CAML_GC_MESSAGE(STACKSIZE, msg_threshold, 0);
     tbl->limit = tbl->end;
     caml_request_minor_gc ();
   }else{
@@ -976,7 +987,7 @@ static void realloc_generic_table
 
     tbl->size *= 2;
     sz = (tbl->size + tbl->reserve) * element_size;
-    caml_gc_message (0x08, msg_growing, (intnat) sz/1024);
+    CAML_GC_MESSAGE(STACKSIZE, msg_growing, (intnat) sz/1024);
     tbl->base = caml_stat_resize_noexc (tbl->base, sz);
     if (tbl->base == NULL){
       caml_fatal_error ("%s", msg_error);
