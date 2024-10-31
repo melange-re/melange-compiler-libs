@@ -52,7 +52,6 @@ let f (W: _ t) = ()
 val f : int M.p t -> unit = <fun>
 |}]
 
-
 type _ t = W: int M.p t | W2: float M.p t
 [%%expect{|
 type _ t = W : int M.p t | W2 : float M.p t
