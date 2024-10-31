@@ -348,10 +348,6 @@ end
 
 (**** unification mode ****)
 
-type equations_generation =
-  | Forbidden
-  | Allowed of { equated_types : TypePairs.t }
-
 type unification_environment =
   | Expression of
       { env : Env.t;
@@ -359,7 +355,7 @@ type unification_environment =
     (* normal unification mode *)
   | Pattern of
       { penv : Pattern_env.t;
-        equations_generation : equations_generation;
+        equated_types : TypePairs.t;
         assume_injective : bool;
         unify_eq_set : TypePairs.t; }
     (* GADT constraint unification mode:
@@ -406,16 +402,12 @@ let in_subst_mode = function
   | Expression {in_subst} -> in_subst
   | Pattern _ -> false
 
-let can_generate_equations = function
-  | Expression _ | Pattern { equations_generation = Forbidden } -> false
-  | Pattern { equations_generation = Allowed _ } -> true
-
 (* Can only be called when generate_equations is true *)
 let record_equation uenv t1 t2 =
   match uenv with
-  | Expression _ | Pattern { equations_generation = Forbidden } ->
+  | Expression _ ->
       invalid_arg "Ctype.record_equation"
-  | Pattern { equations_generation = Allowed { equated_types } } ->
+  | Pattern { equated_types } ->
       TypePairs.add equated_types (t1, t2)
 
 let can_assume_injective = function
@@ -436,11 +428,6 @@ let without_assume_injective uenv f =
   match uenv with
   | Expression _ as uenv -> f uenv
   | Pattern r -> f (Pattern { r with assume_injective = false })
-
-let without_generating_equations uenv f =
-  match uenv with
-  | Expression _ as uenv -> f uenv
-  | Pattern r -> f (Pattern { r with equations_generation = Forbidden })
 
 (*** Checks for type definitions ***)
 
@@ -2689,10 +2676,8 @@ let unify3_var uenv t1' t2 t2' =
   | exception Unify_trace _ when in_pattern_mode uenv ->
       reify uenv t1';
       reify uenv t2';
-      if can_generate_equations uenv then begin
-        occur_univar ~inj_only:true (get_env uenv) t2';
-        record_equation uenv t1' t2';
-      end
+      occur_univar ~inj_only:true (get_env uenv) t2';
+      record_equation uenv t1' t2'
 
 (*
    1. When unifying two non-abbreviated types, one type is made a link
@@ -2851,7 +2836,7 @@ and unify3 uenv t1 t1' t2 t2' =
       | (Ttuple tl1, Ttuple tl2) ->
           unify_list uenv tl1 tl2
       | (Tconstr (p1, tl1, _), Tconstr (p2, tl2, _)) when Path.same p1 p2 ->
-          if not (can_generate_equations uenv) then
+          if not (in_pattern_mode uenv) then
             unify_list uenv tl1 tl2
           else if can_assume_injective uenv then
             without_assume_injective uenv (fun uenv -> unify_list uenv tl1 tl2)
@@ -2867,21 +2852,16 @@ and unify3 uenv t1 t1' t2 t2' =
             in
             List.iter2
               (fun i (t1, t2) ->
-                if i then unify uenv t1 t2 else
-                without_generating_equations uenv
-                  begin fun uenv ->
-                    let snap = snapshot () in
-                    try unify uenv t1 t2 with Unify_trace _ ->
-                      backtrack snap;
-                      reify uenv t1;
-                      reify uenv t2
-                  end)
+                if i then unify uenv t1 t2 else begin
+                  reify uenv t1;
+                  reify uenv t2
+                end)
               inj (List.combine tl1 tl2)
       | (Tconstr (path,[],_),
          Tconstr (path',[],_))
-        when let env = get_env uenv in
-        is_instantiable env path && is_instantiable env path'
-        && can_generate_equations uenv ->
+        when in_pattern_mode uenv &&
+        let env = get_env uenv in
+        is_instantiable env path && is_instantiable env path' ->
           let source, destination =
             if Path.scope path > Path.scope path'
             then  path , t2'
@@ -2890,24 +2870,20 @@ and unify3 uenv t1 t1' t2 t2' =
           record_equation uenv t1' t2';
           add_gadt_equation uenv source destination
       | (Tconstr (path,[],_), _)
-        when is_instantiable (get_env uenv) path
-        && can_generate_equations uenv ->
+        when in_pattern_mode uenv && is_instantiable (get_env uenv) path ->
           reify uenv t2';
           record_equation uenv t1' t2';
           add_gadt_equation uenv path t2'
       | (_, Tconstr (path,[],_))
-        when is_instantiable (get_env uenv) path
-        && can_generate_equations uenv ->
+        when in_pattern_mode uenv && is_instantiable (get_env uenv) path ->
           reify uenv t1';
           record_equation uenv t1' t2';
           add_gadt_equation uenv path t1'
       | (Tconstr (_,_,_), _) | (_, Tconstr (_,_,_)) when in_pattern_mode uenv ->
           reify uenv t1';
           reify uenv t2';
-          if can_generate_equations uenv then (
-            mcomp_for Unify (get_env uenv) t1' t2';
-            record_equation uenv t1' t2'
-          )
+          mcomp_for Unify (get_env uenv) t1' t2';
+          record_equation uenv t1' t2'
       | (Tobject (fi1, nm1), Tobject (fi2, _)) ->
           unify_fields uenv fi1 fi2;
           (* Type [t2'] may have been instantiated by [unify_fields] *)
@@ -2929,10 +2905,8 @@ and unify3 uenv t1 t1' t2 t2' =
               backtrack snap;
               reify uenv t1';
               reify uenv t2';
-              if can_generate_equations uenv then (
-                mcomp_for Unify (get_env uenv) t1' t2';
-                record_equation uenv t1' t2'
-              )
+              mcomp_for Unify (get_env uenv) t1' t2';
+              record_equation uenv t1' t2'
           end
       | (Tfield(f,kind,_,rem), Tnil) | (Tnil, Tfield(f,kind,_,rem)) ->
           begin match field_kind_repr kind with
@@ -3280,10 +3254,9 @@ let unify uenv ty1 ty2 =
 
 let unify_gadt (penv : Pattern_env.t) ty1 ty2 =
   let equated_types = TypePairs.create 0 in
-  let equations_generation = Allowed { equated_types } in
   let uenv = Pattern
       { penv;
-        equations_generation;
+        equated_types;
         assume_injective = true;
         unify_eq_set = TypePairs.create 11; }
   in
