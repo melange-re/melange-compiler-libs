@@ -1528,7 +1528,7 @@ AS_CASE([$host],
   [riscv64-*-linux*],
     [has_native_backend=yes; arch=riscv; model=riscv64; system=linux],
   [x86_64-*-gnu*],
-    [arch=amd64; system=gnu]
+    [has_native_backend=yes; arch=amd64; system=gnu]
 )
 
 AS_CASE([$arch],

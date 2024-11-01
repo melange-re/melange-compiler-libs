@@ -120,6 +120,10 @@ Working version
   code is no longer printed as "..." to avoid confusion with OCaml strings.
   (Florian Angeletti, review by Richard Eisenberg)
 
+- #13587: Enable native backend on x86_64 GNU/Hurd.
+  (Samuel Thibault, review by Antonin Décimo, Sébastien Hinderer and Miod
+   Vallat)
+
 ### Internal/compiler-libs changes:
 
 - #13425: undocumented -dmatchcomp flag for the debug
