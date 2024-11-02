@@ -411,7 +411,7 @@ type block =
 
 type switch_names =
   { consts: cstr_name array
-  ; blocks: cstr_name array
+  ; blocks: block array
   }
 
 type scoped_location = Debuginfo.Scoped_location.t
