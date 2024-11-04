@@ -16,7 +16,6 @@
 #ifndef CAML_PRINTEXC_H
 #define CAML_PRINTEXC_H
 
-
 #include "misc.h"
 #include "mlvalues.h"
 

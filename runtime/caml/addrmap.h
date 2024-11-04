@@ -11,10 +11,11 @@
 /*   special exception on linking described in the file LICENSE.          */
 /*                                                                        */
 /**************************************************************************/
-#include "mlvalues.h"
 
 #ifndef CAML_ADDRMAP_H
 #define CAML_ADDRMAP_H
+
+#include "mlvalues.h"
 
 /* An addrmap is a value -> value hashmap, where
    the values are blocks */
@@ -94,5 +95,4 @@ Caml_inline addrmap_iterator caml_addrmap_iterator(struct addrmap* t)
   return caml_addrmap_next(t, (uintnat)(-1));
 }
 
-
-#endif
+#endif /* CAML_ADDRMAP_H */

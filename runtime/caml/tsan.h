@@ -90,7 +90,6 @@ extern void __tsan_func_exit(void*);
 extern void __tsan_func_entry(void*);
 void __tsan_write8(void *location);
 
-
 #endif /* CAML_INTERNALS */
 
 #endif /* CAML_TSAN_H */

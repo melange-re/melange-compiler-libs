@@ -95,4 +95,4 @@ CAMLextern runtime_events_error caml_runtime_events_read_poll(
     void *callback_data,
     uintnat max_events, uintnat *events_consumed);
 
-#endif
+#endif /* CAML_RUNTIME_EVENTS_CONSUMER_H */

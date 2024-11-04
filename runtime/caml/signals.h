@@ -47,6 +47,7 @@ CAMLextern caml_result caml_process_pending_actions_res (void);
 CAMLextern value caml_process_pending_actions_exn (void);
 
 #ifdef CAML_INTERNALS
+
 value caml_process_pending_actions_with_root (value extra_root); // raises
 /* This is identical to [caml_process_pending_actions], except that it
    registers its argument as a root and eventually returns it. This is

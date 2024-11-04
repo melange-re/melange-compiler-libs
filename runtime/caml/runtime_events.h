@@ -29,7 +29,6 @@
 #define CAML_RUNTIME_EVENTS_H
 
 #include "mlvalues.h"
-#include <stdint.h>
 
 #ifdef CAML_INSTR
 #define CAML_EV_ALLOC(s) caml_ev_alloc(s)
@@ -340,4 +339,4 @@ CAMLextern value caml_runtime_events_user_resolve(char* event_name,
 
 #endif /* CAML_INTERNALS */
 
-#endif /*CAML_RUNTIME_EVENTS_H*/
+#endif /* CAML_RUNTIME_EVENTS_H */
