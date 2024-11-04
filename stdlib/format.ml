@@ -971,6 +971,18 @@ let default_pp_mark_close_tag = function
 let default_pp_print_open_tag = ignore
 let default_pp_print_close_tag = ignore
 
+let utf8_scalar_width s ~pos ~len =
+  let rec width s count current last =
+    if current >= last then count
+    else
+      let decode = String.get_utf_8_uchar s current in
+      let advance = Uchar.utf_decode_length decode in
+      width s (count + 1) (current+advance) last
+  in
+  width s 0 pos (pos + len)
+
+let ascii_width _ ~pos:_ ~len = len
+
 (* Building a formatter given its basic output functions.
    Other fields get reasonable default values. *)
 let pp_make_formatter f g h i j =
@@ -982,7 +994,7 @@ let pp_make_formatter f g h i j =
   let scan_stack = Stack.create () in
   initialize_scan_stack scan_stack;
   Stack.push { left_total = 1; queue_elem = sys_tok } scan_stack;
-  let pp_out_width _ ~pos:_ ~len = len in
+  let pp_out_width = utf8_scalar_width in
   let pp_margin = 78
   and pp_min_space_left = 10 in
   {
