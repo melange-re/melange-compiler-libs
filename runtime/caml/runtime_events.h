@@ -176,6 +176,10 @@ typedef enum {
   E_CURSOR_POLL_BUSY = -8,
 } runtime_events_error;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Starts runtime_events. Needs to be called before
    [caml_runtime_events_create_cursor]. Needs the runtime lock held to call and
    will trigger a stop-the-world pause. */
@@ -196,6 +200,10 @@ CAMLextern void caml_runtime_events_resume(void);
 /* Returns [1] if runtime events are currently active (started and not paused),
    [0] otherwise. */
 CAMLextern int caml_runtime_events_are_active(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #ifdef CAML_INTERNALS
 

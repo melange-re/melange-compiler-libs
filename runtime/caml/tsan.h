@@ -15,6 +15,10 @@
 #ifndef CAML_TSAN_H
 #define CAML_TSAN_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Macro used to deactivate thread sanitizer on some functions. */
 #define CAMLno_tsan
 /* `__has_feature` is present in Clang and recent GCCs (14 and later). Older
@@ -72,6 +76,9 @@ extern void AnnotateHappensAfter(const char *f, int l, void *addr);
 #  define CAMLno_tsan_for_perf CAMLno_tsan
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 
 #ifdef CAML_INTERNALS
 

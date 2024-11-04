@@ -26,6 +26,10 @@ extern "C" {
 
 extern value caml_ephe_none;
 
+#ifdef __cplusplus
+}
+#endif
+
 #ifdef CAML_INTERNALS
 
 struct caml_ephe_info {
@@ -78,9 +82,5 @@ struct caml_ephe_info* caml_alloc_ephe_info (void);
 void caml_ephe_clean(value e);
 
 #endif /* CAML_INTERNALS */
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* CAML_WEAK_H */

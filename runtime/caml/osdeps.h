@@ -18,15 +18,6 @@
 #ifndef CAML_OSDEPS_H
 #define CAML_OSDEPS_H
 
-#ifdef _WIN32
-#include <time.h>
-
-extern unsigned short caml_win32_major;
-extern unsigned short caml_win32_minor;
-extern unsigned short caml_win32_build;
-extern unsigned short caml_win32_revision;
-#endif
-
 #ifdef CAML_INTERNALS
 
 #include "misc.h"
@@ -107,6 +98,8 @@ void caml_plat_mem_unmap(void *, uintnat);
 
 #ifdef _WIN32
 
+#include <time.h>
+
 /* Map a Win32 error code (as returned by GetLastError) to a POSIX error code
    (from <errno.h>).  Return 0 if no POSIX error code matches. */
 CAMLextern int caml_posixerr_of_win32err(unsigned int win32err);
@@ -162,6 +155,15 @@ extern void caml_init_os_params(void);
 
 #ifdef _WIN32
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+extern unsigned short caml_win32_major;
+extern unsigned short caml_win32_minor;
+extern unsigned short caml_win32_build;
+extern unsigned short caml_win32_revision;
+
 /* [caml_stat_strdup_to_utf16(s)] returns a null-terminated copy of [s],
    re-encoded in UTF-16.  The encoding of [s] is assumed to be UTF-8 if
    [caml_windows_unicode_runtime_enabled] is non-zero **and** [s] is valid
@@ -199,6 +201,10 @@ CAMLextern char* caml_stat_strdup_of_utf16(const wchar_t *s);
    or in the current code page otherwise.
 */
 CAMLextern value caml_copy_string_of_utf16(const wchar_t *s);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _WIN32 */
 

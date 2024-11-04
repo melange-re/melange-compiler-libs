@@ -39,6 +39,10 @@
   asize_t reserve;             \
 }
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Count of the total number of minor collections performed by the program */
 CAMLextern atomic_uintnat caml_minor_collections_count;
 
@@ -68,6 +72,10 @@ struct caml_minor_tables {
 };
 
 CAMLextern void caml_minor_collection (void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #ifdef CAML_INTERNALS
 extern void caml_set_minor_heap_size (asize_t); /* size in bytes */

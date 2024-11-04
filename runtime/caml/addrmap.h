@@ -17,6 +17,10 @@
 
 #include "mlvalues.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* An addrmap is a value -> value hashmap, where
    the values are blocks */
 
@@ -94,5 +98,9 @@ Caml_inline addrmap_iterator caml_addrmap_iterator(struct addrmap* t)
 {
   return caml_addrmap_next(t, (uintnat)(-1));
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* CAML_ADDRMAP_H */
