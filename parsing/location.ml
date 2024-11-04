@@ -746,7 +746,7 @@ let batch_mode_printer : report_printer =
   let pp_footnote ppf f =
     Option.iter (Format.fprintf ppf "@,%a" pp_txt) f
   in
-  let old_format self ppf report =
+  let error_format self ppf report =
     Format.fprintf ppf "@[<v>%a%a%a: %a@[%a@]%a%a%a@]@."
       Format.pp_open_tbox ()
       (self.pp_main_loc self report) report.main.loc
@@ -757,7 +757,7 @@ let batch_mode_printer : report_printer =
       pp_footnote report.footnote
       Format.pp_close_tbox ()
   in
-  let new_format self ppf report =
+  let warning_format self ppf report =
     Format.fprintf ppf "@[<v>%a@[<b 2>%a: %a@]%a%a@]@."
       (self.pp_main_loc self report) report.main.loc
       (self.pp_report_kind self report) report.kind
@@ -772,8 +772,8 @@ let batch_mode_printer : report_printer =
       | Report_warning _
       | Report_warning_as_error _
       | Report_alert _ | Report_alert_as_error _ ->
-          new_format self ppf report
-      | Report_error -> old_format self ppf report
+          warning_format self ppf report
+      | Report_error -> error_format self ppf report
     in
     (* Make sure we keep [num_loc_lines] updated.
        The tabulation box is here to give submessage the option
