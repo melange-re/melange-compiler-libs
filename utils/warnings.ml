@@ -1156,9 +1156,9 @@ let message = function
         Style.inline_code "-opaque"
   | Flambda_assignment_to_non_mutable_value ->
       msg
-        "A potential assignment to a non-mutable value@ was@ detected@ \
+        "A potential@ assignment@ to@ a@ non-mutable@ value@ was@ detected@ \
          in@ this@ source@ file.@ \
-         Such@ assignments@ may@ generate@ incorrect code@ \
+         Such@ assignments@ may@ generate@ incorrect@ code@ \
          when@ using@ Flambda."
   | Unused_module s -> msg "unused module %a." Style.inline_code s
   | Unboxable_type_in_prim_decl t ->
