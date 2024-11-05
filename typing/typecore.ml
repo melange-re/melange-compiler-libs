@@ -969,9 +969,9 @@ let solve_Ppat_construct ~refine tps penv loc constr no_existentials
           if not (fully_generic t1 && fully_generic t2) then
             let msg =
               Format_doc.doc_printf
-                "typing this pattern requires considering@ %a@ and@ %a@ as \
-                equal.@ \
-                But the knowledge of these types"
+                "typing this pattern requires considering@ @[%a@]@ and@ \
+                 @[%a@]@ as@ equal.@ \
+                 But@ the@ knowledge@ of@ these@ types"
                     (Style.as_inline_code Printtyp.Doc.type_expr) t1
                     (Style.as_inline_code Printtyp.Doc.type_expr) t2
             in

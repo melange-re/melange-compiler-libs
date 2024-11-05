@@ -63,7 +63,8 @@ Warning 42 [disambiguated-name]: this use of "x" relies on type-directed
 Line 4, characters 29-30:
 4 |   let f2 r = ignore (r:t); r.x (* non principal *)
                                  ^
-Warning 18 [not-principal]: this type-based field disambiguation is not principal.
+Warning 18 [not-principal]: this type-based field disambiguation is not
+  principal.
 
 Line 4, characters 29-30:
 4 |   let f2 r = ignore (r:t); r.x (* non principal *)
@@ -152,7 +153,8 @@ Warning 42 [disambiguated-name]: this use of "y" relies on type-directed
 Line 6, characters 7-13:
 6 |        {x; y} -> y + y
            ^^^^^^
-Warning 18 [not-principal]: this type-based record disambiguation is not principal.
+Warning 18 [not-principal]: this type-based record disambiguation is not
+  principal.
 
 Line 6, characters 8-9:
 6 |        {x; y} -> y + y
@@ -573,7 +575,8 @@ Warning 42 [disambiguated-name]: this use of "A" relies on type-directed
 Line 1, characters 20-21:
 1 | class g = f (A : t) A;; (* warn with -principal *)
                         ^
-Warning 18 [not-principal]: this type-based constructor disambiguation is not principal.
+Warning 18 [not-principal]: this type-based constructor disambiguation is not
+  principal.
 
 Line 1, characters 20-21:
 1 | class g = f (A : t) A;; (* warn with -principal *)
@@ -702,7 +705,8 @@ Warning 42 [disambiguated-name]: this use of "loc" relies on type-directed
 Line 7, characters 10-15:
 7 |     |`Key {loc} -> loc
               ^^^^^
-Warning 18 [not-principal]: this type-based record disambiguation is not principal.
+Warning 18 [not-principal]: this type-based record disambiguation is not
+  principal.
 
 module P6235' :
   sig

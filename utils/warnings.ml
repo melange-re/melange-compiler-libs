@@ -969,7 +969,7 @@ let message = function
       msg "the virtual method %a is not declared."
         Style.inline_code m
   | Not_principal emsg ->
-      msg "%a is not principal." Fmt.pp_doc emsg
+      msg "%a@ is@ not@ principal." Fmt.pp_doc emsg
   | Non_principal_labels s -> msg "%s without principality." s
   | Ignored_extra_argument ->
       msg "this argument will not be used by the function."

@@ -65,7 +65,8 @@ Warning 42 [disambiguated-name]: this use of "A" relies on type-directed
 Line 1, characters 26-27:
 1 | function Not_found -> 1 | A -> 2 | _ -> 3
                               ^
-Warning 18 [not-principal]: this type-based constructor disambiguation is not principal.
+Warning 18 [not-principal]: this type-based constructor disambiguation is not
+  principal.
 
 Line 1, characters 26-27:
 1 | function Not_found -> 1 | A -> 2 | _ -> 3

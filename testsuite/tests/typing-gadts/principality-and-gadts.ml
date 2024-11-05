@@ -47,14 +47,14 @@ val f : 'a t -> 'a -> int = <fun>
 Line 4, characters 4-10:
 4 |   | IntLit, n -> n+1
         ^^^^^^
-Warning 18 [not-principal]: typing this pattern requires considering "
-  int" and "a" as equal. But the knowledge of these types is not principal.
+Warning 18 [not-principal]: typing this pattern requires considering
+  "int" and "a" as equal. But the knowledge of these types is not principal.
 
 Line 5, characters 4-11:
 5 |   | BoolLit, b -> 1
         ^^^^^^^
-Warning 18 [not-principal]: typing this pattern requires considering "
-  bool" and "a" as equal. But the knowledge of these types is not principal.
+Warning 18 [not-principal]: typing this pattern requires considering
+  "bool" and "a" as equal. But the knowledge of these types is not principal.
 
 val f : 'a t -> 'a -> int = <fun>
 |}]
@@ -71,8 +71,8 @@ val f : 'a t -> 'a -> int = <fun>
 Line 4, characters 4-10:
 4 |   | IntLit, n -> n+1
         ^^^^^^
-Warning 18 [not-principal]: typing this pattern requires considering "
-  int" and "a" as equal. But the knowledge of these types is not principal.
+Warning 18 [not-principal]: typing this pattern requires considering
+  "int" and "a" as equal. But the knowledge of these types is not principal.
 
 val f : 'a t -> 'a -> int = <fun>
 |}]
@@ -141,8 +141,8 @@ Line 4, characters 4-7:
 4 |   | MAB -> false;;
         ^^^
 Warning 18 [not-principal]: typing this pattern requires considering
-  "unit M.mab" and "unit ab" as equal.
-  But the knowledge of these types is not principal.
+  "unit M.mab" and "unit ab" as equal. But the knowledge of these types is not
+  principal.
 
 val f1 : unit ab M.t -> bool = <fun>
 |}]
@@ -158,15 +158,15 @@ val f2 : 'x M.t -> bool = <fun>
 Line 4, characters 4-6:
 4 |   | AB -> true
         ^^
-Warning 18 [not-principal]: typing this pattern requires considering "
-  unit ab" and "x" as equal. But the knowledge of these types is not principal.
+Warning 18 [not-principal]: typing this pattern requires considering
+  "unit ab" and "x" as equal. But the knowledge of these types is not principal.
 
 Line 5, characters 4-7:
 5 |   | MAB -> false;;
         ^^^
 Warning 18 [not-principal]: typing this pattern requires considering
-  "unit M.mab" and "x" as equal.
-  But the knowledge of these types is not principal.
+  "unit M.mab" and "x" as equal. But the knowledge of these types is not
+  principal.
 
 val f2 : 'x M.t -> bool = <fun>
 |}]
@@ -184,8 +184,8 @@ Line 5, characters 4-7:
 5 |   | MAB -> false;;
         ^^^
 Warning 18 [not-principal]: typing this pattern requires considering
-  "unit M.mab" and "unit ab" as equal.
-  But the knowledge of these types is not principal.
+  "unit M.mab" and "unit ab" as equal. But the knowledge of these types is not
+  principal.
 
 val f3 : unit ab M.t -> bool = <fun>
 |}]
@@ -212,9 +212,9 @@ val g2 : ('x, int option) eq -> 'x -> int option = <fun>
 Line 3, characters 7-11:
 3 |    let Refl = e in x;;
            ^^^^
-Warning 18 [not-principal]: typing this pattern requires considering "
-  x" and "int option" as equal.
-  But the knowledge of these types is not principal.
+Warning 18 [not-principal]: typing this pattern requires considering
+  "x" and "int option" as equal. But the knowledge of these types is not
+  principal.
 
 val g2 : ('x, int option) eq -> 'x -> int option = <fun>
 |}]
@@ -245,8 +245,8 @@ let () =
 Line 3, characters 27-28:
 3 |   | [ { a = 3; _ } ; { b = F; _ }] -> ()
                                ^
-Warning 18 [not-principal]: typing this pattern requires considering "
-  Foo.t" and "int" as equal. But the knowledge of these types is not principal.
+Warning 18 [not-principal]: typing this pattern requires considering
+  "Foo.t" and "int" as equal. But the knowledge of these types is not principal.
 |}]
 
 let () =
@@ -280,8 +280,8 @@ let () =
 Line 3, characters 26-31:
 3 |   | [ { a = 3; _ }; { b = Refl3 ; _ }] -> ()
                               ^^^^^
-Warning 18 [not-principal]: typing this pattern requires considering "
-  int" and "Foo.t" as equal. But the knowledge of these types is not principal.
+Warning 18 [not-principal]: typing this pattern requires considering
+  "int" and "Foo.t" as equal. But the knowledge of these types is not principal.
 |}]
 
 let () =
@@ -294,8 +294,8 @@ let () =
 Line 3, characters 12-17:
 3 |   | [ { b = Refl3 ; _ }; { a = 3; _ } ] -> ()
                 ^^^^^
-Warning 18 [not-principal]: typing this pattern requires considering "
-  int" and "Foo.t" as equal. But the knowledge of these types is not principal.
+Warning 18 [not-principal]: typing this pattern requires considering
+  "int" and "Foo.t" as equal. But the knowledge of these types is not principal.
 |}]
 
 (* Unify with 'a first *)
@@ -315,8 +315,8 @@ let () =
 Line 3, characters 26-31:
 3 |   | [ { a = 3; _ }; { b = Refl3 ; _ }] -> ()
                               ^^^^^
-Warning 18 [not-principal]: typing this pattern requires considering "
-  int" and "Foo.t" as equal. But the knowledge of these types is not principal.
+Warning 18 [not-principal]: typing this pattern requires considering
+  "int" and "Foo.t" as equal. But the knowledge of these types is not principal.
 |}]
 
 let () =
@@ -328,8 +328,8 @@ let () =
 Line 3, characters 12-17:
 3 |   | [ { b = Refl3 ; _ }; { a = 3; _ } ] -> ()
                 ^^^^^
-Warning 18 [not-principal]: typing this pattern requires considering "
-  int" and "Foo.t" as equal. But the knowledge of these types is not principal.
+Warning 18 [not-principal]: typing this pattern requires considering
+  "int" and "Foo.t" as equal. But the knowledge of these types is not principal.
 |}]
 
 
@@ -360,8 +360,8 @@ val foo : M.t foo -> M.t = <fun>
 Line 3, characters 18-23:
 3 |   | { x = x; eq = Refl3 } -> x
                       ^^^^^
-Warning 18 [not-principal]: typing this pattern requires considering "
-  M.t" and "N.t" as equal. But the knowledge of these types is not principal.
+Warning 18 [not-principal]: typing this pattern requires considering
+  "M.t" and "N.t" as equal. But the knowledge of these types is not principal.
 
 val foo : M.t foo -> M.t = <fun>
 |}]
@@ -376,8 +376,8 @@ val foo : int foo -> int = <fun>
 Line 3, characters 26-31:
 3 |   | { x = (x : int); eq = Refl3 } -> x
                               ^^^^^
-Warning 18 [not-principal]: typing this pattern requires considering "
-  M.t" and "N.t" as equal. But the knowledge of these types is not principal.
+Warning 18 [not-principal]: typing this pattern requires considering
+  "M.t" and "N.t" as equal. But the knowledge of these types is not principal.
 
 val foo : int foo -> int = <fun>
 |}]
@@ -398,8 +398,8 @@ Error: This pattern matches values of type "N.t foo"
 Line 3, characters 26-31:
 3 |   | { x = (x : N.t); eq = Refl3 } -> x
                               ^^^^^
-Warning 18 [not-principal]: typing this pattern requires considering "
-  M.t" and "N.t" as equal. But the knowledge of these types is not principal.
+Warning 18 [not-principal]: typing this pattern requires considering
+  "M.t" and "N.t" as equal. But the knowledge of these types is not principal.
 
 Line 3, characters 4-33:
 3 |   | { x = (x : N.t); eq = Refl3 } -> x
@@ -420,8 +420,8 @@ val foo : string foo -> string = <fun>
 Line 3, characters 29-34:
 3 |   | { x = (x : string); eq = Refl3 } -> x
                                  ^^^^^
-Warning 18 [not-principal]: typing this pattern requires considering "
-  M.t" and "N.t" as equal. But the knowledge of these types is not principal.
+Warning 18 [not-principal]: typing this pattern requires considering
+  "M.t" and "N.t" as equal. But the knowledge of these types is not principal.
 
 val foo : string foo -> string = <fun>
 |}]

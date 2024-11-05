@@ -304,7 +304,8 @@ class ['a] ostream1 :
 Line 8, characters 4-16:
 8 |     self#tl#fold ~f ~init:(f self#hd init)
         ^^^^^^^^^^^^
-Warning 18 [not-principal]: this use of a polymorphic method is not principal.
+Warning 18 [not-principal]: this use of a polymorphic method is not
+  principal.
 
 class ['a] ostream1 :
   hd:'a ->
@@ -1284,21 +1285,24 @@ val f : < m : 'a. 'a -> 'a > -> < m : 'a. 'a -> 'a > = <fun>
 Line 2, characters 9-16:
 2 | fun x -> (f x)#m;; (* Warning 18 *)
              ^^^^^^^
-Warning 18 [not-principal]: this use of a polymorphic method is not principal.
+Warning 18 [not-principal]: this use of a polymorphic method is not
+  principal.
 
 - : < m : 'a. 'a -> 'a > -> 'b -> 'b = <fun>
 val f : < m : 'a. 'a -> 'a > * 'b -> < m : 'a. 'a -> 'a > = <fun>
 Line 4, characters 9-20:
 4 | fun x -> (f (x,x))#m;; (* Warning 18 *)
              ^^^^^^^^^^^
-Warning 18 [not-principal]: this use of a polymorphic method is not principal.
+Warning 18 [not-principal]: this use of a polymorphic method is not
+  principal.
 
 - : < m : 'a. 'a -> 'a > -> 'b -> 'b = <fun>
 val f : < m : 'a. 'a -> 'a > -> < m : 'a. 'a -> 'a > array = <fun>
 Line 6, characters 9-20:
 6 | fun x -> (f x).(0)#m;; (* Warning 18 *)
              ^^^^^^^^^^^
-Warning 18 [not-principal]: this use of a polymorphic method is not principal.
+Warning 18 [not-principal]: this use of a polymorphic method is not
+  principal.
 
 - : < m : 'a. 'a -> 'a > -> 'b -> 'b = <fun>
 |}];;
@@ -1328,13 +1332,15 @@ val just : 'a option -> 'a = <fun>
 Line 4, characters 42-62:
 4 | let f x = let l = [Some x; (None : u)] in (just(List.hd l))#id;;
                                               ^^^^^^^^^^^^^^^^^^^^
-Warning 18 [not-principal]: this use of a polymorphic method is not principal.
+Warning 18 [not-principal]: this use of a polymorphic method is not
+  principal.
 
 val f : c -> 'a -> 'a = <fun>
 Line 7, characters 36-47:
 7 |   let x = List.hd [Some x; none] in (just x)#id;;
                                         ^^^^^^^^^^^
-Warning 18 [not-principal]: this use of a polymorphic method is not principal.
+Warning 18 [not-principal]: this use of a polymorphic method is not
+  principal.
 
 val g : c -> 'a -> 'a = <fun>
 val h : < id : 'a; .. > -> 'a = <fun>
