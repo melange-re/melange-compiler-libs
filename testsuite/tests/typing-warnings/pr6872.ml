@@ -27,7 +27,7 @@ A
 Line 1, characters 0-1:
 1 | A
     ^
-Warning 41 [ambiguous-name]: "A" belongs to several types: "a""exn".
+Warning 41 [ambiguous-name]: "A" belongs to several types: "a" "exn".
   The first one was selected. Please disambiguate if this is wrong.
 
 - : a = A

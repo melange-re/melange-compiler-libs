@@ -404,7 +404,7 @@ let ambiguous_xy_but_not_ambiguous_z g = function
 Line 2, characters 4-5:
 2 |   | A (x as z,(0 as y))|A (0 as y as z,x)|B (x,(y as z)) when g x (y+z) -> 1
         ^
-Warning 41 [ambiguous-name]: "A" belongs to several types: "t2""t".
+Warning 41 [ambiguous-name]: "A" belongs to several types: "t2" "t".
   The first one was selected. Please disambiguate if this is wrong.
 
 Lines 1-3, characters 41-10:
@@ -429,19 +429,19 @@ val ambiguous_xy_but_not_ambiguous_z : (int -> int -> bool) -> t2 -> int =
 Line 2, characters 4-5:
 2 |   | A (x as z,(0 as y))|A (0 as y as z,x)|B (x,(y as z)) when g x (y+z) -> 1
         ^
-Warning 41 [ambiguous-name]: "A" belongs to several types: "t2""t".
+Warning 41 [ambiguous-name]: "A" belongs to several types: "t2" "t".
   The first one was selected. Please disambiguate if this is wrong.
 
 Line 2, characters 24-25:
 2 |   | A (x as z,(0 as y))|A (0 as y as z,x)|B (x,(y as z)) when g x (y+z) -> 1
                             ^
-Warning 41 [ambiguous-name]: "A" belongs to several types: "t2""t".
+Warning 41 [ambiguous-name]: "A" belongs to several types: "t2" "t".
   The first one was selected. Please disambiguate if this is wrong.
 
 Line 2, characters 42-43:
 2 |   | A (x as z,(0 as y))|A (0 as y as z,x)|B (x,(y as z)) when g x (y+z) -> 1
                                               ^
-Warning 41 [ambiguous-name]: "B" belongs to several types: "t2""t".
+Warning 41 [ambiguous-name]: "B" belongs to several types: "t2" "t".
   The first one was selected. Please disambiguate if this is wrong.
 
 Lines 1-3, characters 41-10:

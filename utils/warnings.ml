@@ -884,7 +884,8 @@ module Style = Misc.Style
 let msg = Fmt.doc_printf
 let comma_inline_list = Fmt.(pp_print_list ~pp_sep:comma Style.inline_code)
 let space_inline_list ppf l =
-  Fmt.fprintf ppf "@[%a@]" (Fmt.pp_print_list Style.inline_code) l
+  let pp_sep = Fmt.pp_print_space in
+  Fmt.fprintf ppf "@[%a@]" (Fmt.pp_print_list ~pp_sep Style.inline_code) l
 let expand ppf s = if s = "" then () else Fmt.fprintf ppf "@ %s" s
 
 let message = function

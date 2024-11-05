@@ -495,7 +495,7 @@ Line 6, characters 2-13:
 6 |   inherit d 7
       ^^^^^^^^^^^
 Warning 13 [instance-variable-override]: the following instance variables
-  are overridden by the class "d": "t""z"
+  are overridden by the class "d": "t" "z"
 
 Line 7, characters 6-7:
 7 |   val u = 3

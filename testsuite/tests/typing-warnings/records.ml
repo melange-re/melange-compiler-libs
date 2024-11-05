@@ -101,7 +101,7 @@ Line 3, characters 25-31:
 3 |   let f r = match r with {x; y} -> y + y
                              ^^^^^^
 Warning 41 [ambiguous-name]: these field labels belong to several types:
-    "M1.u""M1.t".
+    "M1.u" "M1.t".
   The first one was selected. Please disambiguate if this is wrong.
 
 Line 3, characters 35-36:
@@ -394,13 +394,13 @@ let r = {MN.x = 3; NM.y = 4};; (* error: type would change with order *)
 Line 1, characters 8-28:
 1 | let r = {MN.x = 3; NM.y = 4};; (* error: type would change with order *)
             ^^^^^^^^^^^^^^^^^^^^
-Warning 41 [ambiguous-name]: "x" belongs to several types: "MN.bar""MN.foo".
+Warning 41 [ambiguous-name]: "x" belongs to several types: "MN.bar" "MN.foo".
   The first one was selected. Please disambiguate if this is wrong.
 
 Line 1, characters 8-28:
 1 | let r = {MN.x = 3; NM.y = 4};; (* error: type would change with order *)
             ^^^^^^^^^^^^^^^^^^^^
-Warning 41 [ambiguous-name]: "y" belongs to several types: "NM.foo""NM.bar".
+Warning 41 [ambiguous-name]: "y" belongs to several types: "NM.foo" "NM.bar".
   The first one was selected. Please disambiguate if this is wrong.
 
 Line 1, characters 19-23:
@@ -633,7 +633,7 @@ Line 7, characters 10-18:
 7 |   let y = {x = ""}
               ^^^^^^^^
 Warning 41 [ambiguous-name]: these field labels belong to several types:
-    "M.s""t".
+    "M.s" "t".
   The first one was selected. Please disambiguate if this is wrong.
 
 module Shadow2 :

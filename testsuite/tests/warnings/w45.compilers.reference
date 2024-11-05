@@ -7,7 +7,7 @@ Warning 45 [open-shadow-label-constructor]: this open statement shadows the
 File "w45.ml", line 26, characters 14-15:
 26 |   let _ = (A, X) (* X belongs to several types *)
                    ^
-Warning 41 [ambiguous-name]: X belongs to several types: T2.sT1.s.
+Warning 41 [ambiguous-name]: X belongs to several types: T2.s T1.s.
   The first one was selected. Please disambiguate if this is wrong.
 
 File "w45.ml", line 23, characters 2-9:
