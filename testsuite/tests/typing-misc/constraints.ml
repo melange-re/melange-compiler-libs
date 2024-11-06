@@ -451,3 +451,15 @@ Error: Constraints are not satisfied in this type.
        Type "foo" was considered abstract when checking constraints in this
        recursive type definition.
 |}]
+
+(* PR#13510 *)
+
+type 'a x = [ `X of 'e ] constraint 'a = 'e list
+
+type p = private [> a x]
+and a = int list
+[%%expect{|
+type 'a x = [ `X of 'e ] constraint 'a = 'e list
+type p = private [> a x ]
+and a = int list
+|}]
