@@ -51,7 +51,7 @@ struct custom_operations {
 extern "C" {
 #endif
 
-CAMLextern uintnat caml_custom_major_ratio;
+CAMLextern _Atomic uintnat caml_custom_major_ratio;
 
 CAMLextern value caml_alloc_custom(const struct custom_operations * ops,
                                    uintnat size, /*size in bytes*/
