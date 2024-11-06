@@ -2436,6 +2436,11 @@ AC_CHECK_FUNCS(
   [pthread_set_name_np],
   [AC_DEFINE([HAS_PTHREAD_SET_NAME_NP], [1])])
 
+## SetThreadDescription
+AC_CHECK_FUNCS(
+  [SetThreadDescription],
+  [AC_DEFINE([HAS_SET_THREAD_DESCRIPTION], [1])])
+
 ## Activate the systhread library
 
 AS_CASE([$enable_systhreads,$enable_unix_lib],

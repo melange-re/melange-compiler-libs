@@ -20289,6 +20289,20 @@ fi
 
 done
 
+## SetThreadDescription
+
+  for ac_func in SetThreadDescription
+do :
+  ac_fn_c_check_func "$LINENO" "SetThreadDescription" "ac_cv_func_SetThreadDescription"
+if test "x$ac_cv_func_SetThreadDescription" = xyes
+then :
+  printf "%s\n" "#define HAVE_SETTHREADDESCRIPTION 1" >>confdefs.h
+ printf "%s\n" "#define HAS_SET_THREAD_DESCRIPTION 1" >>confdefs.h
+
+fi
+
+done
+
 ## Activate the systhread library
 
 case $enable_systhreads,$enable_unix_lib in #(

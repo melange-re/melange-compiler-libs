@@ -972,13 +972,19 @@ static st_retcode caml_threadstatus_wait (value wrapper)
 CAMLprim value caml_set_current_thread_name(value name)
 {
 #if defined(_WIN32)
+
+#  if defined(HAS_SET_THREAD_DESCRIPTION)
   wchar_t *thread_name = caml_stat_strdup_to_utf16(String_val(name));
   SetThreadDescription(GetCurrentThread(), thread_name);
   caml_stat_free(thread_name);
+#  endif
 
+#  if defined(HAS_PTHREAD_SETNAME_NP)
   // We are using both methods.
   // See: https://github.com/ocaml/ocaml/pull/13504#discussion_r1786358928
   pthread_setname_np(pthread_self(), String_val(name));
+#  endif
+
 #elif defined(HAS_PRCTL)
   prctl(PR_SET_NAME, String_val(name));
 #elif defined(HAS_PTHREAD_SETNAME_NP)
