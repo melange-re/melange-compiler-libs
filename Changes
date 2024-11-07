@@ -642,6 +642,10 @@ ___________
   finalisers from being run.
   (Nick Roberts, review by Mark Shinwell)
 
+- #13495, #13514: Fix typechecker crash while typing objects
+  (Jacques Garrigue, report by Nicolás Ojeda Bär, review by
+   Nicolas Ojeda Bär, Gabriel Scherer, Stephen Dolan, Florian Angeletti)
+
 - #13391, #13551: fix a printing bug with `-dsource` when using
   raw literal inside a locally abstract type constraint
   (i.e. `let f: type \#for. ... `)
