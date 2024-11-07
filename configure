@@ -20257,7 +20257,7 @@ ac_fn_check_decl "$LINENO" "prctl" "ac_cv_have_decl_prctl" "#include <sys/prctl.
 " "$ac_c_undeclared_builtin_options" "CFLAGS"
 if test "x$ac_cv_have_decl_prctl" = xyes
 then :
-  printf "%s\n" "#define HAS_PRCTL  1" >>confdefs.h
+  printf "%s\n" "#define HAS_DECL_PRCTL  1" >>confdefs.h
 
 fi
 
@@ -20297,7 +20297,7 @@ do :
 if test "x$ac_cv_func_SetThreadDescription" = xyes
 then :
   printf "%s\n" "#define HAVE_SETTHREADDESCRIPTION 1" >>confdefs.h
- printf "%s\n" "#define HAS_SET_THREAD_DESCRIPTION 1" >>confdefs.h
+ printf "%s\n" "#define HAS_SETTHREADDESCRIPTION 1" >>confdefs.h
 
 fi
 
@@ -20306,7 +20306,7 @@ done
 ac_fn_check_decl "$LINENO" "SetThreadDescription" "ac_cv_have_decl_SetThreadDescription" "$ac_includes_default" "$ac_c_undeclared_builtin_options" "CFLAGS"
 if test "x$ac_cv_have_decl_SetThreadDescription" = xyes
 then :
-  printf "%s\n" "#define HAS_SET_THREAD_DESCRIPTION_DECL 1" >>confdefs.h
+  printf "%s\n" "#define HAS_DECL_SETTHREADDESCRIPTION 1" >>confdefs.h
 
 else $as_nop
   #include <processthreadsapi.h>

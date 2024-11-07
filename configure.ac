@@ -2422,7 +2422,7 @@ AC_LINK_IFELSE(
 ## prctl
 AC_CHECK_DECL(
   [prctl],
-  [AC_DEFINE([HAS_PRCTL] , [1])],
+  [AC_DEFINE([HAS_DECL_PRCTL] , [1])],
   [],
   [#include <sys/prctl.h>])
 
@@ -2439,11 +2439,11 @@ AC_CHECK_FUNCS(
 ## SetThreadDescription
 AC_CHECK_FUNCS(
   [SetThreadDescription],
-  [AC_DEFINE([HAS_SET_THREAD_DESCRIPTION], [1])])
+  [AC_DEFINE([HAS_SETTHREADDESCRIPTION], [1])])
 
 AC_CHECK_DECL(
   [SetThreadDescription],
-  [AC_DEFINE([HAS_SET_THREAD_DESCRIPTION_DECL], [1])],
+  [AC_DEFINE([HAS_DECL_SETTHREADDESCRIPTION], [1])],
   [#include <processthreadsapi.h>])
 
 ## Activate the systhread library
