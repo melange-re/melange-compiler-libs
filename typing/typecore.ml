@@ -923,6 +923,8 @@ let solve_Ppat_construct ~refine tps penv loc constr no_existentials
   let unify_res ty_res expected_ty =
     let refine =
       refine || constr.cstr_generalized && no_existentials = None in
+    (* Here [ty_res] contains only fresh (non-leaking) type variables,
+       so the requirement of [unify_gadt] is fulfilled. *)
     unify_pat_types_return_equated_pairs ~refine loc penv ty_res expected_ty
   in
 

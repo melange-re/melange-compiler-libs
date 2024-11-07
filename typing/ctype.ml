@@ -3289,8 +3289,8 @@ let unify_gadt (penv : Pattern_env.t) ty1 ty2 =
     unify uenv ty1 ty2;
     equated_types
   in
-  let closed = closed_type_expr ty1 && closed_type_expr ty2 in
-  if closed then with_univar_pairs [] do_unify_gadt else
+  let no_leak = penv.allow_recursive_equations || closed_type_expr ty2 in
+  if no_leak then with_univar_pairs [] do_unify_gadt else
   let snap = Btype.snapshot () in
   try
     (* If there are free variables, first try normal unification *)

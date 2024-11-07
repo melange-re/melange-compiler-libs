@@ -275,7 +275,11 @@ val unify_gadt:
         Pattern_env.t -> type_expr -> type_expr -> Btype.TypePairs.t
         (* Unify the two types given and update the environment with the
            local constraints. Raise [Unify] if not possible.
-           Returns the pairs of types that have been equated.  *)
+           Returns the pairs of types that have been equated.
+           Type variables in the first [type_expr] are assumed
+           to be non-leaking (safely reifiable), moreover if
+           [allow_recursive_equations = true] the same assumption
+           is made for the second [type_expr]. *)
 val unify_var: Env.t -> type_expr -> type_expr -> unit
         (* Same as [unify], but allow free univars when first type
            is a variable. *)
