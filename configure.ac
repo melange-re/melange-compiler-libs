@@ -2441,6 +2441,11 @@ AC_CHECK_FUNCS(
   [SetThreadDescription],
   [AC_DEFINE([HAS_SET_THREAD_DESCRIPTION], [1])])
 
+AC_CHECK_DECL(
+  [SetThreadDescription],
+  [AC_DEFINE([HAS_SET_THREAD_DESCRIPTION_DECL], [1])],
+  [#include <processthreadsapi.h>])
+
 ## Activate the systhread library
 
 AS_CASE([$enable_systhreads,$enable_unix_lib],

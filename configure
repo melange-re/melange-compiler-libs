@@ -20303,6 +20303,15 @@ fi
 
 done
 
+ac_fn_check_decl "$LINENO" "SetThreadDescription" "ac_cv_have_decl_SetThreadDescription" "$ac_includes_default" "$ac_c_undeclared_builtin_options" "CFLAGS"
+if test "x$ac_cv_have_decl_SetThreadDescription" = xyes
+then :
+  printf "%s\n" "#define HAS_SET_THREAD_DESCRIPTION_DECL 1" >>confdefs.h
+
+else $as_nop
+  #include <processthreadsapi.h>
+fi
+
 ## Activate the systhread library
 
 case $enable_systhreads,$enable_unix_lib in #(

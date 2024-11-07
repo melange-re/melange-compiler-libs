@@ -22,6 +22,11 @@
 #  include <windows.h>
 #  include <processthreadsapi.h>
 #  include <caml/osdeps.h>
+
+#  if defined(HAS_SET_THREAD_DESCRIPTION) && !defined(HAS_SET_THREAD_DESCRIPTION_DECL)
+HRESULT SetThreadDescription(HANDLE hThread, PCWSTR lpThreadDescription);
+#  endif
+
 #elif defined(HAS_PRCTL)
 #  include <sys/prctl.h>
 #elif defined(HAS_PTHREAD_SETNAME_NP) || defined(HAS_PTHREAD_SET_NAME_NP)
