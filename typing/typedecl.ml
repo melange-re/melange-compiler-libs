@@ -1068,13 +1068,16 @@ let update_type temp_env env id loc =
   let decl = Env.find_type path temp_env in
   match decl.type_manifest with None -> ()
   | Some ty ->
-      (* Since this function may be called after generalizing declarations,
-         ty is at the generic level.  However, we need to keep possible
-         sharings in recursive type definitions*)
-      let params = List.map (fun _ -> Ctype.newvar ()) decl.type_params in
-      try Ctype.unify env (Ctype.newconstr path params) ty
-      with Ctype.Unify err ->
-        raise (Error(loc, Type_clash (env, err)))
+      (* Since this function is called after generalizing declarations,
+         ty is at the generic level.  Since we need to keep possible
+         sharings in recursive type definitions, unify without instantiating,
+         but generalize again after unification. *)
+      Ctype.with_local_level_generalize begin fun () ->
+        let params = List.map (fun _ -> Ctype.newvar ()) decl.type_params in
+        try Ctype.unify env (Ctype.newconstr path params) ty
+        with Ctype.Unify err ->
+          raise (Error(loc, Type_clash (env, err)))
+      end
 
 let add_types_to_env decls shapes env =
   List.fold_right2
@@ -1111,8 +1114,6 @@ let transl_type_decl env rec_flag sdecl_list =
       Uid.mk ~current_unit:(Env.get_current_unit ())
     ) sdecl_list
   in
-  (* Additional scope since update_type may lower some generic levels *)
-  Ctype.with_local_level_generalize begin fun () ->
   (* Translate declarations, using a temporary environment where abbreviations
      expand to a generic type variable. After that, we check the coherence of
      the translated declarations in the resulting new environment. *)
@@ -1241,7 +1242,6 @@ let transl_type_decl env rec_flag sdecl_list =
   in
   (* Done *)
   (final_decls, final_env, shapes)
-  end
 
 (* Translating type extensions *)
 
