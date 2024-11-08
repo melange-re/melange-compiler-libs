@@ -20309,6 +20309,7 @@ then :
   printf "%s\n" "#define HAS_DECL_SETTHREADDESCRIPTION 1" >>confdefs.h
 
 else $as_nop
+
   #include <processthreadsapi.h>
 fi
 
