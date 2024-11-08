@@ -2443,7 +2443,8 @@ AC_CHECK_FUNCS(
 
 AC_CHECK_DECL(
   [SetThreadDescription],
-  [AC_DEFINE([HAS_DECL_SETTHREADDESCRIPTION], [1])], []
+  [AC_DEFINE([HAS_DECL_SETTHREADDESCRIPTION], [1])],
+  [],
   [#include <processthreadsapi.h>])
 
 ## Activate the systhread library
