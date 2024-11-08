@@ -23,8 +23,7 @@
 #  include <processthreadsapi.h>
 #  include <caml/osdeps.h>
 
-#  if \
-      defined(HAS_SETTHREADDESCRIPTION) && \
+#  if defined(HAS_SETTHREADDESCRIPTION) && \
       !defined(HAS_DECL_SETTHREADDESCRIPTION)
 HRESULT SetThreadDescription(HANDLE hThread, PCWSTR lpThreadDescription);
 #  endif
