@@ -2445,7 +2445,9 @@ AC_CHECK_DECL(
   [SetThreadDescription],
   [AC_DEFINE([HAS_DECL_SETTHREADDESCRIPTION], [1])],
   [],
-  [#include <processthreadsapi.h>])
+  [[#define WIN32_LEAN_AND_MEAN
+    #include <windows.h>
+    #include <processthreadsapi.h>]])
 
 ## Activate the systhread library
 
