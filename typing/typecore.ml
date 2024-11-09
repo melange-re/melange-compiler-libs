@@ -2533,7 +2533,8 @@ let partial_pred ~lev ~splitting_mode ?(explode=0) env expected_ty p =
       } in
   try
     let typed_p =
-      check_counter_example_pat ~counter_example_args penv p expected_ty
+      wrap_trace_gadt_instances ~force:true !!penv
+        (check_counter_example_pat ~counter_example_args penv p) expected_ty
     in
     set_state state penv;
     (* types are invalidated but we don't need them here *)

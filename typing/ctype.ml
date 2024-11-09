@@ -143,15 +143,15 @@ exception Incompatible
 (**** Control tracing of GADT instances *)
 
 let trace_gadt_instances = ref false
-let check_trace_gadt_instances env =
-  not !trace_gadt_instances && Env.has_local_constraints env &&
+let check_trace_gadt_instances ?(force=false) env =
+  not !trace_gadt_instances && (force || Env.has_local_constraints env) &&
   (trace_gadt_instances := true; cleanup_abbrev (); true)
 
 let reset_trace_gadt_instances b =
   if b then trace_gadt_instances := false
 
-let wrap_trace_gadt_instances env f x =
-  let b = check_trace_gadt_instances env in
+let wrap_trace_gadt_instances ?force env f x =
+  let b = check_trace_gadt_instances ?force env in
   let y = f x in
   reset_trace_gadt_instances b;
   y
@@ -1578,6 +1578,7 @@ let check_abbrev_env env =
   if not (Env.same_type_declarations env !previous_env) then begin
     (* prerr_endline "cleanup expansion cache"; *)
     cleanup_abbrev ();
+    simple_abbrevs := Mnil;
     previous_env := env
   end
 
