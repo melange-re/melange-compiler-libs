@@ -152,9 +152,8 @@ let reset_trace_gadt_instances b =
 
 let wrap_trace_gadt_instances ?force env f x =
   let b = check_trace_gadt_instances ?force env in
-  let y = f x in
-  reset_trace_gadt_instances b;
-  y
+  Misc.try_finally (fun () -> f x)
+    ~always:(fun () -> reset_trace_gadt_instances b)
 
 (**** Abbreviations without parameters ****)
 (* Shall reset after generalizing *)
