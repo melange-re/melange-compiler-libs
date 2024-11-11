@@ -1397,7 +1397,8 @@ AS_IF([test x"$supports_shared_libraries" = 'xtrue'],
     [aarch64-*-openbsd*], [natdynlink=true],
     [aarch64-*-netbsd*], [natdynlink=true],
     [riscv*-*-linux*], [natdynlink=true],
-    [[i[3456]86-*-gnu*]], [natdynlink=true])])
+    [[i[3456]86-*-gnu*]], [natdynlink=true],
+    [x86_64-*-gnu*], [natdynlink=true])])
 
 AS_CASE([$enable_native_toplevel,$natdynlink],
   [yes,false],

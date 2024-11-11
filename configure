@@ -16021,6 +16021,8 @@ then :
     natdynlink=true ;; #(
   i[3456]86-*-gnu*) :
     natdynlink=true ;; #(
+  x86_64-*-gnu*) :
+    natdynlink=true ;; #(
   *) :
      ;;
 esac
