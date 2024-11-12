@@ -227,6 +227,9 @@ val with_flambda_invariants : bool
 val with_cmm_invariants : bool
 (** Whether the invariants checks for Cmm are enabled *)
 
+val with_codegen_invariants : bool
+(** Whether the invariant checks for native code generation are enabled. *)
+
 val reserved_header_bits : int
 (** How many bits of a block's header are reserved *)
 

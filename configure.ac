@@ -196,6 +196,7 @@ AC_SUBST([natdynlinkopts])
 AC_SUBST([natdynlink_archive])
 AC_SUBST([cmxs])
 AC_SUBST([debug_runtime])
+AC_SUBST([codegen_invariants])
 AC_SUBST([instrumented_runtime])
 AC_SUBST([instrumented_runtime_libs])
 AC_SUBST([otherlibraries])
@@ -377,6 +378,10 @@ AC_ARG_VAR([COMPILER_NATIVE_CPPFLAGS],
 AC_ARG_ENABLE([debug-runtime],
   [AS_HELP_STRING([--disable-debug-runtime],
     [do not build runtime with debugging support])])
+
+AC_ARG_ENABLE([codegen-invariants],
+  [AS_HELP_STRING([--enable-codegen-invariants],
+    [enable invariants checks in native codegen])])
 
 AC_ARG_ENABLE([ocamldebug],
   [AS_HELP_STRING([--enable-ocamldebug],
@@ -2438,6 +2443,11 @@ AS_CASE([$enable_ocamldebug],
 AS_CASE([$enable_debug_runtime],
   [no], [debug_runtime=false],
   [debug_runtime=true])
+
+## Should the codegen with debugging support be built
+AS_CASE([$enable_codegen_invariants],
+  [no], [codegen_invariants=false],
+  [codegen_invariants=true])
 
 ## Determine how to link with the POSIX threads library
 

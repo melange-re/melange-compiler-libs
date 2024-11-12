@@ -1104,15 +1104,19 @@ let emit_instr_debug env i =
   `	.endif\n`
 
 let rec emit_all env lbl_start acc i =
+  let debug = Config.with_codegen_invariants in
   match i.desc with
   | Lend ->
-     (* acc measures in units of 32-bit instructions *)
-     let sz = acc * 4 in
-     `	.ifne (. - {emit_label lbl_start}) - {emit_int sz}\n`;
-     `	.error \"Emit.instr_size: instruction length mismatch\"\n`;
-     `	.endif\n`;
+     if debug then begin
+       (* acc measures in units of 32-bit instructions *)
+       let sz = acc * 4 in
+       `	.ifne (. - {emit_label lbl_start}) - {emit_int sz}\n`;
+       `	.error \"Emit.instr_size: instruction length mismatch\"\n`;
+       `	.endif\n`;
+       end
+     else
+       ()
   | _ ->
-     let debug = false in
      if debug then emit_instr_debug env i else emit_instr env i;
      emit_all env lbl_start (acc + Size.instr_size env.f i.desc) i.next
 

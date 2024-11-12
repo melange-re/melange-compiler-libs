@@ -49,6 +49,7 @@ let mkmaindll = native_pack_linker
 let flambda = false
 let with_flambda_invariants = false
 let with_cmm_invariants = false
+let with_codegen_invariants = false
 let windows_unicode = false
 let flat_float_array = true
 let align_double = true

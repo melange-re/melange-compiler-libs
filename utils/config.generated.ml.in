@@ -59,6 +59,7 @@ let mkmaindll = {@QS@|@mkmaindll_exp@|@QS@}
 let flambda = @flambda@
 let with_flambda_invariants = @flambda_invariants@
 let with_cmm_invariants = @cmm_invariants@
+let with_codegen_invariants = @codegen_invariants@
 let windows_unicode = @windows_unicode@ != 0
 
 let flat_float_array = @flat_float_array@
