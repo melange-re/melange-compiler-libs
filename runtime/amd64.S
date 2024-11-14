@@ -169,7 +169,7 @@
 /******************************************************************************/
 
 #define CAML_CONFIG_H_NO_TYPEDEFS
-#include "../runtime/caml/config.h"
+#include "../runtime/caml/config.h"     /* for caml_assert_stack_invariants */
 
         .set    domain_curr_field, 0
 #define DOMAIN_STATE(c_type, name) \
