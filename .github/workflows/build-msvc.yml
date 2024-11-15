@@ -35,14 +35,6 @@ jobs:
             x86_64: false
 
     steps:
-      - name: Save pristine PATH
-        run: |
-          echo "PRISTINE_PATH=${env:Path}" >> "${env:GITHUB_ENV}"
-
-      - name: Set up MSVC
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: ${{ matrix.x86_64 && 'x64' || 'x86' }}
 
       - name: Fetch OCaml
         uses: actions/checkout@v4
@@ -51,8 +43,6 @@ jobs:
 
       - name: Restore Cygwin cache
         uses: actions/cache/restore@v4
-        env:
-          PATH: ${{ env.PRISTINE_PATH }}
         with:
           path: |
             C:\cygwin-packages
@@ -66,12 +56,15 @@ jobs:
 
       - name: Save Cygwin cache
         uses: actions/cache/save@v4
-        env:
-          PATH: ${{ env.PRISTINE_PATH }}
         with:
           path: |
             C:\cygwin-packages
           key: cygwin-packages
+
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.x86_64 && 'x64' || 'x86' }}
 
       - name: Compute a key to cache configure results
         shell: bash
