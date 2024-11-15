@@ -51,7 +51,7 @@ jobs:
       - name: Install Cygwin
         uses: cygwin/cygwin-install-action@v3
         with:
-          packages: make,bash,mingw64-x86_64-gcc-core
+          packages: make,mingw64-x86_64-gcc-core
           install-dir: 'D:\cygwin'
 
       - name: Save Cygwin cache
