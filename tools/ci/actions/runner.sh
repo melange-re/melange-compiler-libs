@@ -29,7 +29,12 @@ call-configure () {
   local failed
   ./configure "$@" || failed=$?
   if ((failed)); then
+    # Output seems to be a little unpredictable in GitHub Actions: ensure that
+    # the fold is definitely on a new line
+    echo
+    echo "::group::config.log content ($(wc -l config.log) lines)"
     cat config.log
+    echo '::endgroup::'
     exit $failed
   fi
 }

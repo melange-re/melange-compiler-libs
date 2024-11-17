@@ -98,7 +98,13 @@ jobs:
                 --prefix="$PROGRAMFILES/Бактріан🐫" \
                 CC=${{ matrix.cc }} \
               || failed=$?
-            if ((failed)) ; then cat config.log ; exit $failed ; fi
+            if ((failed)) ; then
+              echo
+              echo "::group::config.log content ($(wc -l config.log) lines)"
+              cat config.log
+              echo '::endgroup::'
+              exit $failed
+            fi
           fi
 
       - name: Save Autoconf cache
