@@ -81,12 +81,35 @@ let last_is c str =
 let first_is_in cs str =
   str <> "" && List.mem str.[0] cs
 
-(* Classify intersection with lowercase identifiers and operators due to raw
-   identifiers *)
+(** The OCaml grammar generates [longident]s from five different rules:
+  - module longident (a sequence of uppercase identifiers [A.B.C])
+  - constructor longident, either
+      - a module [longident]
+      - [[]], [()], [true], [false]
+      - an optional module [longident] followed by [(::)] ([A.B.(::)])
+  - class longident, an optional module [longident] followed by a lowercase
+    identifier.
+  - value longident, an optional module [longident] followed by either:
+      - a lowercase identifier ([A.x])
+      - an operator (and in particular the [mod] keyword), ([A.(+), B.(mod)])
+  - type [longident]: a tree of applications and projections of
+    uppercase identifiers followed by a projection ending with
+    a lowercase identifier (for ordinary types), or any identifier
+    (for module types) (e.g [A.B(C.D(E.F).K)(G).X.Y.t])
+All these [longident]s share a common core and optionally add some extensions.
+Unfortunately, these extensions intersect while having different escaping
+and parentheses rules depending on the kind of [longident]:
+  - [true] or [false] can be either constructor [longident]s,
+    or value, type or class [longident]s using the raw identifier syntax.
+  - [mod] can be either an operator value [longident], or a class or type
+    [longident] using the raw identifier syntax.
+Thus in order to print correctly [longident]s, we need to keep track of their
+kind using the context in which they appear.
+*)
 type longindent_kind =
-  | Constr (* [true] and [false] *)
-  | Type  (* [mod] *)
-  | Other
+  | Constr (** variant constructors *)
+  | Type (** core types, module types, class types, and classes *)
+  | Other (** values and modules *)
 
 (* which identifiers are in fact operators needing parentheses *)
 let needs_parens ~kind txt =
