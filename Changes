@@ -813,6 +813,10 @@ ___________
   (Jacques Garrigue, report by @v-gb,
    review by Richard Eisenberg and Florian Angeletti)
 
+- #13603, #13604: fix source printing in the presence of the escaped raw
+  identifier `\#mod`.
+  (Florian Angeletti, report by Chris Casinghino, review by Gabriel Scherer)
+
 OCaml 5.2.0 (13 May 2024)
 -------------------------
 
