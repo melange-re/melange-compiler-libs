@@ -63,7 +63,7 @@ Build () {
   if [ "$(uname)" = 'Darwin' ]; then
     script -q build.log $MAKE_WARN || failed=$?
     if ((failed)); then
-      script -q build.log $MAKE_WARN make -j1 V=1
+      script -q build.log $MAKE_WARN -j1 V=1
       exit $failed
     fi
   else
