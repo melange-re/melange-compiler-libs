@@ -188,7 +188,7 @@ has excellent documentation.
   Makefile.common::       common Makefile definitions
   README.adoc::           general information on the compiler distribution
   README.win32.adoc::     general information on the Windows ports of OCaml
-  VERSION::               version string. Run `make configure` after changing.
+  VERSION::               version string. Run `tools/autogen` after changing.
   asmcomp/::              native-code compiler and linker
   boot/::                 bootstrap compiler
   build-aux/:             autotools support scripts
