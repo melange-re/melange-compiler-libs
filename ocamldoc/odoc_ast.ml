@@ -724,13 +724,10 @@ module Analyser =
                 |  _ ->
                     Odoc_messages.object_end
           in
-          let param_exps = List.fold_left
-              (fun acc -> fun (_, arg) ->
-                match arg with
-                | Omitted () -> acc
-                | Arg e -> acc @ [e])
-              []
-              arg_list
+          let param_exps = List.filter_map (function
+              | _, Omitted () -> None
+              | _, Arg e -> Some e)
+            arg_list
           in
           let param_types = List.map (fun e -> e.Typedtree.exp_type) param_exps in
           let params_code =
