@@ -40,6 +40,7 @@ let empty = ""
 let of_bytes = B.to_string
 let to_bytes = B.of_string
 let sub s ofs len =
+  if ofs = 0 && length s = len then s else
   B.sub (bos s) ofs len |> bts
 let blit =
   B.blit_string
@@ -62,6 +63,7 @@ let rec unsafe_blits dst pos sep seplen = function
 
 let concat sep = function
     [] -> ""
+  | [s] -> s
   | l -> let seplen = length sep in bts @@
           unsafe_blits
             (B.create (sum_lengths 0 seplen l))
