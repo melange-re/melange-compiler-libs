@@ -20253,13 +20253,18 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
     conftest$ac_exeext conftest.$ac_ext
 
 ## prctl
-ac_fn_check_decl "$LINENO" "prctl" "ac_cv_have_decl_prctl" "#include <sys/prctl.h>
-" "$ac_c_undeclared_builtin_options" "CFLAGS"
-if test "x$ac_cv_have_decl_prctl" = xyes
+
+  for ac_func in prctl
+do :
+  ac_fn_c_check_func "$LINENO" "prctl" "ac_cv_func_prctl"
+if test "x$ac_cv_func_prctl" = xyes
 then :
-  printf "%s\n" "#define HAS_DECL_PRCTL  1" >>confdefs.h
+  printf "%s\n" "#define HAVE_PRCTL 1" >>confdefs.h
+ printf "%s\n" "#define HAS_PRCTL 1" >>confdefs.h
 
 fi
+
+done
 
 ## pthread_setname_np
 
@@ -20299,19 +20304,18 @@ then :
   printf "%s\n" "#define HAVE_SETTHREADDESCRIPTION 1" >>confdefs.h
  printf "%s\n" "#define HAS_SETTHREADDESCRIPTION 1" >>confdefs.h
 
-fi
-
-done
-
-ac_fn_check_decl "$LINENO" "SetThreadDescription" "ac_cv_have_decl_SetThreadDescription" "#define WIN32_LEAN_AND_MEAN
-    #include <windows.h>
-    #include <processthreadsapi.h>
+  ac_fn_check_decl "$LINENO" "SetThreadDescription" "ac_cv_have_decl_SetThreadDescription" "#define WIN32_LEAN_AND_MEAN
+      #include <windows.h>
+      #include <processthreadsapi.h>
 " "$ac_c_undeclared_builtin_options" "CFLAGS"
 if test "x$ac_cv_have_decl_SetThreadDescription" = xyes
 then :
   printf "%s\n" "#define HAS_DECL_SETTHREADDESCRIPTION 1" >>confdefs.h
 
 fi
+fi
+
+done
 
 ## Activate the systhread library
 
