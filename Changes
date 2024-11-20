@@ -139,6 +139,9 @@ Working version
 - #13606: Fix Numbers.Int_base.compare
   (Mark Shinwell, review by Vincent Laviron)
 
+- #13612: Refactor `type_application`
+  (Ulysse Gérard, Leo White, review by Antonin Décimo, ...)
+
 ### Build system:
 
 ### Bug fixes:
