@@ -147,6 +147,10 @@ Caml_inline char caml_gc_phase_char(int may_access_gc_phase) {
   }
 }
 
+/*******************************************************************************
+ * Prefetching
+ ******************************************************************************/
+
 #define PREFETCH_BUFFER_SIZE  (1 << 8)
 #define PREFETCH_BUFFER_MIN   64 /* keep pb at least this full */
 #define PREFETCH_BUFFER_MASK  (PREFETCH_BUFFER_SIZE - 1)
@@ -225,6 +229,10 @@ Caml_inline void prefetch_block(value v)
   caml_prefetch((const void *)Hp_val(v));
   caml_prefetch((const void *)&Field(v, 3));
 }
+
+/*******************************************************************************
+ * Ephemerons
+ ******************************************************************************/
 
 extern value caml_ephe_none; /* See weak.c */
 
@@ -606,6 +614,10 @@ static void adopt_orphaned_work (void)
   }
 }
 
+/*******************************************************************************
+ * Pacing
+ ******************************************************************************/
+
 /* These two counters keep track of how much work the GC is supposed to
    do in order to keep up with allocation. Both are in GC work units.
    `alloc_counter` increases when we allocate: the number of words allocated
@@ -861,6 +873,10 @@ static void commit_major_slice_work(intnat words_done) {
     dom_st->requested_global_major_slice = 0;
   }
 }
+
+/*******************************************************************************
+ * Marking
+ ******************************************************************************/
 
 /* NB the MARK_STACK_INIT_SIZE must be larger than the number of objects
    that can be in a pool, see POOL_WSIZE */
@@ -1404,6 +1420,10 @@ void caml_darken(void* state, value v, volatile value* ignored) {
   }
 }
 
+/*******************************************************************************
+ * Major GC cycle
+ ******************************************************************************/
+
 static void cycle_major_heap_from_stw_single(
   caml_domain_state* domain,
   uintnat num_domains_in_stw)
@@ -1630,6 +1650,10 @@ static void stw_cycle_all_domains(
   CAML_EV_END(EV_MAJOR_GC_CYCLE_DOMAINS);
 }
 
+/*******************************************************************************
+ * Major GC phases
+ ******************************************************************************/
+
 static int is_complete_phase_sweep_and_mark_main (void)
 {
   return
@@ -1701,6 +1725,10 @@ static void stw_try_complete_gc_phase(
 
   CAML_EV_END(EV_MAJOR_GC_PHASE_CHANGE);
 }
+
+/*******************************************************************************
+ * Major GC slices
+ ******************************************************************************/
 
 intnat caml_opportunistic_major_work_available (caml_domain_state* domain_state)
 {
@@ -1984,6 +2012,10 @@ void caml_major_collection_slice(intnat howmuch)
    */
   Caml_state->major_slice_epoch = major_slice_epoch;
 }
+
+/*******************************************************************************
+ * Major GC API
+ ******************************************************************************/
 
 struct finish_major_cycle_params {
   uintnat saved_major_cycles;
