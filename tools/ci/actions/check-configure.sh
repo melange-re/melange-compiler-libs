@@ -69,7 +69,7 @@ CheckTree () {
     git checkout -qB return
     git checkout -q "$COMMIT"
     mv configure configure.ref
-    make -s configure
+    tools/autogen
     if diff -q configure configure.ref >/dev/null ; then
       echo -e "$COMMIT: \e[32mconfigure.ac generates configure\e[0m"
     else
@@ -106,6 +106,6 @@ if ((!RESULT)); then
   else
     echo 'Please fix the branch by committing changes after running:'
   fi
-  echo 'make -B configure'
+  echo 'tools/autogen'
   exit 1
 fi
