@@ -14921,30 +14921,6 @@ fi
 
 # Checks for header files
 
-# Don't check for unistd.h on Windows
-case $host in #(
-  *-*-mingw32*|*-pc-windows) :
-     ;; #(
-  *) :
-           for ac_header in unistd.h
-do :
-  ac_fn_c_check_header_compile "$LINENO" "unistd.h" "ac_cv_header_unistd_h" "$ac_includes_default"
-if test "x$ac_cv_header_unistd_h" = xyes
-then :
-  printf "%s\n" "#define HAVE_UNISTD_H 1" >>confdefs.h
- printf "%s\n" "#define HAS_UNISTD 1" >>confdefs.h
-
-fi
-
-done ;;
-esac
-
-ac_fn_c_check_header_compile "$LINENO" "math.h" "ac_cv_header_math_h" "$ac_includes_default"
-if test "x$ac_cv_header_math_h" = xyes
-then :
-
-fi
-
 ac_fn_c_check_header_compile "$LINENO" "pthread_np.h" "ac_cv_header_pthread_np_h" "$ac_includes_default"
 if test "x$ac_cv_header_pthread_np_h" = xyes
 then :
@@ -16089,7 +16065,7 @@ esac
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether the C compiler supports __attribute__((optimize(\"tree-vectorize\")))" >&5
 printf %s "checking whether the C compiler supports __attribute__((optimize(\"tree-vectorize\")))... " >&6; }
   saved_CFLAGS="$CFLAGS"
-  CFLAGS="-Werror $CFLAGS"
+  CFLAGS="$warn_error_flag $CFLAGS"
   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 __attribute__((optimize("tree-vectorize"))) void f(void) {}
