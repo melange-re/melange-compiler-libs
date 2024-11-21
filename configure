@@ -15945,8 +15945,6 @@ then :
     natdynlink=true ;; #(
   i[3456]86-*-linux*) :
     natdynlink=true ;; #(
-  i[3456]86-*-gnu*) :
-    natdynlink=true ;; #(
   x86_64-*-linux*) :
     natdynlink=true ;; #(
   arm64-*-darwin*) :
@@ -15979,8 +15977,6 @@ then :
     natdynlink=true ;; #(
   x86_64-*-netbsd*) :
     natdynlink=true ;; #(
-  i386-*-gnu0.3) :
-    natdynlink=true ;; #(
   i[3456]86-*-haiku*) :
     natdynlink=true ;; #(
   arm*-*-linux*) :
@@ -15998,6 +15994,10 @@ then :
   aarch64-*-netbsd*) :
     natdynlink=true ;; #(
   riscv*-*-linux*) :
+    natdynlink=true ;; #(
+  i[3456]86-*-gnu*) :
+    natdynlink=true ;; #(
+  x86_64-*-gnu*) :
     natdynlink=true ;; #(
   *) :
      ;;

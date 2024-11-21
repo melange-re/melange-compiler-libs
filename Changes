@@ -136,6 +136,9 @@ Working version
   (Samuel Thibault, review by Antonin Décimo, Sébastien Hinderer and Miod
    Vallat)
 
+- #13601: Enable natdynlink on x86_64 GNU/Hurd
+  (Samuel Thibault)
+
 ### Internal/compiler-libs changes:
 
 - #13624: Added location to exception definitions and type extensions
