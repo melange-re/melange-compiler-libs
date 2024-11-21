@@ -137,7 +137,7 @@ Working version
    Vallat)
 
 - #13601: Enable natdynlink on x86_64 GNU/Hurd
-  (Samuel Thibault)
+  (Samuel Thibault, review by Sébastien Hinderer)
 
 ### Internal/compiler-libs changes:
 
