@@ -58,6 +58,10 @@ Working version
   (Stephen Dolan, report by Timothy Bourke, review by Mark Shinwell and Damien
   Doligez)
 
+- #13613: Functions from caml/skiplist.h and caml/lf_skiplist.h no longer raise
+  Out_of_memory exceptions that the runtime could not handle.
+  (Guillaume Munch-Maccagnoni, review by Stephen Dolan)
+
 ### Code generation and optimizations:
 
 - #13565: less tagging in switches compiled to affine transformations
