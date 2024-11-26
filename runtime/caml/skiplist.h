@@ -96,6 +96,6 @@ extern void caml_skiplist_empty(struct skiplist * sk);
     }                                                           \
   }
 
-#endif
+#endif /* CAML_INTERNALS */
 
-#endif
+#endif /* CAML_SKIPLIST_H */

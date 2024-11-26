@@ -13,6 +13,7 @@
 /*   special exception on linking described in the file LICENSE.          */
 /*                                                                        */
 /**************************************************************************/
+
 #ifndef CAML_ATOMIC_H
 #define CAML_ATOMIC_H
 

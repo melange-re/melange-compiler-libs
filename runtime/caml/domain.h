@@ -17,10 +17,6 @@
 #ifndef CAML_DOMAIN_H
 #define CAML_DOMAIN_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifdef CAML_INTERNALS
 
 #include "camlatomic.h"
@@ -235,9 +231,5 @@ void caml_global_barrier_release_as_final(barrier_status status);
           CAML_GENSYM(continue) = 0))
 
 #endif /* CAML_INTERNALS */
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* CAML_DOMAIN_H */

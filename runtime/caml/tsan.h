@@ -15,6 +15,10 @@
 #ifndef CAML_TSAN_H
 #define CAML_TSAN_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Macro used to deactivate thread sanitizer on some functions. */
 #define CAMLno_tsan
 /* __has_feature is Clang-specific, but GCC defines __SANITIZE_ADDRESS__ and
@@ -67,6 +71,9 @@ extern void AnnotateHappensAfter(const char *f, int l, void *addr);
 #  define CAMLno_tsan_for_perf CAMLno_tsan
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 
 #ifdef CAML_INTERNALS
 
@@ -84,7 +91,6 @@ CAMLextern void caml_tsan_entry_on_resume(uintnat pc, char* sp,
 extern void __tsan_func_exit(void*);
 extern void __tsan_func_entry(void*);
 void __tsan_write8(void *location);
-
 
 #endif /* CAML_INTERNALS */
 

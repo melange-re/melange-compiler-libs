@@ -22,6 +22,10 @@
 
 #include "misc.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define NUM_EXTRA_PARAMS 64
 typedef value extra_params_area[NUM_EXTRA_PARAMS];
 
@@ -66,5 +70,9 @@ CAMLnoret CAMLextern void caml_bad_caml_state(void);
    caml_bad_caml_state())
 
 #define Caml_state_field(field) (Caml_state->field)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* CAML_STATE_H */
