@@ -17,10 +17,6 @@
 #ifndef CAML_DOMAIN_H
 #define CAML_DOMAIN_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifdef CAML_INTERNALS
 
 #include <stdbool.h>
@@ -249,9 +245,5 @@ void caml_stop_all_domains(void);
 bool caml_free_domains(void);
 
 #endif /* CAML_INTERNALS */
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* CAML_DOMAIN_H */

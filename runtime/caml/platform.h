@@ -14,9 +14,10 @@
 /*                                                                        */
 /**************************************************************************/
 
+/* Platform-specific concurrency and memory primitives */
+
 #ifndef CAML_PLAT_THREADS_H
 #define CAML_PLAT_THREADS_H
-/* Platform-specific concurrency and memory primitives */
 
 #ifdef CAML_INTERNALS
 

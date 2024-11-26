@@ -29,7 +29,6 @@
 #define CAML_RUNTIME_EVENTS_H
 
 #include "mlvalues.h"
-#include <stdint.h>
 
 #ifdef CAML_INSTR
 #define CAML_EV_ALLOC(s) caml_ev_alloc(s)
@@ -177,6 +176,10 @@ typedef enum {
   E_CURSOR_POLL_BUSY = -8,
 } runtime_events_error;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Starts runtime_events. Needs to be called before
    [caml_runtime_events_create_cursor]. Needs the runtime lock held to call and
    will trigger a stop-the-world pause. */
@@ -197,6 +200,10 @@ CAMLextern void caml_runtime_events_resume(void);
 /* Returns [1] if runtime events are currently active (started and not paused),
    [0] otherwise. */
 CAMLextern int caml_runtime_events_are_active(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #ifdef CAML_INTERNALS
 
@@ -340,4 +347,4 @@ CAMLextern value caml_runtime_events_user_resolve(char* event_name,
 
 #endif /* CAML_INTERNALS */
 
-#endif /*CAML_RUNTIME_EVENTS_H*/
+#endif /* CAML_RUNTIME_EVENTS_H */

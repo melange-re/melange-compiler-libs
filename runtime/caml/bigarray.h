@@ -117,6 +117,6 @@ CAMLextern intnat caml_ba_hash(value v);
 CAMLextern void caml_ba_serialize(value, uintnat *, uintnat *);
 CAMLextern uintnat caml_ba_deserialize(void * dst);
 
-#endif
+#endif  /* CAML_INTERNALS */
 
 #endif /* CAML_BIGARRAY_H */

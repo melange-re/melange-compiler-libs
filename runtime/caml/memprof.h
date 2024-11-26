@@ -137,6 +137,6 @@ CAMLextern void caml_memprof_enter_thread(memprof_thread_t);
 
 CAMLextern void caml_memprof_delete_thread(memprof_thread_t);
 
-#endif
+#endif /* CAML_INTERNALS */
 
 #endif /* CAML_MEMPROF_H */
