@@ -119,3 +119,23 @@ type x = int M.p cstr
 type ab = A of x | B of x
 val test : ab -> x list = <fun>
 |}]
+
+(** Need to reify even when we do not unify *)
+
+module M : sig type _ t val wrap : 'a -> 'a t val unwrap : 'a t -> 'a end =
+  struct type 'a t = 'a let wrap x = x let unwrap x = x end;;
+type 'a u = U : 'b M.t -> 'b M.t u;;
+[%%expect{|
+module M : sig type _ t val wrap : 'a -> 'a t val unwrap : 'a t -> 'a end
+type 'a u = U : 'b M.t -> 'b M.t u
+|}]
+let f : type a b. a M.t u -> b M.t = fun (U x) -> x;;
+let g x = M.unwrap (f (U (M.wrap x)));;
+[%%expect{|
+Line 1, characters 50-51:
+1 | let f : type a b. a M.t u -> b M.t = fun (U x) -> x;;
+                                                      ^
+Error: The value "x" has type "$0 M.t" but an expression was expected of type
+         "b M.t"
+       Type "$0" is not compatible with type "b"
+|}]
