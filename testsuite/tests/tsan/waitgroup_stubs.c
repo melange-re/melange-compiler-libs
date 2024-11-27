@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdatomic.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <caml/mlvalues.h>
