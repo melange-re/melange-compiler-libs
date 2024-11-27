@@ -2494,8 +2494,10 @@ let check_counter_example_pat ~counter_example_args penv tp expected_ty =
      way -- one of the functions it calls writes an entry into
      [tps_pattern_forces] -- so we can just ignore module patterns. *)
   let type_pat_state = create_type_pat_state Modules_ignored in
-  check_counter_example_pat
-    ~info:counter_example_args ~penv type_pat_state tp expected_ty (fun x -> x)
+  wrap_trace_gadt_instances ~force:true !!penv
+    (check_counter_example_pat ~info:counter_example_args ~penv
+       type_pat_state tp expected_ty)
+    (fun x -> x)
 
 (* this function is passed to Partial.parmatch
    to type check gadt nonexhaustiveness *)

@@ -667,6 +667,10 @@ ___________
   (Jacques Garrigue, report by @v-gb,
    review by Richard Eisenberg and Florian Angeletti)
 
+- #13598: Falsely triggered warning 56 [unreachable-case]
+  This was caused by unproper protection of the retyping function.
+  (Jacques Garrigue, report by Tõivo Leedjärv, review by Florian Angeletti)
+
 - #13603, #13604: fix source printing in the presence of the escaped raw
   identifier `\#mod`.
   (Florian Angeletti, report by Chris Casinghino, review by Gabriel Scherer)
