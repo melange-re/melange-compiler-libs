@@ -406,18 +406,21 @@
         .text
 
 #if defined(FUNCTION_SECTIONS)
-        TEXT_SECTION(caml_hot.code_begin)
-        .globl  G(caml_hot.code_begin)
-G(caml_hot.code_begin):
+        TEXT_SECTION(caml_hot$code_begin)
+        .globl  G(caml_hot$code_begin)
+G(caml_hot$code_begin):
 
-        TEXT_SECTION(caml_hot.code_end)
-        .globl  G(caml_hot.code_end)
-G(caml_hot.code_end):
+        TEXT_SECTION(caml_hot$code_end)
+        .globl  G(caml_hot$code_end)
+G(caml_hot$code_end):
 #endif
 
 /******************************************************************************/
 /* text section */
 /******************************************************************************/
+
+/* Allocation functions and GC interface.
+   Referenced from C code in runtime/startup_nat.c */
 
         TEXT_SECTION(caml_system__code_begin)
         .globl  G(caml_system__code_begin)
@@ -1328,8 +1331,10 @@ ENDFUNCTION(G(caml_assert_stack_invariants))
         .globl  G(caml_system__code_end)
 G(caml_system__code_end):
 
+/* Frametable - GC roots for callback */
+/* Uses the same naming convention as ocamlopt generated modules. */
         .data
-OBJECT(G(caml_system.frametable))
+OBJECT(G(caml_system$frametable))
         .quad   2           /* two descriptors */
         .quad   LBL(108)    /* return address into callback */
         .value  -1          /* negative frame size => use callback link */
@@ -1338,7 +1343,7 @@ OBJECT(G(caml_system.frametable))
         .quad   LBL(frame_runstack) /* return address into fiber_val_handler */
         .value  -1          /* negative frame size => use callback link */
         .value  0           /* no roots here */
-ENDOBJECT(G(caml_system.frametable))
+ENDOBJECT(G(caml_system$frametable))
 
 #if defined(SYS_macosx)
         .literal16
