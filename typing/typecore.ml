@@ -436,6 +436,8 @@ let unify_pat_types_return_equated_pairs ~refine loc penv ty ty' =
       raise(Typetexp.Error(loc, !!penv, Typetexp.Variant_tags (l1, l2)))
 
 let unify_pat_types_refine ~refine loc penv ty ty' =
+  (* [refine=true] only in calls originating from [check_counter_example_pat],
+     which in turn may contain only non-leaking type variables *)
   ignore (unify_pat_types_return_equated_pairs ~refine loc penv ty ty')
 
 (** [sdesc_for_hint] is used by error messages to report literals in their
@@ -903,6 +905,8 @@ let solve_Ppat_construct ~refine tps penv loc constr no_existentials
   let unify_res ty_res expected_ty =
     let refine =
       refine || constr.cstr_generalized && no_existentials = None in
+    (* Here [ty_res] contains only fresh (non-leaking) type variables,
+       so the requirement of [unify_gadt] is fulfilled. *)
     unify_pat_types_return_equated_pairs ~refine loc penv ty_res expected_ty
   in
 
