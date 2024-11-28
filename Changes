@@ -647,6 +647,10 @@ ___________
   path under Win32.
   (Nicolás Ojeda Bär, review by David Allsopp and Damien Doligez)
 
+- #13501: Regression on mutually recursive types caused by #12180.
+  Resuscitate Typedecl.update_type.
+  (Jacques Garrigue and Takafumi Saikawa, review by ???)
+
 - #13502: Fix misindexing related to `Gc.finalise_last` that could prevent
   finalisers from being run.
   (Nick Roberts, review by Mark Shinwell)
