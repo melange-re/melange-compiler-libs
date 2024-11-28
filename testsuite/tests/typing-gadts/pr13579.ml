@@ -44,19 +44,13 @@ type _ t = W : int M.p t
 
 let f (W: _ M.p t) = ()
 [%%expect{|
-Line 1, characters 7-8:
-1 | let f (W: _ M.p t) = ()
-           ^
-Error: This pattern matches values of type "int M.p t"
-       but a pattern was expected which matches values of type "$0 M.p t"
-       The type constructor "$0" would escape its scope
+val f : int M.p t -> unit = <fun>
 |}]
 
 let f (W: _ t) = ()
 [%%expect{|
 val f : int M.p t -> unit = <fun>
 |}]
-
 
 type _ t = W: int M.p t | W2: float M.p t
 [%%expect{|
@@ -65,12 +59,13 @@ type _ t = W : int M.p t | W2 : float M.p t
 
 let f (W: _ M.p t) = ()
 [%%expect{|
-Line 1, characters 7-8:
+Line 1, characters 6-18:
 1 | let f (W: _ M.p t) = ()
-           ^
-Error: This pattern matches values of type "int M.p t"
-       but a pattern was expected which matches values of type "$0 M.p t"
-       The type constructor "$0" would escape its scope
+          ^^^^^^^^^^^^
+Warning 8 [partial-match]: this pattern-matching is not exhaustive.
+  Here is an example of a case that is not matched: "W2"
+
+val f : int M.p t -> unit = <fun>
 |}]
 
 let f =  function W -> () | W2 -> ()
@@ -80,12 +75,7 @@ val f : int M.p t -> unit = <fun>
 
 let f =  function (W: _ M.p t) -> () | W2 -> ()
 [%%expect{|
-Line 1, characters 19-20:
-1 | let f =  function (W: _ M.p t) -> () | W2 -> ()
-                       ^
-Error: This pattern matches values of type "int M.p t"
-       but a pattern was expected which matches values of type "$0 M.p t"
-       The type constructor "$0" would escape its scope
+val f : int M.p t -> unit = <fun>
 |}]
 
 let f: type a. a M.p t -> unit =  function W -> () | W2 -> ()

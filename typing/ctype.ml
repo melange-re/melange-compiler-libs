@@ -3279,15 +3279,28 @@ let unify uenv ty1 ty2 =
 
 let unify_gadt (penv : Pattern_env.t) ty1 ty2 =
   let equated_types = TypePairs.create 0 in
-  let uenv = Pattern
-      { penv;
-        equated_types;
-        assume_injective = true;
-        unify_eq_set = TypePairs.create 11; }
-  in
-  with_univar_pairs [] (fun () ->
+  let do_unify_gadt () =
+    let uenv = Pattern
+        { penv;
+          equated_types;
+          assume_injective = true;
+          unify_eq_set = TypePairs.create 11; }
+    in
     unify uenv ty1 ty2;
-    equated_types)
+    equated_types
+  in
+  let no_leak = penv.allow_recursive_equations || closed_type_expr ty2 in
+  if no_leak then with_univar_pairs [] do_unify_gadt else
+  let snap = Btype.snapshot () in
+  try
+    (* If there are free variables, first try normal unification *)
+    let uenv = Expression {env = penv.env; in_subst = false} in
+    with_univar_pairs [] (fun () -> unify uenv ty1 ty2);
+    equated_types
+  with Unify _ ->
+    (* If it fails, retry in pattern mode *)
+    Btype.backtrack snap;
+    with_univar_pairs [] do_unify_gadt
 
 let unify_var uenv t1 t2 =
   if eq_type t1 t2 then () else
