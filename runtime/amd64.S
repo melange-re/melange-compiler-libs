@@ -31,9 +31,9 @@
 #define EIGHT_ALIGN 3
 #define SIXTEEN_ALIGN 4
 #define FUNCTION(name) \
-        .globl name; \
+        .globl G(name); \
         .align FUNCTION_ALIGN; \
-        name:
+G(name):
 
 #elif defined(SYS_mingw64) || defined(SYS_cygwin)
 
@@ -46,10 +46,10 @@
 #define EIGHT_ALIGN 8
 #define SIXTEEN_ALIGN 16
 #define FUNCTION(name) \
-        TEXT_SECTION(name); \
-        .globl name; \
+        TEXT_SECTION(G(name)); \
+        .globl G(name); \
         .align FUNCTION_ALIGN; \
-        name:
+G(name):
 
 #else /* Unix-like operating systems using ELF binaries */
 
@@ -66,28 +66,28 @@
 #define EIGHT_ALIGN 8
 #define SIXTEEN_ALIGN 16
 #define FUNCTION(name) \
-        TEXT_SECTION(name); \
-        .globl name; \
-        .type name,@function; \
+        TEXT_SECTION(G(name)); \
+        .globl G(name); \
+        .type G(name),@function; \
         .align FUNCTION_ALIGN; \
-        name:
+G(name):
 
 #endif
 
 #define OBJECT(name) \
-        .globl name; \
+        .globl G(name); \
         .align EIGHT_ALIGN; \
-        name:
+G(name):
 
 #if defined(SYS_linux) || defined(SYS_gnu)
-#define ENDFUNCTION(name) \
-        .size name, . - name
-#define ENDOBJECT(name) \
-        .type name, @object; \
-        .size name, . - name;
+#define END_FUNCTION(name) \
+        .size G(name), . - G(name)
+#define END_OBJECT(name) \
+        .type G(name), @object; \
+        .size G(name), . - G(name)
 #else
-#define ENDFUNCTION(name)
-#define ENDOBJECT(name)
+#define END_FUNCTION(name)
+#define END_OBJECT(name)
 #endif
 
 #include "../runtime/caml/asm.h"
@@ -577,7 +577,7 @@ G(caml_system__code_begin):
 #define TSAN_RESTORE_CALLER_REGS
 #endif
 
-FUNCTION(G(caml_call_realloc_stack))
+FUNCTION(caml_call_realloc_stack)
 CFI_STARTPROC
         CFI_SIGNAL_FRAME
         ENTER_FUNCTION
@@ -596,9 +596,9 @@ CFI_STARTPROC
         add     $16, %rsp /* pop argument, retaddr */
         jmp     GCALL(caml_raise_exn)
 CFI_ENDPROC
-ENDFUNCTION(G(caml_call_realloc_stack))
+END_FUNCTION(caml_call_realloc_stack)
 
-FUNCTION(G(caml_call_gc))
+FUNCTION(caml_call_gc)
 CFI_STARTPROC
         CFI_SIGNAL_FRAME
         ENTER_FUNCTION
@@ -615,9 +615,9 @@ LBL(caml_call_gc):
         LEAVE_FUNCTION
         ret
 CFI_ENDPROC
-ENDFUNCTION(G(caml_call_gc))
+END_FUNCTION(caml_call_gc)
 
-FUNCTION(G(caml_alloc1))
+FUNCTION(caml_alloc1)
 CFI_STARTPROC
         ENTER_FUNCTION
         subq    $16, %r15
@@ -626,9 +626,9 @@ CFI_STARTPROC
         LEAVE_FUNCTION
         ret
 CFI_ENDPROC
-ENDFUNCTION(G(caml_alloc1))
+END_FUNCTION(caml_alloc1)
 
-FUNCTION(G(caml_alloc2))
+FUNCTION(caml_alloc2)
 CFI_STARTPROC
         ENTER_FUNCTION
         subq    $24, %r15
@@ -637,9 +637,9 @@ CFI_STARTPROC
         LEAVE_FUNCTION
         ret
 CFI_ENDPROC
-ENDFUNCTION(G(caml_alloc2))
+END_FUNCTION(caml_alloc2)
 
-FUNCTION(G(caml_alloc3))
+FUNCTION(caml_alloc3)
 CFI_STARTPROC
         ENTER_FUNCTION
         subq    $32, %r15
@@ -648,9 +648,9 @@ CFI_STARTPROC
         LEAVE_FUNCTION
         ret
 CFI_ENDPROC
-ENDFUNCTION(G(caml_alloc3))
+END_FUNCTION(caml_alloc3)
 
-FUNCTION(G(caml_allocN))
+FUNCTION(caml_allocN)
 CFI_STARTPROC
         ENTER_FUNCTION
         cmpq    Caml_state(young_limit), %r15
@@ -658,7 +658,7 @@ CFI_STARTPROC
         LEAVE_FUNCTION
         ret
 CFI_ENDPROC
-ENDFUNCTION(G(caml_allocN))
+END_FUNCTION(caml_allocN)
 
 /******************************************************************************/
 /* Call a C function from OCaml */
@@ -690,7 +690,7 @@ ENDFUNCTION(G(caml_allocN))
 1:      movq    $-1, Caml_state(young_limit);   \
         ret
 
-FUNCTION(G(caml_c_call))
+FUNCTION(caml_c_call)
 CFI_STARTPROC
         CFI_SIGNAL_FRAME
         ENTER_FUNCTION
@@ -725,9 +725,9 @@ LBL(caml_c_call):
     /* Return to OCaml caller */
         RET_FROM_C_CALL
 CFI_ENDPROC
-ENDFUNCTION(G(caml_c_call))
+END_FUNCTION(caml_c_call)
 
-FUNCTION(G(caml_c_call_stack_args))
+FUNCTION(caml_c_call_stack_args)
 CFI_STARTPROC
         CFI_SIGNAL_FRAME
         ENTER_FUNCTION
@@ -773,13 +773,13 @@ LBL(106):
         LEAVE_FUNCTION
         RET_FROM_C_CALL
 CFI_ENDPROC
-ENDFUNCTION(G(caml_c_call_stack_args))
+END_FUNCTION(caml_c_call_stack_args)
 
 /******************************************************************************/
 /* Start the OCaml program */
 /******************************************************************************/
 
-FUNCTION(G(caml_start_program))
+FUNCTION(caml_start_program)
 CFI_STARTPROC
         CFI_SIGNAL_FRAME
     /* Save callee-save registers */
@@ -887,7 +887,7 @@ LBL(109):
         movq    %rsp, %r10
         jmp     1b
 CFI_ENDPROC
-ENDFUNCTION(G(caml_start_program))
+END_FUNCTION(caml_start_program)
 
 /******************************************************************************/
 /* Exceptions */
@@ -895,7 +895,7 @@ ENDFUNCTION(G(caml_start_program))
 
 /* Raise an exception from OCaml */
 
-FUNCTION(G(caml_raise_exn))
+FUNCTION(caml_raise_exn)
 CFI_STARTPROC
         ENTER_FUNCTION
 LBL(caml_raise_exn):
@@ -918,7 +918,7 @@ LBL(117):
         RESTORE_EXN_HANDLER_OCAML
         ret
 CFI_ENDPROC
-ENDFUNCTION(G(caml_raise_exn))
+END_FUNCTION(caml_raise_exn)
 
 #if defined(WITH_THREAD_SANITIZER)
 /* When TSan support is enabled, this routine should be called just before
@@ -926,7 +926,7 @@ ENDFUNCTION(G(caml_raise_exn))
    to be exited due to the exception.
    Takes no arguments, clobbers C_ARG_1, C_ARG_2, C_ARG_3 and potentially all
    caller-saved registers of the C calling convention. */
-FUNCTION(G(caml_tsan_exit_on_raise_asm))
+FUNCTION(caml_tsan_exit_on_raise_asm)
 CFI_STARTPROC
         ENTER_FUNCTION
         movq    STACK_RETADDR(%rsp), C_ARG_1   /* arg 1: pc of raise */
@@ -938,10 +938,10 @@ CFI_STARTPROC
         LEAVE_FUNCTION
         ret
 CFI_ENDPROC
-ENDFUNCTION(G(caml_tsan_exit_on_raise_asm))
+END_FUNCTION(caml_tsan_exit_on_raise_asm)
 #endif
 
-FUNCTION(G(caml_reraise_exn))
+FUNCTION(caml_reraise_exn)
 CFI_STARTPROC
         ENTER_FUNCTION
         testq   $1, Caml_state(backtrace_active)
@@ -949,11 +949,11 @@ CFI_STARTPROC
         RESTORE_EXN_HANDLER_OCAML
         ret
 CFI_ENDPROC
-ENDFUNCTION(G(caml_reraise_exn))
+END_FUNCTION(caml_reraise_exn)
 
 /* Raise an exception from C */
 
-FUNCTION(G(caml_raise_exception))
+FUNCTION(caml_raise_exception)
 CFI_STARTPROC
         ENTER_FUNCTION
         movq    C_ARG_1, %r14                /* Caml_state */
@@ -977,13 +977,13 @@ CFI_STARTPROC
 #endif
         jmp LBL(caml_raise_exn)
 CFI_ENDPROC
-ENDFUNCTION(G(caml_raise_exception))
+END_FUNCTION(caml_raise_exception)
 
 /******************************************************************************/
 /* Callback from C to OCaml */
 /******************************************************************************/
 
-FUNCTION(G(caml_callback_asm))
+FUNCTION(caml_callback_asm)
 CFI_STARTPROC
 #if defined(WITH_THREAD_SANITIZER)
     /* Save non-callee-saved registers C_ARG_1, C_ARG_2, C_ARG_3 before C call
@@ -1008,9 +1008,9 @@ CFI_STARTPROC
         movq    $0, %rsi           /* dummy */
         jmp     LBL(caml_start_program)
 CFI_ENDPROC
-ENDFUNCTION(G(caml_callback_asm))
+END_FUNCTION(caml_callback_asm)
 
-FUNCTION(G(caml_callback2_asm))
+FUNCTION(caml_callback2_asm)
 CFI_STARTPROC
 #if defined(WITH_THREAD_SANITIZER)
     /* Save non-callee-saved registers C_ARG_1, C_ARG_2, C_ARG_3 before C call
@@ -1035,9 +1035,9 @@ CFI_STARTPROC
         movq    $0, %rsi           /* dummy */
         jmp     LBL(caml_start_program)
 CFI_ENDPROC
-ENDFUNCTION(G(caml_callback2_asm))
+END_FUNCTION(caml_callback2_asm)
 
-FUNCTION(G(caml_callback3_asm))
+FUNCTION(caml_callback3_asm)
 CFI_STARTPROC
 #if defined(WITH_THREAD_SANITIZER)
     /* Save non-callee-saved registers C_ARG_1, C_ARG_2, C_ARG_3 before C call
@@ -1062,7 +1062,7 @@ CFI_STARTPROC
         LEA_VAR(caml_apply3, %r12) /* code pointer */
         jmp     LBL(caml_start_program)
 CFI_ENDPROC
-ENDFUNCTION(G(caml_callback3_asm))
+END_FUNCTION(caml_callback3_asm)
 
 /******************************************************************************/
 /* Fibers */
@@ -1074,7 +1074,7 @@ ENDFUNCTION(G(caml_callback3_asm))
  */
 /******************************************************************************/
 
-FUNCTION(G(caml_perform))
+FUNCTION(caml_perform)
 CFI_STARTPROC
     /*  %rax: effect to perform
         %rbx: freshly allocated continuation */
@@ -1153,9 +1153,9 @@ LBL(112):
         LEA_VAR(caml_raise_unhandled_effect, %rax)
         jmp     LBL(caml_c_call)
 CFI_ENDPROC
-ENDFUNCTION(G(caml_perform))
+END_FUNCTION(caml_perform)
 
-FUNCTION(G(caml_reperform))
+FUNCTION(caml_reperform)
 CFI_STARTPROC
     /*  %rax: effect to reperform
         %rbx: continuation
@@ -1169,9 +1169,9 @@ CFI_STARTPROC
         UPDATE_BASE_POINTER(%r10)
         jmp     LBL(do_perform)
 CFI_ENDPROC
-ENDFUNCTION(G(caml_reperform))
+END_FUNCTION(caml_reperform)
 
-FUNCTION(G(caml_resume))
+FUNCTION(caml_resume)
 CFI_STARTPROC
     /* %rax -> fiber, %rbx -> fun, %rdi -> arg, %rsi -> last_fiber */
         leaq    -1(%rax), %r10  /* %r10 (new stack) = Ptr_val(%rax) */
@@ -1218,11 +1218,11 @@ CFI_STARTPROC
         LEA_VAR(caml_raise_continuation_already_resumed, %rax)
         jmp LBL(caml_c_call)
 CFI_ENDPROC
-ENDFUNCTION(G(caml_resume))
+END_FUNCTION(caml_resume)
 
 /* Run a function on a new stack,
    then invoke either the value or exception handler */
-FUNCTION(G(caml_runstack))
+FUNCTION(caml_runstack)
 CFI_STARTPROC
         CFI_SIGNAL_FRAME
         ENTER_FUNCTION
@@ -1302,9 +1302,9 @@ LBL(fiber_exn_handler):
         movq    Handler_exception(%r11), %rbx
         jmp     1b
 CFI_ENDPROC
-ENDFUNCTION(G(caml_runstack))
+END_FUNCTION(caml_runstack)
 
-FUNCTION(G(caml_ml_array_bound_error))
+FUNCTION(caml_ml_array_bound_error)
 CFI_STARTPROC
         ENTER_FUNCTION
     /* No registers require saving before C call to TSan */
@@ -1312,9 +1312,9 @@ CFI_STARTPROC
         LEA_VAR(caml_array_bound_error_asm, %rax)
         jmp     LBL(caml_c_call)
 CFI_ENDPROC
-ENDFUNCTION(G(caml_ml_array_bound_error))
+END_FUNCTION(caml_ml_array_bound_error)
 
-FUNCTION(G(caml_assert_stack_invariants))
+FUNCTION(caml_assert_stack_invariants)
 CFI_STARTPROC
         movq    Caml_state(current_stack), %r11
         movq    %rsp, %r10
@@ -1325,7 +1325,7 @@ CFI_STARTPROC
         int3
 1:      ret
 CFI_ENDPROC
-ENDFUNCTION(G(caml_assert_stack_invariants))
+END_FUNCTION(caml_assert_stack_invariants)
 
         TEXT_SECTION(caml_system__code_end)
         .globl  G(caml_system__code_end)
@@ -1334,7 +1334,7 @@ G(caml_system__code_end):
 /* Frametable - GC roots for callback */
 /* Uses the same naming convention as ocamlopt generated modules. */
         .data
-OBJECT(G(caml_system$frametable))
+OBJECT(caml_system$frametable)
         .quad   2           /* two descriptors */
         .quad   LBL(108)    /* return address into callback */
         .value  -1          /* negative frame size => use callback link */
@@ -1343,7 +1343,7 @@ OBJECT(G(caml_system$frametable))
         .quad   LBL(frame_runstack) /* return address into fiber_val_handler */
         .value  -1          /* negative frame size => use callback link */
         .value  0           /* no roots here */
-ENDOBJECT(G(caml_system$frametable))
+END_OBJECT(caml_system$frametable)
 
 #if defined(SYS_macosx)
         .literal16
