@@ -183,7 +183,8 @@ Working version
 
 - #13501: Regression on mutually recursive types caused by #12180.
   Resuscitate Typedecl.update_type.
-  (Jacques Garrigue and Takafumi Saikawa, review by ???)
+  (Jacques Garrigue and Takafumi Saikawa, review by Florian Angeletti, Richard
+  Eisenberg and Gabriel Scherer)
 
 - #13388, #13540: raises an error message (and not an internal compiler error)
   when two local substitutions are incompatible (for instance `module type
