@@ -649,7 +649,9 @@ ___________
 
 - #13501: Regression on mutually recursive types caused by #12180.
   Resuscitate Typedecl.update_type.
-  (Jacques Garrigue and Takafumi Saikawa, review by ???)
+  (Jacques Garrigue and Takafumi Saikawa, review by Florian Angeletti, Richard
+  Eisenberg and Gabriel Scherer)
+
 
 - #13502: Fix misindexing related to `Gc.finalise_last` that could prevent
   finalisers from being run.
