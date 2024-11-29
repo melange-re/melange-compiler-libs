@@ -14596,7 +14596,7 @@ case $ocaml_cc_vendor,$host in #(
     oc_ldflags='-Wl,-no_compact_unwind';
     printf "%s\n" "#define HAS_ARCH_CODE32 1" >>confdefs.h
  ;; #(
-  *,aarch64-*-darwin*|arm64-*-darwin*) :
+  *,aarch64-*-darwin*|*,arm64-*-darwin*) :
     printf "%s\n" "#define HAS_ARCH_CODE32 1" >>confdefs.h
  ;; #(
   *,*-*-cygwin*) :

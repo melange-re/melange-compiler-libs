@@ -1066,7 +1066,7 @@ AS_CASE([$ocaml_cc_vendor,$host],
   [*,x86_64-*-darwin*],
     [oc_ldflags='-Wl,-no_compact_unwind';
     AC_DEFINE([HAS_ARCH_CODE32], [1])],
-  [*,aarch64-*-darwin*|arm64-*-darwin*],
+  [*,aarch64-*-darwin*|*,arm64-*-darwin*],
     AC_DEFINE([HAS_ARCH_CODE32], [1]),
   [*,*-*-cygwin*],
     [common_cppflags="$common_cppflags -U_WIN32"
