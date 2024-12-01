@@ -142,18 +142,17 @@ exception Incompatible
 (**** Control tracing of GADT instances *)
 
 let trace_gadt_instances = ref false
-let check_trace_gadt_instances env =
-  not !trace_gadt_instances && Env.has_local_constraints env &&
+let check_trace_gadt_instances ?(force=false) env =
+  not !trace_gadt_instances && (force || Env.has_local_constraints env) &&
   (trace_gadt_instances := true; cleanup_abbrev (); true)
 
 let reset_trace_gadt_instances b =
   if b then trace_gadt_instances := false
 
-let wrap_trace_gadt_instances env f x =
-  let b = check_trace_gadt_instances env in
-  let y = f x in
-  reset_trace_gadt_instances b;
-  y
+let wrap_trace_gadt_instances ?force env f x =
+  let b = check_trace_gadt_instances ?force env in
+  Misc.try_finally (fun () -> f x)
+    ~always:(fun () -> reset_trace_gadt_instances b)
 
 (**** Abbreviations without parameters ****)
 (* Shall reset after generalizing *)
@@ -582,35 +581,34 @@ let rec filter_row_fields erase = function
 type variable_kind = Row_variable | Type_variable
 exception Non_closed of type_expr * variable_kind
 
-(* [free_vars] collects the variables of the input type expression. It
+(* [free_vars] walks over the variables of the input type expression. It
    is used for several different things in the type-checker, with the
    following bells and whistles:
    - If [env] is Some typing environment, types in the environment
      are expanded to check whether the apparently-free variable would vanish
      during expansion.
-   - We collect both type variables and row variables, paired with
-     a [variable_kind] to distinguish them.
    - We do not count "virtual" free variables -- free variables stored in
      the abbreviation of an object type that has been expanded (we store
      the abbreviations for use when displaying the type).
 
-   [free_vars] returns a [(variable * bool) list], while
-   [free_variables] below drops the type/row information
-   and only returns a [variable list].
+   [free_vars] accumulates its answer in a monoid-like structure, with
+   an initial element [zero] and a combining function [add_one], passing
+   [add_one] information about whether the variable is a normal type variable
+   or a row variable.
  *)
-let free_vars ?env mark ty =
+let free_vars ~init ~add_one ?env mark ty =
   let rec fv ~kind acc ty =
     if not (try_mark_node mark ty) then acc
     else match get_desc ty, env with
       | Tvar _, _ ->
-          (ty, kind) :: acc
+          add_one ty kind acc
       | Tconstr (path, tl, _), Some env ->
           let acc =
             match Env.find_type_expansion path env with
             | exception Not_found -> acc
             | (_, body, _) ->
                 if get_level body = generic_level then acc
-                else (ty, kind) :: acc
+                else add_one ty kind acc
           in
           List.fold_left (fv ~kind:Type_variable) acc tl
       | Tobject (ty, _), _ ->
@@ -626,15 +624,20 @@ let free_vars ?env mark ty =
           else fv ~kind:Row_variable acc (row_more row)
       | _    ->
           fold_type_expr (fv ~kind) acc ty
-  in fv ~kind:Type_variable [] ty
+  in fv ~kind:Type_variable init ty
 
 let free_variables ?env ty =
-  with_type_mark (fun mark -> List.map fst (free_vars ?env mark ty))
+  let add_one ty _kind acc = ty :: acc in
+  with_type_mark (fun mark -> free_vars ~init:[] ~add_one ?env mark ty)
 
-let closed_type mark ty =
-  match free_vars mark ty with
-      []           -> ()
-  | (v, real) :: _ -> raise (Non_closed (v, real))
+let closed_type ?env mark ty =
+  let add_one ty kind _acc = raise (Non_closed (ty, kind)) in
+  free_vars ~init:() ~add_one ?env mark ty
+
+let closed_type_expr ?env ty =
+  with_type_mark (fun mark ->
+    try closed_type ?env mark ty; true
+    with Non_closed _ -> false)
 
 let closed_parameterized_type params ty =
   with_type_mark begin fun mark ->
@@ -1575,6 +1578,7 @@ let check_abbrev_env env =
   if not (Env.same_type_declarations env !previous_env) then begin
     (* prerr_endline "cleanup expansion cache"; *)
     cleanup_abbrev ();
+    simple_abbrevs := Mnil;
     previous_env := env
   end
 
@@ -3276,15 +3280,28 @@ let unify uenv ty1 ty2 =
 
 let unify_gadt (penv : Pattern_env.t) ty1 ty2 =
   let equated_types = TypePairs.create 0 in
-  let uenv = Pattern
-      { penv;
-        equated_types;
-        assume_injective = true;
-        unify_eq_set = TypePairs.create 11; }
-  in
-  with_univar_pairs [] (fun () ->
+  let do_unify_gadt () =
+    let uenv = Pattern
+        { penv;
+          equated_types;
+          assume_injective = true;
+          unify_eq_set = TypePairs.create 11; }
+    in
     unify uenv ty1 ty2;
-    equated_types)
+    equated_types
+  in
+  let no_leak = penv.allow_recursive_equations || closed_type_expr ty2 in
+  if no_leak then with_univar_pairs [] do_unify_gadt else
+  let snap = Btype.snapshot () in
+  try
+    (* If there are free variables, first try normal unification *)
+    let uenv = Expression {env = penv.env; in_subst = false} in
+    with_univar_pairs [] (fun () -> unify uenv ty1 ty2);
+    equated_types
+  with Unify _ ->
+    (* If it fails, retry in pattern mode *)
+    Btype.backtrack snap;
+    with_univar_pairs [] do_unify_gadt
 
 let unify_var uenv t1 t2 =
   if eq_type t1 t2 then () else
