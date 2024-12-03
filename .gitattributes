@@ -180,12 +180,10 @@ aclocal.m4 typo.tab -linguist-vendored linguist-language=M4Sugar
 configure.ac text eol=lf
 # These scripts are all parts of autoconf and are tagged linguist-generated
 # to suppress inclusion in PR diffs.
-build-aux/compile linguist-generated text eol=lf
 build-aux/config.guess linguist-generated text eol=lf
 build-aux/config.sub linguist-generated text eol=lf
 build-aux/install-sh linguist-generated text eol=lf
 build-aux/ltmain.sh linguist-generated text eol=lf
-build-aux/missing linguist-generated text eol=lf
 build-aux/*.m4 linguist-vendored
 build-aux/ocaml_version.m4 -linguist-vendored linguist-language=M4Sugar
 ocamltest/OCAMLTEST.org typo.long-line=may typo.missing-header
