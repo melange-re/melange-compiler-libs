@@ -2622,7 +2622,7 @@ let list_labels env ty =
   result
 
 
-(* Collecting arguments for function applications *)
+(* Collecting arguments for function applications. *)
 
 type untyped_apply_arg =
   | Known_arg of
@@ -2632,16 +2632,38 @@ type untyped_apply_arg =
         ty_arg0 : type_expr;
         wrapped_in_some : bool;
       }
+    (* - [f arg] when is known to be a function (f : _ -> _)
+       - [f ~lab:arg] when (f : lab:_ -> _)
+       - [f ?lab:arg] when (f : ?lab:_ -> _)
+       In these cases we have [wrapped_in_some = false].
+
+       - [f ~lab:arg] when (f : ?lab:_ -> _)
+         In this case [wrapped_in_some = true].
+
+       [ty_arg] is the (possibly generic) expected type of the argument,
+       and [ty_arg0] is an instance of [ty_arg].
+    *)
   | Unknown_arg of
       {
         sarg : Parsetree.expression;
         ty_arg : type_expr;
       }
+    (* [f arg] when [f] is not known (either a type variable,
+       or the weird [commu_ok] case where a function type is known
+       but not principally).
+
+       [ty_arg] is the expected type of the argument, usually just
+       a fresh type variable. *)
   | Eliminated_optional_arg of
       {
         ty_arg : type_expr;
         level: int;
       }
+    (* [~foo] in [f x] with [f : ?foo:ty -> _ -> _]
+       ([foo] is an optional argument that was not passed,
+        but a following argument was passed).
+
+       [level] is the level of the function arrow. *)
 
 type untyped_omitted_param =
   {
