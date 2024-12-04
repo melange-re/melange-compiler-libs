@@ -5635,7 +5635,7 @@ and type_application env funct sargs =
                          (Optional "opt", Arg None);
                          (Nolabel, Arg n)]
       *)
-      args, ty_ret
+      args, instance ty_ret
 
 and type_construct env ~sexp lid sarg ty_expected_explained =
   let { ty = ty_expected; explanation } = ty_expected_explained in
