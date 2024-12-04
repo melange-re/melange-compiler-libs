@@ -2825,8 +2825,7 @@ let collect_apply_args env funct ignore_labels ty_fun ty_fun0 sargs =
         in
         loop ty_ret ty_ret0 ((l, arg) :: rev_args) remaining_sargs
     | _ ->
-      (* We're not looking at a *known* function type anymore, or there are no
-        arguments left. *)
+      (* We're not looking at a *known* function type anymore. *)
       collect_unknown_apply_args env funct ty_fun0 rev_args sargs
   in
   loop ty_fun ty_fun0 [] sargs
