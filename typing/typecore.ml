@@ -5608,11 +5608,33 @@ and type_application env funct sargs =
            true)
         end
       in
+      (* Consider for example the application
+           [f n]
+         with
+           [f : a:bar -> ?opt:baz -> int -> unit]
+      *)
       let ty_ret, args =
         collect_apply_args env funct ignore_labels ty (instance ty) sargs
       in
+      (* example: [collect_apply_args] returns
+         [ty_ret = unit] and
+         [args = [(Label "a", Omitted bar);
+                  (Optional "opt", Arg (Eliminated_optional_arg baz));
+                  (Nolabel, Arg (Known_arg n))]] *)
       let args = List.map (fun arg -> type_apply_arg env arg) args in
-      let ty_ret, args = type_omitted_parameters ty_ret args in
+      (* example: type-check [n] and generate [None] for [?opt].
+         [args] becomes [(Label "a", Omitted bar);
+                         (Optional "opt", Arg None);
+                         (Nolabel, Arg n)]
+       *)
+      let ty_ret, args =
+        type_omitted_parameters ty_ret args in
+      (* example:
+         [ty_ret] becomes [a:bar -> unit]
+         [args] becomes [(Label "a", Omitted ());
+                         (Optional "opt", Arg None);
+                         (Nolabel, Arg n)]
+      *)
       args, ty_ret
 
 and type_construct env ~sexp lid sarg ty_expected_explained =
