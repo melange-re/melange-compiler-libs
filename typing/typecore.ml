@@ -2730,7 +2730,8 @@ let collect_unknown_apply_args env funct ty_fun rev_args sargs =
                     attached (eg. an optional argument that is not passed). *)
                   rev_args
                   |> List.find_map (function
-                      | _, Arg (Known_arg { sarg = {pexp_loc = loc; _ }}) ->
+                      | _, Arg (Known_arg { sarg = {pexp_loc = loc; _ }}
+                               | Unknown_arg { sarg = {pexp_loc = loc; _}}) ->
                           Some loc
                       | _ -> None)
                   |> Option.value ~default:funct.exp_loc
