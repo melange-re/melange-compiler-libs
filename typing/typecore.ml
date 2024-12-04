@@ -2750,10 +2750,10 @@ let collect_unknown_apply_args env funct ty_fun rev_args sargs =
 let collect_apply_args env funct ignore_labels ty_fun ty_fun0 sargs =
   let warned = ref false in
   let rec loop ty_fun ty_fun0 rev_args sargs =
-    let ty_fun' = expand_head env ty_fun in
     if sargs = [] then
       collect_unknown_apply_args env funct ty_fun0 rev_args sargs
     else
+    let ty_fun' = expand_head env ty_fun in
     match get_desc ty_fun', get_desc (expand_head env ty_fun0) with
     | Tarrow (l, ty_arg, ty_ret, com), Tarrow (_, ty_arg0, ty_ret0, _)
       when is_commu_ok com ->
