@@ -2685,7 +2685,7 @@ let remaining_function_type ty_ret rev_args =
             ty_ret)
     ty_ret rev_args
 
-let collect_unknown_apply_args env funct ty_fun rev_args sargs =
+let collect_unknown_apply_args env funct ty_fun0 rev_args sargs =
   let labels_match ~param ~arg =
     param = arg
     || !Clflags.classic && arg = Nolabel && not (is_optional param)
@@ -2746,7 +2746,7 @@ let collect_unknown_apply_args env funct ty_fun rev_args sargs =
       let arg = Unknown_arg { sarg; ty_arg } in
       loop ty_res ((lbl, Arg arg) :: rev_args) rest
   in
-  loop ty_fun rev_args sargs
+  loop ty_fun0 rev_args sargs
 
 let collect_apply_args env funct ignore_labels ty_fun ty_fun0 sargs =
   let warned = ref false in
