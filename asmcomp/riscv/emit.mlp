@@ -339,7 +339,7 @@ let emit_instr env i =
            at noalloc calls *)
         `	mv	s0, sp\n`;
         cfi_remember_state ();
-        cfi_def_cfa_register ~reg:21;
+        cfi_def_cfa_register ~reg:8;
         let ofs = Domainstate.(idx_of_field Domain_c_stack) * 8 in
         `	ld	sp, {emit_int ofs}({emit_reg reg_domain_state_ptr})\n`;
         `	{emit_call func}\n`;
