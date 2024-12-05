@@ -5594,7 +5594,7 @@ and type_application env funct sargs =
       let ignore_labels =
         !Clflags.classic ||
         begin
-          let ls, tvar = list_labels env funct.exp_type in
+          let ls, tvar = list_labels env ty in
           not tvar &&
           let labels = List.filter (fun l -> not (is_optional l)) ls in
           List.length labels = List.length sargs &&
