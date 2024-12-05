@@ -214,7 +214,7 @@ static char * read_section(int fd, struct exec_trailer *trail,
   char * data;
 
   len = caml_seek_optional_section(fd, trail, name);
-  if (len == -1) return NULL;
+  if (len < 0) return NULL; // (len == -1) widened to (len < 0) to help gcc
   data = caml_stat_alloc(len + 1);
   if (read(fd, data, len) != len)
     caml_fatal_error("error reading section %s", name);
