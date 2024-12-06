@@ -62,6 +62,11 @@ Working version
   Out_of_memory exceptions that the runtime could not handle.
   (Guillaume Munch-Maccagnoni, review by Stephen Dolan)
 
+- #13575, #13635: Maintain OCaml frame pointers correctly even when using
+   C libraries that do not support them.
+  (Stephen Dolan and David Allsopp, report by Thomas Leonard, review by Tim
+   McGilchrist and Fabrice Buoro)
+
 ### Code generation and optimizations:
 
 - #13565: less tagging in switches compiled to affine transformations
