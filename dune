@@ -1,0 +1,19 @@
+(dirs wrapper lib parsing utils file_formats lambda typing)
+(include_subdirs unqualified)
+
+(library
+  (name melange_compiler_libs)
+  (public_name melange-compiler-libs)
+  (flags -w -9)
+  (libraries menhirLib melange_wrapper)
+  (modules :standard \ melange_wrapper)
+  (modules_without_implementation
+   annot
+   value_rec_types))
+
+ (library
+  (name melange_wrapper)
+  (public_name melange-compiler-libs.wrapper)
+  (libraries compiler-libs.common)
+  (modules melange_wrapper)
+  (modules_without_implementation melange_wrapper))
