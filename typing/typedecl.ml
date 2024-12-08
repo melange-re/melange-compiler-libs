@@ -389,6 +389,14 @@ let transl_declaration env sdecl (id, uid) =
             (List.filter (fun cd -> cd.pcd_args <> Pcstr_tuple []) scstrs)
            > (Config.max_tag + 1) then
           raise(Error(sdecl.ptype_loc, Too_many_constructors));
+        let copy_tag_attr_from_decl attrs =
+          match
+            List.filter
+              (fun { attr_name = {txt; _}; _} -> txt = "mel.tag")
+              sdecl.ptype_attributes
+          with
+          | [] -> attrs
+          | xs -> xs @ attrs in
         let make_cstr scstr =
           let name = Ident.create_local scstr.pcd_name.txt in
           let targs, tret_type, args, ret_type =
@@ -402,14 +410,14 @@ let transl_declaration env sdecl (id, uid) =
               cd_args = targs;
               cd_res = tret_type;
               cd_loc = scstr.pcd_loc;
-              cd_attributes = scstr.pcd_attributes }
+              cd_attributes = copy_tag_attr_from_decl scstr.pcd_attributes }
           in
           let cstr =
             { Types.cd_id = name;
               cd_args = args;
               cd_res = ret_type;
               cd_loc = scstr.pcd_loc;
-              cd_attributes = scstr.pcd_attributes;
+              cd_attributes = copy_tag_attr_from_decl scstr.pcd_attributes;
               cd_uid = Uid.mk ~current_unit:(Env.get_unit_name ()) }
           in
             tcstr, cstr
