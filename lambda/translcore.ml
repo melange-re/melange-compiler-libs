@@ -320,18 +320,17 @@ and transl_exp0 ~in_new_scope ~scopes e =
         | _ -> assert false
       end else begin match cstr.cstr_tag with
         Cstr_constant n ->
-          let ptr_info = match lid.txt with
-            | Longident.Lident ("false"|"true") -> Pt_builtin_boolean
-            | Longident.Ldot (Longident.Lident "*predef*", "None")
-            | _ ->
-              if Datarepr.constructor_has_optional_shape cstr
-              then Pt_shape_none
-              else (Lambda.Pt_constructor
-                     { name = cstr.cstr_name
-                     ; const = cstr.cstr_consts
-                     ; non_const = cstr.cstr_nonconsts
-                     ; attributes = cstr.cstr_attributes
-                     })
+          let ptr_info =
+            if !Env.same_constr e.exp_env cstr.cstr_res Predef.type_bool
+            then Pt_builtin_boolean
+            else if Datarepr.constructor_has_optional_shape cstr
+            then Pt_shape_none
+            else (Lambda.Pt_constructor
+                   { name = cstr.cstr_name
+                   ; const = cstr.cstr_consts
+                   ; non_const = cstr.cstr_nonconsts
+                   ; attributes = cstr.cstr_attributes
+                   })
           in
           Lconst(const_int ~ptr_info n)
       | Cstr_unboxed ->
@@ -1036,7 +1035,7 @@ and transl_record ~scopes loc env fields repres opt_init_expr =
         let cl = List.map extract_constant ll in
         match repres with
         | Record_regular -> Lconst(Const_block(0, !Lambda.blk_record fields, cl))
-        | Record_inlined {tag;name;num_nonconsts} -> Lconst(Const_block(tag, !Lambda.blk_record_inlined fields name num_nonconsts, cl))
+        | Record_inlined {tag;name;num_nonconsts;attributes} -> Lconst(Const_block(tag, !Lambda.blk_record_inlined fields name num_nonconsts attributes, cl))
         | Record_unboxed _ -> Lconst(match cl with [v] -> v | _ -> assert false)
         | Record_float ->
             if !Config.bs_only then Lconst(Const_block(0, !Lambda.blk_record fields, cl))
@@ -1049,8 +1048,8 @@ and transl_record ~scopes loc env fields repres opt_init_expr =
         match repres with
           Record_regular ->
             Lprim(Pmakeblock(0, !Lambda.blk_record fields, mut, Some shape), ll, loc)
-        | Record_inlined {tag;name; num_nonconsts} ->
-            Lprim(Pmakeblock(tag, !Lambda.blk_record_inlined fields name num_nonconsts, mut, Some shape), ll, loc)
+        | Record_inlined {tag;name; num_nonconsts; attributes} ->
+            Lprim(Pmakeblock(tag, !Lambda.blk_record_inlined fields name num_nonconsts attributes, mut, Some shape), ll, loc)
         | Record_unboxed _ -> (match ll with [v] -> v | _ -> assert false)
         | Record_float ->
             if !Config.bs_only then Lprim(Pmakeblock(0, !Lambda.blk_record fields, mut, Some shape), ll, loc)
