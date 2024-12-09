@@ -773,6 +773,7 @@ ac_ct_LD
 LD
 DEFAULT_STRING
 WINDOWS_UNICODE_MODE
+TARGET_BINDIR
 LIBUNWIND_LDFLAGS
 LIBUNWIND_CPPFLAGS
 DLLIBS
@@ -1022,7 +1023,6 @@ enable_native_compiler
 enable_flambda
 enable_flambda_invariants
 enable_cmm_invariants
-with_target_bindir
 with_target_sh
 enable_reserved_header_bits
 enable_stdlib_manpages
@@ -1059,6 +1059,7 @@ COMPILER_NATIVE_CPPFLAGS
 DLLIBS
 LIBUNWIND_CPPFLAGS
 LIBUNWIND_LDFLAGS
+TARGET_BINDIR
 WINDOWS_UNICODE_MODE
 DEFAULT_STRING
 CC
@@ -1750,8 +1751,6 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-odoc             build documentation with odoc
-  --with-target-bindir    location of the runtime binaries on the target
-                          system
   --with-target-sh        location of Posix sh on the target system
   --with-afl              use the AFL fuzzer
   --with-flexdll          bootstrap FlexDLL from the given sources
@@ -1782,6 +1781,8 @@ Some influential environment variables:
               libunwind headers>)
   LIBUNWIND_LDFLAGS
               linker flags for libunwind (e.g. -L<location of libunwind>
+  TARGET_BINDIR
+              location of the runtime binaries on the target system
   WINDOWS_UNICODE_MODE
               how to handle Unicode under Windows: ansi, compatible
   DEFAULT_STRING
@@ -4091,14 +4092,6 @@ then :
 fi
 
 
-
-# Check whether --with-target-bindir was given.
-if test ${with_target_bindir+y}
-then :
-  withval=$with_target_bindir; target_bindir=$withval
-else $as_nop
-  target_bindir=''
-fi
 
 
 
@@ -23457,9 +23450,9 @@ fi
   eval "exec_prefix=\"$exec_prefix\""
   eval "ocaml_bindir=\"$bindir\""
   eval "ocaml_libdir=\"$libdir\""
-  if test x"$target_bindir" = 'x'
+  if test x"$TARGET_BINDIR" = 'x'
 then :
-  target_bindir="$ocaml_bindir"
+  TARGET_BINDIR="$ocaml_bindir"
 fi
   if test x"$target_launch_method" = 'x'
 then :
@@ -24424,7 +24417,7 @@ fi
   target_launch_method=\
 '$(echo "$target_launch_method" | sed -e "s/'/'\"'\"'/g")'
   ocaml_bindir='$(echo "$ocaml_bindir" | sed -e "s/'/'\"'\"'/g")'
-  target_bindir='$(echo "$target_bindir" | sed -e "s/'/'\"'\"'/g")'
+  TARGET_BINDIR='$(echo "$TARGET_BINDIR" | sed -e "s/'/'\"'\"'/g")'
 
 _ACEOF
 
@@ -25601,7 +25594,7 @@ ltmain=$ac_aux_dir/ltmain.sh
  ;;
     "shebang":C) printf '%s\n%s\000\n' "$launch_method" "$ocaml_bindir" \
     > stdlib/runtime.info
-  printf '%s\n%s\000\n' "$target_launch_method" "$target_bindir" \
+  printf '%s\n%s\000\n' "$target_launch_method" "$TARGET_BINDIR" \
     > stdlib/target_runtime.info ;;
 
   esac
