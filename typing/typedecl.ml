@@ -2218,10 +2218,29 @@ let report_error_doc ppf = function
   | Unavailable_type_constructor p ->
       fprintf ppf "The definition of type %a@ is unavailable"
         (Style.as_inline_code Printtyp.path) p
-  | Variance Typedecl_variance.Varying_anonymous ->
-      fprintf ppf "@[%s@ %s@ %s@]"
-        "In this GADT definition," "the variance of some parameter"
-        "cannot be checked"
+  | Variance (Typedecl_variance.Varying_anonymous (n, reason)) ->
+      let reason_text =
+        match reason with
+        | Variable_constrained ty ->
+            dprintf
+              ", because the type variable %a appears@ in other parameters.@ \
+               In GADTS, covariant or contravariant type parameters@ \
+               must not depend@ on other parameters."
+              (Style.as_inline_code Printtyp.type_expr) ty
+        | Variable_instantiated ty ->
+            dprintf
+              ", because it is instantiated to the type %a.@ \
+               Covariant or contravariant type parameters@ \
+               may only appear@ as type variables@ \
+               in GADT constructor definitions."
+              (Style.as_inline_code Printtyp.type_expr) ty
+      in
+      fprintf ppf
+        "@[<hov>In this GADT constructor definition,@ \
+         the variance of the@ %d%s parameter@ \
+         cannot be checked%t@]"
+        n (Misc.ordinal_suffix n)
+        reason_text
   | Val_in_structure ->
       fprintf ppf "Value declarations are only allowed in signatures"
   | Multiple_native_repr_attributes ->
