@@ -15,7 +15,7 @@ accident if this prospective calendar ever matches the real release calendar.
 |    Phase              | Expected (early) | Expected (late) | Actual           |
 |-----------------------|------------------|-----------------|------------------|
 | Feature freeze        | 15 August 2024   | (same)          | 25 August 2024   |
-| 1st beta release      | 10th September   | 15th October    |                  |
+| 1st beta release      | 10th September   | 15th October    | 7th November     |
 | 1st release candidate | 1st October      | 7th November    |                  |
 | Release               | 7th October      | 21st November   |                  |
 
@@ -23,7 +23,10 @@ accident if this prospective calendar ever matches the real release calendar.
 
 |    Release            | Expected (early) | Expected (late)  | Actual      |
 |-----------------------|------------------|------------------|-------------|
-| Release               | April 2025       |  May 2025        |             |
+| Feature freeze        | 5th March 2025   |  (same)          |             |
+| 1st beta release      | April 2025       |  May 2025        |             |
+| 1st release candidate | May 2025         |  June 2025       |             |
+| Release               | June 2025        |  July 2025       |             |
 
 # LTS version
 
