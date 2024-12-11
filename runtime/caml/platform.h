@@ -90,6 +90,10 @@ Caml_inline void cpu_relax(void) {
    The domain lock must be held in order to call
    [caml_plat_lock_non_blocking].
 
+   It is possible to combine calls to [caml_plat_lock_non_blocking] on
+   a mutex from the mutator with calls to [caml_plat_lock_blocking] on
+   the same mutex from a STW section.
+
    These functions never raise exceptions; errors are fatal. Thus, for
    usages where bugs are susceptible to be introduced by users, the
    functions from caml/sync.h should be used instead.
