@@ -4,6 +4,8 @@
 \subsubsection*{sss:lex:text-encoding}{Source file encoding}
 
 OCaml source files are expected to be valid UTF-8 encoded Unicode text.
+The interpretation of source files which are not UTF-8 encoded is unspecified.
+Such source files may be rejected in the future.
 
 \subsubsection*{sss:lex:blanks}{Blanks}
 

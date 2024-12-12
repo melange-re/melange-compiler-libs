@@ -588,7 +588,7 @@ ___________
 
 - #13668: Document the basic support for unicode identifiers and the switch to
    UTF-8 encoded Unicode text for OCaml source file
-  (Florian Angeletti, review by Daniel Bünzli)
+  (Florian Angeletti, review by Nicolás Ojeda Bär and Daniel Bünzli)
 
 ### Compiler user-interface and warnings:
 
