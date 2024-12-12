@@ -72,3 +72,30 @@ let it = Q.Sub.A
 [%%expect {|
 val it : Q.Sub.t = Q.Sub.A
 |}]
+
+(* A "hellish example" from Florian Angeletti. *)
+module M = struct
+  module N = struct
+    module A = struct
+      module B = struct
+        type t = X
+      end
+    end
+    module F(X:sig type t end) = struct type t = A of X.t end
+  end
+end
+open M open N open A open B
+[%%expect {|
+module M :
+  sig
+    module N :
+      sig
+        module A : sig module B : sig type t = X end end
+        module F : (X : sig type t end) -> sig type t = A of X.t end
+      end
+  end
+|}]
+let x = let module FB = F(B) in FB.A X
+[%%expect {|
+val x : M.N.F(M.N.A.B).t = M.N.F(M.N.A.B).A X
+|}]
