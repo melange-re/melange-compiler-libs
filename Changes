@@ -124,12 +124,6 @@ Working version
    review by Florian Angeletti, Anil Madhavapeddy, Gabriel Scherer,
    and Miod Vallat)
 
-- #13666: Rewrite parts of the example code around nested lists in Chapter 6
-  (Polymorphism and its limitations -> Polymorphic recursion) giving the
-  "depth" function [in the non-polymorphically-recursive part of the example]
-  a much more sensible behavior; also fix a typo and some formatting.
-  (Frank Steffahn, review by Florian Angeletti)
-
 ### Compiler user-interface and warnings:
 
 - #13428: support dump=[source | parsetree | lambda | ... | cmm | ...]
@@ -568,6 +562,12 @@ ___________
 - #13440: Update documentation of `Gc.{control,get,set}` to reflect fields
   not currently supported on OCaml 5.
   (Jan Midtgaard, review by Gabriel Scherer)
+
+- #13666: Rewrite parts of the example code around nested lists in Chapter 6
+  (Polymorphism and its limitations -> Polymorphic recursion) giving the
+  "depth" function [in the non-polymorphically-recursive part of the example]
+  a much more sensible behavior; also fix a typo and some formatting.
+  (Frank Steffahn, review by Florian Angeletti)
 
 ### Compiler user-interface and warnings:
 
