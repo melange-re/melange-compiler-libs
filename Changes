@@ -586,9 +586,9 @@ ___________
   a much more sensible behavior; also fix a typo and some formatting.
   (Frank Steffahn, review by Florian Angeletti)
 
-- #????: Document the basic support for unicode identifiers and the switch to
-   utf-8 encoded unicode text for OCaml source file
-  (Florian Angeletti, review by ???)
+- #13668: Document the basic support for unicode identifiers and the switch to
+   UTF-8 encoded Unicode text for OCaml source file
+  (Florian Angeletti, review by Daniel Bünzli)
 
 ### Compiler user-interface and warnings:
 
