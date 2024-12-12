@@ -339,6 +339,12 @@ ___________
    review by Florian Angeletti, Anil Madhavapeddy, Gabriel Scherer,
    and Miod Vallat)
 
+- #13666: Rewrite parts of the example code around nested lists in Chapter 6
+  (Polymorphism and its limitations -> Polymorphic recursion) giving the
+  "depth" function [in the non-polymorphically-recursive part of the example]
+  a much more sensible behavior; also fix a typo and some formatting.
+  (Frank Steffahn, review by Florian Angeletti)
+
 ### Compiler user-interface and warnings:
 
 * #12084: Check link order when creating archive and when using ocamlopt
