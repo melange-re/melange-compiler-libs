@@ -1,5 +1,10 @@
 \section{s:lexical-conventions}{Lexical conventions}
 %HEVEA\cutname{lex.html}
+
+\subsubsection*{sss:lex:text-encoding}{Source file encoding}
+
+OCaml source files are expected to be valid UTF-8 encoded unicode text.
+
 \subsubsection*{sss:lex:blanks}{Blanks}
 
 The following characters are considered as blanks: space,
@@ -31,21 +36,23 @@ let f = function
 
 \begin{syntax}
 ident: (letter || "_") { letter || "0"\ldots"9" || "_" || "'" } ;
-capitalized-ident: ("A"\ldots"Z") { letter || "0"\ldots"9" || "_" || "'" } ;
+capitalized-ident: uppercase-letter { letter || "0"\ldots"9" || "_" || "'" } ;
 lowercase-ident:
-   ("a"\ldots"z" || "_") { letter || "0"\ldots"9" || "_" || "'" } ;
-letter: "A"\ldots"Z" || "a"\ldots"z"
+   (lowercase-letter || "_") { letter || "0"\ldots"9" || "_" || "'" } ;
+letter: uppercase-letter || lowercase-letter ;
+lowercase-letter:
+"a"\ldots"z" || "š" || "ž" || "œ" || "ß" \ldots "ö" || "ø" \dots "ÿ" ;
+uppercase-letter:
+  "A"\ldots"Z" || "Š" || "Ž" || "Œ" || "Ÿ" || "À" \ldots "Ö" || "Ø" \ldots "Þ" || "ẞ"
+ ;
 \end{syntax}
 
 Identifiers are sequences of letters, digits, "_" (the underscore
 character), and "'" (the single quote), starting with a
 letter or an underscore.
 Letters contain at least the 52 lowercase and uppercase
-letters from the ASCII set. The current implementation
-also recognizes as letters some characters from the ISO
-8859-1 set (characters 192--214 and 216--222 as uppercase letters;
-characters 223--246 and 248--255 as lowercase letters). This
-feature is deprecated and should be avoided for future compatibility.
+letters from the ASCII set, and the 70 lowercase and uppercase letters
+from the ISO 8859-15 character set extended with uppercase ẞ.
 
 All characters in an identifier are
 meaningful. The current implementation accepts identifiers up to
@@ -186,7 +193,7 @@ string-literal:
        |  '{' quoted-string-id '|' { newline | any-char } '|' quoted-string-id '}'
 ;
 quoted-string-id:
-     { 'a'...'z' || '_' }
+     { lowercase-letter || '_' }
 ;
 string-character:
           regular-string-char
