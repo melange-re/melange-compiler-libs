@@ -3,7 +3,7 @@
 
 \subsubsection*{sss:lex:text-encoding}{Source file encoding}
 
-OCaml source files are expected to be valid UTF-8 encoded unicode text.
+OCaml source files are expected to be valid UTF-8 encoded Unicode text.
 
 \subsubsection*{sss:lex:blanks}{Blanks}
 
