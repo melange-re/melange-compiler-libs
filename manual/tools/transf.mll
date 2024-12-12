@@ -6,7 +6,7 @@
   match c with
   | '\'' -> printf "{\\textquotesingle}"
   | '`' -> printf "{\\textasciigrave}"
-  | _ -> printf "\\char%d" (int_of_char c);
+  | _ -> printf "{\\char%d}" (int_of_char c);
   ;;
 }
 
