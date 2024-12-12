@@ -41,18 +41,21 @@ lowercase-ident:
    (lowercase-letter || "_") { letter || "0"\ldots"9" || "_" || "'" } ;
 letter: uppercase-letter || lowercase-letter ;
 lowercase-letter:
-"a"\ldots"z" || "š" || "ž" || "œ" || "ß" \ldots "ö" || "ø" \dots "ÿ" ;
+"a"\ldots"z"  || 'U+00DF' \ldots 'U+00F6' || 'U+00F8' \dots 'U+00FF' || 'U+0153' || 'U+0161' || 'U+017E'  ;
 uppercase-letter:
-  "A"\ldots"Z" || "Š" || "Ž" || "Œ" || "Ÿ" || "À" \ldots "Ö" || "Ø" \ldots "Þ" || "ẞ"
+  "A"\ldots"Z" || 'U+00C0' \ldots 'U+00D6' || 'U+00D8' \ldots 'U+00DE' \\
+  || 'U+0152' || 'U+0160' || 'U+017D' || 'U+0178' || 'U+1E9E'
  ;
 \end{syntax}
 
 Identifiers are sequences of letters, digits, "_" (the underscore
 character), and "'" (the single quote), starting with a
 letter or an underscore.
-Letters contain at least the 52 lowercase and uppercase
-letters from the ASCII set, and the 70 lowercase and uppercase letters
-from the ISO 8859-15 character set extended with uppercase ẞ.
+Letters contain the 52 lowercase and uppercase letters from the ASCII set,
+letters from the Latin-1 Supplement block ("U+0080" to "U+00FF"), letters
+"ŠšŽžŒœŸ" from the Latin Extended-A block ("U+0100" to "U+017F") and upper case
+ẞ ("U+189E"). Any byte sequence which is equivalent to a supported Unicode
+character under NFC (Normalization Form C) is supported too.
 
 All characters in an identifier are
 meaningful. The current implementation accepts identifiers up to
