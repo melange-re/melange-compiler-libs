@@ -54,10 +54,11 @@ Identifiers are sequences of letters, digits, "_" (the underscore
 character), and "'" (the single quote), starting with a
 letter or an underscore.
 Letters contain the 52 lowercase and uppercase letters from the ASCII set,
-letters from the Latin-1 Supplement block ("U+0080" to "U+00FF"), letters
-"ŠšŽžŒœŸ" from the Latin Extended-A block ("U+0100" to "U+017F") and upper case
-ẞ ("U+189E"). Any byte sequence which is equivalent to a supported Unicode
-character under NFC (Normalization Form C) is supported too.
+letters "ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿ" from
+the Latin-1 Supplement block, letters "ŠšŽžŒœŸ" from the Latin Extended-A block
+and upper case ẞ ("U+189E"). Any byte sequence which is equivalent to one of
+these Unicode characters under NFC\footnote{Normalization Form C} is supported
+too.
 
 All characters in an identifier are
 meaningful. The current implementation accepts identifiers up to
