@@ -156,7 +156,7 @@ let scan_file ldeps file tolink = match file with
       (* This is a .cmx file. It must be linked in any case. *)
       Linkdeps.add ldeps
         ~filename:file_name ~compunit:info.ui_name
-        ~provides:info.ui_defines
+        ~provides:[info.ui_name]
         ~requires:(List.map fst info.ui_imports_cmx);
       (info, file_name, crc) :: tolink
   | Library (file_name,infos) ->
@@ -171,7 +171,7 @@ let scan_file ldeps file tolink = match file with
            then begin
              Linkdeps.add ldeps
                ~filename:file_name ~compunit:info.ui_name
-               ~provides:info.ui_defines
+               ~provides:[info.ui_name]
                ~requires:(List.map fst info.ui_imports_cmx);
              (info, file_name, crc) :: reqd
            end else
