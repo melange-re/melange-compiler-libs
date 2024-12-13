@@ -44,6 +44,7 @@ let bytecomp_c_compiler =
 let native_c_compiler =
   c_compiler ^ " " ^ native_cflags ^ " " ^ native_cppflags
 let native_c_libraries = {@QS@|@cclibs@|@QS@}
+let compression_c_libraries = {@QS@|@zstd_libs@|@QS@}
 let native_ldflags = {@QS@|@native_ldflags@|@QS@}
 let native_pack_linker = {@QS@|@PACKLD@|@QS@}
 let default_rpath = {@QS@|@rpath@|@QS@}
@@ -72,6 +73,7 @@ let native_compiler = @native_compiler@
 let architecture = {@QS@|@arch@|@QS@}
 let model = {@QS@|@model@|@QS@}
 let system = {@QS@|@system@|@QS@}
+let target_os_type = {@QS@|@target_os_type@|@QS@}
 
 let asm = {@QS@|@AS@|@QS@}
 let asm_cfi_supported = @asm_cfi_supported@

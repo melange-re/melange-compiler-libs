@@ -65,6 +65,12 @@ val bytecomp_c_libraries: string
 val native_c_libraries: string
 (** The C libraries to link with native-code programs *)
 
+val compression_c_libraries: string
+(** The C libraries needed with -lcomprmarsh (should appear before
+    {!native_c_libraries} in a call to the C compiler)
+
+    @since 5.4 *)
+
 val native_ldflags : string
 (* Flags to pass to the system linker *)
 
@@ -162,6 +168,12 @@ val model: string
 
 val system: string
 (** Name of operating system for the native-code compiler *)
+
+val target_os_type: string
+(** Operating system targetted by the native-code compiler. One of
+-  ["Unix"] (for all Unix versions, including Linux and macOS),
+-  ["Win32"] (for MS-Windows, OCaml compiled with MSVC++ or MinGW-w64),
+-  ["Cygwin"] (for MS-Windows, OCaml compiled with Cygwin). *)
 
 val asm: string
 (** The assembler (and flags) to use for assembling

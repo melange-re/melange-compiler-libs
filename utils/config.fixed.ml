@@ -35,6 +35,7 @@ let bytecomp_c_libraries = ""
 let bytecomp_c_compiler = ""
 let native_c_compiler = c_compiler
 let native_c_libraries = ""
+let compression_c_libraries = ""
 let native_ldflags = ""
 let native_pack_linker = boot_cannot_call "the linker"
 let default_rpath = ""
@@ -59,6 +60,8 @@ let tsan = false
 let architecture = "none"
 let model = "default"
 let system = "unknown"
+let target_os_type =
+  "The boot compiler should not be using Config.target_os_type"
 let asm = boot_cannot_call "the assembler"
 let asm_cfi_supported = false
 let with_frame_pointers = false
