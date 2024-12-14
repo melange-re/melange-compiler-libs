@@ -18102,15 +18102,6 @@ then :
 esac
 fi
 
-case $enable_native_toplevel,$natdynlink in #(
-  yes,false) :
-    as_fn_error $? "The native toplevel requires native dynlink support" "$LINENO" 5 ;; #(
-  yes,*) :
-    install_ocamlnat=true ;; #(
-  *) :
-    install_ocamlnat=false ;;
-esac
-
 # Try to work around the Skylake/Kaby Lake processor bug.
 case "$ocaml_cc_vendor,$target" in #(
   *gcc*,x86_64-*|*gcc*,i686-*) :
@@ -18405,6 +18396,15 @@ then :
 else $as_nop
   natdynlink_archive=""
 fi
+
+case $enable_native_toplevel,$natdynlink in #(
+  yes,false) :
+    as_fn_error $? "The native toplevel requires native dynlink support" "$LINENO" 5 ;; #(
+  yes,*) :
+    install_ocamlnat=true ;; #(
+  *) :
+    install_ocamlnat=false ;;
+esac
 
 printf "%s\n" "#define OCAML_OS_TYPE \"$ostype\"" >>confdefs.h
 
