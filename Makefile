@@ -34,7 +34,8 @@ CAMLOPT=$(OCAMLRUN) ./ocamlopt$(EXE) $(STDLIBFLAGS) -I otherlibs/dynlink
 ARCHES=amd64 arm64 power s390x riscv
 VPATH = utils parsing typing bytecomp file_formats lambda middle_end \
   middle_end/closure middle_end/flambda middle_end/flambda/base_types \
-  asmcomp driver toplevel tools $(addprefix otherlibs/, $(ALL_OTHERLIBS))
+  asmcomp driver toplevel tools runtime \
+  $(addprefix otherlibs/, $(ALL_OTHERLIBS))
 INCLUDES = $(addprefix -I ,$(VPATH))
 
 ifeq "$(strip $(NATDYNLINKOPTS))" ""
@@ -1999,9 +2000,6 @@ ocamltest/ocamltest.opt$(EXE): ocamlopt ocamlyacc ocamllex
 # (see #9797)
 ocamltest/%: \
   VPATH := $(filter-out $(unix_directory), $(VPATH))
-
-# runtime headers are necessary to link ocamltest in custom mode
-ocamltest/%: VPATH += runtime
 
 # Ocamltest_unix and the linking of the executable itself should include the
 # Unix library, if it's being built.
