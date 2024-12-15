@@ -25,6 +25,19 @@
 # have to be lazier.
 HOST_ZSTD_LIBS=ZSTD_LIBS=$(shell ocamlopt -config-var compression_c_libraries)
 
+# The build system adds various include directories which pertain to the current
+# tree, including -I runtime, which is necessary for -custom executables.
+# ocamltest is always a -custom executable, but some others (ocamldoc; the
+# debugger, etc.) are only -custom in specific circumstances. It is therefore
+# fiddly to change this in the main build system, so we perform a slightly
+# different trick by ensuring that "+" is the first entry in VPATH. This will
+# put the host compiler's standard library (and consequently its runtime
+# objects) well above the .a files found with -I runtime. For now, this seems
+# the least nefarious way of ensuring that the bytecode compiler has the C
+# headers in runtime/caml available without breaking builds with an external
+# ocamlopt.
+VPATH := + $(VPATH)
+
 CROSS_OVERRIDES=OCAMLRUN=ocamlrun NEW_OCAMLRUN=ocamlrun \
   BOOT_OCAMLLEX=ocamllex OCAMLYACC=ocamlyacc
 CROSS_COMPILER_OVERRIDES=$(CROSS_OVERRIDES) CAMLC=ocamlc CAMLOPT=ocamlopt \
