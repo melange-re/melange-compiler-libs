@@ -34,4 +34,8 @@
  }
 *)
 
+(* Check that it is still possible to link modules compiled with -for-pack but
+   not yet packed for the sake of backward compatibility. This is not officially
+   supported, but it is not worth breaking packages using this property. *)
+
 let () = Format.printf "A.x=%d@." A.x
