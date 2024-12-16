@@ -61,11 +61,12 @@ if %ERRORLEVEL% equ 1 (
 goto :EOF
 
 :UpgradeCygwin
+set CYGWIN_FLAGS=
 if %CYGWIN_UPGRADE_REQUIRED% equ 1 (
-  set CYGWIN_FLAGS=--upgrade-also
-  set CYGWIN_UPGRADE_REQUIRED=0
-) else (
-  set CYGWIN_FLAGS=
+  if "%CYGWIN_INSTALL_PACKAGES%" neq "" (
+    set CYGWIN_FLAGS=--upgrade-also
+    set CYGWIN_UPGRADE_REQUIRED=0
+  )
 )
 if "%CYGWIN_INSTALL_PACKAGES%" neq "" "%CYG_ROOT%\setup-x86_64.exe" --quiet-mode --no-shortcuts --no-startmenu --no-desktop --only-site --root "%CYG_ROOT%" --site "%CYG_MIRROR%" --local-package-dir "%CYG_CACHE%" %CYGWIN_FLAGS% --packages %CYGWIN_INSTALL_PACKAGES:~1%
 for %%P in (%CYGWIN_COMMANDS%) do "%CYG_ROOT%\bin\%%P.exe" --version 2> nul > nul || set CYGWIN_UPGRADE_REQUIRED=1
