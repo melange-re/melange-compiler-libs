@@ -2135,6 +2135,11 @@ let simplify_app_summary app_view = match app_view.arg with
     | false, Some p -> Includemod.Error.Named p, mty
     | false, None   -> Includemod.Error.Anonymous, mty
 
+let check_package_closed ~loc ~env ~typ fl =
+  if List.exists (fun (_n, t) -> not (Ctype.closed_type_expr t)) fl
+  then
+    raise (Error (loc, env, Incomplete_packed_module typ))
+
 let not_principal msg = Warnings.Not_principal (Format_doc.Doc.msg msg)
 
 let rec type_module ?(alias=false) sttn funct_body anchor env smod =
@@ -2255,10 +2260,7 @@ and type_module_aux ~alias sttn funct_body anchor env smod =
       let mty =
         match get_desc (Ctype.expand_head env exp.exp_type) with
           Tpackage (p, fl) ->
-            if List.exists (fun (_n, t) -> not (Ctype.closed_type_expr t)) fl
-            then
-              raise (Error (smod.pmod_loc, env,
-                            Incomplete_packed_module exp.exp_type));
+            check_package_closed ~loc:smod.pmod_loc ~env ~typ:exp.exp_type fl;
             if !Clflags.principal &&
               not (Typecore.generalizable (Btype.generic_level-1) exp.exp_type)
             then
