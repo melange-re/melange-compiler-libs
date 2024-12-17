@@ -506,22 +506,24 @@ and core_type1 ctxt f x =
         pp f "@[<hov2>%a#%a@]"
           (list (core_type ctxt) ~sep:"," ~first:"(" ~last:")") l
           (with_loc type_longident) li
-    | Ptyp_package (lid, cstrs) ->
-        let aux f (s, ct) =
-          pp f "type %a@ =@ %a"
-            (with_loc type_longident) s
-            (core_type ctxt) ct  in
-        (match cstrs with
-         |[] -> pp f "@[<hov2>(module@ %a)@]" (with_loc type_longident) lid
-         |_ ->
-             pp f "@[<hov2>(module@ %a@ with@ %a)@]"
-               (with_loc type_longident) lid
-               (list aux  ~sep:"@ and@ ")  cstrs)
+    | Ptyp_package pck_ty ->
+        pp f "@[<hov2>(module@ %a)@]" (package_type ctxt) pck_ty
     | Ptyp_open(li, ct) ->
        pp f "@[<hov2>%a.(%a)@]" value_longident_loc li (core_type ctxt) ct
     | Ptyp_extension e -> extension ctxt f e
     | (Ptyp_arrow _ | Ptyp_alias _ | Ptyp_poly _) ->
        paren true (core_type ctxt) f x
+
+and package_type ctxt f (lid, cstrs) =
+  let aux f (s, ct) =
+    pp f "type %a@ =@ %a" (with_loc type_longident) s (core_type ctxt) ct
+  in
+  match cstrs with
+  | [] -> with_loc type_longident f lid
+  | _ ->
+    pp f "%a@ with@ %a"
+      (with_loc type_longident) lid
+      (list aux  ~sep:"@ and@ ")  cstrs
 
 (********************pattern********************)
 (* be cautious when use [pattern], [pattern1] is preferred *)
