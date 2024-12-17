@@ -519,11 +519,11 @@ and package_type ctxt f (lid, cstrs) =
     pp f "type %a@ =@ %a" (with_loc type_longident) s (core_type ctxt) ct
   in
   match cstrs with
-   |[] -> (with_loc type_longident) f lid
-   |_ ->
-       pp f "%a@ with@ %a"
-         (with_loc type_longident) lid
-         (list aux  ~sep:"@ and@ ")  cstrs
+  | [] -> with_loc type_longident f lid
+  | _ ->
+    pp f "%a@ with@ %a"
+      (with_loc type_longident) lid
+      (list aux  ~sep:"@ and@ ")  cstrs
 
 (********************pattern********************)
 (* be cautious when use [pattern], [pattern1] is preferred *)
