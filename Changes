@@ -588,7 +588,8 @@ ___________
 
 ### Compiler user-interface and warnings:
 
-* #12084: Check link order when creating archive and when using ocamlopt
+* #12084, #13669, #13673: Check link order when creating archive and when using
+   ocamlopt.
   (Hugo Heuzard, review by Stefan Muenzel and Sébastien Hinderer)
 
 - #12980: Explain type mismatch involving first-class modules by including

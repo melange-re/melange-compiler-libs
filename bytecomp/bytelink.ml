@@ -110,6 +110,7 @@ let provided compunit =
 
 let linkdeps_unit ldeps ~filename compunit =
   let requires = required compunit in
+  (* [requires] contains pack submodules *)
   let provides = provided compunit in
   let Compunit compunit = compunit.cu_name in
   Linkdeps.add ldeps ~filename ~compunit ~requires ~provides
