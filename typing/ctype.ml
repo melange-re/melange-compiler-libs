@@ -207,9 +207,9 @@ let with_local_level_gen ~begin_def ~structure ?before_generalize f =
     end
   in
   simple_abbrevs := Mnil;
-  (* Nodes in [pool] were either created by the above call to [f],
-     or they were created before, generalized, and then added to
-     the pool by [update_level].
+  (* Nodes in [pool] were either created by the above calls to [f]
+     and [before_generalize], or they were created before, generalized,
+     and then added to the pool by [update_level].
      In the latter case, their level was already kept for backtracking
      by a call to [set_level] inside [update_level].
      Since backtracking can only go back to a snapshot taken before [f] was
