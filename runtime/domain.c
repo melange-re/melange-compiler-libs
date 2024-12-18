@@ -1943,9 +1943,8 @@ CAMLexport int caml_bt_is_self(void)
 
 CAMLexport intnat caml_domain_is_multicore (void)
 {
-  dom_internal *self = domain_self;
-  bool bt_running = backup_thread_running(self);
-  return (!caml_domain_alone() || bt_running);
+  return (!caml_domain_alone()
+          || backup_thread_running(domain_self));
 }
 
 CAMLexport void caml_acquire_domain_lock(void)
