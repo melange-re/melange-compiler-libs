@@ -211,7 +211,7 @@ and expression_desc =
             The resulting typedtree for the application is:
             Texp_apply (Texp_ident "f/1037",
                         [(Nolabel, Omitted ());
-                         (Labelled "y", Some (Texp_constant Const_int 3))
+                         (Labelled "y", Arg (Texp_constant Const_int 3))
                         ])
          *)
   | Texp_match of expression * computation case list * value case list * partial

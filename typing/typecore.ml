@@ -2632,7 +2632,8 @@ type untyped_apply_arg =
         ty_arg0 : type_expr;
         wrapped_in_some : bool;
       }
-    (* - [f arg] when is known to be a function (f : _ -> _)
+    (* [arg] is a [Known_arg] in:
+       - [f arg] when is known to be a function (f : _ -> _)
        - [f ~lab:arg] when (f : lab:_ -> _)
        - [f ?lab:arg] when (f : ?lab:_ -> _)
        In these cases we have [wrapped_in_some = false].
@@ -2641,15 +2642,15 @@ type untyped_apply_arg =
          In this case [wrapped_in_some = true].
 
        [ty_arg] is the (possibly generic) expected type of the argument,
-       and [ty_arg0] is an instance of [ty_arg].
-    *)
+       and [ty_arg0] is an instance of [ty_arg]. *)
   | Unknown_arg of
       {
         sarg : Parsetree.expression;
         ty_arg : type_expr;
       }
-    (* [f arg] when [f] is not known (either a type variable,
-       or the weird [commu_ok] case where a function type is known
+    (* [arg] is an [Unknown_arg] in:
+       [f arg] when [f] is not known (either a type variable,
+       or the [commu_ok] case where a function type is known
        but not principally).
 
        [ty_arg] is the expected type of the argument, usually just
@@ -2659,9 +2660,9 @@ type untyped_apply_arg =
         ty_arg : type_expr;
         level: int;
       }
-    (* [~foo] in [f x] with [f : ?foo:ty -> _ -> _]
-       ([foo] is an optional argument that was not passed,
-        but a following argument was passed).
+    (* When [f : ?foo:ty -> _ -> _], [~foo] is an [Eliminated_optional_arg]
+       in [f x] ([foo] is an optional argument that was not passed,  but a
+       following positional argument was passed).
 
        [level] is the level of the function arrow. *)
 
@@ -5611,8 +5612,7 @@ and type_application env funct sargs =
       (* Consider for example the application
            [f n]
          with
-           [f : a:bar -> ?opt:baz -> int -> unit]
-      *)
+           [f : a:bar -> ?opt:baz -> int -> unit] *)
       let ty_ret, args =
         collect_apply_args env funct ignore_labels ty (instance ty) sargs
       in
@@ -5625,16 +5625,14 @@ and type_application env funct sargs =
       (* example: type-check [n] and generate [None] for [?opt].
          [args] becomes [(Label "a", Omitted bar);
                          (Optional "opt", Arg None);
-                         (Nolabel, Arg n)]
-       *)
+                         (Nolabel, Arg n)] *)
       let ty_ret, args =
         type_omitted_parameters ty_ret args in
       (* example:
          [ty_ret] becomes [a:bar -> unit]
          [args] becomes [(Label "a", Omitted ());
                          (Optional "opt", Arg None);
-                         (Nolabel, Arg n)]
-      *)
+                         (Nolabel, Arg n)] *)
       args, instance ty_ret
 
 and type_construct env ~sexp lid sarg ty_expected_explained =
