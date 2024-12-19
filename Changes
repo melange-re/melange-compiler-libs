@@ -140,7 +140,8 @@ Working version
   (Mark Shinwell, review by Vincent Laviron)
 
 - #13612: Refactor `type_application`
-  (Ulysse Gérard, Leo White, review by Antonin Décimo, ...)
+  (Ulysse Gérard, Leo White, review by Antonin Décimo, Gabriel Scherer,
+   Samuel Vivien, Florian Angeletti and Jacques Garrigue)
 
 ### Build system:
 
