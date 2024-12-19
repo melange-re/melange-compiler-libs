@@ -220,7 +220,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
     && List.for_all (fun (_, arg) -> not (is_omitted arg)) oargs ->
       let argl, extra_args = cut p.prim_arity oargs in
       let arg_exps =
-         List.map (function _, Arg x -> x | _ -> assert false) argl
+         List.map (function _, Arg x -> x | _, Omitted () -> assert false) argl
       in
       let args = transl_list ~scopes arg_exps in
       let prim_exp = if extra_args = [] then Some e else None in
