@@ -2832,7 +2832,7 @@ let collect_apply_args env funct ignore_labels ty_fun ty_fun0 sargs =
   in
   loop ty_fun ty_fun0 [] sargs
 
-let type_omitted_parameters ty_ret args =
+let type_omitted_parameters_and_build_result_type ty_ret args =
   let ty_ret, args =
     List.fold_left
       (fun (ty_ret, args) (lbl, arg) ->
@@ -5627,7 +5627,7 @@ and type_application env funct sargs =
                          (Optional "opt", Arg None);
                          (Nolabel, Arg n)] *)
       let ty_ret, args =
-        type_omitted_parameters ty_ret args in
+        type_omitted_parameters_and_build_result_type ty_ret args in
       (* example:
          [ty_ret] becomes [a:bar -> unit]
          [args] becomes [(Label "a", Omitted ());
