@@ -345,6 +345,10 @@ ___________
   a much more sensible behavior; also fix a typo and some formatting.
   (Frank Steffahn, review by Florian Angeletti)
 
+- #13668: Document the basic support for unicode identifiers and the switch to
+   UTF-8 encoded Unicode text for OCaml source file
+  (Florian Angeletti, review by Nicolás Ojeda Bär and Daniel Bünzli)
+
 ### Compiler user-interface and warnings:
 
 * #12084, #13669, #13673: Check link order when creating archive and when using
