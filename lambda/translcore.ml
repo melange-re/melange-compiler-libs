@@ -719,10 +719,7 @@ and transl_apply ~scopes
            if we already passed here this is a no-op. *)
         let l =
           List.map
-            (fun (arg, opt) ->
-               match arg with
-               | Omitted () -> arg, opt
-               | Arg arg -> Arg (protect "arg" arg), opt)
+            (fun (arg, opt) -> Typedtree.map_apply_arg (protect "arg") arg, opt)
             l
         in
         let id_arg = Ident.create_local "param" in
@@ -748,11 +745,7 @@ and transl_apply ~scopes
     | [] ->
         lapply lam (List.rev_map fst args)
   in
-  let transl_arg arg =
-    match arg with
-    | Omitted () as arg -> arg
-    | Arg exp -> Arg (transl_exp ~scopes exp)
-  in
+  let transl_arg arg = Typedtree.map_apply_arg (transl_exp ~scopes) arg in
   (build_apply lam [] (List.map (fun (l, arg) ->
                                    transl_arg arg,
                                    Btype.is_optional l)

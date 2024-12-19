@@ -900,3 +900,7 @@ let split_pattern pat =
         combine_opts (into cpat) exns1 exns2
   in
   split_pattern pat
+
+let map_apply_arg f = function
+  | Arg arg -> Arg (f arg)
+  | Omitted _ as arg -> arg
