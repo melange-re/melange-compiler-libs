@@ -15,10 +15,10 @@ ___________
 
 ### Language features:
 
-- #12828, #13282: Add short syntax for dependent functor types `(X:A) -> ...`
+- #12828, #13283: Add short syntax for dependent functor types `(X:A) -> ...`
   (Jeremy Yallop, review by Nicolás Ojeda Bär and Gabriel Scherer)
 
-- Add syntax support for deep effect handlers
+- #12309, #13158: Add syntax support for deep effect handlers
   (Leo White, Tom Kelly, Anil Madhavapeddy, KC Sivaramakrishnan, Xavier Leroy
    and Florian Angeletti, review by the same, Hugo Heuzard, and Ulysse Gérard)
 
@@ -263,7 +263,7 @@ ___________
 
 - #11716: ocamllex: mismatched parentheses and curly brackets are now caught
   by ocamllex, instead of causing invalid OCaml code to be generated.
-  (Demi Marie Obenour)
+  (Demi Marie Obenour, review by Damien Doligez and Xavier Leroy)
 
 - #12904: Run the testsuite with ThreadSanitizer on a PR when label
   `run-thread-sanitizer` is added
@@ -276,7 +276,7 @@ ___________
 
 - #13136: Rewrite GDB extensions and macros in debugger-agnostic Python, and add
   LLDB support for them.
-  (Nick Barnes).
+  (Nick Barnes, review by Tim McGilchrist and Gabriel Scherer)
 
 ### Toplevel:
 
@@ -586,7 +586,7 @@ ___________
   incorrectly triggering Warning 53.
   (Nicolás Ojeda Bär, review by Chris Casinghino and Florian Angeletti)
 
-- #13203: Do not issue warning 53 is the compiler is stopping before attributes
+- #13203: Do not issue warning 53 if the compiler is stopping before attributes
   have been accurately marked.
   (Chris Casinghino, review by Florian Angeletti)
 
@@ -662,7 +662,6 @@ ___________
   Resuscitate Typedecl.update_type.
   (Jacques Garrigue and Takafumi Saikawa, review by Florian Angeletti, Richard
   Eisenberg and Gabriel Scherer)
-
 
 - #13502: Fix misindexing related to `Gc.finalise_last` that could prevent
   finalisers from being run.
@@ -3114,7 +3113,7 @@ OCaml 4.14 maintenance version
 - #13448, #13449: fix a code-generation bug on unsafe array accesses
   at type int32, int64, nativeint, which has been introduced in OCaml 4.04.
   (Gabriel Scherer, review by Nicolás Ojeda Bär and Vincent Laviron,
-   report by Simon Cruanes)
+   report by Raphaël Bocquet and Simon Cruanes)
 
 OCaml 4.14.1 (20 December 2022)
 ------------------------------
