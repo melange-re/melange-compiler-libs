@@ -49,9 +49,6 @@ external get : 'a iarray -> int -> 'a = "%array_safe_get"
    @raise Invalid_argument
    if [n] is outside the range 0 to [(length a - 1)]. *)
 
-external ( .:() ) : 'a iarray -> int -> 'a = "%array_safe_get"
-(** A synonym for [get]. *)
-
 val init : int -> f:(int -> 'a) -> 'a iarray
 (** [init n ~f] returns a fresh immutable array of length [n],
    with element number [i] initialized to the result of [f i].
@@ -226,11 +223,11 @@ val find_mapi : f:(int -> 'a -> 'b option) -> 'a iarray -> 'b option
 (** {1 Arrays of pairs} *)
 
 val split : ('a * 'b) iarray -> 'a iarray * 'b iarray
-(** [split [:(a1,b1); ...; (an,bn):]] is
-    [([:a1; ...; an:], [:b1; ...; bn:])]. *)
+(** [split [|(a1,b1); ...; (an,bn)|]] is
+    [([|a1; ...; an|], [|b1; ...; bn|])]. *)
 
 val combine : 'a iarray -> 'b iarray -> ('a * 'b) iarray
-(** [combine [:a1; ...; an:] [:b1; ...; bn:]] is [[:(a1,b1); ...; (an,bn):]].
+(** [combine [|a1; ...; an|] [|b1; ...; bn|]] is [[|(a1,b1); ...; (an,bn)|]].
     Raise [Invalid_argument] if the two immutable arrays have different
     lengths. *)
 

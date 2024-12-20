@@ -2,9 +2,6 @@
 
 (* Copied from [test.ml], but with all the [Array.fill] tests deleted *)
 
-(* The get operator isn't available in Stdlib *)
-let ( .:() ) = Iarray.( .:() );;
-
 (* [iarray]s don't have the [make*] functions, so we redefine them here *)
 let make n x = Iarray.init n (fun _ -> x);;
 let make_matrix m n x = make m (make n x);;
@@ -36,7 +33,7 @@ let () =
   assert (Iarray.exists (fun a -> a mod 2 = 0)  [|1;4;5|]);
   assert (not (Iarray.exists (fun a -> a mod 2 = 0)  [|1;3;5|]));
   assert (not (Iarray.exists (fun _ -> true) [||]));
-  assert (Iarray.exists (fun a -> a.:(9) = 1) (make_matrix 10 10 1));;
+  assert (Iarray.exists (fun a -> Iarray.get a 9 = 1) (make_matrix 10 10 1));;
 ;;
 
 let () =
@@ -106,7 +103,7 @@ let () =
   assert (Iarray.for_all (fun x -> x mod 2 = 0) [|2;4;6|]);
   assert (not (Iarray.for_all (fun x -> x mod 2 = 0) [|2;3;6|]));
   assert (Iarray.for_all (fun _ -> false) [||]);
-  assert (Iarray.for_all (fun a -> a.:(9) = 1) (make_matrix 10 10 1));
+  assert (Iarray.for_all (fun a -> Iarray.get a 9 = 1) (make_matrix 10 10 1));
 ;;
 ;;
 

@@ -53,7 +53,6 @@ type +'a t = 'a iarray
 
 external length : 'a iarray -> int = "%array_length"
 external get : 'a iarray -> int -> 'a = "%array_safe_get"
-external ( .:() ) : 'a iarray -> int -> 'a = "%array_safe_get"
 external unsafe_get : 'a iarray -> int -> 'a = "%array_unsafe_get"
 external concat : 'a iarray list -> 'a iarray = "caml_array_concat"
 

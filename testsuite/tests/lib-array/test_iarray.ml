@@ -2,13 +2,6 @@
  expect;
 *)
 
-(** The get operator isn't available in Stdlib *)
-
-let ( .:() ) = Iarray.( .:() );;
-[%%expect{|
-val ( .:() ) : 'a iarray -> int -> 'a = <fun>
-|}];;
-
 (** Create some immutable and mutable arrays *)
 
 let iarray  : int   iarray = [|1;2;3;4;5|];;
@@ -69,12 +62,13 @@ Iarray.length iarray, Iarray.length ifarray;;
 - : int * int = (5, 5)
 |}];;
 
-iarray.:(0), Iarray.get iarray 1, ifarray.:(2), Iarray.get ifarray 3;;
+Iarray.get iarray 0, Iarray.get iarray 1, Iarray.get ifarray 2,
+Iarray.get ifarray 3;;
 [%%expect{|
 - : int * int * float * float = (1, 2, 3.5, 4.5)
 |}];;
 
-iarray.:(10)
+Iarray.get iarray 10
 [%%expect{|
 Exception: Invalid_argument "index out of bounds".
 |}];;
@@ -84,7 +78,7 @@ Iarray.get iarray (-1);;
 Exception: Invalid_argument "index out of bounds".
 |}];;
 
-ifarray.:(-10);;
+Iarray.get ifarray (-10);;
 [%%expect{|
 Exception: Invalid_argument "index out of bounds".
 |}];;
