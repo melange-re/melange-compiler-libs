@@ -658,7 +658,7 @@ Since public method tags are hashed in the same way as variant tags,
 and methods are functions taking self as first argument, if you want
 to do the method call "foo#bar" from the C side, you should call:
 \begin{verbatim}
-  callback(caml_get_public_method(foo, hash_variant("bar")), foo);
+  callback(caml_get_public_method(foo, caml_hash_variant("bar")), foo);
 \end{verbatim}
 
 \subsection{ss:c-polyvar}{Polymorphic variants}
@@ -668,14 +668,14 @@ as integers (for polymorphic variants without argument), or as blocks
 (for polymorphic variants with an argument).  Unlike constructed
 terms, variant constructors are not numbered starting from 0, but
 identified by a hash value (an OCaml integer), as computed by the C function
-"hash_variant" (declared in "<caml/mlvalues.h>"):
+"caml_hash_variant" (declared in "<caml/mlvalues.h>"):
 the hash value for a variant constructor named, say, "VConstr"
-is "hash_variant(\"VConstr\")".
+is "caml_hash_variant(\"VConstr\")".
 
 The variant value "`VConstr" is represented by
-"hash_variant(\"VConstr\")".  The variant value "`VConstr("\var{v}")" is
+"caml_hash_variant(\"VConstr\")".  The variant value "`VConstr("\var{v}")" is
 represented by a block of size 2 and tag 0, with field number 0
-containing "hash_variant(\"VConstr\")" and field number 1 containing
+containing "caml_hash_variant(\"VConstr\")" and field number 1 containing
 \var{v}.
 
 Unlike constructed values, polymorphic variant values taking several

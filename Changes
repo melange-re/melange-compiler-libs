@@ -146,6 +146,9 @@ Working version
 
 ### Manual and documentation:
 
+- #13694: Fix name for caml_hash_variant in the C interface.
+  (Michael Hendricks)
+
 ### Compiler user-interface and warnings:
 
 - #13428: support dump=[source | parsetree | lambda | ... | cmm | ...]
