@@ -61,6 +61,11 @@ val fold : ok:('a -> 'c) -> error:('e -> 'c) -> ('a, 'e) result -> 'c
 (** [fold ~ok ~error r] is [ok v] if [r] is [Ok v] and [error e] if [r]
     is [Error e]. *)
 
+val retract : ('a, 'a) result -> 'a
+(** [retract r] is [v] if [r] is [Ok v] or [Error v].
+
+    @since 5.4 *)
+
 val iter : ('a -> unit) -> ('a, 'e) result -> unit
 (** [iter f r] is [f v] if [r] is [Ok v] and [()] otherwise. *)
 
