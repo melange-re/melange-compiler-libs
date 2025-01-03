@@ -284,3 +284,26 @@ Error: The value "x" has type "[ `A | `R of rt ]"
          "[< `A | `R of 'a ] as 'a"
        The second variant type does not allow tag(s) "`B"
 |}]
+
+
+(** [subtype_row] errors *)
+
+(* #13706 *)
+let f x = (x : [ `Foo of int ] :> [ `Foo | `Bar ])
+[%%expect{|
+Line 4, characters 10-50:
+4 | let f x = (x : [ `Foo of int ] :> [ `Foo | `Bar ])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error: Type "[ `Foo of int ]" is not a subtype of "[ `Bar | `Foo ]"
+       Types for tag "`Foo" are incompatible
+|}]
+
+let f x = (x : [ `Foo of int ] list :> [ `Foo | `Bar ] list)
+[%%expect{|
+Line 1, characters 10-60:
+1 | let f x = (x : [ `Foo of int ] list :> [ `Foo | `Bar ] list)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error: Type "[ `Foo of int ] list" is not a subtype of "[ `Bar | `Foo ] list"
+       Type "[ `Foo of int ]" is not a subtype of "[ `Bar | `Foo ]"
+       Types for tag "`Foo" are incompatible
+|}]

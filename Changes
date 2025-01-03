@@ -253,6 +253,10 @@ Working version
   (Gabriel Scherer, review by Jan Midtgaard and Miod Vallat,
    report by Jan Midtgaard)
 
+- #13703: wrong explanation for some polymorphic-variant subtyping errors
+  (Gabriel Scherer, review by Jacques Garrigue,
+   report by Wiktor Kuchta and Richard Eisenberg)
+
 - #13710: Support unicode identifiers in comments.
   (Pieter Goetschalckx, review by Florian Angeletti and Gabriel Scherer)
 
