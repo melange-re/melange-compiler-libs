@@ -625,7 +625,7 @@ CAMLprim value caml_continuation_use_and_update_handler_noexc
     /* The continuation has already been taken */
     return stack;
   }
-  while (Stack_parent(stk) != NULL) stk = Stack_parent(stk);
+  stk = Ptr_val(Field(cont, 1));
   Stack_handle_value(stk) = hval;
   Stack_handle_exception(stk) = hexn;
   Stack_handle_effect(stk) = heff;
