@@ -2142,11 +2142,11 @@ let check_package_closed ~loc ~env ~typ fl =
 
 let not_principal msg = Warnings.Not_principal (Format_doc.Doc.msg msg)
 
-let rec type_module ?(alias=false) sttn funct_body anchor env smod =
+let rec type_module ?(alias=false) ~strengthen funct_body anchor env smod =
   Builtin_attributes.warning_scope smod.pmod_attributes
-    (fun () -> type_module_aux ~alias sttn funct_body anchor env smod)
+    (fun () -> type_module_aux ~alias ~strengthen funct_body anchor env smod)
 
-and type_module_aux ~alias sttn funct_body anchor env smod =
+and type_module_aux ~alias ~strengthen funct_body anchor env smod =
   match smod.pmod_desc with
     Pmod_ident lid ->
       let path =
@@ -2167,7 +2167,7 @@ and type_module_aux ~alias sttn funct_body anchor env smod =
           (Env.add_required_global (Path.head path); md)
         else begin
           let mty =
-            if sttn then
+            if strengthen then
               Env.find_strengthened_module ~aliasable path env
             else
               (Env.find_module path env).md_type
@@ -2176,7 +2176,7 @@ and type_module_aux ~alias sttn funct_body anchor env smod =
           | Mty_alias p1 when not alias ->
               let p1 = Env.normalize_module_path (Some smod.pmod_loc) env p1 in
               let mty = Includemod.expand_module_alias
-                  ~strengthen:sttn env p1 in
+                  ~strengthen env p1 in
               { md with
                 mod_desc =
                   Tmod_constraint (md, mty, Tmodtype_implicit,
@@ -2231,7 +2231,9 @@ and type_module_aux ~alias sttn funct_body anchor env smod =
           Named (id, param, mty), Types.Named (id, mty.mty_type), newenv,
           var, true
       in
-      let body, body_shape = type_module true funct_body None newenv sbody in
+      let body, body_shape =
+        type_module ~strengthen:true funct_body None newenv sbody
+      in
       { mod_desc = Tmod_functor(t_arg, body);
         mod_type = Mty_functor(ty_arg, body.mod_type);
         mod_env = env;
@@ -2239,9 +2241,11 @@ and type_module_aux ~alias sttn funct_body anchor env smod =
         mod_loc = smod.pmod_loc },
       Shape.abs funct_shape_param body_shape
   | Pmod_apply _ | Pmod_apply_unit _ ->
-      type_application smod.pmod_loc sttn funct_body env smod
+      type_application smod.pmod_loc ~strengthen funct_body env smod
   | Pmod_constraint(sarg, smty) ->
-      let arg, arg_shape = type_module ~alias true funct_body anchor env sarg in
+      let arg, arg_shape =
+        type_module ~alias ~strengthen:true funct_body anchor env sarg
+      in
       let mty = transl_modtype env smty in
       let md, final_shape =
         wrap_constraint_with_shape env true arg mty.mty_type arg_shape
@@ -2284,11 +2288,13 @@ and type_module_aux ~alias sttn funct_body anchor env smod =
   | Pmod_extension ext ->
       raise (Error_forward (Builtin_attributes.error_of_extension ext))
 
-and type_application loc strengthen funct_body env smod =
+and type_application loc ~strengthen funct_body env smod =
   let rec extract_application funct_body env sargs smod =
     match smod.pmod_desc with
     | Pmod_apply (f, sarg) ->
-        let arg, shape = type_module true funct_body None env sarg in
+        let arg, shape =
+          type_module ~strengthen:true funct_body None env sarg
+        in
         let summary = {
           loc = smod.pmod_loc;
           attributes = smod.pmod_attributes;
@@ -2318,7 +2324,7 @@ and type_application loc strengthen funct_body env smod =
       | Some { path = Some _ } -> true
     in
     let strengthen = strengthen && List.for_all has_path args in
-    type_module strengthen funct_body None env sfunct
+    type_module ~strengthen funct_body None env sfunct
   in
   List.fold_left
     (type_one_application ~ctx:(loc, sfunct, funct, args) funct_body env)
@@ -2458,7 +2464,9 @@ and type_open_decl_aux ?used_slot ?toplevel funct_body names env od =
     } in
     open_descr, [], newenv
   | _ ->
-    let md, mod_shape = type_module true funct_body None env od.popen_expr in
+    let md, mod_shape =
+      type_module ~strengthen:true funct_body None env od.popen_expr
+    in
     let scope = Ctype.create_scope () in
     let sg, newenv =
       Env.enter_signature ~scope ~mod_shape
@@ -2595,7 +2603,7 @@ and type_structure ?(toplevel = false) funct_body anchor env sstr =
         let modl, md_shape =
           Builtin_attributes.warning_scope attrs
             (fun () ->
-               type_module ~alias:true true funct_body
+               type_module ~alias:true ~strengthen:true funct_body
                  (anchor_submodule name.txt anchor) env smodl
             )
         in
@@ -2674,8 +2682,8 @@ and type_structure ?(toplevel = false) funct_body anchor env sstr =
                let modl, shape =
                  Builtin_attributes.warning_scope attrs
                    (fun () ->
-                      type_module true funct_body (anchor_recmodule id)
-                        newenv smodl
+                      type_module ~strengthen:true funct_body
+                        (anchor_recmodule id) newenv smodl
                    )
                in
                let mty' =
@@ -2802,7 +2810,7 @@ and type_structure ?(toplevel = false) funct_body anchor env sstr =
         let smodl = sincl.pincl_mod in
         let modl, modl_shape =
           Builtin_attributes.warning_scope sincl.pincl_attributes
-            (fun () -> type_module true funct_body None env smodl)
+            (fun () -> type_module ~strengthen:true funct_body None env smodl)
         in
         let scope = Ctype.create_scope () in
         (* Rename all identifiers bound by this signature to avoid clashes *)
@@ -2856,9 +2864,12 @@ let type_toplevel_phrase env s =
   Env.reset_required_globals ();
   type_structure ~toplevel:true false None env s
 
-let type_module_alias = type_module ~alias:true true false None
-let type_module = type_module true false None
-let type_structure = type_structure false None
+let type_module_alias =
+  type_module ~alias:true ~strengthen:true false None
+let type_module =
+  type_module ~strengthen:true false None
+let type_structure =
+  type_structure false None
 
 (* Normalize types in a signature *)
 
