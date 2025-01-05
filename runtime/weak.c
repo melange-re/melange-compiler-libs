@@ -74,7 +74,7 @@ CAMLprim value caml_weak_create (value len)
    Specificity of the cleaning phase (Phase_clean):
 
    The dead keys must be removed from the ephemerons and data removed
-   when one the keys is dead. Here we call it cleaning the ephemerons.
+   when one of the keys is dead. Here we call it cleaning the ephemerons.
    A specific phase of the GC is dedicated to this, Phase_clean. This
    phase is just after the mark phase, so the white values are dead
    values. It iterates the function caml_ephe_clean through all the
