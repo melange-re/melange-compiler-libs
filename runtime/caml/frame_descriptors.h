@@ -119,7 +119,8 @@ void* caml_copy_and_register_frametable(void *table, int size);
 
 /* The unregistered frametables can still be in use after calling
    this function. Thus, you should not free their memory.
-   Note: it may reorder the content of the array 'tables' */
+   Note: it may reorder the content of the array 'tables'.
+   This can be called from a custom block finalizer. */
 void caml_unregister_frametables(void **tables, int ntables);
 void caml_unregister_frametable(void *table);
 

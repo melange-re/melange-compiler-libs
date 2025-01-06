@@ -64,6 +64,10 @@ Working version
 - #13701: optimize `caml_continuation_use` based on #12735
   (Hugo Heuzard, review by KC Sivaramakrishnan)
 
+- #13227: Review of locking in the multicore runtime. Fix deadlocks in
+  runtime events and potential deadlocks with named values.
+  (Guillaume Munch-Maccagnoni, review by Gabriel Scherer)
+
 ### Code generation and optimizations:
 
 * #13050: Use '$' instead of '.' to separate module names in symbol names.
