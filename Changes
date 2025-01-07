@@ -64,9 +64,11 @@ Working version
 - #13701: optimize `caml_continuation_use` based on #12735
   (Hugo Heuzard, review by KC Sivaramakrishnan)
 
-- #13227: Review of locking in the multicore runtime. Fix deadlocks in
-  runtime events and potential deadlocks with named values.
-  (Guillaume Munch-Maccagnoni, review by Gabriel Scherer)
+- #13227, #13714: Review of locking in the multicore runtime. Fix
+  deadlocks in runtime events and potential deadlocks with named
+  values.
+  (Guillaume Munch-Maccagnoni, review by Gabriel Scherer, tests by
+  Jan Midtgaard)
 
 ### Code generation and optimizations:
 

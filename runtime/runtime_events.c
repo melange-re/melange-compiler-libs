@@ -717,7 +717,13 @@ CAMLprim value caml_runtime_events_user_register(value event_name,
   Field(event, 3) = event_tag;
 
 
-  caml_plat_lock_non_blocking(&user_events_lock);
+  /* Pre-allocate to avoid STW while holding [user_events_lock]. */
+  list_item = caml_alloc_small(2, 0);
+
+  /* [user_events_lock] can be acquired during STW, so we must use
+     caml_plat_lock_blocking and be careful to avoid triggering any
+     STW while holding it */
+  caml_plat_lock_blocking(&user_events_lock);
   // critical section: when we update the user_events list we need to make sure
   // it is not updated while we construct the pointer to the next element
 
@@ -727,7 +733,6 @@ CAMLprim value caml_runtime_events_user_register(value event_name,
   }
 
   // event is added to the list of known events
-  list_item = caml_alloc_small(2, 0);
   Field(list_item, 0) = event;
   Field(list_item, 1) = user_events;
   caml_modify_generational_global_root(&user_events, list_item);
@@ -833,7 +838,7 @@ CAMLexport value caml_runtime_events_user_resolve(
   CAMLlocal3(event, cur_event_name, ml_event_name);
 
   // TODO: it might be possible to atomic load instead
-  caml_plat_lock_non_blocking(&user_events_lock);
+  caml_plat_lock_blocking(&user_events_lock);
   value current_user_event = user_events;
   caml_plat_unlock(&user_events_lock);
 

@@ -559,7 +559,7 @@ void caml_finalize_channel(value vchan)
   }
   /* Don't run concurrently with caml_ml_out_channels_list that may resurrect
      a dead channel . */
-  caml_plat_lock_non_blocking(&caml_all_opened_channels_mutex);
+  caml_plat_lock_blocking(&caml_all_opened_channels_mutex);
   chan->refcount --;
   if (chan->refcount > 0 || notflushed) {
     /* We need to keep the channel around, either because it is being
@@ -612,7 +612,7 @@ CAMLprim value caml_ml_open_descriptor_in_with_flags(int fd, int flags)
   struct channel * chan = caml_open_descriptor_in(fd);
   chan->flags |= flags | CHANNEL_FLAG_MANAGED_BY_GC;
   chan->refcount = 1;
-  caml_plat_lock_non_blocking(&caml_all_opened_channels_mutex);
+  caml_plat_lock_blocking(&caml_all_opened_channels_mutex);
   link_channel (chan);
   caml_plat_unlock (&caml_all_opened_channels_mutex);
   return caml_alloc_channel(chan);
@@ -627,7 +627,7 @@ CAMLprim value caml_ml_open_descriptor_out_with_flags(int fd, int flags)
   struct channel * chan = caml_open_descriptor_out(fd);
   chan->flags |= flags | CHANNEL_FLAG_MANAGED_BY_GC;
   chan->refcount = 1;
-  caml_plat_lock_non_blocking(&caml_all_opened_channels_mutex);
+  caml_plat_lock_blocking(&caml_all_opened_channels_mutex);
   link_channel (chan);
   caml_plat_unlock (&caml_all_opened_channels_mutex);
   return caml_alloc_channel(chan);
@@ -663,7 +663,13 @@ CAMLprim value caml_ml_out_channels_list (value unit)
   struct channel_list *channel_list = NULL, *cl_tmp;
   mlsize_t num_channels = 0;
 
-  caml_plat_lock_non_blocking(&caml_all_opened_channels_mutex);
+  /* We cannot use [caml_plat_lock_non_blocking] inside
+     [caml_finalize_channel], so instead we must be careful here not
+     to trigger a STW while holding [caml_all_opened_channels_mutex].
+     This is why we allocate a temporary list with malloc. This is
+     unsatisfactory because the critical section inside
+     caml_ml_out_channels_list is not guaranteed to be short.*/
+  caml_plat_lock_blocking(&caml_all_opened_channels_mutex);
   for (struct channel *channel = caml_all_opened_channels;
        channel != NULL;
        channel = channel->next) {
