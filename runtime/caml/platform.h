@@ -91,8 +91,10 @@ Caml_inline void cpu_relax(void) {
    [caml_plat_lock_non_blocking].
 
    It is possible to combine calls to [caml_plat_lock_non_blocking] on
-   a mutex from the mutator with calls to [caml_plat_lock_blocking] on
-   the same mutex from a STW section.
+   a mutex from the mutator holding the domain lock with calls to
+   [caml_plat_lock_blocking] on another mutator that has released
+   their domain lock, but not with calls to [caml_plat_lock_blocking]
+   from a STW section or a custom block finaliser.
 
    These functions never raise exceptions; errors are fatal. Thus, for
    usages where bugs are susceptible to be introduced by users, the
