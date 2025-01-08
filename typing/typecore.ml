@@ -2776,17 +2776,17 @@ let collect_apply_args env funct ignore_labels ty_fun ty_fun0 sargs =
       collect_unknown_apply_args env funct ty_fun0 rev_args sargs
     else
     let ty_fun' = expand_head env ty_fun in
+    let lv = get_level ty_fun' in
+    let may_warn loc w =
+      if not !warned && !Clflags.principal && lv <> generic_level
+      then begin
+        warned := true;
+        Location.prerr_warning loc w
+      end
+    in
     match get_desc ty_fun', get_desc (expand_head env ty_fun0) with
     | Tarrow (l, ty_arg, ty_ret, com), Tarrow (_, ty_arg0, ty_ret0, _)
       when is_commu_ok com ->
-        let lv = get_level ty_fun' in
-        let may_warn loc w =
-          if not !warned && !Clflags.principal && lv <> generic_level
-          then begin
-            warned := true;
-            Location.prerr_warning loc w
-          end
-        in
         let name = label_name l
         and optional = is_optional l in
         let use_arg sarg l' =
