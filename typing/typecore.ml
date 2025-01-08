@@ -2692,7 +2692,7 @@ type untyped_omitted_param =
     level: int;
   }
 
-let remaining_function_type ty_ret rev_args =
+let remaining_function_type_for_error ty_ret rev_args =
   List.fold_left
     (fun ty_ret (lbl, arg) ->
         match arg with
@@ -2736,7 +2736,7 @@ let collect_unknown_apply_args env funct ty_fun0 rev_args sargs =
               (ty_arg, ty_res)
           | td ->
               let ty_fun = match td with Tarrow _ -> newty td | _ -> ty_fun in
-              let ty_res = remaining_function_type ty_fun rev_args in
+              let ty_res = remaining_function_type_for_error ty_fun rev_args in
               match get_desc ty_res with
               | Tarrow _ ->
                   if !Clflags.classic || not (has_label lbl ty_fun) then
