@@ -2784,45 +2784,43 @@ let collect_apply_args env funct ignore_labels ty_fun ty_fun0 sargs =
         Location.prerr_warning loc w
       end
     in
-    match get_desc ty_fun', get_desc (expand_head env ty_fun0) with
-    | Tarrow (l, ty_arg, ty_ret, com), Tarrow (_, ty_arg0, ty_ret0, _)
-      when is_commu_ok com ->
+    let lopt =
+      match get_desc ty_fun', get_desc (expand_head env ty_fun0) with
+      | Tarrow (l, _, _, com), Tarrow (_, _, _, _)
+        when is_commu_ok com ->
+          Some l
+      | _ -> None
+    in
+    match lopt with
+    | None ->
+      (* We're not looking at a *known* function type anymore. *)
+      collect_unknown_apply_args env funct ty_fun0 rev_args sargs
+    | Some l ->
+      begin
         let name = label_name l
         and optional = is_optional l in
-        let use_arg sarg l' =
-          let wrapped_in_some = optional && not (is_optional l') in
-          if wrapped_in_some then
-            may_warn sarg.pexp_loc
-              (not_principal "using an optional argument here");
-          Arg (Known_arg { sarg; ty_arg; ty_arg0; wrapped_in_some })
-        in
-        let eliminate_optional_arg () =
-          may_warn funct.exp_loc
-            (Warnings.Non_principal_labels "eliminated optional argument");
-          Arg (Eliminated_optional_arg { ty_arg; level = lv })
-        in
-        let remaining_sargs, arg =
+        let remaining_sargs, arg_opt =
           if ignore_labels then begin
             (* No reordering is allowed, process arguments in order *)
             match sargs with
             | [] -> assert false
             | (l', sarg) :: remaining_sargs ->
                 if name = label_name l' || (not optional && l' = Nolabel) then
-                  (remaining_sargs, use_arg sarg l')
+                  (remaining_sargs, Some (sarg, l'))
                 else if
                   optional &&
                   not (List.exists (fun (l, _) -> name = label_name l)
-                         remaining_sargs) &&
+                        remaining_sargs) &&
                   List.exists (function (Nolabel, _) -> true | _ -> false)
                     sargs
                 then
-                  (sargs, eliminate_optional_arg ())
+                  (sargs, None)
                 else
                   raise(Error(sarg.pexp_loc, env,
                               Apply_wrong_label(l', ty_fun', optional)))
           end else
             (* Arguments can be commuted, try to fetch the argument
-               corresponding to the first parameter. *)
+              corresponding to the first parameter. *)
             match extract_label name sargs with
             | Some (l', sarg, commuted, remaining_sargs) ->
                 if commuted then begin
@@ -2832,23 +2830,42 @@ let collect_apply_args env funct ignore_labels ty_fun ty_fun0 sargs =
                 if not optional && is_optional l' then
                   Location.prerr_warning sarg.pexp_loc
                     (Warnings.Nonoptional_label (Asttypes.string_of_label l));
-                remaining_sargs, use_arg sarg l'
+                remaining_sargs, Some (sarg, l')
             | None ->
-                sargs,
-                if optional && List.mem_assoc Nolabel sargs then
-                  eliminate_optional_arg ()
-                else begin
-                  (* No argument was given for this parameter, we abstract over
-                     it. *)
-                  may_warn funct.exp_loc
-                    (Warnings.Non_principal_labels "commuted an argument");
-                  Omitted { ty_arg; level = lv }
-                end
+                sargs, None
         in
-        loop ty_ret ty_ret0 ((l, arg) :: rev_args) remaining_sargs
-    | _ ->
-      (* We're not looking at a *known* function type anymore. *)
-      collect_unknown_apply_args env funct ty_fun0 rev_args sargs
+        match get_desc ty_fun', get_desc (expand_head env ty_fun0) with
+        | Tarrow (_, ty_arg, ty_ret, _), Tarrow (_, ty_arg0, ty_ret0, _) ->
+            let use_arg sarg l' =
+              let wrapped_in_some = optional && not (is_optional l') in
+              if wrapped_in_some then
+                may_warn sarg.pexp_loc
+                  (not_principal "using an optional argument here");
+              Arg (Known_arg { sarg; ty_arg; ty_arg0; wrapped_in_some })
+            in
+            let eliminate_optional_arg () =
+              may_warn funct.exp_loc
+                (Warnings.Non_principal_labels "eliminated optional argument");
+              Arg (Eliminated_optional_arg { ty_arg; level = lv })
+            in
+            let arg =
+              match arg_opt with
+              | Some (sarg, l') -> use_arg sarg l'
+              | None ->
+                  if optional && List.mem_assoc Nolabel sargs then
+                    eliminate_optional_arg ()
+                  else begin
+                    (* No argument was given for this parameter, we abstract
+                      over it. *)
+                    may_warn funct.exp_loc
+                      (Warnings.Non_principal_labels "commuted an argument");
+                    Omitted { ty_arg; level = lv }
+                  end
+            in
+            loop ty_ret ty_ret0 ((l, arg) :: rev_args) remaining_sargs
+        | _ ->
+          assert false
+      end
   in
   loop ty_fun ty_fun0 [] sargs
 
