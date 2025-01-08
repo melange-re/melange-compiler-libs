@@ -2706,6 +2706,18 @@ let remaining_function_type_for_error ty_ret rev_args =
             ty_ret)
     ty_ret rev_args
 
+let previous_arg_loc rev_args ~funct =
+  (* [rev_args] is the arguments typed until now, in reverse
+    order of appearance. Not all arguments have a location
+    attached (eg. an optional argument that is not passed). *)
+    rev_args
+    |> List.find_map (function
+        | _, Arg (Known_arg { sarg = {pexp_loc = loc; _ }}
+                  | Unknown_arg { sarg = {pexp_loc = loc; _}}) ->
+            Some loc
+        | _ -> None)
+    |> Option.value ~default:funct.exp_loc
+
 let collect_unknown_apply_args env funct ty_fun0 rev_args sargs =
   let labels_match ~param ~arg =
     param = arg
@@ -2745,23 +2757,11 @@ let collect_unknown_apply_args env funct ty_fun0 rev_args sargs =
                   else
                     raise (Error(funct.exp_loc, env, Incoherent_label_order))
               | _ ->
-                let previous_arg_loc =
-                  (* [rev_args] is the arguments typed until now, in reverse
-                    order of appearance. Not all arguments have a location
-                    attached (eg. an optional argument that is not passed). *)
-                  rev_args
-                  |> List.find_map (function
-                      | _, Arg (Known_arg { sarg = {pexp_loc = loc; _ }}
-                               | Unknown_arg { sarg = {pexp_loc = loc; _}}) ->
-                          Some loc
-                      | _ -> None)
-                  |> Option.value ~default:funct.exp_loc
-                in
                 raise(Error(funct.exp_loc, env, Apply_non_function {
                     funct;
                     func_ty = expand_head env funct.exp_type;
                     res_ty = expand_head env ty_res;
-                    previous_arg_loc;
+                    previous_arg_loc = previous_arg_loc rev_args ~funct;
                     extra_arg_loc = sarg.pexp_loc; }))
       in
       let arg = Unknown_arg { sarg; ty_arg } in
