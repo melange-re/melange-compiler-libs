@@ -470,7 +470,6 @@ let symbolchar_or_hash =
 let kwdopchar =
   ['$' '&' '*' '+' '-' '/' '<' '=' '>' '@' '^' '|']
 
-let ident = (lowercase | uppercase) identchar*
 let ident_ext = identstart_ext  identchar_ext*
 let extattrident = ident_ext ('.' ident_ext)*
 
@@ -826,7 +825,7 @@ and comment = parse
         store_normalized_newline nl;
         comment lexbuf
       }
-  | ident
+  | ident_ext
       { store_lexeme lexbuf; comment lexbuf }
   | _
       { store_lexeme lexbuf; comment lexbuf }

@@ -253,6 +253,9 @@ Working version
   (Gabriel Scherer, review by Jan Midtgaard and Miod Vallat,
    report by Jan Midtgaard)
 
+- #13710: Support unicode identifiers in comments.
+  (Pieter Goetschalckx, review by Florian Angeletti and Gabriel Scherer)
+
 OCaml 5.3.0
 ___________
 

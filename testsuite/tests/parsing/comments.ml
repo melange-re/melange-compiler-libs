@@ -25,6 +25,8 @@ let four = (* We are inserting quoted litteral here {p|*)|p}, {œ|(*|œ} *) 4;;
 
 let set = (** [x < min({x'|x'∊l})] *) 5;;
 
+let unit = let é' = ignore in é' '"';;
+
 
 let meta = (* (* Reminder: quoted strings *)
 {é|Some text|é};;
@@ -46,4 +48,6 @@ let three =
 
 let four = (* We are inserting quoted litteral here {p|*)|p}, {œ|(*|œ} *) 4;;
 
-let set = (** [x < min({x'|x'∊l})] *) 5;; *) 6;;
+let set = (** [x < min({x'|x'∊l})] *) 5;;
+
+let unit = let é' = ignore in é' '"';; *) 6;;

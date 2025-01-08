@@ -23,5 +23,6 @@ val two : int = 2
 val three : int = 3
 val four : int = 4
 val set : int = 5
+val unit : unit = ()
 val meta : int = 6
 
