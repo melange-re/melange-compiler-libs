@@ -1,3 +1,23 @@
+OCaml 5.3.0 (8 January 2024)
+----------------------------
+
+Some of the highlights in OCaml 5.3.0 are:
+
+- Syntax for deep effect handlers
+- Restored MSVC port
+- Re-introduced statistical memory profiling (statmemprof)
+- utf-8 encoded Unicode source files and modest support of Unicode identifiers
+- More space-efficient implementation of Dynarray
+- Improved metadata on the pairs of declarations and definitions for merlin.
+
+And a lot of incremental changes:
+
+- Around 20 new functions in the standard library
+- Many fixes and improvements in the runtime
+- Improved error messages for first-class modules, functors, labeled arguments,
+type clashes.
+- Numerous bug fixes
+
 OCaml 5.2.0 (13 May 2024)
 ------------------------
 
