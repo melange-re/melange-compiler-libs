@@ -243,7 +243,7 @@ EXIT_CODE=0
         # presence of lines containing malformed UTF-8. It may be tested using
         # https://www.cl.cam.ac.uk/~mgk25/ucs/examples/UTF-8-test.txt
         if $OCAML_CT_CAT "$OCAML_CT_PREFIX$f" \
-             | LC_ALL=en_US.UTF8 grep -qaxv '.*' ; then
+             | LC_ALL=C.UTF-8 grep -qaxv '.*' ; then
           echo "File \"$f\" is not correctly encoded in UTF-8"
           exit 2
         fi
