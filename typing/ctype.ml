@@ -5087,7 +5087,7 @@ and subtype_row env trace row1 row2 cstrs =
   | (Tvar _|Tconstr _|Tnil), (Tvar _|Tconstr _|Tnil)
     when row1_closed && r1 = [] ->
       List.fold_left
-        (fun cstrs (_,f1,f2) ->
+        (fun cstrs (l,f1,f2) ->
           match row_field_repr f1, row_field_repr f2 with
             (Rpresent None|Reither(true,_,_)), Rpresent None ->
               cstrs
@@ -5104,7 +5104,12 @@ and subtype_row env trace row1 row2 cstrs =
                 t1 t2
                 cstrs
           | Rabsent, _ -> cstrs
-          | _ -> raise Exit)
+          | Rpresent None, Rpresent (Some _)
+          | Rpresent (Some _), Rpresent None ->
+              subtype_error ~env ~trace
+                ~unification_trace:[Variant (Incompatible_types_for l)]
+          | _ ->
+              raise Exit)
         cstrs pairs
   | Tunivar _, Tunivar _
     when row1_closed = row2_closed && r1 = [] && r2 = [] ->
