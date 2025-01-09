@@ -14728,7 +14728,19 @@ ocamlsrcdir=${ocamlsrcdir%X}
 
 case $host in #(
   *-*-mingw32*|*-pc-windows) :
-    ln='cp -pf'
+
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for a workable solution for ln -sf" >&5
+printf %s "checking for a workable solution for ln -sf... " >&6; }
+  if MSYS=winsymlinks:nativestrict CYGWIN=winsymlinks:nativestrict ln -sf configure conftestLink 2>/dev/null
+then :
+  ln='ln -sf'
+else $as_nop
+  ln='cp -pf'
+
+fi
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ln" >&5
+printf "%s\n" "$ln" >&6; }
+
     ocamlsrcdir="$(LC_ALL=C.UTF-8 cygpath -w -- "$ocamlsrcdir")" ;; #(
   *) :
     ln='ln -sf' ;;
