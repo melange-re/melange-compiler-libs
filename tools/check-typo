@@ -236,17 +236,14 @@ EXIT_CODE=0
     rules=" $(echo $rules) "
     attr_rules=" $(echo $attr_rules) "
 
-    if test -n "$(echo "$rules $attr_rules" | grep " utf8 ")"
-    then
-        # grep -a is used to force the file to be considered as text and -x
-        # requires the entire line to match. This specifically detects the
-        # presence of lines containing malformed UTF-8. It may be tested using
-        # https://www.cl.cam.ac.uk/~mgk25/ucs/examples/UTF-8-test.txt
-        if $OCAML_CT_CAT "$OCAML_CT_PREFIX$f" \
-             | LC_ALL=C.UTF-8 grep -qaxv '.*' ; then
-          echo "File \"$f\" is not correctly encoded in UTF-8"
-          exit 2
-        fi
+    # grep -a is used to force the file to be considered as text and -x
+    # requires the entire line to match. This specifically detects the
+    # presence of lines containing malformed UTF-8. It may be tested using
+    # https://www.cl.cam.ac.uk/~mgk25/ucs/examples/UTF-8-test.txt
+    if $OCAML_CT_CAT "$OCAML_CT_PREFIX$f" \
+         | LC_ALL=C.UTF-8 grep -qaxv '.*' ; then
+      echo "File \"$f\" is not correctly encoded in UTF-8"
+      exit 2
     fi
     if ! \
     ($OCAML_CT_CAT "$OCAML_CT_PREFIX$f" | tr -d '\r'; echo) \
