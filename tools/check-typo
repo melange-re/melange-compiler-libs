@@ -363,7 +363,7 @@ EXIT_CODE=0
         match($0, /[\200-\377]/) \
         && state != "authors" && state != "copyright" {
           if (is_err("utf8")) {
-            err("non-ascii", "non-ASCII character(s)");
+            err("non-ascii", "non-ASCII character(s): missing utf8 attribute?");
             if (header_utf8 && !is_err("non-ascii")) {
               err("non-ascii-utf8", \
                   "non-ASCII character(s) AND UTF-8 encountered");

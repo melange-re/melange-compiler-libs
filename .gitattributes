@@ -56,23 +56,20 @@ META.in                  typo.missing-header
 
 # Hyperlinks and other markup features cause long lines
 *.adoc                   typo.long-line=may typo.very-long-line=may typo.utf8=may
-*.md                     typo.long-line=may typo.very-long-line=may
+*.md                     typo.long-line=may typo.very-long-line=may typo.utf8=may
 
 # Github templates and scripts lack headers, have long lines
 /.github/**              typo.missing-header typo.long-line=may typo.very-long-line=may
-/.github/workflows/build-cross.yml typo.non-ascii
-/.github/workflows/build-msvc.yml typo.utf8
+/.github/workflows/*.yml typo.utf8=may
 
-/.mailmap                typo.long-line typo.missing-header typo.non-ascii
-/CONTRIBUTING.md         typo.non-ascii=may
-/README.adoc             typo.non-ascii=may
-/README.win32.adoc       typo.non-ascii=may
+/.mailmap                typo.long-line typo.missing-header typo.utf8
+/CONTRIBUTING.md         typo.utf8
 /Changes                 typo.utf8 typo.missing-header
 /release-info/News       typo.utf8 typo.missing-header
 /LICENSE                 typo.very-long-line typo.missing-header
 # tools/ci/appveyor/appveyor_build.cmd only has missing-header because
 # dra27 too lazy to update check-typo to interpret Cmd-style comments!
-/tools/ci/appveyor/appveyor_build.cmd       typo.very-long-line typo.missing-header typo.non-ascii
+/tools/ci/appveyor/appveyor_build.cmd       typo.very-long-line typo.missing-header typo.utf8
 /tools/ci/inria/bootstrap/remove-sinh-primitive.patch typo.prune
 /release-info/howto.md                    typo.missing-header typo.long-line
 /release-info/templates/*.md              typo.missing-header typo.very-long-line=may
@@ -111,7 +108,7 @@ otherlibs/unix/symlink_win32.c     typo.long-line
 
 # Some Unicode characters here and there
 utils/misc.ml            typo.utf8
-runtime/sak.c            typo.non-ascii
+runtime/sak.c            typo.utf8
 
 testsuite/tests/**                                      typo.missing-header typo.long-line=may
 testsuite/tests/lib-bigarray-2/bigarrf.f                typo.tab linguist-language=Fortran
