@@ -323,8 +323,8 @@ val for_all : ('a -> bool) -> 'a t -> bool
 (** [for_all f a] is [true] if all elements of [a] satisfy [f].
     This includes the case where [a] is empty.
 
-    For example, if the elements of [a] are [x0], [x1], then
-    [exists f a] is [f x0 && f x1 && f x2].
+    For example, if the elements of [a] are [x0], [x1], [x2], then
+    [for_all f a] is [f x0 && f x1 && f x2].
 *)
 
 val mem : 'a -> 'a t -> bool
