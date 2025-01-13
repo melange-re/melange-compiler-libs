@@ -41,7 +41,7 @@
 #include "caml/weak.h"
 
 /* Default speed setting for the major GC. */
-uintnat caml_percent_free = Percent_free_def;
+_Atomic uintnat caml_percent_free = Percent_free_def;
 
 /* This variable is only written with the world stopped, so it need not be
    atomic */
@@ -687,6 +687,7 @@ update_major_slice_work(intnat howmuch,
   double my_extra_count;
   caml_domain_state *dom_st = Caml_state;
   uintnat heap_words, heap_size, heap_sweep_words, total_cycle_work;
+  uintnat percent_free;
 
   my_alloc_count = dom_st->allocated_words;
   my_alloc_direct_count = dom_st->allocated_words_direct;
@@ -734,16 +735,17 @@ update_major_slice_work(intnat howmuch,
   heap_size = caml_heap_size(dom_st->shared_heap);
   heap_words = Wsize_bsize(heap_size);
   heap_sweep_words = heap_words;
+  percent_free = atomic_load(&caml_percent_free);
 
   total_cycle_work =
     heap_sweep_words
-    + (uintnat) ((double) heap_words * 100.0 / (100.0 + caml_percent_free));
+    + (uintnat) ((double) heap_words * 100.0 / (100.0 + percent_free));
 
   if (heap_words > 0) {
     double alloc_ratio =
       total_cycle_work
-      * 3.0 * (100 + caml_percent_free)
-      / heap_words / caml_percent_free / 2.0;
+      * 3.0 * (100 + percent_free)
+      / heap_words / percent_free / 2.0;
     alloc_work = (intnat) (my_alloc_count * alloc_ratio);
   } else {
     alloc_work = 0;
@@ -752,8 +754,8 @@ update_major_slice_work(intnat howmuch,
   if (dom_st->dependent_size > 0) {
     double dependent_ratio =
       total_cycle_work
-      * (100 + caml_percent_free)
-        / (double)dom_st->dependent_size / (double)caml_percent_free;
+      * (100 + percent_free)
+        / (double)dom_st->dependent_size / (double)percent_free;
     dependent_work = (intnat) (my_dependent_count * dependent_ratio);
   }else{
     dependent_work = 0;

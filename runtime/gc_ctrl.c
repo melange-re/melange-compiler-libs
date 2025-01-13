@@ -42,10 +42,10 @@
 atomic_uintnat caml_max_stack_wsize;
 uintnat caml_fiber_wsz;
 
-extern uintnat caml_percent_free; /* see major_gc.c */
-extern uintnat caml_custom_major_ratio; /* see custom.c */
-extern uintnat caml_custom_minor_ratio; /* see custom.c */
-extern uintnat caml_custom_minor_max_bsz; /* see custom.c */
+extern _Atomic uintnat caml_percent_free; /* see major_gc.c */
+extern _Atomic uintnat caml_custom_major_ratio; /* see custom.c */
+extern _Atomic uintnat caml_custom_minor_ratio; /* see custom.c */
+extern _Atomic uintnat caml_custom_minor_max_bsz; /* see custom.c */
 extern uintnat caml_minor_heap_max_wsz; /* see domain.c */
 
 CAMLprim value caml_gc_quick_stat(value v)
@@ -126,12 +126,16 @@ CAMLprim value caml_gc_get(value v)
 
   res = caml_alloc_tuple (11);
   Store_field (res, 0, Val_long (Caml_state->minor_heap_wsz));          /* s */
-  Store_field (res, 2, Val_long (caml_percent_free));                   /* o */
+  Store_field (res, 2,
+    Val_long (atomic_load_relaxed(&caml_percent_free)));                /* o */
   Store_field (res, 3, Val_long (atomic_load_relaxed(&caml_verb_gc)));  /* v */
   Store_field (res, 5, Val_long (caml_max_stack_wsize));                /* l */
-  Store_field (res, 8, Val_long (caml_custom_major_ratio));             /* M */
-  Store_field (res, 9, Val_long (caml_custom_minor_ratio));             /* m */
-  Store_field (res, 10, Val_long (caml_custom_minor_max_bsz));          /* n */
+  Store_field (res, 8,
+    Val_long (atomic_load_relaxed(&caml_custom_major_ratio)));          /* M */
+  Store_field (res, 9,
+    Val_long (atomic_load_relaxed(&caml_custom_minor_ratio)));          /* m */
+  Store_field (res, 10,
+    Val_long (atomic_load_relaxed(&caml_custom_minor_max_bsz)));        /* n */
   CAMLreturn (res);
 }
 
@@ -166,8 +170,8 @@ CAMLprim value caml_gc_set(value v)
 
   caml_change_max_stack_size (new_max_stack_size);
 
-  if (newpf != caml_percent_free){
-    caml_percent_free = newpf;
+  if (newpf != atomic_load_relaxed(&caml_percent_free)){
+    atomic_store_relaxed(&caml_percent_free, newpf);
     CAML_GC_MESSAGE(PARAMS,
                     "New space overhead: %" ARCH_INTNAT_PRINTF_FORMAT "u%%\n",
                     caml_percent_free);
@@ -177,20 +181,20 @@ CAMLprim value caml_gc_set(value v)
 
   /* These fields were added in 4.08.0. */
   if (Wosize_val (v) >= 11){
-    if (new_custom_maj != caml_custom_major_ratio){
-      caml_custom_major_ratio = new_custom_maj;
+    if (new_custom_maj != atomic_load_relaxed(&caml_custom_major_ratio)){
+      atomic_store_relaxed(&caml_custom_major_ratio, new_custom_maj);
       CAML_GC_MESSAGE(PARAMS, "New custom major ratio: %"
                       ARCH_INTNAT_PRINTF_FORMAT "u%%\n",
                       caml_custom_major_ratio);
     }
-    if (new_custom_min != caml_custom_minor_ratio){
-      caml_custom_minor_ratio = new_custom_min;
+    if (new_custom_min != atomic_load_relaxed(&caml_custom_minor_ratio)){
+      atomic_store_relaxed(&caml_custom_minor_ratio, new_custom_min);
       CAML_GC_MESSAGE(PARAMS, "New custom minor ratio: %"
                       ARCH_INTNAT_PRINTF_FORMAT "u%%\n",
                       caml_custom_minor_ratio);
     }
-    if (new_custom_sz != caml_custom_minor_max_bsz){
-      caml_custom_minor_max_bsz = new_custom_sz;
+    if (new_custom_sz != atomic_load_relaxed(&caml_custom_minor_max_bsz)){
+      atomic_store_relaxed(&caml_custom_minor_max_bsz, new_custom_sz);
       CAML_GC_MESSAGE(PARAMS, "New custom minor size limit: %"
                       ARCH_INTNAT_PRINTF_FORMAT "u%%\n",
                       caml_custom_minor_max_bsz);
@@ -331,16 +335,18 @@ void caml_init_gc (void)
 
   caml_max_stack_wsize = caml_params->init_max_stack_wsz;
   caml_fiber_wsz = (Stack_threshold * 2) / sizeof(value);
-  caml_percent_free = norm_pfree (caml_params->init_percent_free);
+  atomic_store_relaxed(&caml_percent_free,
+                       norm_pfree (caml_params->init_percent_free));
   caml_gc_log ("Initial stack limit: %"
                ARCH_INTNAT_PRINTF_FORMAT "uk bytes",
                caml_params->init_max_stack_wsz / 1024 * sizeof (value));
 
-  caml_custom_major_ratio =
-      norm_custom_maj (caml_params->init_custom_major_ratio);
-  caml_custom_minor_ratio =
-      norm_custom_min (caml_params->init_custom_minor_ratio);
-  caml_custom_minor_max_bsz = caml_params->init_custom_minor_max_bsz;
+  atomic_store_relaxed(&caml_custom_major_ratio,
+                       norm_custom_maj (caml_params->init_custom_major_ratio));
+  atomic_store_relaxed(&caml_custom_minor_ratio,
+                       norm_custom_min (caml_params->init_custom_minor_ratio));
+  atomic_store_relaxed(&caml_custom_minor_max_bsz,
+                       caml_params->init_custom_minor_max_bsz);
 
   caml_gc_phase = Phase_sweep_and_mark_main;
   #ifdef NATIVE_CODE
