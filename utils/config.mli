@@ -74,6 +74,12 @@ val compression_c_libraries: string
 val native_ldflags : string
 (* Flags to pass to the system linker *)
 
+val with_nonexecstack_note : bool
+(** Whether an explicit ".note.GNU-stack" section is to be added to indicate
+    the stack should not be executable
+
+    @since 5.4 *)
+
 val native_pack_linker: string
 (** The linker to use for packaging (ocamlopt -pack) and for partial
     links (ocamlopt -output-obj). *)

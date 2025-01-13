@@ -37,6 +37,7 @@ let native_c_compiler = c_compiler
 let native_c_libraries = ""
 let compression_c_libraries = ""
 let native_ldflags = ""
+let with_nonexecstack_note = false
 let native_pack_linker = boot_cannot_call "the linker"
 let default_rpath = ""
 let mksharedlibrpath = ""
