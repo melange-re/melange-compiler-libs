@@ -81,3 +81,8 @@
 #undef SUPPORTS_TREE_VECTORIZE
 
 #undef USE_MMAP_MAP_STACK
+
+#undef WITH_NONEXECSTACK_NOTE
+
+/* Define WITH_NONEXECSTACK_NOTE when an explicit ".note.GNU-stack" section
+   is to be added to indicate the stack should not be executable */

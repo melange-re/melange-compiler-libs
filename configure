@@ -878,6 +878,7 @@ flexdll_dir
 bootstrapping_flexdll
 flexdll_source_dir
 zstd_libs
+with_nonexecstack_note
 native_ldflags
 cclibs
 oc_dll_ldflags
@@ -14293,6 +14294,66 @@ CC=$lt_save_CC
 
 CFLAGS="$saved_CFLAGS"
 target_os=$old_host_os
+
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking if $CC generates a .note.GNU-stack section" >&5
+printf %s "checking if $CC generates a .note.GNU-stack section... " >&6; }
+if test ${ocaml_cv_prog_cc_nonexecstack_note+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+
+  saved_CC="$CC"
+  saved_CFLAGS="$CFLAGS"
+  saved_CPPFLAGS="$CPPFLAGS"
+  saved_LIBS="$LIBS"
+  saved_ac_ext="$ac_ext"
+  saved_ac_compile="$ac_compile"
+  # Move the content of confdefs.h to another file so it does not
+  # get included
+  mv confdefs.h confdefs.h.bak
+  touch confdefs.h
+
+
+    # We write the assembly into the .$ac_objext file as AC_COMPILE_IFELSE
+    # assumes an error if such a file doesn't exist after compiling
+    CFLAGS="$CFLAGS -S -o conftest.$ac_objext"
+
+    ocaml_cv_prog_cc_nonexecstack_note=no
+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"
+then :
+  if $FGREP .note.GNU-stack conftest.$ac_objext >/dev/null
+then :
+  ocaml_cv_prog_cc_nonexecstack_note=yes
+fi
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
+
+  # Restore the content of confdefs.h
+  mv confdefs.h.bak confdefs.h
+  ac_compile="$saved_ac_compile"
+  ac_ext="$saved_ac_ext"
+  CPPFLAGS="$saved_CPPFLAGS"
+  CFLAGS="$saved_CFLAGS"
+  CC="$saved_CC"
+  LIBS="$saved_LIBS"
+
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ocaml_cv_prog_cc_nonexecstack_note" >&5
+printf "%s\n" "$ocaml_cv_prog_cc_nonexecstack_note" >&6; }
+
+  if test "x$ocaml_cv_prog_cc_nonexecstack_note" = xyes
+then :
+  with_nonexecstack_note=true
+    printf "%s\n" "#define WITH_NONEXECSTACK_NOTE 1" >>confdefs.h
+
+else $as_nop
+  with_nonexecstack_note=false
+fi
+
 
 case $host in #(
   sparc-sun-solaris*) :

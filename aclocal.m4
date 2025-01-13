@@ -527,6 +527,30 @@ AC_DEFUN([OCAML_CC_SUPPORTS_ATOMIC], [
   OCAML_CC_RESTORE_VARIABLES
 ])
 
+# Detects whether the C compiler generates an explicit .note.GNU-stack section
+# to mark the stack as non-executable, so that we can follow suit
+AC_DEFUN([OCAML_WITH_NONEXECSTACK_NOTE],
+  [AC_REQUIRE([AC_PROG_FGREP])dnl
+  AC_CACHE_CHECK([if $CC generates a .note.GNU-stack section],
+    [ocaml_cv_prog_cc_nonexecstack_note],
+    [OCAML_CC_SAVE_VARIABLES
+
+    # We write the assembly into the .$ac_objext file as AC_COMPILE_IFELSE
+    # assumes an error if such a file doesn't exist after compiling
+    CFLAGS="$CFLAGS -S -o conftest.$ac_objext"
+
+    ocaml_cv_prog_cc_nonexecstack_note=no
+    AC_COMPILE_IFELSE([AC_LANG_SOURCE],
+      [AS_IF([$FGREP .note.GNU-stack conftest.$ac_objext >/dev/null],
+        [ocaml_cv_prog_cc_nonexecstack_note=yes])])
+    OCAML_CC_RESTORE_VARIABLES])
+
+  AS_IF([test "x$ocaml_cv_prog_cc_nonexecstack_note" = xyes],
+    [with_nonexecstack_note=true
+    AC_DEFINE([WITH_NONEXECSTACK_NOTE], [1])],
+    [with_nonexecstack_note=false])
+])
+
 AC_DEFUN([OCAML_CC_SUPPORTS_LABELS_AS_VALUES], [
   AC_CACHE_CHECK([whether $CC supports the labels as values extension],
     [ocaml_cv_prog_cc_labels_as_values],
