@@ -1224,5 +1224,4 @@ TOCENTRY(caml_array_bound_error_asm)
 TOCENTRYLABEL(fiber_exn_handler)
 TOCENTRYLABEL(trap_handler)
 
-/* Mark stack as non-executable */
-        .section .note.GNU-stack,"",%progbits
+        NONEXECSTACK_NOTE

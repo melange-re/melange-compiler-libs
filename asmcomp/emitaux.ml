@@ -111,6 +111,11 @@ let emit_float64_split_directive directive x =
 let emit_float32_directive directive x =
   emit_printf "\t%s\t0x%lx\n" directive x
 
+let emit_nonexecstack_note () =
+  if Config.with_nonexecstack_note then begin
+    emit_string "\t.section .note.GNU-stack,\"\",%progbits\n"
+  end
+
 (* Record live pointers at call points *)
 
 type frame_debuginfo =

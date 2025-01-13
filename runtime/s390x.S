@@ -1216,5 +1216,4 @@ OBJECT(caml_system$frametable)
         .align  8
 ENDOBJECT(caml_system$frametable)
 
-/* Mark stack as non-executable */
-        .section .note.GNU-stack,"",%progbits
+        NONEXECSTACK_NOTE

@@ -1273,9 +1273,4 @@ let end_assembly () =
       efa_string = (fun s -> emit_string_directive "	.asciz	" s) };
   emit_symbol_type emit_symbol lbl "object";
   emit_symbol_size lbl;
-  begin match Config.system with
-  | "linux" ->
-      (* Mark stack as non-executable *)
-      `	.section	.note.GNU-stack,\"\",%progbits\n`
-  | _ -> ()
-  end
+  emit_nonexecstack_note ()

@@ -1170,4 +1170,4 @@ let end_assembly() =
   emit_string toc_space;
   emit_toctable();
   Hashtbl.clear tocref_entries;
-  `	.section .note.GNU-stack,\"\",%progbits\n`
+  emit_nonexecstack_note ()
