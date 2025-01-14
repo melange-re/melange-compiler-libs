@@ -2763,9 +2763,9 @@ let collect_unknown_apply_args env funct ty_fun0 rev_args sargs =
                     res_ty = expand_head env ty_res;
                     previous_arg_loc = previous_arg_loc rev_args ~funct;
                     extra_arg_loc = sarg.pexp_loc; }))
-      in
-      let arg = Unknown_arg { sarg; ty_arg } in
-      loop ty_res ((lbl, Arg arg) :: rev_args) rest
+        in
+        let arg = Unknown_arg { sarg; ty_arg } in
+        loop ty_res ((lbl, Arg arg) :: rev_args) rest
   in
   loop ty_fun0 rev_args sargs
 
