@@ -453,7 +453,7 @@ let proper_exp_loc exp =
   in
   aux exp.exp_extra
 
-(** [sexp_for_hint] is used by error messages to report literals in their
+(** [sexp] is used by error messages to report literals in their
     original formatting *)
 let unify_exp ~sexp env exp expected_ty =
   let loc = proper_exp_loc exp in
