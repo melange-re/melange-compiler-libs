@@ -1,17 +1,17 @@
 (* TEST
- modules = "a.ml cocinelle.ml";
+ modules = "a.ml coccinelle.ml";
  {
    setup-ocamlc.byte-build-env;
    flags = "-for-pack Pack";
    module = "a.ml";
    ocamlc.byte;
    flags = "-for-pack Pack";
-   module = "cocinelle.ml";
+   module = "coccinelle.ml";
    ocamlc.byte;
    module = "";
    flags = "";
-   program="./cocinelle.byte";
-   all_modules = "a.cmo cocinelle.cmo";
+   program="./coccinelle.byte";
+   all_modules = "a.cmo coccinelle.cmo";
    module = "";
    ocamlc.byte;
    run;
@@ -22,11 +22,9 @@
      module = "a.ml";
      ocamlopt.byte;
      flags = "-for-pack Pack";
-     module = "cocinelle.ml";
+     module = "coccinelle.ml";
      ocamlopt.byte;
-     output="cocinelle";
-     all_modules = "a.cmx cocinelle.cmx";
-     program="./cocinelle.exe";
+     all_modules = "a.cmx coccinelle.cmx";
      module = "";
      ocamlopt.byte;
      run;
