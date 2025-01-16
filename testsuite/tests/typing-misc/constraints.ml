@@ -484,3 +484,15 @@ Line 1, characters 31-39:
 Error: This type "'a" should be an instance of type "'b"
        The universal variable "'b" would escape its scope
 |}]
+
+class type ['a] c = object
+  method m : 'b. (int -> 'b) as 'a
+end
+
+[%%expect{|
+Line 2, characters 17-34:
+2 |   method m : 'b. (int -> 'b) as 'a
+                     ^^^^^^^^^^^^^^^^^
+Error: This type "'a" should be an instance of type "int -> 'b"
+       The universal variable "'b" would escape its scope
+|}]

@@ -373,7 +373,9 @@ Working version
   (Tim McGilchrist, report by Nick Barnes, review by Nick Barnes)
 
 * #13605: Fix ungenerated constraints when they where impossible due to polyvars
-  issues (Samuel Vivien, review by Florian Angeletti and Jacques Garrigue)
+  issues
+  (Samuel Vivien, review by Florian Angeletti, Richard Eisenberg
+   and Jacques Garrigue)
 
 - #13677, #13679: domain.c: remove backup_thread_running to simplify
   concurrent state updates to the backup thread status.
