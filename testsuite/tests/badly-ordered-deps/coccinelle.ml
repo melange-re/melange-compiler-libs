@@ -24,7 +24,7 @@
      flags = "-for-pack Pack";
      module = "coccinelle.ml";
      ocamlopt.byte;
-     output="coccinelle";
+     output="coccinelle.output";
      all_modules = "a.cmx coccinelle.cmx";
      program="./coccinelle.exe";
      module = "";
