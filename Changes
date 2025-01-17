@@ -91,6 +91,10 @@ Working version
   (Pierre Chambart, review by Gabriel Scherer and Xavier Leroy,
    report by Patrick Nicodemus)
 
+- #13667: (originally #11162) Fix instr_size computation on arm64.
+  (Stephen Dolan and Tim McGilchrist, review by Xavier Leroy
+  and David Allsopp)
+
 ### Standard library:
 
 - #13729: Add Either.retract

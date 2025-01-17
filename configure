@@ -862,6 +862,7 @@ otherlibs
 otherlibraries
 instrumented_runtime_libs
 instrumented_runtime
+codegen_invariants
 debug_runtime
 cmxs
 natdynlink_archive
@@ -998,6 +999,7 @@ ac_subst_files=''
 ac_user_opts='
 enable_option_checking
 enable_debug_runtime
+enable_codegen_invariants
 enable_ocamldebug
 enable_debugger
 enable_dependency_generation
@@ -1697,6 +1699,8 @@ Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --disable-debug-runtime do not build runtime with debugging support
+  --enable-codegen-invariants
+                          enable invariants checks in native codegen
   --enable-ocamldebug     build ocamldebug [default=auto]
   --enable-debugger       alias for --enable-ocamldebug
   --disable-dependency-generation
@@ -3500,6 +3504,7 @@ LINEAR_MAGIC_NUMBER=Caml1999L035
 
 
 
+
  # TODO: rename this variable
 
 
@@ -3866,6 +3871,13 @@ fi
 if test ${enable_debug_runtime+y}
 then :
   enableval=$enable_debug_runtime;
+fi
+
+
+# Check whether --enable-codegen-invariants was given.
+if test ${enable_codegen_invariants+y}
+then :
+  enableval=$enable_codegen_invariants;
 fi
 
 
@@ -21662,6 +21674,14 @@ case $enable_debug_runtime in #(
     debug_runtime=false ;; #(
   *) :
     debug_runtime=true ;;
+esac
+
+## Should the codegen with debugging support be built
+case $enable_codegen_invariants in #(
+  no) :
+    codegen_invariants=false ;; #(
+  *) :
+    codegen_invariants=true ;;
 esac
 
 ## Determine how to link with the POSIX threads library
