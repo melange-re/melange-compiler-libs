@@ -164,10 +164,6 @@ type primitive =
      handlers, finalizers, memprof callbacks, etc, as well as GCs and
      GC slices, so should not be moved or optimised away. *)
   | Ppoll
-  | Parray_to_iarray (* Unsafely reinterpret a mutable array as an immutable
-                        one; O(1) *)
-  | Parray_of_iarray (* Unsafely reinterpret an immutable array as a mutable
-                        one; O(1) *)
 
 and integer_comparison =
     Ceq | Cne | Clt | Cgt | Cle | Cge
