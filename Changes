@@ -11,6 +11,9 @@ Working version
   array` by default).
   (Nicolás Ojeda Bär, review by Richard Eisenberg, Jeremy Yallop, Jacques
   Garrigue, and Gabriel Scherer)
+- #13097: Immutable arrays
+  (Antal Spector-Zabusky and Olivier Nicole, review by Gabriel Scherer,
+  Jeremy Yallop and Vincent Laviron)
 
 ### Runtime system:
 
