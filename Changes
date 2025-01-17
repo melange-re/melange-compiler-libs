@@ -115,6 +115,10 @@ Working version
 - #13758: Propagate more value kinds in Flambda to allow more unboxing
   (Vincent Laviron, review by Pierre Chambart)
 
+- #13735: Follow the behaviour of the C compiler to decide whether to emit the
+  `.size` and `.type` directives and the `.note.GNU-stack` section
+  (Samuel Hym, review by Miod Vallat, Antonin Décimo and Gabriel Scherer)
+
 ### Standard library:
 
 - #13731: Add Either.retract
