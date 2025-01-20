@@ -455,7 +455,7 @@ again:
           re->offset != CAML_EPHE_DATA_OFFSET && /* ephe key (not data)  */
           Is_block(v) &&                         /* a block              */
           young_start <= v && v < young_end &&   /* on *this* minor heap */
-          Tag_val(v) != 0 &&                     /* not already promoted */
+          Hd_val(v) != 0 &&                      /* not already promoted */
           atomic_compare_exchange_strong(data, &v, caml_ephe_locked)) {
         /* locked, clean it later */
         re->locked = v;
