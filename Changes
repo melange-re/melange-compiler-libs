@@ -254,6 +254,9 @@ Working version
   (Ulysse Gérard, Leo White, review by Antonin Décimo, Gabriel Scherer,
    Samuel Vivien, Florian Angeletti and Jacques Garrigue)
 
+- #13748: Add a .editorconfig file for basic editor auto-configuration.
+  (Antonin Décimo, review by Gabriel Scherer and David Allsopp)
+
 ### Build system:
 
 - #13431: Simplify github action responsible for flagging PRs with
