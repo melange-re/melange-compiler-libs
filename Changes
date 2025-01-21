@@ -306,8 +306,8 @@ Working version
 - #13710: Support unicode identifiers in comments.
   (Pieter Goetschalckx, review by Florian Angeletti and Gabriel Scherer)
 
-OCaml 5.3.0
-___________
+OCaml 5.3.0 (8 January 2025)
+----------------------------
 
 (Changes that can break existing programs are marked with a "*")
 
@@ -533,8 +533,8 @@ ___________
 
 - #13197: Dynarray.blit, which allows to extend the destination
   dynarray (0 <= dst_pos <= dst_length).
-  (Gabriel Scherer, report by Hazem Elmasry,
-   review by Olivier Nicole, Hazem Elmasry and Nicolás Ojeda Bär)
+  (Gabriel Scherer, report by Hazem ElMasry,
+   review by Olivier Nicole, Hazem ElMasry and Nicolás Ojeda Bär)
 
 * #13240: Add Uchar.seeded_hash, Change Uchar.hash implementation.
   Previously, Uchar.hash was aliased to Uchar.to_int. If you need that behavior,
@@ -643,7 +643,7 @@ ___________
 
 - #13469, #13474, #13535: Document that [Hashtbl.create n] creates a hash table
   with a default minimal size, even if [n] is very small or negative.
-  (Antonin Décimo, Nick Bares, report by Nikolaus Huber and Jan Midtgaard,
+  (Antonin Décimo, Nick Barnes, report by Nikolaus Huber and Jan Midtgaard,
    review by Florian Angeletti, Anil Madhavapeddy, Gabriel Scherer,
    and Miod Vallat)
 
@@ -753,7 +753,7 @@ ___________
 - #13067: rework volatile memory access rules under TSan to consider properly
   aligned smaller-than-register read operations as atomic, which gets rid of
   false positives on s390x
-  (Miod Vallat, review by Fabien Buoro)
+  (Miod Vallat, review by Fabrice Buoro)
 
 - #13162: Use quoted strings to clarify code being generated.
   (Antonin Décimo, review by Miod Vallat and Gabriel Scherer)
@@ -977,7 +977,7 @@ ___________
 
 - #13495, #13514: Fix typechecker crash while typing objects
   (Jacques Garrigue, report by Nicolás Ojeda Bär, review by
-   Nicolas Ojeda Bär, Gabriel Scherer, Stephen Dolan, Florian Angeletti)
+   Nicolás Ojeda Bär, Gabriel Scherer, Stephen Dolan, Florian Angeletti)
 
 - #13391, #13551: fix a printing bug with `-dsource` when using
   raw literal inside a locally abstract type constraint
@@ -1216,8 +1216,7 @@ OCaml 5.2.0 (13 May 2024)
 
 - #12769: Unify MSVC and MinGW-w64 code paths, by always using WinAPI
   directly.
-  (David Allsopp, Antonin Décimo, and Samuel Hym, review by Nicolas
-   Ojeda Bar)
+  (David Allsopp, Antonin Décimo, and Samuel Hym, review by Nicolás Ojeda Bär)
 
 - #11911, #12382, #12383: Restore statmemprof functionality in part
   (backtrace buffers, per-thread and per-domain data structures,
@@ -1343,7 +1342,7 @@ OCaml 5.2.0 (13 May 2024)
 
 * #12455: `Array.make_matrix dimx dimy f` now raises `Invalid_argument`
   when `dimx = 0 && dimy < 0` This was already specified but not enforced.
-  (Glen Mével, report by Jeremy Yallop, review by Nicolas Ojeda Bar)
+  (Glen Mével, report by Jeremy Yallop, review by Nicolás Ojeda Bär)
 
 - #12459: Add `Random.int_in_range`, `Random.int32_in_range`,
   `Random.int64_in_range`, `Random.nativeint_in_range`,
