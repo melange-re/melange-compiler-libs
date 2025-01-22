@@ -1421,7 +1421,6 @@ module Fun            = Fun
 module Gc             = Gc
 module Hashtbl        = Hashtbl
 module Iarray         = Iarray
-module IarrayLabels   = IarrayLabels
 module In_channel     = In_channel
 module Int            = Int
 module Int32          = Int32

@@ -17,14 +17,6 @@
 
 open! Stdlib
 
-(* NOTE:
-   If this file is iarrayLabels.mli, run tools/sync_stdlib_docs after editing it
-   to generate iarray.mli.
-
-   If this file is iarray.mli, do not edit it directly -- edit
-   iarrayLabels.mli instead.
- *)
-
 (** Operations on immutable arrays.  This module mirrors the API of [Array], but
     omits functions that assume mutability; in addition to obviously mutating
     functions, it omits [copy] along with the functions [make], [create_float],
@@ -68,8 +60,8 @@ val append : 'a iarray -> 'a iarray -> 'a iarray
 val concat : 'a iarray list -> 'a iarray
 (** Same as {!append}, but concatenates a list of immutable arrays. *)
 
-val sub : 'a iarray -> int -> int -> 'a iarray
-(** [sub a pos len] returns a fresh immutable array of length [len],
+val sub : 'a iarray -> pos:int -> len:int -> 'a iarray
+(** [sub a ~pos ~len] returns a fresh immutable array of length [len],
    containing the elements number [pos] to [pos + len - 1]
    of immutable array [a].  This creates a copy of the selected
    portion of the immutable array.

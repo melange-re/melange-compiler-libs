@@ -110,22 +110,22 @@ Iarray.concat [ Iarray.init 1 (fun x ->   1 + x)
 - : int iarray = [|1; 20; 21; 300; 301; 302|]
 |}];;
 
-Iarray.sub iarray 0 2, Iarray.sub iarray 2 3;;
+Iarray.sub iarray ~pos:0 ~len:2, Iarray.sub iarray ~pos:2 ~len:3;;
 [%%expect{|
 - : int iarray * int iarray = ([|1; 2|], [|3; 4; 5|])
 |}];;
 
-Iarray.sub iarray (-1) 3;;
+Iarray.sub iarray ~pos:(-1) ~len:3;;
 [%%expect{|
 Exception: Invalid_argument "Iarray.sub".
 |}];;
 
-Iarray.sub iarray 1 (-3);;
+Iarray.sub iarray ~pos:1 ~len:(-3);;
 [%%expect{|
 Exception: Invalid_argument "Iarray.sub".
 |}];;
 
-Iarray.sub iarray 3 10;;
+Iarray.sub iarray ~pos:3 ~len:10;;
 [%%expect{|
 Exception: Invalid_argument "Iarray.sub".
 |}];;

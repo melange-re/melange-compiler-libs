@@ -97,7 +97,6 @@ STDLIB_MODULE_BASENAMES = \
   filename \
   complex \
   arrayLabels \
-  iarrayLabels \
   listLabels \
   bytesLabels \
   stringLabels \

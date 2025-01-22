@@ -68,10 +68,10 @@ let append a1 a2 =
   else if length a2 = 0 then a1
   else append_prim a1 a2
 
-let sub a ofs len =
-  if ofs < 0 || len < 0 || ofs > length a - len
+let sub a ~pos ~len =
+  if pos < 0 || len < 0 || pos > length a - len
   then invalid_arg "Iarray.sub"
-  else unsafe_sub a ofs len
+  else unsafe_sub a pos len
 
 let iter f a =
   for i = 0 to length a - 1 do f(unsafe_get a i) done
