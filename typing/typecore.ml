@@ -2816,16 +2816,16 @@ let collect_apply_args env funct ignore_labels ty_fun ty_fun0 sargs =
     in
     let lopt =
       match get_desc ty_fun', get_desc (expand_head env ty_fun0) with
-      | Tarrow (l, _, _, com), Tarrow (_, _, _, _)
+      | Tarrow (l, ty_arg, ty_ret, com), Tarrow (_, ty_arg0, ty_ret0, _)
         when is_commu_ok com ->
-          Some l
+          Some (l, `Arrow (ty_arg, ty_ret, ty_arg0, ty_ret0))
       | _ -> None
     in
     match lopt with
     | None ->
       (* We're not looking at a *known* function type anymore. *)
       collect_unknown_apply_args env funct ty_fun0 rev_args sargs
-    | Some l ->
+    | Some (l, arrow_kind) ->
       begin
         let name = label_name l
         and optional = is_optional l in
@@ -2864,8 +2864,8 @@ let collect_apply_args env funct ignore_labels ty_fun ty_fun0 sargs =
             | None ->
                 sargs, None
         in
-        match get_desc ty_fun', get_desc (expand_head env ty_fun0) with
-        | Tarrow (_, ty_arg, ty_ret, _), Tarrow (_, ty_arg0, ty_ret0, _) ->
+        match arrow_kind with
+        | `Arrow (ty_arg, ty_ret, ty_arg0, ty_ret0) ->
             let use_arg sarg l' =
               let wrapped_in_some = optional && not (is_optional l') in
               if wrapped_in_some then
@@ -2893,8 +2893,6 @@ let collect_apply_args env funct ignore_labels ty_fun ty_fun0 sargs =
                   end
             in
             loop ty_ret ty_ret0 ((l, arg) :: rev_args) remaining_sargs
-        | _ ->
-          assert false
       end
   in
   loop ty_fun ty_fun0 [] sargs
