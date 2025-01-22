@@ -137,6 +137,8 @@ jobs:
             config_arg: >-
               --disable-naked-pointers
               --disable-stdlib-manpages
+          - name: linux-arm64
+            os: ubuntu-24.04-arm
           - name: macos-x86_64
             os: macos-13
           - name: macos-arm64
