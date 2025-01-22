@@ -20,6 +20,8 @@
 .gitattributes typo.long-line=may typo.utf8
 .gitmodules typo.long-line=may typo.tab=may
 
+.editorconfig typo.missing-header=may
+
 # Binary files
 /boot/ocamlc binary
 /boot/ocamllex binary
@@ -53,7 +55,7 @@ tools/mantis2gh_stripped.csv typo.missing-header
 META.in                  typo.missing-header
 
 # Hyperlinks and other markup features cause long lines
-*.adoc                   typo.long-line=may typo.very-long-line=may
+*.adoc                   typo.long-line=may typo.very-long-line=may typo.utf8=may
 *.md                     typo.long-line=may typo.very-long-line=may
 
 # Github templates and scripts lack headers, have long lines

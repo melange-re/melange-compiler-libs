@@ -237,6 +237,16 @@ the original commit in the commit message.
 git cherry-pick -x -m 1 <merge-commit-hash>
 ----
 
+=== Code style
+
+Keep the style of the code you’re modifying. We don’t enforce the use of
+automated formatters. For OCaml code,
+https://github.com/OCamlPro/ocp-indent[ocp-indent] has been used.
+We use https://editorconfig.org/[EditorConfig] for simple styling. Lots of
+editors support EditorConfig
+https://editorconfig.org/#pre-installed[out-of-the-box], or with
+https://editorconfig.org/#download[plugins].
+
 [#opam-switch]
 === Testing with `opam`
 
