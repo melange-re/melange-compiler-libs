@@ -153,7 +153,7 @@ jobs:
             os: ubuntu-latest
             config_arg: CFLAGS='-O0'
           - name: linux-arm64
-             os: ubuntu-24.04-arm
+            os: ubuntu-24.04-arm
           - name: macos-x86_64
             os: macos-13
           - name: macos-arm64
