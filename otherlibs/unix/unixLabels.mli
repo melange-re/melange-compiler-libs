@@ -1097,7 +1097,11 @@ val select :
    The result is composed of three sets of descriptors: those ready
    for reading (first component), ready for writing (second component),
    and over which an exceptional condition is pending (third
-   component). *)
+   component).
+
+   On Windows, if one of descriptor lists exceeds [FD_SETSIZE] elements
+   (64 by default), or if at least one non-socket file descriptor is
+   used, the maximal timeout is capped to 2{^32} milliseconds. *)
 
 (** {1 Locking} *)
 

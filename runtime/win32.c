@@ -1147,7 +1147,7 @@ CAMLexport clock_t caml_win32_clock(void)
   return (clock_t)((stime.ul + utime.ul) / clocks_per_sec);
 }
 
-static double clock_period = 0;
+static double clock_period_nsec = 0;
 
 void caml_init_os_params(void)
 {
@@ -1162,7 +1162,7 @@ void caml_init_os_params(void)
 
   /* Get the number of nanoseconds for each tick in QueryPerformanceCounter */
   QueryPerformanceFrequency(&frequency);
-  clock_period = (1000000000.0 / frequency.QuadPart);
+  clock_period_nsec = (double) NSEC_PER_SEC / frequency.QuadPart;
 }
 
 uint64_t caml_time_counter(void)
@@ -1170,7 +1170,7 @@ uint64_t caml_time_counter(void)
   LARGE_INTEGER now;
 
   QueryPerformanceCounter(&now);
-  return (uint64_t)(now.QuadPart * clock_period);
+  return (uint64_t) (now.QuadPart * clock_period_nsec);
 }
 
 void *caml_plat_mem_map(uintnat size, int reserve_only)
