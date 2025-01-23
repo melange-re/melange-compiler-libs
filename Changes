@@ -104,7 +104,7 @@ Working version
 
 ### Standard library:
 
-- #13729: Add Either.retract
+- #13731: Add Either.retract
   (Daniel Bünzli, review by Nicolás Ojeda Bär and David Allsopp)
 
 - #13729: Add Seq.filteri
