@@ -64,6 +64,7 @@ STDLIB_MODULE_BASENAMES = \
   nativeint \
   lexing \
   parsing \
+  repr \
   set \
   map \
   stack \
