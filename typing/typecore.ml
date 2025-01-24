@@ -2866,25 +2866,20 @@ let collect_apply_args env funct ignore_labels ty_fun ty_fun0 sargs =
         in
         match arrow_kind with
         | `Arrow (ty_arg, ty_ret, ty_arg0, ty_ret0) ->
-            let use_arg sarg l' =
-              let wrapped_in_some = optional && not (is_optional l') in
-              if wrapped_in_some then
-                may_warn sarg.pexp_loc
-                  (not_principal "using an optional argument here");
-              Arg (Known_arg { sarg; ty_arg; ty_arg0; wrapped_in_some })
-            in
-            let eliminate_optional_arg () =
-              may_warn funct.exp_loc
-                (Warnings.Non_principal_labels "eliminated optional argument");
-              Arg (Eliminated_optional_arg { ty_arg; level = lv })
-            in
             let arg =
               match arg_opt with
-              | Some (sarg, l') -> use_arg sarg l'
+              | Some (sarg, l') ->
+                  let wrapped_in_some = optional && not (is_optional l') in
+                  if wrapped_in_some then
+                    may_warn sarg.pexp_loc
+                      (not_principal "using an optional argument here");
+                  Arg (Known_arg { sarg; ty_arg; ty_arg0; wrapped_in_some })
               | None ->
-                  if optional && List.mem_assoc Nolabel sargs then
-                    eliminate_optional_arg ()
-                  else begin
+                  if optional && List.mem_assoc Nolabel sargs then begin
+                    may_warn funct.exp_loc (Warnings.Non_principal_labels
+                                                "eliminated optional argument");
+                    Arg (Eliminated_optional_arg { ty_arg; level = lv })
+                  end else begin
                     (* No argument was given for this parameter, we abstract
                       over it. *)
                     may_warn funct.exp_loc
