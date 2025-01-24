@@ -2045,11 +2045,9 @@ when the block becomes unreachable and is about to be reclaimed.
 The block is passed as first argument to the function.
 The "finalize" field can also be "custom_finalize_default" to indicate that no
 finalization function is associated with the block.
-Note the caution below: there are many restrictions on the behaviour
-of these custom block finalizers; they must not allocate on the Caml
-heap, or call OCaml code or allow it to be called (for example, they
-should not call "caml_release_runtime_system()"). For more powerful
-and flexible finalization, use "Gc.finalise" (see \stdmoduleref{Gc}).
+Note the caution below: there are many restrictions on the
+behaviour of these custom block finalizers. For more powerful and
+flexible finalization, use "Gc.finalise" (see \stdmoduleref{Gc}).
 
 \item "int (*compare)(value v1, value v2)" \\
 The "compare" field contains a pointer to a C function that is
@@ -2139,17 +2137,25 @@ specified in the "fixed_length" structure, and do not consume space in
 the serialized output.
 \end{itemize}
 
-\emph{Caution}: the "finalize", "compare", "hash", "serialize", and "deserialize"
-functions attached to custom blocks descriptors are only allowed limited
-interactions with the OCaml runtime. Within these functions, do not call any of
-the OCaml allocation functions, and do not perform any callback into OCaml
-code. Do not use "CAMLparam" to register the parameters to these functions, and
-do not use "CAMLreturn" to return the result. Do not raise exceptions (to
-signal an error during deserialization, use "caml_deserialize_error"). When in
-doubt, err on the side of caution. However, note that "finalize" functions may
-freely use "caml_remove_global_root" and "caml_remove_generational_global_root",
-and "serialize" and "deserialize" functions may freely use the corresponding
-functions from section~\ref{ss:c-custom-serialization}.
+\emph{Caution}: the "finalize", "compare", "hash", "serialize", and
+"deserialize" functions attached to custom block descriptors are allowed
+only limited interactions with the OCaml runtime. Within these functions, do
+not call any of the OCaml allocation functions, and do not perform any
+callback into OCaml code or allow it to be called (for example, do not call
+"caml_release_runtime_system()"). Do not use "CAMLparam" to register the
+parameters to these functions, do not use "CAMLlocal" to register their
+local variables, and do not use "CAMLreturn" to return the result. Do not
+raise exceptions. To signal an error during deserialization, use
+"caml_deserialize_error", and "serialize" and "deserialize" functions may
+freely use the functions from section~\ref{ss:c-custom-serialization}.
+There are especially stringent restrictions on the behavior of custom block
+finalizers. In addition to the restrictions above, finalizers must not
+access the OCaml heap, or mutate the OCaml heap or any memory reachable from
+OCaml GC roots. However, note that "finalize" functions may freely use
+"caml_remove_global_root" and "caml_remove_generational_global_root". In
+short, if a custom block finalizer does anything with the "value" it
+receives other than call "Data_custom_val" on it, then it is probably
+unsafe. When in doubt, err on the side of caution.
 
 \subsection{ss:c-custom-alloc}{Allocating custom blocks}
 
