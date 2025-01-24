@@ -203,7 +203,7 @@ val for_all : ('a -> bool) -> 'a t -> bool
     @since 4.14 *)
 
 val exists : ('a -> bool) -> 'a t -> bool
-(** [exists xs p] determines whether at least one element [x]
+(** [exists p xs] determines whether at least one element [x]
     of the sequence [xs] satisfies [p x].
 
     The sequence [xs] must be finite.
