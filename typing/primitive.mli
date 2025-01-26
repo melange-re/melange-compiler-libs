@@ -31,7 +31,8 @@ type description = private
     prim_alloc: bool;          (* Does it allocates or raise? *)
     prim_native_name: string;  (* Name of C function for the nat. code gen. *)
     prim_native_repr_args: native_repr list;
-    prim_native_repr_res: native_repr }
+    prim_native_repr_res: native_repr;
+    prim_attrs: Parsetree.attribute list }
 
 (* Invariant [List.length d.prim_native_repr_args = d.prim_arity] *)
 
