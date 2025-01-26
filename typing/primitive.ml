@@ -32,7 +32,8 @@ type description =
     prim_alloc: bool;          (* Does it allocates or raise? *)
     prim_native_name: string;  (* Name of C function for the nat. code gen. *)
     prim_native_repr_args: native_repr list;
-    prim_native_repr_res: native_repr }
+    prim_native_repr_res: native_repr;
+    prim_attrs: Parsetree.attribute list }
 
 type error =
   | Old_style_float_with_native_repr_attribute
@@ -71,7 +72,8 @@ let simple ~name ~arity ~alloc =
    prim_alloc = alloc;
    prim_native_name = "";
    prim_native_repr_args = make_native_repr_args arity Same_as_ocaml_repr;
-   prim_native_repr_res = Same_as_ocaml_repr}
+   prim_native_repr_res = Same_as_ocaml_repr;
+   prim_attrs = []}
 
 let make ~name ~alloc ~native_name ~native_repr_args ~native_repr_res =
   {prim_name = name;
@@ -79,7 +81,8 @@ let make ~name ~alloc ~native_name ~native_repr_args ~native_repr_res =
    prim_alloc = alloc;
    prim_native_name = native_name;
    prim_native_repr_args = native_repr_args;
-   prim_native_repr_res = native_repr_res}
+   prim_native_repr_res = native_repr_res;
+   prim_attrs = []}
 
 let parse_declaration valdecl ~native_repr_args ~native_repr_res =
   let arity = List.length native_repr_args in
@@ -133,7 +136,8 @@ let parse_declaration valdecl ~native_repr_args ~native_repr_res =
    prim_alloc = not noalloc;
    prim_native_name = native_name;
    prim_native_repr_args = native_repr_args;
-   prim_native_repr_res = native_repr_res}
+   prim_native_repr_res = native_repr_res;
+   prim_attrs = valdecl.pval_attributes}
 
 open Outcometree
 
