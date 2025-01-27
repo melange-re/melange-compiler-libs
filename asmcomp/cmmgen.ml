@@ -1388,6 +1388,14 @@ and transl_switch dbg env arg index cases = match Array.length cases with
     let cases = Array.map (transl env) cases in
     transl_switch_clambda dbg arg index cases
 
+let machtype_of_value_kind (value_kind : Lambda.value_kind) =
+  match value_kind with
+  | Pgenval
+  | Pfloatval
+  | Pboxedintval _ ->
+      Cmm.typ_val
+  | Pintval ->
+      Cmm.typ_int
 
 (* Translate a function definition *)
 
@@ -1408,8 +1416,13 @@ let transl_function f =
     else
       [ Reduce_code_size ]
   in
+  let fun_args =
+    List.map (fun (id, value_kind) ->
+        (id, machtype_of_value_kind value_kind))
+      f.params
+  in
   Cfunction {fun_name = f.label;
-             fun_args = List.map (fun (id, _) -> (id, typ_val)) f.params;
+             fun_args;
              fun_body = cmm_body;
              fun_codegen_options;
              fun_poll = f.poll;
