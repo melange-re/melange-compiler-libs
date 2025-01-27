@@ -267,6 +267,9 @@ Working version
 - #13748: Add a .editorconfig file for basic editor auto-configuration.
   (Antonin Décimo, review by Gabriel Scherer and David Allsopp)
 
+- #13744: Refactor in `collect_apply_args`
+  (Samuel Vivien, review by Florian Angeletti and Gabriel Scherer)
+
 ### Build system:
 
 - #13431: Simplify github action responsible for flagging PRs with

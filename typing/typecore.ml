@@ -432,6 +432,36 @@ let unify_exp_types loc env ty expected_ty =
   | Tags(l1,l2) ->
       raise(Typetexp.Error(loc, env, Typetexp.Variant_tags (l1, l2)))
 
+(* Getting proper location of already typed expressions.
+
+   Used to avoid confusing locations on type error messages in presence of
+   type constraints.
+   For example:
+
+       (* Before patch *)
+       # let x : string = (5 : int);;
+                           ^
+       (* After patch *)
+       # let x : string = (5 : int);;
+                          ^^^^^^^^^
+*)
+let proper_exp_loc exp =
+  let rec aux = function
+    | [] -> exp.exp_loc
+    | ((Texp_constraint _ | Texp_coerce _), loc, _) :: _ -> loc
+    | _ :: rest -> aux rest
+  in
+  aux exp.exp_extra
+
+(** [sexp] is used by error messages to report literals in their
+    original formatting *)
+let unify_exp ~sexp env exp expected_ty =
+  let loc = proper_exp_loc exp in
+  try
+    unify_exp_types loc env exp.exp_type expected_ty
+  with Error(loc, env, Expr_type_clash(err, tfc, None)) ->
+    raise (Error(loc, env, Expr_type_clash(err, tfc, Some sexp)))
+
 (* helper notation for Pattern_env.t *)
 let (!!) (penv : Pattern_env.t) = penv.env
 
@@ -2706,6 +2736,18 @@ let remaining_function_type_for_error ty_ret rev_args =
             ty_ret)
     ty_ret rev_args
 
+let previous_arg_loc rev_args ~funct =
+  (* [rev_args] is the arguments typed until now, in reverse
+    order of appearance. Not all arguments have a location
+    attached (eg. an optional argument that is not passed). *)
+    rev_args
+    |> List.find_map (function
+        | _, Arg (Known_arg { sarg = {pexp_loc = loc; _ }}
+                  | Unknown_arg { sarg = {pexp_loc = loc; _}}) ->
+            Some loc
+        | _ -> None)
+    |> Option.value ~default:funct.exp_loc
+
 let collect_unknown_apply_args env funct ty_fun0 rev_args sargs =
   let labels_match ~param ~arg =
     param = arg
@@ -2745,27 +2787,15 @@ let collect_unknown_apply_args env funct ty_fun0 rev_args sargs =
                   else
                     raise (Error(funct.exp_loc, env, Incoherent_label_order))
               | _ ->
-                let previous_arg_loc =
-                  (* [rev_args] is the arguments typed until now, in reverse
-                    order of appearance. Not all arguments have a location
-                    attached (eg. an optional argument that is not passed). *)
-                  rev_args
-                  |> List.find_map (function
-                      | _, Arg (Known_arg { sarg = {pexp_loc = loc; _ }}
-                               | Unknown_arg { sarg = {pexp_loc = loc; _}}) ->
-                          Some loc
-                      | _ -> None)
-                  |> Option.value ~default:funct.exp_loc
-                in
                 raise(Error(funct.exp_loc, env, Apply_non_function {
                     funct;
                     func_ty = expand_head env funct.exp_type;
                     res_ty = expand_head env ty_res;
-                    previous_arg_loc;
+                    previous_arg_loc = previous_arg_loc rev_args ~funct;
                     extra_arg_loc = sarg.pexp_loc; }))
-      in
-      let arg = Unknown_arg { sarg; ty_arg } in
-      loop ty_res ((lbl, Arg arg) :: rev_args) rest
+        in
+        let arg = Unknown_arg { sarg; ty_arg } in
+        loop ty_res ((lbl, Arg arg) :: rev_args) rest
   in
   loop ty_fun0 rev_args sargs
 
@@ -2776,53 +2806,51 @@ let collect_apply_args env funct ignore_labels ty_fun ty_fun0 sargs =
       collect_unknown_apply_args env funct ty_fun0 rev_args sargs
     else
     let ty_fun' = expand_head env ty_fun in
-    match get_desc ty_fun', get_desc (expand_head env ty_fun0) with
-    | Tarrow (l, ty_arg, ty_ret, com), Tarrow (_, ty_arg0, ty_ret0, _)
-      when is_commu_ok com ->
-        let lv = get_level ty_fun' in
-        let may_warn loc w =
-          if not !warned && !Clflags.principal && lv <> generic_level
-          then begin
-            warned := true;
-            Location.prerr_warning loc w
-          end
-        in
+    let lv = get_level ty_fun' in
+    let may_warn loc w =
+      if not !warned && !Clflags.principal && lv <> generic_level
+      then begin
+        warned := true;
+        Location.prerr_warning loc w
+      end
+    in
+    let lopt =
+      match get_desc ty_fun', get_desc (expand_head env ty_fun0) with
+      | Tarrow (l, ty_arg, ty_ret, com), Tarrow (_, ty_arg0, ty_ret0, _)
+        when is_commu_ok com ->
+          Some (l, `Arrow (ty_arg, ty_ret, ty_arg0, ty_ret0))
+      | _ -> None
+    in
+    match lopt with
+    | None ->
+      (* We're not looking at a *known* function type anymore. *)
+      collect_unknown_apply_args env funct ty_fun0 rev_args sargs
+    | Some (l, arrow_kind) ->
+      begin
         let name = label_name l
         and optional = is_optional l in
-        let use_arg sarg l' =
-          let wrapped_in_some = optional && not (is_optional l') in
-          if wrapped_in_some then
-            may_warn sarg.pexp_loc
-              (not_principal "using an optional argument here");
-          Arg (Known_arg { sarg; ty_arg; ty_arg0; wrapped_in_some })
-        in
-        let eliminate_optional_arg () =
-          may_warn funct.exp_loc
-            (Warnings.Non_principal_labels "eliminated optional argument");
-          Arg (Eliminated_optional_arg { ty_arg; level = lv })
-        in
-        let remaining_sargs, arg =
+        let remaining_sargs, arg_opt =
           if ignore_labels then begin
             (* No reordering is allowed, process arguments in order *)
             match sargs with
             | [] -> assert false
             | (l', sarg) :: remaining_sargs ->
                 if name = label_name l' || (not optional && l' = Nolabel) then
-                  (remaining_sargs, use_arg sarg l')
+                  (remaining_sargs, Some (sarg, l'))
                 else if
                   optional &&
                   not (List.exists (fun (l, _) -> name = label_name l)
-                         remaining_sargs) &&
+                        remaining_sargs) &&
                   List.exists (function (Nolabel, _) -> true | _ -> false)
                     sargs
                 then
-                  (sargs, eliminate_optional_arg ())
+                  (sargs, None)
                 else
                   raise(Error(sarg.pexp_loc, env,
                               Apply_wrong_label(l', ty_fun', optional)))
           end else
             (* Arguments can be commuted, try to fetch the argument
-               corresponding to the first parameter. *)
+              corresponding to the first parameter. *)
             match extract_label name sargs with
             | Some (l', sarg, commuted, remaining_sargs) ->
                 if commuted then begin
@@ -2832,23 +2860,35 @@ let collect_apply_args env funct ignore_labels ty_fun ty_fun0 sargs =
                 if not optional && is_optional l' then
                   Location.prerr_warning sarg.pexp_loc
                     (Warnings.Nonoptional_label (Asttypes.string_of_label l));
-                remaining_sargs, use_arg sarg l'
+                remaining_sargs, Some (sarg, l')
             | None ->
-                sargs,
-                if optional && List.mem_assoc Nolabel sargs then
-                  eliminate_optional_arg ()
-                else begin
-                  (* No argument was given for this parameter, we abstract over
-                     it. *)
-                  may_warn funct.exp_loc
-                    (Warnings.Non_principal_labels "commuted an argument");
-                  Omitted { ty_arg; level = lv }
-                end
+                sargs, None
         in
-        loop ty_ret ty_ret0 ((l, arg) :: rev_args) remaining_sargs
-    | _ ->
-      (* We're not looking at a *known* function type anymore. *)
-      collect_unknown_apply_args env funct ty_fun0 rev_args sargs
+        match arrow_kind with
+        | `Arrow (ty_arg, ty_ret, ty_arg0, ty_ret0) ->
+            let arg =
+              match arg_opt with
+              | Some (sarg, l') ->
+                  let wrapped_in_some = optional && not (is_optional l') in
+                  if wrapped_in_some then
+                    may_warn sarg.pexp_loc
+                      (not_principal "using an optional argument here");
+                  Arg (Known_arg { sarg; ty_arg; ty_arg0; wrapped_in_some })
+              | None ->
+                  if optional && List.mem_assoc Nolabel sargs then begin
+                    may_warn funct.exp_loc (Warnings.Non_principal_labels
+                                                "eliminated optional argument");
+                    Arg (Eliminated_optional_arg { ty_arg; level = lv })
+                  end else begin
+                    (* No argument was given for this parameter, we abstract
+                      over it. *)
+                    may_warn funct.exp_loc
+                      (Warnings.Non_principal_labels "commuted an argument");
+                    Omitted { ty_arg; level = lv }
+                  end
+            in
+            loop ty_ret ty_ret0 ((l, arg) :: rev_args) remaining_sargs
+      end
   in
   loop ty_fun ty_fun0 [] sargs
 
@@ -3404,27 +3444,6 @@ let check_absent_variant env =
                      (duplicate_type pat.pat_type)
     | _ -> () }
 
-(* Getting proper location of already typed expressions.
-
-   Used to avoid confusing locations on type error messages in presence of
-   type constraints.
-   For example:
-
-       (* Before patch *)
-       # let x : string = (5 : int);;
-                           ^
-       (* After patch *)
-       # let x : string = (5 : int);;
-                          ^^^^^^^^^
-*)
-let proper_exp_loc exp =
-  let rec aux = function
-    | [] -> exp.exp_loc
-    | ((Texp_constraint _ | Texp_coerce _), loc, _) :: _ -> loc
-    | _ :: rest -> aux rest
-  in
-  aux exp.exp_extra
-
 (* To find reasonable names for let-bound and lambda-bound idents *)
 
 let rec name_pattern default = function
@@ -3439,15 +3458,6 @@ let name_cases default lst =
   name_pattern default (List.map (fun c -> c.c_lhs) lst)
 
 (* Typing of expressions *)
-
-(** [sexp_for_hint] is used by error messages to report literals in their
-    original formatting *)
-let unify_exp ~sexp env exp expected_ty =
-  let loc = proper_exp_loc exp in
-  try
-    unify_exp_types loc env exp.exp_type expected_ty
-  with Error(loc, env, Expr_type_clash(err, tfc, None)) ->
-    raise (Error(loc, env, Expr_type_clash(err, tfc, Some sexp)))
 
 (* If [is_inferred e] is true, [e] will be typechecked without using
    the "expected type" provided by the context. *)
