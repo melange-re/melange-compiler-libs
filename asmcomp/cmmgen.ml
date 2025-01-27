@@ -121,9 +121,14 @@ let min_mut x y =
   | Immutable,_ | _,Immutable -> Immutable
   | Mutable,Mutable -> Mutable
 
-let get_field env mut ptr n dbg =
+let get_field env imm_or_pointer mut ptr n dbg =
   let mut = min_mut mut (mut_from_env env ptr) in
-  get_field_gen mut ptr n dbg
+  let memory_chunk =
+    match imm_or_pointer with
+    | Immediate -> Word_int
+    | Pointer -> Word_val
+  in
+  get_field_gen ~memory_chunk mut ptr n dbg
 
 (* Translate structured constants to Cmm data items *)
 
@@ -794,8 +799,8 @@ and transl_prim_1 env p arg dbg =
     Popaque ->
       opaque (transl env arg) dbg
   (* Heap operations *)
-  | Pfield(n, _, mut) ->
-      get_field env mut (transl env arg) n dbg
+  | Pfield(n, imm_or_pointer, mut) ->
+      get_field env imm_or_pointer mut (transl env arg) n dbg
   | Pfloatfield n ->
       let ptr = transl env arg in
       box_float dbg (floatfield n ptr dbg)

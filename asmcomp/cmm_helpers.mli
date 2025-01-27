@@ -206,7 +206,8 @@ val field_address : expression -> int -> Debuginfo.t -> expression
 (** [get_field_gen mut ptr n dbg] returns an expression for the access to the
     [n]th field of the block pointed to by [ptr] *)
 val get_field_gen :
-  Asttypes.mutable_flag -> expression -> int -> Debuginfo.t -> expression
+  ?memory_chunk:memory_chunk -> Asttypes.mutable_flag -> expression -> int ->
+  Debuginfo.t -> expression
 
 (** [set_field ptr n newval init dbg] returns an expression for setting the
     [n]th field of the block pointed to by [ptr] to [newval] *)
