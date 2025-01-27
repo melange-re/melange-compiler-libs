@@ -339,6 +339,15 @@ let is_unboxed_number_cmm ~strict ~kind cmm =
   aux cmm;
   !r
 
+let machtype_of_value_kind (value_kind : Lambda.value_kind) =
+  match value_kind with
+  | Pgenval
+  | Pfloatval
+  | Pboxedintval _ ->
+      Cmm.typ_val
+  | Pintval ->
+      Cmm.typ_int
+
 (* Translate an expression *)
 
 let rec transl env e =
@@ -708,12 +717,12 @@ and transl_catch env nfail ids body handler dbg =
   let body = transl env_body body in
   let new_env, rewrite, ids =
     List.fold_right
-      (fun (id, _kind, u) (env, rewrite, ids) ->
+      (fun (id, kind, u) (env, rewrite, ids) ->
          match !u with
          | No_unboxing | Boxed (_, true) | No_result ->
              env,
              (fun x -> x) :: rewrite,
-             (id, Cmm.typ_val) :: ids
+             (id, machtype_of_value_kind kind) :: ids
          | Boxed (bn, false) ->
              let unboxed_id = V.create_local (VP.name id) in
              add_unboxed_id (VP.var id) unboxed_id bn env,
@@ -1392,15 +1401,6 @@ and transl_switch dbg env arg index cases = match Array.length cases with
 | _ ->
     let cases = Array.map (transl env) cases in
     transl_switch_clambda dbg arg index cases
-
-let machtype_of_value_kind (value_kind : Lambda.value_kind) =
-  match value_kind with
-  | Pgenval
-  | Pfloatval
-  | Pboxedintval _ ->
-      Cmm.typ_val
-  | Pintval ->
-      Cmm.typ_int
 
 (* Translate a function definition *)
 
