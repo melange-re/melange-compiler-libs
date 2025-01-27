@@ -203,8 +203,8 @@ val mk_load_atomic : memory_chunk -> operation
     [n]th field of the block pointed to by [ptr] *)
 val field_address : expression -> int -> Debuginfo.t -> expression
 
-(** [get_field_gen mut ptr n dbg] returns an expression for the access to the
-    [n]th field of the block pointed to by [ptr] *)
+(** [get_field_gen ?memory_chunk mut ptr n dbg] returns an expression for
+    the access to the [n]th field of the block pointed to by [ptr]. *)
 val get_field_gen :
   ?memory_chunk:memory_chunk -> Asttypes.mutable_flag -> expression -> int ->
   Debuginfo.t -> expression
