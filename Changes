@@ -102,6 +102,9 @@ Working version
   (Stephen Dolan and Tim McGilchrist, review by Xavier Leroy
   and David Allsopp)
 
+- #13759: Propagate more type information from clambda to cmm.
+  (Pierre Chambart, review by Gabriel Scherer)
+
 ### Standard library:
 
 - #13731: Add Either.retract
