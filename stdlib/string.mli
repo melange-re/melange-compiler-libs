@@ -420,6 +420,17 @@ val edit_distance : ?limit:int -> t -> t -> int
     @since 5.4
 *)
 
+val spellcheck :
+  ?max_dist:(string -> int) -> string list -> string -> string list
+(** [spellcheck dict s] are the elements of [dict] whose
+    {{!edit_distance}edit distance} to [s] is the smallest and at most
+    [max_dist s] (default is [Fun.const 2], this is subject to change
+    in the future, use your own function if you want to rely on
+    that). If multiple corrections are returned their order is as
+    given in [dict].
+
+    @since 5.4 *)
+
 (** {1 Binary decoding of integers} *)
 
 (** The functions in this section binary decode integers from strings.

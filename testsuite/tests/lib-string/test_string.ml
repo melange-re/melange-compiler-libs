@@ -107,3 +107,21 @@ let () =
   test "élément" "élment" 1;
   test "OCaml🐫" "O'Caml🐪" 2;
 ;;
+
+let () =
+  let test ?max_dist dict s res =
+    assert (String.spellcheck ?max_dist dict s = res)
+  in
+  test ["abcd"; "abca"; "abcdef"] "" [];
+  test ["abcd"; "abca"; "abcdef"] "a" [];
+  test ["abcd"; "abca"; "abcdef"] "ag" [];
+  test ["abcd"; "abca"; "abcdef"] "ab" ["abcd"; "abca"];
+  test ["abcd"; "abca"; "abcdef"] "ac" ["abcd"; "abca"];
+  test ["abcd"; "abca"; "abcdef"] "abc" ["abcd"; "abca"];
+  test ["abcd"; "abca"; "abcdef"] "aba" ["abca"];
+  test ["abcd"; "abca"; "abcdef"] "abcd" ["abcd"];
+  let max_dist s = if String.length s <= 1 then 1 else 2 in
+  test ["abc"] "a" ["abc"];
+  test ~max_dist ["abc"] "a" [];
+  test ~max_dist ["abc"; "ab"; "b"] "a" ["ab"; "b"];
+  ()

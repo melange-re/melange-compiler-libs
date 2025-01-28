@@ -338,3 +338,12 @@ let edit_distance ?(limit = Int.max_int) s0 s1 =
   let row = Array.make (len1 + 1) ignore in
   let d = loop row_minus2 row_minus1 row 1 len0 limit in
   if d > limit then limit else d
+
+let spellcheck ?(max_dist = fun _ -> 2) dict s =
+  let select_words (min, acc) word =
+    let d = edit_distance ~limit:(min + 1) s word in
+    if d = min then min, (word :: acc) else
+    if d < min then d, [word] else min, acc
+  in
+  let _min, words = List.fold_left select_words (max_dist s, []) dict in
+  List.rev words
