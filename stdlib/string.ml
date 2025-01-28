@@ -295,17 +295,20 @@ let uchar_array_of_utf_8_string s =
   done;
   uchars, !k
 
-let edit_distance s0 s1 =
+let edit_distance ?(limit = Int.max_int) s0 s1 =
   let[@inline] minimum a b c = Int.min a (Int.min b c) in
   let s0, len0 = uchar_array_of_utf_8_string s0 in
   let s1, len1 = uchar_array_of_utf_8_string s1 in
+  let limit = Int.min (Int.max len0 len1) limit in
+  if Int.abs (len1 - len0) > limit then limit else
   let s0, s1 = if len0 > len1 then s0, s1 else s1, s0 in
   let len0, len1 = if len0 > len1 then len0, len1 else len1, len0 in
-  let rec loop row_minus2 row_minus1 row i len0 =
+  let rec loop row_minus2 row_minus1 row i len0 limit =
     if i > len0 then row_minus1.(Array.length row_minus1 - 1) else
     let len1 = Array.length row - 1 in
+    let row_min = ref Int.max_int in
     row.(0) <- i;
-    for j = 1 to len1 do
+    for j = Int.max 1 (i - limit - 1) to Int.min len1 (i + limit + 1) do
       let cost = if Uchar.equal s0.(i-1) s1.(j-1) then 0 else 1 in
       let min = minimum
           (row_minus1.(j-1) + cost) (* substitute *)
@@ -320,10 +323,18 @@ let edit_distance s0 s1 =
         else min
       in
       row.(j) <- min;
+      row_min := Int.min !row_min min;
     done;
-    loop row_minus1 row row_minus2 (i + 1) len0
+    if !row_min >= limit then (* can no longer decrease *) limit else
+    loop row_minus1 row row_minus2 (i + 1) len0 limit
   in
-  let row_minus2 = Array.make (len1 + 1) 0 in
+  let ignore =
+    (* Value used to make the values around the diagonal stripe ignored
+       by the min computations when we have a limit. *)
+    limit + 1
+  in
+  let row_minus2 = Array.make (len1 + 1) ignore in
   let row_minus1 = Array.init (len1 + 1) (fun x -> x) in
-  let row = Array.make (len1 + 1) 0 in
-  loop row_minus2 row_minus1 row 1 len0
+  let row = Array.make (len1 + 1) ignore in
+  let d = loop row_minus2 row_minus1 row 1 len0 limit in
+  if d > limit then limit else d

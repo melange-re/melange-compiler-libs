@@ -79,11 +79,11 @@ let () =
 
 
 let () =
-  let test x y d =
-    assert (String.edit_distance x y = d);
-    assert (String.edit_distance y x = d);
-    assert (String.edit_distance x x = 0);
-    assert (String.edit_distance y y = 0);
+  let test ?limit x y d =
+    assert (String.edit_distance ?limit x y = d);
+    assert (String.edit_distance ?limit y x = d);
+    assert (String.edit_distance ?limit x x = 0);
+    assert (String.edit_distance ?limit y y = 0);
   in
   test "" "" 0;
   test "" "ab" 2;
@@ -96,6 +96,13 @@ let () =
   test "function" "fantcio" 3;   (* substitute + transpose + delete *)
   test "function" "efantcio" 4;  (* all *)
   test "fun" "function" 5;
+  test "fun" "function" ~limit:0 0;
+  test "fun" "function" ~limit:1 1;
+  test "fun" "function" ~limit:2 2;
+  test "fun" "function" ~limit:3 3;
+  test "fun" "function" ~limit:4 4;
+  test "fun" "function" ~limit:5 5;
+  test "fun" "function" ~limit:6 5;
   test "ca" "abc" 3 (* Damerau-Levenshtein would be 2 *);
   test "élément" "élment" 1;
   test "OCaml🐫" "O'Caml🐪" 2;

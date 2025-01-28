@@ -397,7 +397,28 @@ val is_valid_utf_16le : t -> bool
 
 (** {1:spellchecking Spellchecking} *)
 
-val edit_distance : t -> t -> int
+val edit_distance : ?limit:int -> t -> t -> int
+(** [edit_distance s0 s1] is the number of single character edits
+    (understood as insertion, deletion, substitution, transposition)
+    that are needed to change [s0] into [s1].
+
+    The function assumes the strings are UTF-8 encoded and uses {!Uchar.t}
+    for the notion of character. Decoding errors are replaced by
+    {!Uchar.rep}. Normalizing the strings to
+    {{:https://unicode.org/glossary/#normalization_form_c}NFC} gives
+    better results.
+
+    If [limit] is provided the function returns with [limit] as soon
+    as it was determined that [s0] and [s1] have distance of at least
+    [limit]. This is faster if you have a fixed limit, for example for
+    spellchecking.
+
+    {b Note.} This implements the simpler optimal string alignement
+    distance, not the Damerau-Levenshtein distance. With this function
+    ["ca"] and ["abc"] have a distance of 3 not 2.
+
+    @since 5.4
+*)
 
 (** {1 Binary decoding of integers} *)
 
