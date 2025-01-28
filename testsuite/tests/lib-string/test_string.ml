@@ -76,3 +76,27 @@ let () =
   assert(not (String.ends_with ~suffix:"foo" ""));
   assert(not (String.ends_with ~suffix:"obaz" "foobar"));
 ;;
+
+
+let () =
+  let test x y d =
+    assert (String.edit_distance x y = d);
+    assert (String.edit_distance y x = d);
+    assert (String.edit_distance x x = 0);
+    assert (String.edit_distance y y = 0);
+  in
+  test "" "" 0;
+  test "" "ab" 2;
+  test "function" "function" 0;
+  test "function" "fanction" 1;  (* substitute *)
+  test "function" "fnction" 1;   (* delete *)
+  test "function" "funiction" 1; (* insert *)
+  test "function" "funtcion" 1;  (* transpose *)
+  test "function" "fantcion" 2;  (* substitute + transpose *)
+  test "function" "fantcio" 3;   (* substitute + transpose + delete *)
+  test "function" "efantcio" 4;  (* all *)
+  test "fun" "function" 5;
+  test "ca" "abc" 3 (* Damerau-Levenshtein would be 2 *);
+  test "élément" "élment" 1;
+  test "OCaml🐫" "O'Caml🐪" 2;
+;;

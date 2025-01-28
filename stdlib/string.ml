@@ -280,3 +280,46 @@ let get_int32_le s i = B.get_int32_le (bos s) i
 let get_int32_be s i = B.get_int32_be (bos s) i
 let get_int64_le s i = B.get_int64_le (bos s) i
 let get_int64_be s i = B.get_int64_be (bos s) i
+
+(* Spellchecking *)
+
+let uchar_array_of_utf_8_string s =
+  let slen = length s in (* is an upper bound on Uchar.t count *)
+  let uchars = Array.make slen Uchar.max in
+  let k = ref 0 and i = ref 0 in
+  while (!i < slen) do
+    let dec = get_utf_8_uchar s !i in
+    i := !i + Uchar.utf_decode_length dec;
+    uchars.(!k) <- Uchar.utf_decode_uchar dec;
+    incr k;
+  done;
+  uchars, !k
+
+let edit_distance s0 s1 =
+  let[@inline] minimum a b c = Int.min a (Int.min b c) in
+  let s0, len0 = uchar_array_of_utf_8_string s0 in
+  let s1, len1 = uchar_array_of_utf_8_string s1 in
+  let d = Array.make_matrix (len0 + 1) (len1 + 1) 0 in
+  (* Note, d.(i).(j) is the OSA distance between the first i characters
+     of s0 and the first j characters of s1 *)
+  for i = 0 to len0 do d.(i).(0) <- i done;
+  for j = 0 to len1 do d.(0).(j) <- j done;
+  for i = 1 to len0 do
+    for j = 1 to len1 do
+      let cost = if Uchar.equal s0.(i-1) s1.(j-1) then 0 else 1 in
+      let min = minimum
+          (d.(i-1).(j-1) + cost) (* substitute *)
+          (d.(i-1).(j) + 1)      (* delete *)
+          (d.(i).(j-1) + 1)      (* insert *)
+      in
+      let min =
+        if (i > 1 && j > 1 &&
+            Uchar.equal s0.(i-1) s1.(j-2) &&
+            Uchar.equal s0.(i-2) s1.(j-1))
+        then Int.min min (d.(i-2).(j-2) + cost) (* transpose *)
+        else min
+      in
+      d.(i).(j) <- min
+    done;
+  done;
+  d.(len0).(len1)

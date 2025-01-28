@@ -782,12 +782,18 @@ std_exit.cmx : \
     std_exit.cmi
 std_exit.cmi :
 stdlib__String.cmo : string.ml \
+    stdlib__Uchar.cmi \
     stdlib.cmi \
+    stdlib__Int.cmi \
     stdlib__Bytes.cmi \
+    stdlib__Array.cmi \
     stdlib__String.cmi
 stdlib__String.cmx : string.ml \
+    stdlib__Uchar.cmx \
     stdlib.cmx \
+    stdlib__Int.cmx \
     stdlib__Bytes.cmx \
+    stdlib__Array.cmx \
     stdlib__String.cmi
 stdlib__String.cmi : string.mli \
     stdlib__Uchar.cmi \

@@ -395,6 +395,10 @@ val is_valid_utf_16le : t -> bool
 (** [is_valid_utf_16le b] is [true] if and only if [b] contains valid
     UTF-16LE data. *)
 
+(** {1:spellchecking Spellchecking} *)
+
+val edit_distance : t -> t -> int
+
 (** {1 Binary decoding of integers} *)
 
 (** The functions in this section binary decode integers from strings.
