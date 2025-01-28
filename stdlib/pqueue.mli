@@ -26,7 +26,8 @@
     preferred to repeated insertions with [add]).
 
     It is fine to have several elements with the same priority.
-    It is guaranteed that the element returned by [min_elt] (or
+    Nothing is guaranteed regarding the order in which they will be popped.
+    However, it is guaranteed that the element returned by [min_elt] (or
     [min_elt_opt]) is the one that is removed from the priority queue
     by [pop_min] (or [pop_min_opt] or [remove_min]). This is important
     in many algorithms, (e.g. when peeking at several priority queues
@@ -77,22 +78,22 @@ module type Min =
     val add: t -> elt -> unit
     (** [add q x] adds the element [x] in the priority queue [q]. *)
 
-    val add_seq: t -> elt Seq.t -> unit
-    (** [add q s] adds the elements of [s] in the priority queue [q]. *)
+    val add_iter: t -> ((elt -> unit) -> 'x -> unit) -> 'x -> unit
+    (** [add_iter q iter x] adds each element of [x] to the end of [q].
+        This is [iter (add q) x]. *)
 
     exception Empty
     (** Raised when {!min_elt}, {!pop_min} or {!remove_min} is applied
         to an empty queue. *)
 
     val min_elt: t -> elt
-    (** [min_elt q] returns an element in queue [q] with minimal priority,
-        without removing it from the queue,
-        or raises {!Empty} if the queue is empty. *)
+    (** [min_elt q] returns an element of [q] with minimal priority,
+        or raises {!Empty} if the queue is empty. The queue is not
+        modified. *)
 
     val min_elt_opt: t -> elt option
-    (** [min_elt_opt q] returns an element in queue [q] with minimal priority,
-        without removing it from the queue, or returns [None] if the queue
-        is empty. *)
+    (** [min_elt_opt q] is an element of [q] with minimal priority or
+        [None] if the queue is empty. The queue is not modified. *)
 
     val pop_min: t -> elt
     (** [pop_min q] removes and returns an element in queue [q] with
@@ -107,11 +108,10 @@ module type Min =
         minimal priority, or raises {!Empty} if the queue is empty. *)
 
     val clear: t -> unit
-    (** Discard all elements from a priority queue. *)
+    (** [clear q] removes all elements from [q]. *)
 
     val copy: t -> t
-    (** [copy q] is a shallow copy of [q] (a new priority queue
-        containing the same elements as [q]). *)
+    (** [copy q] is a new priority queue with the same elements [q] has. *)
 
     (** {1:conversions Conversions from other data structures} *)
 
@@ -123,9 +123,15 @@ module type Min =
     (** [of_list l] returns a new priority queue containing the
         elements of list [l]. Runs in linear time. *)
 
-    val of_seq: elt Seq.t -> t
-    (** [of_seq s] returns a new priority queue containing the
-        elements of sequence [s]. Runs in linear time. *)
+    val of_iter: ((elt -> unit) -> 'x -> unit) -> 'x -> t
+    (** [of_iter iter x] returns a new priority queue containing the
+        elements of [x], obtained from [iter].
+
+        For example, [of_iter Seq.iter s] returns a new priority queue
+        containing all the elements of the sequence [s] (provided it
+        is finite)
+
+        Runs in linear time (excluding the time spent in [iter]). *)
 
     (** {1:iteration Iteration}
 
@@ -138,13 +144,19 @@ module type Min =
         array implementation, but this is not guaranteed. *)
 
     val iter: (elt -> unit) -> t -> unit
-    (** [iter f q] calls [f] on each element of [q] in some
-        unspecified order. *)
+    (** [iter f q] applies [f] to all elements in [q].  The order in
+        which the elements are passed to [f] is unspecified.
+
+        The behavior is not specified if the priority queue is modified
+        by [f] during the iteration. *)
 
     val fold: ('acc -> elt -> 'acc) -> 'acc -> t -> 'acc
-    (** [fold f accu q] is [(f (... (f (f accu x1) x2) ...) xn)]
-        where [x1,x2,...,xn] are the elements of [q] in some
-        unspecified order. *)
+    (** [fold f accu q] is [(f (... (f (f accu x1) x2) ...) xn)] where
+        [x1,x2,...,xn] are the elements of [q]. The order in which the
+        elements are passed to [f] is unspecified.
+
+        The behavior is not specified if the priority queue is modified
+        by [f] during the iteration. *)
 
     val to_seq: t -> elt Seq.t
     (** [to_seq q] is the sequence of elements of [q] in some
@@ -165,7 +177,7 @@ module type Max =
     val length: t -> int
     val is_empty: t -> bool
     val add: t -> elt -> unit
-    val add_seq: t -> elt Seq.t -> unit
+    val add_iter: t -> ((elt -> unit) -> 'x -> unit) -> 'x -> unit
     exception Empty
     val max_elt: t -> elt
     val max_elt_opt: t -> elt option
@@ -176,7 +188,7 @@ module type Max =
     val copy: t -> t
     val of_array: elt array -> t
     val of_list: elt list -> t
-    val of_seq: elt Seq.t -> t
+    val of_iter: ((elt -> unit) -> 'x -> unit) -> 'x -> t
     val iter: (elt -> unit) -> t -> unit
     val fold: ('acc -> elt -> 'acc) -> 'acc -> t -> 'acc
     val to_seq: t -> elt Seq.t
@@ -192,37 +204,22 @@ module MakeMax(E: OrderedType) : Max with type elt := E.t
     The following, more complex functors create polymorphic queues of
     type ['a t], just like other polymorphic containers (lists,
     arrays...). They require a notion of "polymorphic elements" ['a
-    elt] that can be compared without depending on choice of ['a].
+    elt] that can be compared without depending on the values of ['a].
 
-    One usage scenario comes from certain polymorphic containers that
-    embed priority information, for example:
-    {[
-      type 'a task = {
-        run : unit -> 'a;
-        cancel : unit -> unit;
-        priority : int;
-      }
-
-      module TaskQueue = PQueue.MakeMaxPoly(struct
-        type 'a elt = task
-        let compare t1 t2 = Int.compare t1.priority t2.priority
-      end)
-    ]}
-
-    Another usage scenario is if the user wants to pass priorities
+    One usage scenario is when the user wants to pass priorities
     separately from the value stored in the queue. This is done by
     using pairs [priority * 'a] as elements.
     {[
       module Prio : OrderedType = ...
 
-      module PrioQueue = PQueue.MakeMinPoly(struct
-        type 'a elt = Prio.t * 'a
+      module PrioQueue = Pqueue.MakeMinPoly(struct
+        type 'a t = Prio.t * 'a
         let compare (p1, _) (p2, _) = Prio.compare p1 p2
       end)
 
       (* for example, we now have: *)
-      PrioQueue.add : 'a PrioQueue.t -> Prio.t * 'a -> unit
-      PrioQueue.min_elt : 'a PrioQueue.t -> (Prio.t * 'a) option
+      PrioQueue.add: 'a PrioQueue.t -> Prio.t * 'a -> unit
+      PrioQueue.min_elt_opt: 'a PrioQueue.t -> (Prio.t * 'a) option
     ]}
 *)
 
@@ -244,7 +241,7 @@ module type MinPoly =
     val length: 'a t -> int
     val is_empty: 'a t -> bool
     val add: 'a t -> 'a elt -> unit
-    val add_seq: 'a t -> 'a elt Seq.t -> unit
+    val add_iter: 'a t -> (('a elt -> unit) -> 'x -> unit) -> 'x -> unit
     exception Empty
     val min_elt: 'a t -> 'a elt
     val min_elt_opt: 'a t -> 'a elt option
@@ -255,7 +252,7 @@ module type MinPoly =
     val copy: 'a t -> 'a t
     val of_array: 'a elt array -> 'a t
     val of_list: 'a elt list -> 'a t
-    val of_seq: 'a elt Seq.t -> 'a t
+    val of_iter: (('a elt -> unit) -> 'x -> unit) -> 'x -> 'a t
     val iter: ('a elt -> unit) -> 'a t -> unit
     val fold: ('acc -> 'a elt -> 'acc) -> 'acc -> 'a t -> 'acc
     val to_seq: 'a t -> 'a elt Seq.t
@@ -275,7 +272,7 @@ module type MaxPoly =
     val length: 'a t -> int
     val is_empty: 'a t -> bool
     val add: 'a t -> 'a elt -> unit
-    val add_seq: 'a t -> 'a elt Seq.t -> unit
+    val add_iter: 'a t -> (('a elt -> unit) -> 'x -> unit) -> 'x -> unit
     exception Empty
     val max_elt: 'a t -> 'a elt
     val max_elt_opt: 'a t -> 'a elt option
@@ -286,7 +283,7 @@ module type MaxPoly =
     val copy: 'a t -> 'a t
     val of_array: 'a elt array -> 'a t
     val of_list: 'a elt list -> 'a t
-    val of_seq: 'a elt Seq.t -> 'a t
+    val of_iter: (('a elt -> unit) -> 'x -> unit) -> 'x -> 'a t
     val iter: ('a elt -> unit) -> 'a t -> unit
     val fold: ('acc -> 'a elt -> 'acc) -> 'acc -> 'a t -> 'acc
     val to_seq: 'a t -> 'a elt Seq.t

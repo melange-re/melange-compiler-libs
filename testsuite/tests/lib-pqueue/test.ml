@@ -76,8 +76,8 @@ let () =
 
 let () =
   let q = Q.create () in
-  let s = List.to_seq [2, "b"; 3, "c"; 1, "a"; 4, "d"; 0, ""] in
-  Q.add_seq q s;
+  let l = [2, "b"; 3, "c"; 1, "a"; 4, "d"; 0, ""] in
+  Q.add_iter q List.iter l;
   assert (Q.min_elt q = (0, ""));
   assert (Q.fold (fun acc (x, _) -> acc+x) 0 q = 10)
 
@@ -112,5 +112,14 @@ let () =
                           | Some x -> assert (x = a.(i))
   done;
   assert (is_empty q)
+
+(* check the usage scenario from the .mli *)
+module Prio : Pqueue.OrderedType = Int
+
+module PrioQueue = Pqueue.MakeMinPoly(struct
+  type 'a t = Prio.t * 'a
+  let compare (p1, _) (p2, _) = Prio.compare p1 p2
+end)
+
 
 let () = print_endline "OK"

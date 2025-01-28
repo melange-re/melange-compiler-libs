@@ -79,8 +79,8 @@ module MakeMinPoly(E: OrderedPolyType) =
       Dynarray.add_last h x;
       if i > 0 then sift_up h i x
 
-    let add_seq h s =
-      Seq.iter (add h) s
+    let add_iter h iter x =
+      iter (add h) x
 
     exception Empty
 
@@ -156,8 +156,10 @@ module MakeMinPoly(E: OrderedPolyType) =
     let of_list l =
       Dynarray.of_list l |> heapify
 
-    let of_seq s =
-      Dynarray.of_seq s |> heapify
+    let of_iter iter x =
+      let a = Dynarray.create () in
+      iter (Dynarray.add_last a) x;
+      heapify a
 
     let iter =
       Dynarray.iter
@@ -178,7 +180,7 @@ module type MinPoly =
     val length: 'a t -> int
     val is_empty: 'a t -> bool
     val add: 'a t -> 'a elt -> unit
-    val add_seq: 'a t -> 'a elt Seq.t -> unit
+    val add_iter: 'a t -> (('a elt -> unit) -> 'x -> unit) -> 'x -> unit
     exception Empty
     val min_elt: 'a t -> 'a elt
     val min_elt_opt: 'a t -> 'a elt option
@@ -189,7 +191,7 @@ module type MinPoly =
     val copy: 'a t -> 'a t
     val of_array: 'a elt array -> 'a t
     val of_list: 'a elt list -> 'a t
-    val of_seq: 'a elt Seq.t -> 'a t
+    val of_iter: (('a elt -> unit) -> 'x -> unit) -> 'x -> 'a t
     val iter: ('a elt -> unit) -> 'a t -> unit
     val fold: ('acc -> 'a elt -> 'acc) -> 'acc -> 'a t -> 'acc
     val to_seq: 'a t -> 'a elt Seq.t
@@ -203,7 +205,7 @@ module type MaxPoly =
     val length: 'a t -> int
     val is_empty: 'a t -> bool
     val add: 'a t -> 'a elt -> unit
-    val add_seq: 'a t -> 'a elt Seq.t -> unit
+    val add_iter: 'a t -> (('a elt -> unit) -> 'x -> unit) -> 'x -> unit
     exception Empty
     val max_elt: 'a t -> 'a elt
     val max_elt_opt: 'a t -> 'a elt option
@@ -214,7 +216,7 @@ module type MaxPoly =
     val copy: 'a t -> 'a t
     val of_array: 'a elt array -> 'a t
     val of_list: 'a elt list -> 'a t
-    val of_seq: 'a elt Seq.t -> 'a t
+    val of_iter: (('a elt -> unit) -> 'x -> unit) -> 'x -> 'a t
     val iter: ('a elt -> unit) -> 'a t -> unit
     val fold: ('acc -> 'a elt -> 'acc) -> 'acc -> 'a t -> 'acc
     val to_seq: 'a t -> 'a elt Seq.t
@@ -251,7 +253,7 @@ module type Min =
     val length: t -> int
     val is_empty: t -> bool
     val add: t -> elt -> unit
-    val add_seq: t -> elt Seq.t -> unit
+    val add_iter: t -> ((elt -> unit) -> 'x -> unit) -> 'x -> unit
     exception Empty
     val min_elt: t -> elt
     val min_elt_opt: t -> elt option
@@ -262,7 +264,7 @@ module type Min =
     val copy: t -> t
     val of_array: elt array -> t
     val of_list: elt list -> t
-    val of_seq: elt Seq.t -> t
+    val of_iter: ((elt -> unit) -> 'x -> unit) -> 'x -> t
     val iter: (elt -> unit) -> t -> unit
     val fold: ('acc -> elt -> 'acc) -> 'acc -> t -> 'acc
     val to_seq: t -> elt Seq.t
@@ -283,7 +285,7 @@ module type Max =
     val length: t -> int
     val is_empty: t -> bool
     val add: t -> elt -> unit
-    val add_seq: t -> elt Seq.t -> unit
+    val add_iter: t -> ((elt -> unit) -> 'x -> unit) -> 'x -> unit
     exception Empty
     val max_elt: t -> elt
     val max_elt_opt: t -> elt option
@@ -294,7 +296,7 @@ module type Max =
     val copy: t -> t
     val of_array: elt array -> t
     val of_list: elt list -> t
-    val of_seq: elt Seq.t -> t
+    val of_iter: ((elt -> unit) -> 'x -> unit) -> 'x -> t
     val iter: (elt -> unit) -> t -> unit
     val fold: ('acc -> elt -> 'acc) -> 'acc -> t -> 'acc
     val to_seq: t -> elt Seq.t
