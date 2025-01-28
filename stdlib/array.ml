@@ -441,12 +441,10 @@ let fast_sort = stable_sort
 
 let shuffle_contract_violation i j =
   let int = string_of_int in
-  String.concat "" [
-    "Array.shuffle: 'rand "; int (i + 1);
-    "' returned "; int j;
-    ", out of expected range [0; "; int i; "]"
-  ]
-  |> invalid_arg
+  invalid_arg
+    ("Array.shuffle: 'rand " ^ int (i + 1) ^
+     "' returned " ^ int j ^
+     ", out of expected range [0; " ^ int i ^ "]")
 
 let shuffle ~rand a = (* Fisher-Yates *)
   for i = length a - 1 downto 1 do
