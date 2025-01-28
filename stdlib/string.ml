@@ -299,27 +299,31 @@ let edit_distance s0 s1 =
   let[@inline] minimum a b c = Int.min a (Int.min b c) in
   let s0, len0 = uchar_array_of_utf_8_string s0 in
   let s1, len1 = uchar_array_of_utf_8_string s1 in
-  let d = Array.make_matrix (len0 + 1) (len1 + 1) 0 in
-  (* Note, d.(i).(j) is the OSA distance between the first i characters
-     of s0 and the first j characters of s1 *)
-  for i = 0 to len0 do d.(i).(0) <- i done;
-  for j = 0 to len1 do d.(0).(j) <- j done;
-  for i = 1 to len0 do
+  let s0, s1 = if len0 > len1 then s0, s1 else s1, s0 in
+  let len0, len1 = if len0 > len1 then len0, len1 else len1, len0 in
+  let rec loop row_minus2 row_minus1 row i len0 =
+    if i > len0 then row_minus1.(Array.length row_minus1 - 1) else
+    let len1 = Array.length row - 1 in
+    row.(0) <- i;
     for j = 1 to len1 do
       let cost = if Uchar.equal s0.(i-1) s1.(j-1) then 0 else 1 in
       let min = minimum
-          (d.(i-1).(j-1) + cost) (* substitute *)
-          (d.(i-1).(j) + 1)      (* delete *)
-          (d.(i).(j-1) + 1)      (* insert *)
+          (row_minus1.(j-1) + cost) (* substitute *)
+          (row_minus1.(j) + 1)      (* delete *)
+          (row.(j-1) + 1)           (* insert *)
       in
       let min =
         if (i > 1 && j > 1 &&
             Uchar.equal s0.(i-1) s1.(j-2) &&
             Uchar.equal s0.(i-2) s1.(j-1))
-        then Int.min min (d.(i-2).(j-2) + cost) (* transpose *)
+        then Int.min min (row_minus2.(j-2) + cost) (* transpose *)
         else min
       in
-      d.(i).(j) <- min
+      row.(j) <- min;
     done;
-  done;
-  d.(len0).(len1)
+    loop row_minus1 row row_minus2 (i + 1) len0
+  in
+  let row_minus2 = Array.make (len1 + 1) 0 in
+  let row_minus1 = Array.init (len1 + 1) (fun x -> x) in
+  let row = Array.make (len1 + 1) 0 in
+  loop row_minus2 row_minus1 row 1 len0
