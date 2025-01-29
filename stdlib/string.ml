@@ -303,7 +303,7 @@ let edit_distance ?(limit = Int.max_int) s0 s1 =
   if Int.abs (len1 - len0) > limit then limit else
   let s0, s1 = if len0 > len1 then s0, s1 else s1, s0 in
   let len0, len1 = if len0 > len1 then len0, len1 else len1, len0 in
-  let rec loop row_minus2 row_minus1 row i len0 limit =
+  let rec loop row_minus2 row_minus1 row i len0 limit s0 s1 =
     if i > len0 then row_minus1.(Array.length row_minus1 - 1) else
     let len1 = Array.length row - 1 in
     let row_min = ref Int.max_int in
@@ -326,7 +326,7 @@ let edit_distance ?(limit = Int.max_int) s0 s1 =
       row_min := Int.min !row_min min;
     done;
     if !row_min >= limit then (* can no longer decrease *) limit else
-    loop row_minus1 row row_minus2 (i + 1) len0 limit
+    loop row_minus1 row row_minus2 (i + 1) len0 limit s0 s1
   in
   let ignore =
     (* Value used to make the values around the diagonal stripe ignored
@@ -336,7 +336,7 @@ let edit_distance ?(limit = Int.max_int) s0 s1 =
   let row_minus2 = Array.make (len1 + 1) ignore in
   let row_minus1 = Array.init (len1 + 1) (fun x -> x) in
   let row = Array.make (len1 + 1) ignore in
-  let d = loop row_minus2 row_minus1 row 1 len0 limit in
+  let d = loop row_minus2 row_minus1 row 1 len0 limit s0 s1 in
   if d > limit then limit else d
 
 let spellcheck ?(max_dist = fun _ -> 2) dict s =
