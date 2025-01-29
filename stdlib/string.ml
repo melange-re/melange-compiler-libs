@@ -283,6 +283,24 @@ let get_int64_be s i = B.get_int64_be (bos s) i
 
 (* Spellchecking *)
 
+let uchar_utf_8_byte_decode_length = function
+  | '\x00' .. '\x7F' -> 1
+  | '\x80' .. '\xC1' -> 0
+  | '\xC2' .. '\xDF' -> 2
+  | '\xE0' .. '\xEF' -> 3
+  | '\xF0' .. '\xF4' -> 4
+  | _ -> 0
+
+let utf_8_uchar_length s =
+  let slen = length s in
+  let i = ref 0 and ulen = ref 0 in
+  while (!i < slen) do
+    let dec_len = uchar_utf_8_byte_decode_length (unsafe_get s !i) in
+    i := (!i + if dec_len = 0 then 1 (* count one Uchar.rep *) else dec_len);
+    incr ulen;
+  done;
+  !ulen
+
 let uchar_array_of_utf_8_string s =
   let slen = length s in (* is an upper bound on Uchar.t count *)
   let uchars = Array.make slen Uchar.max in
@@ -339,7 +357,12 @@ let edit_distance ?(limit = Int.max_int) s0 s1 =
   let d = loop row_minus2 row_minus1 row 1 len0 limit s0 s1 in
   if d > limit then limit else d
 
-let spellcheck ?(max_dist = fun _ -> 2) dict s =
+let default_max_dist s = match utf_8_uchar_length s with
+  | 0 | 1 | 2 -> 0
+  | 3 | 4 -> 1
+  | _ -> 2
+
+let spellcheck ?(max_dist = default_max_dist) dict s =
   let select_words (min, acc) word =
     let d = edit_distance ~limit:(min + 1) s word in
     if d = min then min, (word :: acc) else

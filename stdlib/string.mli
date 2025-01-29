@@ -424,10 +424,16 @@ val spellcheck :
   ?max_dist:(string -> int) -> string list -> string -> string list
 (** [spellcheck dict s] are the elements of [dict] whose
     {{!edit_distance}edit distance} to [s] is the smallest and at most
-    [max_dist s] (default is [Fun.const 2], this is subject to change
-    in the future, use your own function if you want to rely on
-    that). If multiple corrections are returned their order is as
-    given in [dict].
+    [max_dist s]. If multiple corrections are returned their order is
+    as given in [dict]. The default [max_dist s] is:
+
+    {ul
+    {- [0] if [s] has 0 to 2 Unicode characters.}
+    {- [1] if [s] has 3 to 4 Unicode characters.}
+    {- [2] otherwise.}}
+
+    All strings are assumed to be UTF-8 encoded, decoding
+    errors are replaced by {!Uchar.rep} characters.
 
     @since 5.4 *)
 
