@@ -314,6 +314,7 @@ let uchar_array_of_utf_8_string s =
   uchars, !k
 
 let edit_distance ?(limit = Int.max_int) s0 s1 =
+  if limit <= 1 then (if equal s0 s1 then 0 else limit) else
   let[@inline] minimum a b c = Int.min a (Int.min b c) in
   let s0, len0 = uchar_array_of_utf_8_string s0 in
   let s1, len1 = uchar_array_of_utf_8_string s1 in
