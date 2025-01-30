@@ -143,24 +143,20 @@ module type Min =
         Such an error may be detected and signaled by the backing dynamic
         array implementation, but this is not guaranteed. *)
 
-    val iter: (elt -> unit) -> t -> unit
-    (** [iter f q] applies [f] to all elements in [q].  The order in
-        which the elements are passed to [f] is unspecified.
+    val iter_unordered: (elt -> unit) -> t -> unit
+    (** [iter_unordered f q] applies [f] to all elements in [q].  The
+        order in which the elements are passed to [f] is unspecified.
 
         The behavior is not specified if the priority queue is modified
         by [f] during the iteration. *)
 
-    val fold: ('acc -> elt -> 'acc) -> 'acc -> t -> 'acc
-    (** [fold f accu q] is [(f (... (f (f accu x1) x2) ...) xn)] where
-        [x1,x2,...,xn] are the elements of [q]. The order in which the
-        elements are passed to [f] is unspecified.
+    val fold_unordered: ('acc -> elt -> 'acc) -> 'acc -> t -> 'acc
+    (** [fold_unordered f accu q] is [(f (... (f (f accu x1) x2) ...)
+        xn)] where [x1,x2,...,xn] are the elements of [q]. The order
+        in which the elements are passed to [f] is unspecified.
 
         The behavior is not specified if the priority queue is modified
         by [f] during the iteration. *)
-
-    val to_seq: t -> elt Seq.t
-    (** [to_seq q] is the sequence of elements of [q] in some
-        unspecified order. *)
 
   end
 (** Output signature of the functor {!MakeMin}. *)
@@ -189,9 +185,8 @@ module type Max =
     val of_array: elt array -> t
     val of_list: elt list -> t
     val of_iter: ((elt -> unit) -> 'x -> unit) -> 'x -> t
-    val iter: (elt -> unit) -> t -> unit
-    val fold: ('acc -> elt -> 'acc) -> 'acc -> t -> 'acc
-    val to_seq: t -> elt Seq.t
+    val iter_unordered: (elt -> unit) -> t -> unit
+    val fold_unordered: ('acc -> elt -> 'acc) -> 'acc -> t -> 'acc
 end
 (** Output signature of the functor {!MakeMax}. *)
 
@@ -253,9 +248,8 @@ module type MinPoly =
     val of_array: 'a elt array -> 'a t
     val of_list: 'a elt list -> 'a t
     val of_iter: (('a elt -> unit) -> 'x -> unit) -> 'x -> 'a t
-    val iter: ('a elt -> unit) -> 'a t -> unit
-    val fold: ('acc -> 'a elt -> 'acc) -> 'acc -> 'a t -> 'acc
-    val to_seq: 'a t -> 'a elt Seq.t
+    val iter_unordered: ('a elt -> unit) -> 'a t -> unit
+    val fold_unordered: ('acc -> 'a elt -> 'acc) -> 'acc -> 'a t -> 'acc
   end
 (** Output signature of the functor {!MakeMinPoly}. *)
 
@@ -284,9 +278,8 @@ module type MaxPoly =
     val of_array: 'a elt array -> 'a t
     val of_list: 'a elt list -> 'a t
     val of_iter: (('a elt -> unit) -> 'x -> unit) -> 'x -> 'a t
-    val iter: ('a elt -> unit) -> 'a t -> unit
-    val fold: ('acc -> 'a elt -> 'acc) -> 'acc -> 'a t -> 'acc
-    val to_seq: 'a t -> 'a elt Seq.t
+    val iter_unordered: ('a elt -> unit) -> 'a t -> unit
+    val fold_unordered: ('acc -> 'a elt -> 'acc) -> 'acc -> 'a t -> 'acc
 end
 (** Output signature of the functor {!MakeMaxPoly}. *)
 

@@ -62,6 +62,14 @@ let () =
     check_is_empty q
   done
 
+(* check iter_unordered and fold_unordered *)
+let () =
+  let q = Q.create () in
+  for n = 0 to 10 do Q.add q (n, "") done;
+  let r = ref 0 in Q.iter_unordered (fun (x,_) -> r := !r + x) q;
+  assert (!r = 55);
+  assert (Q.fold_unordered (fun acc (x,_) -> acc+x) 0 q = 55)
+
 let () =
   for n = 0 to 10 do
     let a = Array.init n (fun i -> (i/3, string_of_int i)) in
@@ -79,7 +87,7 @@ let () =
   let l = [2, "b"; 3, "c"; 1, "a"; 4, "d"; 0, ""] in
   Q.add_iter q List.iter l;
   assert (Q.min_elt q = (0, ""));
-  assert (Q.fold (fun acc (x, _) -> acc+x) 0 q = 10)
+  assert (Q.fold_unordered (fun acc (x, _) -> acc+x) 0 q = 10)
 
 (* check that min_elt and pop_min are consistent when several elements
    have the same priority *)

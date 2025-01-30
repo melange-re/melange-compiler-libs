@@ -161,14 +161,11 @@ module MakeMinPoly(E: OrderedPolyType) =
       iter (Dynarray.add_last a) x;
       heapify a
 
-    let iter =
+    let iter_unordered =
       Dynarray.iter
 
-    let fold =
+    let fold_unordered =
       Dynarray.fold_left
-
-    let to_seq =
-      Dynarray.to_seq
 
   end
 
@@ -192,9 +189,8 @@ module type MinPoly =
     val of_array: 'a elt array -> 'a t
     val of_list: 'a elt list -> 'a t
     val of_iter: (('a elt -> unit) -> 'x -> unit) -> 'x -> 'a t
-    val iter: ('a elt -> unit) -> 'a t -> unit
-    val fold: ('acc -> 'a elt -> 'acc) -> 'acc -> 'a t -> 'acc
-    val to_seq: 'a t -> 'a elt Seq.t
+    val iter_unordered: ('a elt -> unit) -> 'a t -> unit
+    val fold_unordered: ('acc -> 'a elt -> 'acc) -> 'acc -> 'a t -> 'acc
   end
 
 module type MaxPoly =
@@ -217,9 +213,8 @@ module type MaxPoly =
     val of_array: 'a elt array -> 'a t
     val of_list: 'a elt list -> 'a t
     val of_iter: (('a elt -> unit) -> 'x -> unit) -> 'x -> 'a t
-    val iter: ('a elt -> unit) -> 'a t -> unit
-    val fold: ('acc -> 'a elt -> 'acc) -> 'acc -> 'a t -> 'acc
-    val to_seq: 'a t -> 'a elt Seq.t
+    val iter_unordered: ('a elt -> unit) -> 'a t -> unit
+    val fold_unordered: ('acc -> 'a elt -> 'acc) -> 'acc -> 'a t -> 'acc
 end
 
 module MakeMaxPoly(E: OrderedPolyType)
@@ -265,9 +260,8 @@ module type Min =
     val of_array: elt array -> t
     val of_list: elt list -> t
     val of_iter: ((elt -> unit) -> 'x -> unit) -> 'x -> t
-    val iter: (elt -> unit) -> t -> unit
-    val fold: ('acc -> elt -> 'acc) -> 'acc -> t -> 'acc
-    val to_seq: t -> elt Seq.t
+    val iter_unordered: (elt -> unit) -> t -> unit
+    val fold_unordered: ('acc -> elt -> 'acc) -> 'acc -> t -> 'acc
   end
 
 module MakeMin(E: OrderedType) =
@@ -297,9 +291,8 @@ module type Max =
     val of_array: elt array -> t
     val of_list: elt list -> t
     val of_iter: ((elt -> unit) -> 'x -> unit) -> 'x -> t
-    val iter: (elt -> unit) -> t -> unit
-    val fold: ('acc -> elt -> 'acc) -> 'acc -> t -> 'acc
-    val to_seq: t -> elt Seq.t
+    val iter_unordered: (elt -> unit) -> t -> unit
+    val fold_unordered: ('acc -> elt -> 'acc) -> 'acc -> t -> 'acc
   end
 
 module MakeMax(E: OrderedType) =
