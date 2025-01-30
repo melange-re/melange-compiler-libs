@@ -47,5 +47,7 @@
     gsub("This version of LLDB has no plugin for the language \"assembler\". Inspection of frame variables will be limited.", "")
     # Replace printed match results
     gsub("1 match found in /(.*):$", "1 match found in \"XXXX\":")
-    print $0
+
+    if ($0 != "")
+      print $0
 }
