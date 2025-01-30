@@ -75,7 +75,6 @@ frame 12: libc.so.6`__libc_start_call_main
 frame 13: libc.so.6`__libc_start_main_impl
 frame 14: meander`_start
 (lldb) continue
-
 Process XXXX resuming
 Process XXXX stopped
 * thread #1, name = 'XXXX', stop reason = breakpoint 3.1
