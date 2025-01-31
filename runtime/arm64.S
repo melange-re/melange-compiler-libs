@@ -139,19 +139,19 @@ G(\name):
         TEXT_SECTION(name); \
         .align  2; \
         .globl  G(name); \
-        .type   G(name), %function; \
+        TYPE_DIRECTIVE(G(name),%function) \
 G(name):
 #define END_FUNCTION(name) \
-        .size   G(name), .-G(name)
+        SIZE_DIRECTIVE(G(name))
 
 #define OBJECT(name) \
         .data; \
         .align  3; \
         .globl  G(name); \
-        .type   G(name), %object; \
+        TYPE_DIRECTIVE(G(name),%object) \
 G(name):
 #define END_OBJECT(name) \
-        .size   G(name), .-G(name)
+        SIZE_DIRECTIVE(G(name))
 #endif
 
 /* Function prologue and epilogue */

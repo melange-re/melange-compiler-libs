@@ -619,7 +619,7 @@ let rec emit_all env = function
 let fundecl fundecl =
   let env = mk_env fundecl in
   `	.globl	{emit_symbol fundecl.fun_name}\n`;
-  `	.type	{emit_symbol fundecl.fun_name}, @function\n`;
+  emit_type_directive fundecl.fun_name "@function";
   emit_named_text_section fundecl.fun_name;
   `	.align	2\n`;
   `{emit_symbol fundecl.fun_name}:\n`;
@@ -666,7 +666,7 @@ let fundecl fundecl =
   end;
 
   cfi_endproc();
-  `	.size	{emit_symbol fundecl.fun_name}, .-{emit_symbol fundecl.fun_name}\n`;
+  emit_size_directive fundecl.fun_name;
   (* Emit the float literals *)
   if env.float_literals <> [] then begin
     `	{emit_string rodata_space}\n`;
@@ -682,7 +682,7 @@ let fundecl fundecl =
 
 let declare_global_data s =
   `	.globl	{emit_symbol s}\n`;
-  `	.type	{emit_symbol s}, @object\n`
+  emit_type_directive s "@object"
 
 let emit_item = function
   | Cglobal_symbol s ->
@@ -760,4 +760,5 @@ let end_assembly() =
       efa_def_label = (fun l -> `{emit_label l}:\n`);
       efa_string = (fun s -> emit_bytes_directive "	.byte	" (s ^ "\000"))
      };
+  emit_size_directive lbl;
   emit_nonexecstack_note ()

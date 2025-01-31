@@ -30,6 +30,16 @@ val emit_float64_directive: string -> int64 -> unit
 val emit_float64_split_directive: string -> int64 -> unit
 val emit_float32_directive: string -> int32 -> unit
 
+val emit_size_directive: string -> unit
+(** [emit_size_directive symbol]
+    Emit a [.size] assembler directive for the given [symbol] when it is
+    supported by the assembler *)
+
+val emit_type_directive: string -> string -> unit
+(** [emit_type_directive symbol typ]
+    Emit a [.type] assembler directive that [symbol] has type [typ] when it is
+    supported by the assembler *)
+
 val emit_nonexecstack_note : unit -> unit
 (** Emit a [.note.GNU-stack] section when it is supported by the linker *)
 

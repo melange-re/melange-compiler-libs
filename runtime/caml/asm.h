@@ -45,6 +45,18 @@
 #define CFI_STARTPROC
 #endif
 
+/* .size and .type directives, with explicit end-of-directive semi-colons */
+
+#ifdef ASM_SIZE_TYPE_DIRECTIVES
+#define SIZE_DIRECTIVE(name) \
+        .size name, . - name;
+#define TYPE_DIRECTIVE(name,ty) \
+        .type name, ty;
+#else
+#define SIZE_DIRECTIVE(name)
+#define TYPE_DIRECTIVE(name,ty)
+#endif
+
 /* Non-executable stack note */
 
 #ifdef WITH_NONEXECSTACK_NOTE

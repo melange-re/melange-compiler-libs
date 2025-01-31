@@ -69,7 +69,7 @@ G(name):
 #define FUNCTION(name) \
         TEXT_SECTION(G(name)); \
         .globl G(name); \
-        .type G(name),@function; \
+        TYPE_DIRECTIVE(G(name),@function); \
         .align FUNCTION_ALIGN; \
 G(name):
 
@@ -80,16 +80,11 @@ G(name):
         .align EIGHT_ALIGN; \
 G(name):
 
-#if defined(SYS_linux) || defined(SYS_gnu)
 #define END_FUNCTION(name) \
-        .size G(name), . - G(name)
+        SIZE_DIRECTIVE(G(name))
 #define END_OBJECT(name) \
-        .type G(name), @object; \
-        .size G(name), . - G(name)
-#else
-#define END_FUNCTION(name)
-#define END_OBJECT(name)
-#endif
+        TYPE_DIRECTIVE(G(name),@object) \
+        SIZE_DIRECTIVE(G(name))
 
 #ifdef WITH_FRAME_POINTERS
 #define FRAME_POINTER_SIZE   8

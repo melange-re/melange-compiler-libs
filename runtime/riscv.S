@@ -80,13 +80,13 @@ caml_hot$code_end:
         TEXT_SECTION(name); \
         .align 2; \
         .globl name; \
-        .type  name, @function; \
+        TYPE_DIRECTIVE(name,@function) \
 name:; \
         CFI_STARTPROC
 
 #define END_FUNCTION(name) \
         CFI_ENDPROC; \
-        .size name, .-name
+        SIZE_DIRECTIVE(name)
 
 #if defined(__PIC__)
         .option pic
@@ -100,10 +100,10 @@ name:; \
         .data; \
         .align  3; \
         .globl  name; \
-        .type   name, @object; \
+        TYPE_DIRECTIVE(name,@object) \
 name:
 #define END_OBJECT(name) \
-        .size   name, .-name
+        SIZE_DIRECTIVE(name)
 
 /* Function prologue and epilogue */
 

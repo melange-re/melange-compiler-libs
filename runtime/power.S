@@ -89,7 +89,7 @@ caml_hot$code_end:
 .macro FUNCTION name
         TEXT_SECTION \name
         .globl \name
-        .type \name, @function
+        TYPE_DIRECTIVE(\name,@function)
 \name:
 0:      addis   2, 12, .TOC.- 0b@ha
         addi    2, 2,  .TOC.- 0b@l
@@ -97,17 +97,17 @@ caml_hot$code_end:
 .endm
 
 .macro ENDFUNCTION name
-        .size \name, . - \name
+        SIZE_DIRECTIVE(\name)
 .endm
 
 .macro OBJECT name
         .globl \name
-        .type \name, @object
+        TYPE_DIRECTIVE(\name,@object)
 \name:
 .endm
 
 .macro ENDOBJECT name
-        .size \name, . - \name
+        SIZE_DIRECTIVE(\name)
 .endm
 
 /* Function prologue and epilogue */
