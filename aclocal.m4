@@ -551,6 +551,54 @@ AC_DEFUN([OCAML_WITH_NONEXECSTACK_NOTE],
     [with_nonexecstack_note=false])
 ])
 
+AC_DEFUN([OCAML_ASM_SIZE_TYPE_DIRECTIVES],
+  [AC_REQUIRE([AC_PROG_GREP])dnl
+  AC_CACHE_CHECK([if $CC generates .size and .type asm directives],
+    [ocaml_cv_prog_cc_asm_size_type_directives],
+    [OCAML_CC_SAVE_VARIABLES
+
+    # We write the assembly into the .$ac_objext file as AC_COMPILE_IFELSE
+    # assumes an error if such a file doesn't exist after compiling
+    CFLAGS="$CFLAGS -S -o conftest.$ac_objext"
+
+    ocaml_cv_prog_cc_asm_size_type_directives=no
+    AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+int feat_detect_obj;
+int feat_detect_func(void) {
+  return 42;
+}
+    ]])],
+      [asm_type_obj_directive=no
+      asm_type_func_directive=no
+      asm_size_func_directive=no
+      # We do not look for a .size directive for the object as it is not
+      # generated in that simple case for instance by the compiler
+      # powerpc64le-linux-gnu-gcc 14.2 which emits instead an .lcomm directive
+      AS_IF([$GREP '\.type.*feat_detect_obj' conftest.$ac_objext >/dev/null],
+        [asm_type_obj_directive=yes])
+      AS_IF([$GREP '\.type.*feat_detect_func' conftest.$ac_objext >/dev/null],
+        [asm_type_func_directive=yes])
+      AS_IF([$GREP '\.size.*feat_detect_func' conftest.$ac_objext >/dev/null],
+        [asm_size_func_directive=yes])
+      AS_CASE([m4_join([,],[$asm_type_obj_directive],[$asm_type_func_directive],
+          [$asm_size_func_directive])],
+        [yes,yes,yes],
+          [ocaml_cv_prog_cc_asm_size_type_directives=yes],
+        [no,no,no],
+          [ocaml_cv_prog_cc_asm_size_type_directives=no],
+        [ocaml_cv_prog_cc_asm_size_type_directives=unconclusive])])
+    OCAML_CC_RESTORE_VARIABLES])
+
+  AS_CASE([$ocaml_cv_prog_cc_asm_size_type_directives],
+    [yes],
+      [asm_size_type_directives=true
+      AC_DEFINE([ASM_SIZE_TYPE_DIRECTIVES], [1])],
+    [no],
+      [asm_size_type_directives=false],
+    [AC_MSG_WARN([found inconsistent results for .size and .type directives])
+    asm_size_type_directives=false])
+])
+
 AC_DEFUN([OCAML_CC_SUPPORTS_LABELS_AS_VALUES], [
   AC_CACHE_CHECK([whether $CC supports the labels as values extension],
     [ocaml_cv_prog_cc_labels_as_values],
