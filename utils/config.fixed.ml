@@ -66,6 +66,7 @@ let target_os_type =
   "The boot compiler should not be using Config.target_os_type"
 let asm = boot_cannot_call "the assembler"
 let asm_cfi_supported = false
+let asm_size_type_directives = false
 let with_frame_pointers = false
 let reserved_header_bits = 0
 let ext_exe = ".ex_The boot compiler should not be using Config.ext_exe"

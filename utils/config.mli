@@ -188,6 +188,11 @@ val asm: string
 val asm_cfi_supported: bool
 (** Whether assembler understands CFI directives *)
 
+val asm_size_type_directives: bool
+(** Whether the [.size] and [.type] assembler directives can be used
+
+    @since 5.4 *)
+
 val with_frame_pointers : bool
 (** Whether assembler should maintain frame pointers *)
 
