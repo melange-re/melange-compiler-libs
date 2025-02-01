@@ -150,7 +150,7 @@ val uncons : 'a t -> ('a * 'a t) option
 val length : 'a t -> int
 (** [length xs] is the length of the sequence [xs].
 
-    The sequence [xs] must be finite.
+    Does not terminate if [xs] is infinite.
 
     @since 4.14 *)
 
@@ -198,7 +198,7 @@ val for_all : ('a -> bool) -> 'a t -> bool
 (** [for_all p xs] determines whether all elements [x] of the sequence [xs]
     satisfy [p x].
 
-    The sequence [xs] must be finite.
+    May not terminate if [xs] is infinite.
 
     @since 4.14 *)
 
@@ -206,7 +206,7 @@ val exists : ('a -> bool) -> 'a t -> bool
 (** [exists p xs] determines whether at least one element [x]
     of the sequence [xs] satisfies [p x].
 
-    The sequence [xs] must be finite.
+    May not terminate if [xs] is infinite.
 
     @since 4.14 *)
 
@@ -216,7 +216,7 @@ val find : ('a -> bool) -> 'a t -> 'a option
 
     It returns [None] if there is no such element.
 
-    The sequence [xs] must be finite.
+    May not terminate if [xs] is infinite.
 
     @since 4.14 *)
 
@@ -227,7 +227,7 @@ val find_index : ('a -> bool) -> 'a t -> int option
 
     It returns [None] if there is no such element.
 
-    The sequence [xs] must be finite.
+    May not terminate if [xs] is infinite.
 
     @since 5.1 *)
 
@@ -238,7 +238,7 @@ val find_map : ('a -> 'b option) -> 'a t -> 'b option
 
     It returns [None] if there is no such element.
 
-    The sequence [xs] must be finite.
+    May not terminate if [xs] is infinite.
 
     @since 4.14 *)
 
@@ -247,7 +247,7 @@ val find_mapi : (int -> 'a -> 'b option) -> 'a t -> 'b option
    the element as first argument (counting from 0), and the element
    itself as second argument.
 
-   The sequence [xs] must be finite.
+   May not terminate if [xs] is infinite.
 
    @since 5.1 *)
 
@@ -298,7 +298,7 @@ val for_all2 : ('a -> 'b -> bool) -> 'a t -> 'b t -> bool
     [for_all2] and [equal] differ: [equal eq xs ys] can
     be true only if [xs] and [ys] have the same length.
 
-    At least one of the sequences [xs] and [ys] must be finite.
+    May not terminate if both of the sequences [xs] and [ys] are infinite.
 
     [for_all2 p xs ys] is equivalent to [for_all (fun b -> b) (map2 p xs ys)].
 
@@ -312,7 +312,7 @@ val exists2 : ('a -> 'b -> bool) -> 'a t -> 'b t -> bool
     iteration must stop as soon as one sequence is exhausted;
     the excess elements in the other sequence are ignored.
 
-    At least one of the sequences [xs] and [ys] must be finite.
+    May not terminate if both of the sequences [xs] and [ys] are infinite.
 
     [exists2 p xs ys] is equivalent to [exists (fun b -> b) (map2 p xs ys)].
 
@@ -323,7 +323,7 @@ val equal : ('a -> 'b -> bool) -> 'a t -> 'b t -> bool
     [equal eq xs ys] determines whether the sequences [xs] and [ys]
     are pointwise equal.
 
-    At least one of the sequences [xs] and [ys] must be finite.
+    May not terminate if both of the sequences [xs] and [ys] are infinite.
 
     @since 4.14 *)
 
@@ -334,7 +334,7 @@ val compare : ('a -> 'b -> int) -> 'a t -> 'b t -> int
 
     For more details on comparison functions, see {!Array.sort}.
 
-    At least one of the sequences [xs] and [ys] must be finite.
+    May not terminate if both of the sequences [xs] and [ys] are infinite.
 
     @since 4.14 *)
 
