@@ -267,7 +267,7 @@ Working version
   inference of type-directed disambiguation in principal mode.
   (Richard Eisenberg, review by Jacques Garrigue)
 
-- #13539: Use nanosleep instead of usleep, if available.
+- #13539, #13776: Use nanosleep instead of usleep or select, if available.
   (Antonin Décimo, review by Miod Vallat and Gabriel Scherer)
 
 - #13606: Fix Numbers.Int_base.compare
