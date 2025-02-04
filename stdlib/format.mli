@@ -862,7 +862,7 @@ val get_formatter_output_functions :
 
 type formatter_out_functions = {
   out_string : string -> int -> int -> unit;
-  out_width: string -> pos:int -> len:int -> int;
+  out_width: string -> pos:int -> len:int -> int; (** @since 5.4 *)
   out_flush : unit -> unit;
   out_newline : unit -> unit;
   out_spaces : int -> unit;
@@ -931,7 +931,7 @@ val utf8_scalar_width: string -> pos:int -> len:int -> int
     the substring [String.sub s pos len]. Invalid byte sequences are implictly
     replaced by [U+FFFD] since this yields a better width approximation for
     other ascii-based encoding scheme like ISO-8859-15. This is the default
-    [out_width] function.
+    [out_width] function since OCaml 5.4.
     @since 5.4 *)
 
 val ascii_width: string -> pos:int -> len:int -> int

@@ -399,19 +399,18 @@ let format_pp_token state size = function
 
   | Pp_break { fits; breaks } ->
     let before, off, _ = breaks in
-    let before_width = pp_string_width state before in
     begin match Stack.top_opt state.pp_format_stack with
     | None -> () (* No open box. *)
     | Some { box_type; width } ->
       begin match box_type with
       | Pp_hovbox ->
-        if size + before_width > state.pp_space_left
+        if size + pp_string_width state before > state.pp_space_left
         then break_new_line state breaks width
         else break_same_line state fits
       | Pp_box ->
         (* Have the line just been broken here ? *)
         if state.pp_is_new_line then break_same_line state fits else
-        if size + before_width > state.pp_space_left
+        if size + pp_string_width state before > state.pp_space_left
           then break_new_line state breaks width else
         (* break the line here leads to new indentation ? *)
         if state.pp_current_indent > state.pp_margin - width + off
@@ -972,12 +971,12 @@ let default_pp_print_open_tag = ignore
 let default_pp_print_close_tag = ignore
 
 let utf8_scalar_width s ~pos ~len =
-  let rec width s count current last =
-    if current >= last then count
+  let rec width s count current stop =
+    if current >= stop then count
     else
       let decode = String.get_utf_8_uchar s current in
       let advance = Uchar.utf_decode_length decode in
-      width s (count + 1) (current+advance) last
+      width s (count + 1) (current+advance) stop
   in
   width s 0 pos (pos + len)
 
