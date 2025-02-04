@@ -876,8 +876,10 @@ type formatter_out_functions = {
 - the [out_width] function informs the formatting engine of the width of the
   substring as rendered on the output device. Explicit width information as
   provided by [@<n>], {!pp_print_as} or {!pp_print_substring_as} takes priority
-  over this function. Notably, [out_width] can be used to compute an
-  approximative width for unicode substrings.
+  over this function. Moreover, the formatting engine evaluate the width of the
+  string arguments of {!pp_print_string} and substring arguments of
+  {!pp_print_substring} as a whole. Consequently, [out_width] can be used to
+  compute an approximative width for unicode substrings.
 - the [out_flush] function flushes the pretty-printer output device.
 - [out_newline] is called to open a new line when the pretty-printer splits
   the line.
