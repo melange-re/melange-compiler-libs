@@ -11,28 +11,27 @@ let does_raise f q =
   try
     ignore (f q);
     false
-  with Q.Empty ->
+  with Invalid_argument _ ->
     true
 
 let check_is_empty q =
   assert (Q.length q = 0); assert (Q.is_empty q);
-  assert (does_raise Q.min_elt q); assert (Q.min_elt_opt q = None);
-  assert (does_raise Q.pop_min q); assert (Q.pop_min_opt q = None);
-  assert (does_raise Q.remove_min q)
+  assert (does_raise Q.get_min_elt q); assert (Q.min_elt q = None);
+  assert (Q.pop_min q = None); assert (does_raise Q.remove_min q)
 
 let () =
   let q = Q.create () in
   check_is_empty q;
   Q.add q (1, "a");
   assert (Q.length q = 1); assert (not (Q.is_empty q));
-  assert (Q.min_elt q = (1, "a")); assert (Q.min_elt_opt q = Some (1, "a"));
+  assert (Q.get_min_elt q = (1, "a")); assert (Q.min_elt q = Some (1, "a"));
   assert (Q.length q = 1);
-  assert (Q.pop_min q = (1, "a")); check_is_empty q;
+  assert (Q.pop_min q = Some (1, "a")); check_is_empty q;
   Q.add q (2, "b");
   Q.add q (1, "a");
-  assert (Q.min_elt q = (1, "a")); assert (Q.min_elt_opt q = Some (1, "a"));
-  assert (Q.pop_min_opt q = Some (1, "a")); assert (Q.length q = 1);
-  assert (Q.min_elt q = (2, "b")); assert (Q.min_elt_opt q = Some (2, "b"));
+  assert (Q.get_min_elt q = (1, "a")); assert (Q.min_elt q = Some (1, "a"));
+  assert (Q.pop_min q = Some (1, "a")); assert (Q.length q = 1);
+  assert (Q.get_min_elt q = (2, "b")); assert (Q.min_elt q = Some (2, "b"));
   Q.remove_min q; check_is_empty q;
   Q.add q (2, "b");
   Q.add q (1, "a");
@@ -50,7 +49,7 @@ let () =
   let q = Q.create () in
   for n = 0 to 10 do
     for x = n-1 downto 0 do Q.add q (x, "") done;
-    for x = 0 to n-1 do assert (Q.pop_min q = (x, "")) done;
+    for x = 0 to n-1 do assert (Q.pop_min q = Some (x, "")) done;
     check_is_empty q
   done
 
@@ -58,7 +57,7 @@ let () =
   let q = Q.create () in
   for n = 0 to 10 do
     for x = n-1 downto 0 do Q.add q (x, "") done;
-    for x = 0 to n-1 do assert (Q.pop_min q = (x, "")) done;
+    for x = 0 to n-1 do assert (Q.pop_min q = Some (x, "")) done;
     check_is_empty q
   done
 
@@ -75,7 +74,7 @@ let () =
     let a = Array.init n (fun i -> (i/3, string_of_int i)) in
     let q = Q.of_array a in
     assert (Q.length q = n);
-    for i = 0 to n - 1 do match Q.pop_min_opt q with
+    for i = 0 to n - 1 do match Q.pop_min q with
                           | None -> assert false
                           | Some (x, _) -> assert (x = fst a.(i))
     done;
@@ -86,7 +85,7 @@ let () =
   let q = Q.create () in
   let l = [2, "b"; 3, "c"; 1, "a"; 4, "d"; 0, ""] in
   Q.add_iter q List.iter l;
-  assert (Q.min_elt q = (0, ""));
+  assert (Q.min_elt q = Some (0, ""));
   assert (Q.fold_unordered (fun acc (x, _) -> acc+x) 0 q = 10)
 
 (* check that min_elt and pop_min are consistent when several elements
@@ -104,7 +103,10 @@ let () =
   let open Pqueue.MakeMax(E) in
   let q = create () in
   add q (2, "b"); add q (1, "a"); add q (4, "d"); add q (3, "c");
-  for i = 4 downto 1 do let x = pop_max q in assert (fst x = i) done
+  for i = 4 downto 1 do match pop_max q with
+                        | None -> assert false
+                        | Some (x, _) -> assert (x = i)
+  done
 
 (* testing with string elements *)
 let () =
@@ -115,7 +117,7 @@ let () =
   for i = 0 to n - 1 do add q a.(i) done;
   assert (length q = n);
   Array.sort String.compare a;
-  for i = 0 to n - 1 do match pop_min_opt q with
+  for i = 0 to n - 1 do match pop_min q with
                           | None -> assert false
                           | Some x -> assert (x = a.(i))
   done;

@@ -15,7 +15,7 @@
 (** Priority queues.
 
     The {!Pqueue} module implements a data structure of priority queues,
-    given a totally ordered type for priorities. This is a mutable
+    given a totally ordered type for elements. This is a mutable
     data structure. Both min- and max-priority queues are provided.
 
     The implementation uses a heap stored in a dynamic array, and is
@@ -26,14 +26,14 @@
     preferred to repeated insertions with [add]).
 
     It is fine to have several elements with the same priority.
-    Nothing is guaranteed regarding the order in which they will be popped.
-    However, it is guaranteed that the element returned by [min_elt] (or
-    [min_elt_opt]) is the one that is removed from the priority queue
-    by [pop_min] (or [pop_min_opt] or [remove_min]). This is important
+    Nothing is guaranteed regarding the order in which they will be
+    popped.  However, it is guaranteed that the element returned by
+    [min_elt] (or [get_min_elt]) is the one that is removed from the
+    priority queue by [pop_min] (or [remove_min]). This is important
     in many algorithms, (e.g. when peeking at several priority queues
     and then selecting one to remove from).
 
-    @since 5.3
+    @since 5.4
 *)
 
 module type OrderedType =
@@ -82,30 +82,23 @@ module type Min =
     (** [add_iter q iter x] adds each element of [x] to the end of [q].
         This is [iter (add q) x]. *)
 
-    exception Empty
-    (** Raised when {!min_elt}, {!pop_min} or {!remove_min} is applied
-        to an empty queue. *)
-
-    val min_elt: t -> elt
-    (** [min_elt q] returns an element of [q] with minimal priority,
-        or raises {!Empty} if the queue is empty. The queue is not
-        modified. *)
-
-    val min_elt_opt: t -> elt option
-    (** [min_elt_opt q] is an element of [q] with minimal priority or
+    val min_elt: t -> elt option
+    (** [min_elt q] is an element of [q] with minimal priority or
         [None] if the queue is empty. The queue is not modified. *)
 
-    val pop_min: t -> elt
-    (** [pop_min q] removes and returns an element in queue [q] with
-        minimal priority, or raises {!Empty} if the queue is empty. *)
+    val get_min_elt: t -> elt
+    (** [get_min_elt q] returns an element of [q] with minimal
+        priority, or raises {!Stdlib.Invalid_argument} if the queue is
+        empty. The queue is not modified. *)
 
-    val pop_min_opt: t -> elt option
-    (** [pop_min_opt q] removes and returns an element in queue [q] with
+    val pop_min: t -> elt option
+    (** [pop_min q] removes and returns an element in queue [q] with
         minimal priority, or returns [None] if the queue is empty. *)
 
     val remove_min: t -> unit
-    (** [remove_min q] removes an element in queue [q] with
-        minimal priority, or raises {!Empty} if the queue is empty. *)
+    (** [remove_min q] removes an element in queue [q] with minimal
+        priority, or raises {!Stdlib.Invalid_argument} if the queue is
+        empty. *)
 
     val clear: t -> unit
     (** [clear q] removes all elements from [q]. *)
@@ -129,7 +122,7 @@ module type Min =
 
         For example, [of_iter Seq.iter s] returns a new priority queue
         containing all the elements of the sequence [s] (provided it
-        is finite)
+        is finite).
 
         Runs in linear time (excluding the time spent in [iter]). *)
 
@@ -174,11 +167,9 @@ module type Max =
     val is_empty: t -> bool
     val add: t -> elt -> unit
     val add_iter: t -> ((elt -> unit) -> 'x -> unit) -> 'x -> unit
-    exception Empty
-    val max_elt: t -> elt
-    val max_elt_opt: t -> elt option
-    val pop_max: t -> elt
-    val pop_max_opt: t -> elt option
+    val max_elt: t -> elt option
+    val get_max_elt: t -> elt
+    val pop_max: t -> elt option
     val remove_max: t -> unit
     val clear: t -> unit
     val copy: t -> t
@@ -214,7 +205,7 @@ module MakeMax(E: OrderedType) : Max with type elt := E.t
 
       (* for example, we now have: *)
       PrioQueue.add: 'a PrioQueue.t -> Prio.t * 'a -> unit
-      PrioQueue.min_elt_opt: 'a PrioQueue.t -> (Prio.t * 'a) option
+      PrioQueue.min_elt: 'a PrioQueue.t -> (Prio.t * 'a) option
     ]}
 *)
 
@@ -237,11 +228,9 @@ module type MinPoly =
     val is_empty: 'a t -> bool
     val add: 'a t -> 'a elt -> unit
     val add_iter: 'a t -> (('a elt -> unit) -> 'x -> unit) -> 'x -> unit
-    exception Empty
-    val min_elt: 'a t -> 'a elt
-    val min_elt_opt: 'a t -> 'a elt option
-    val pop_min: 'a t -> 'a elt
-    val pop_min_opt: 'a t -> 'a elt option
+    val min_elt: 'a t -> 'a elt option
+    val get_min_elt: 'a t -> 'a elt
+    val pop_min: 'a t -> 'a elt option
     val remove_min: 'a t -> unit
     val clear: 'a t -> unit
     val copy: 'a t -> 'a t
@@ -267,11 +256,9 @@ module type MaxPoly =
     val is_empty: 'a t -> bool
     val add: 'a t -> 'a elt -> unit
     val add_iter: 'a t -> (('a elt -> unit) -> 'x -> unit) -> 'x -> unit
-    exception Empty
-    val max_elt: 'a t -> 'a elt
-    val max_elt_opt: 'a t -> 'a elt option
-    val pop_max: 'a t -> 'a elt
-    val pop_max_opt: 'a t -> 'a elt option
+    val max_elt: 'a t -> 'a elt option
+    val get_max_elt: 'a t -> 'a elt
+    val pop_max: 'a t -> 'a elt option
     val remove_max: 'a t -> unit
     val clear: 'a t -> unit
     val copy: 'a t -> 'a t

@@ -82,14 +82,12 @@ module MakeMinPoly(E: OrderedPolyType) =
     let add_iter h iter x =
       iter (add h) x
 
-    exception Empty
-
     let min_elt h =
-      if Dynarray.is_empty h then raise Empty;
-      Dynarray.get h 0
-
-    let min_elt_opt h =
       if Dynarray.is_empty h then None else Some (Dynarray.get h 0)
+
+    let get_min_elt h =
+      if Dynarray.is_empty h then invalid_arg "empty priority queue";
+      Dynarray.get h 0
 
     let lt h i j =
       E.compare (Dynarray.get h i) (Dynarray.get h j) < 0
@@ -112,16 +110,6 @@ module MakeMinPoly(E: OrderedPolyType) =
 
     let pop_min h =
       let n = Dynarray.length h in
-      if n = 0 then raise Empty;
-      let x = Dynarray.pop_last h in
-      if n = 1 then x else (
-        let r = Dynarray.get h 0 in
-        sift_down h ~len:(n - 1) 0 x;
-        r
-      )
-
-    let pop_min_opt h =
-      let n = Dynarray.length h in
       if n = 0 then None else
       let x = Dynarray.pop_last h in
       if n = 1 then Some x else (
@@ -132,7 +120,7 @@ module MakeMinPoly(E: OrderedPolyType) =
 
     let remove_min h =
       let n = Dynarray.length h in
-      if n = 0 then raise Empty;
+      if n = 0 then invalid_arg "empty priority queue";
       let x = Dynarray.pop_last h in
       if n > 1 then sift_down h ~len:(n - 1) 0 x
 
@@ -178,11 +166,9 @@ module type MinPoly =
     val is_empty: 'a t -> bool
     val add: 'a t -> 'a elt -> unit
     val add_iter: 'a t -> (('a elt -> unit) -> 'x -> unit) -> 'x -> unit
-    exception Empty
-    val min_elt: 'a t -> 'a elt
-    val min_elt_opt: 'a t -> 'a elt option
-    val pop_min: 'a t -> 'a elt
-    val pop_min_opt: 'a t -> 'a elt option
+    val min_elt: 'a t -> 'a elt option
+    val get_min_elt: 'a t -> 'a elt
+    val pop_min: 'a t -> 'a elt option
     val remove_min: 'a t -> unit
     val clear: 'a t -> unit
     val copy: 'a t -> 'a t
@@ -202,11 +188,9 @@ module type MaxPoly =
     val is_empty: 'a t -> bool
     val add: 'a t -> 'a elt -> unit
     val add_iter: 'a t -> (('a elt -> unit) -> 'x -> unit) -> 'x -> unit
-    exception Empty
-    val max_elt: 'a t -> 'a elt
-    val max_elt_opt: 'a t -> 'a elt option
-    val pop_max: 'a t -> 'a elt
-    val pop_max_opt: 'a t -> 'a elt option
+    val max_elt: 'a t -> 'a elt option
+    val get_max_elt: 'a t -> 'a elt
+    val pop_max: 'a t -> 'a elt option
     val remove_max: 'a t -> unit
     val clear: 'a t -> unit
     val copy: 'a t -> 'a t
@@ -226,9 +210,8 @@ module MakeMaxPoly(E: OrderedPolyType)
     end)
     (* renaming a few functions... *)
     let max_elt = min_elt
-    let max_elt_opt = min_elt_opt
+    let get_max_elt = get_min_elt
     let pop_max = pop_min
-    let pop_max_opt = pop_min_opt
     let remove_max = remove_min
   end
 
@@ -249,11 +232,9 @@ module type Min =
     val is_empty: t -> bool
     val add: t -> elt -> unit
     val add_iter: t -> ((elt -> unit) -> 'x -> unit) -> 'x -> unit
-    exception Empty
-    val min_elt: t -> elt
-    val min_elt_opt: t -> elt option
-    val pop_min: t -> elt
-    val pop_min_opt: t -> elt option
+    val min_elt: t -> elt option
+    val get_min_elt: t -> elt
+    val pop_min: t -> elt option
     val remove_min: t -> unit
     val clear: t -> unit
     val copy: t -> t
@@ -280,11 +261,9 @@ module type Max =
     val is_empty: t -> bool
     val add: t -> elt -> unit
     val add_iter: t -> ((elt -> unit) -> 'x -> unit) -> 'x -> unit
-    exception Empty
-    val max_elt: t -> elt
-    val max_elt_opt: t -> elt option
-    val pop_max: t -> elt
-    val pop_max_opt: t -> elt option
+    val max_elt: t -> elt option
+    val get_max_elt: t -> elt
+    val pop_max: t -> elt option
     val remove_max: t -> unit
     val clear: t -> unit
     val copy: t -> t
@@ -301,8 +280,7 @@ module MakeMax(E: OrderedType) =
                                let compare x y = E.compare y x end)
     type t = E.t Dynarray.t
     let max_elt = min_elt
-    let max_elt_opt = min_elt_opt
+    let get_max_elt = get_min_elt
     let pop_max = pop_min
-    let pop_max_opt = pop_min_opt
     let remove_max = remove_min
   end
