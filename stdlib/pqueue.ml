@@ -120,9 +120,10 @@ module MakeMinPoly(E: OrderedPolyType) =
 
     let remove_min h =
       let n = Dynarray.length h in
-      if n = 0 then invalid_arg "empty priority queue";
-      let x = Dynarray.pop_last h in
-      if n > 1 then sift_down h ~len:(n - 1) 0 x
+      if n > 0 then (
+        let x = Dynarray.pop_last h in
+        if n > 1 then sift_down h ~len:(n - 1) 0 x
+      )
 
     let copy =
       Dynarray.copy

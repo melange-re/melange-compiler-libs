@@ -97,8 +97,7 @@ module type Min =
 
     val remove_min: t -> unit
     (** [remove_min q] removes an element in queue [q] with minimal
-        priority, or raises {!Stdlib.Invalid_argument} if the queue is
-        empty. *)
+        priority. It does nothing if [q] is empty. *)
 
     val clear: t -> unit
     (** [clear q] removes all elements from [q]. *)

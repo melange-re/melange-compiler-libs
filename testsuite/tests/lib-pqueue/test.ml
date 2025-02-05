@@ -17,7 +17,7 @@ let does_raise f q =
 let check_is_empty q =
   assert (Q.length q = 0); assert (Q.is_empty q);
   assert (does_raise Q.get_min_elt q); assert (Q.min_elt q = None);
-  assert (Q.pop_min q = None); assert (does_raise Q.remove_min q)
+  assert (Q.pop_min q = None); Q.remove_min q; assert (Q.length q = 0)
 
 let () =
   let q = Q.create () in
