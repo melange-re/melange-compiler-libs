@@ -19,6 +19,7 @@
 /* Must be preprocessed by cpp */
 
 #include "caml/m.h"
+#include "caml/asm.h"
 
 /* Special registers */
 
@@ -152,8 +153,6 @@ G(name):
 #define END_OBJECT(name) \
         .size   G(name), .-G(name)
 #endif
-
-#include "../runtime/caml/asm.h"
 
 /* Function prologue and epilogue */
 

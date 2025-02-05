@@ -16,6 +16,7 @@
 /**************************************************************************/
 
 #include "caml/m.h"
+#include "caml/asm.h"
 
 /* Special registers */
 
@@ -137,8 +138,6 @@ caml_hot$code_end:
 #define DW_REG_r9                 9
 #define DW_REG_r12                12
 #define DW_REG_r15                15
-
-#include "../runtime/caml/asm.h"
 
 /******************************************************************************/
 /* Access to the current domain state block. */

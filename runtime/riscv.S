@@ -17,6 +17,7 @@
 /* Must be preprocessed by cpp */
 
 #include "caml/m.h"
+#include "caml/asm.h"
 
 #define DOMAIN_STATE_PTR s11
 #define TRAP_PTR s1
@@ -103,8 +104,6 @@ name:; \
 name:
 #define END_OBJECT(name) \
         .size   name, .-name
-
-#include "../runtime/caml/asm.h"
 
 /* Function prologue and epilogue */
 
