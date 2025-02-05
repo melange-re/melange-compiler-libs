@@ -347,6 +347,11 @@ let is_floatarray_type env ty =
     Tconstr(path, [], _) -> Path.same path Predef.path_floatarray
   | _ -> false
 
+let is_iarray_type env ty =
+  match get_desc (expand_head env ty) with
+  | Tconstr(path, [_], _) -> Path.same path Predef.path_iarray
+  | _ -> false
+
 let protect_expansion env ty =
   if Env.has_local_constraints env then generic_instance ty else ty
 
@@ -387,19 +392,25 @@ let extract_label_names env ty =
 let is_principal ty =
   not !Clflags.principal || get_level ty = generic_level
 
-(* Returns [Some ty_elt] if the expected type can be used for type-directed
-   disambiguation of an array literal. *)
+(* Represents information about an array type inferred using type-directed
+   disambiguation. *)
+type array_info =
+  { ty_elt : type_expr option;
+    mut : mutable_flag }
+
 let disambiguate_array_literal ~loc env expected_ty =
-  let return ty =
+  let return (ty_elt : type_expr option) (mut : mutable_flag) =
     if not (is_principal expected_ty) then
       Location.prerr_warning loc
         (not_principal "this type-based array disambiguation");
-    Some ty
+    { ty_elt; mut }
   in
   if is_floatarray_type env expected_ty then
-    return (instance Predef.type_float)
+    return (Some (instance Predef.type_float)) Mutable
+  else if is_iarray_type env expected_ty then
+    return None Immutable
   else
-    None
+    { ty_elt = None; mut = Mutable }
 
 (* Typing of patterns *)
 
@@ -1046,11 +1057,15 @@ let solve_Ppat_record_field loc penv label label_lid record_ty =
 let solve_Ppat_array loc env expected_ty =
   let expected_ty = generic_instance expected_ty in
   match disambiguate_array_literal ~loc !!env expected_ty with
-  | Some ty_elt -> ty_elt
-  | None ->
+  | { ty_elt = Some ty_elt; mut } -> ty_elt, mut
+  | { ty_elt = None; mut } ->
+      let array_type = match mut with
+        | Immutable -> Predef.type_iarray
+        | Mutable -> Predef.type_array
+      in
       let ty_elt = newgenvar() in
-      unify_pat_types_penv loc env (Predef.type_array ty_elt) expected_ty;
-      ty_elt
+      unify_pat_types_penv loc env (array_type ty_elt) expected_ty;
+      ty_elt, mut
 
 let solve_Ppat_lazy loc env expected_ty =
   let nv = newgenvar () in
@@ -1998,11 +2013,11 @@ and type_pat_aux
           lid_sp_list
       in
       rvp @@ solve_expected (make_record_pat lbl_a_list)
-  | Ppat_array spl ->
-      let ty_elt = solve_Ppat_array loc penv expected_ty in
+  | Ppat_array(spl) ->
+      let ty_elt, expected_mutability = solve_Ppat_array loc penv expected_ty in
       let pl = List.map (fun p -> type_pat tps Value p ty_elt) spl in
       rvp {
-        pat_desc = Tpat_array pl;
+        pat_desc = Tpat_array (expected_mutability, pl);
         pat_loc = loc; pat_extra=[];
         pat_type = instance expected_ty;
         pat_attributes = sp.ppat_attributes;
@@ -2510,10 +2525,10 @@ let rec check_counter_example_pat
       in
       map_fold_cont type_label_pat fields
         (fun fields -> mkp k (Tpat_record (fields, closed)))
-  | Tpat_array tpl ->
-      let ty_elt = solve_Ppat_array loc penv expected_ty in
+  | Tpat_array (mutability, tpl) ->
+      let ty_elt, _ = solve_Ppat_array loc penv expected_ty in
       map_fold_cont (fun p -> check_rec p ty_elt) tpl
-        (fun pl -> mkp k (Tpat_array pl))
+        (fun pl -> mkp k (Tpat_array (mutability, pl)))
   | Tpat_or(tp1, tp2, _) ->
       (* We are in counter-example mode, but try to avoid backtracking *)
       let must_split =
@@ -2919,7 +2934,7 @@ let rec is_nonexpansive exp =
   | Texp_constant _
   | Texp_unreachable
   | Texp_function _
-  | Texp_array [] -> true
+  | Texp_array (_, []) -> true
   | Texp_let(_rec_flag, pat_exp_list, body) ->
       List.for_all (fun vb -> is_nonexpansive vb.vb_expr) pat_exp_list &&
       is_nonexpansive body
@@ -2996,7 +3011,7 @@ let rec is_nonexpansive exp =
                          ("%raise" | "%reraise" | "%raise_notrace")}}) },
       [Nolabel, Arg e]) ->
      is_nonexpansive e
-  | Texp_array (_ :: _)
+  | Texp_array (_, _ :: _)
   | Texp_apply _
   | Texp_try _
   | Texp_setfield _
@@ -4154,22 +4169,26 @@ and type_expect_
         exp_attributes = sexp.pexp_attributes;
         exp_env = env }
   | Pexp_array(sargl) ->
-      let ty_elt =
+      let ty_elt, mutability =
         let ty_expected = generic_instance ty_expected in
         match disambiguate_array_literal ~loc env ty_expected with
-        | Some ty_elt -> ty_elt
-        | None ->
+        | { ty_elt = Some ty; mut } -> ty, mut
+        | { ty_elt = None; mut } ->
             let ty = newgenvar () in
-            let to_unify = Predef.type_array ty in
+            let to_unify =
+              match mut with
+              | Mutable -> Predef.type_array ty
+              | Immutable -> Predef.type_iarray ty
+            in
             with_explanation (fun () ->
                 unify_exp_types loc env to_unify ty_expected);
-            ty
+            ty, mut
       in
       let argl =
         List.map (fun sarg -> type_expect env sarg (mk_expected ty_elt)) sargl
       in
       re {
-        exp_desc = Texp_array argl;
+        exp_desc = Texp_array (mutability, argl);
         exp_loc = loc; exp_extra = [];
         exp_type = instance ty_expected;
         exp_attributes = sexp.pexp_attributes;
