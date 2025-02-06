@@ -16,6 +16,7 @@
 /**************************************************************************/
 
 #include "caml/m.h"
+#include "caml/asm.h"
 
 /* Special registers */
 
@@ -59,18 +60,20 @@ caml_hot$code_end:
 #define FUNCTION(name) \
         TEXT_SECTION(name); \
         .globl name; \
-        .type name,@function; \
+        TYPE_DIRECTIVE(name,@function) \
         name:
 
-#define ENDFUNCTION(name)
+#define ENDFUNCTION(name) \
+        SIZE_DIRECTIVE(name)
 
 #define OBJECT(name) \
         .align 8; \
         .globl name; \
-        .type name, @object; \
+        TYPE_DIRECTIVE(name,@object) \
         name:
 
-#define ENDOBJECT(name)
+#define ENDOBJECT(name) \
+        SIZE_DIRECTIVE(name)
 
 /* Stack space to be reserved by the caller of a C function */
 #define RESERVED_STACK          160
@@ -137,8 +140,6 @@ caml_hot$code_end:
 #define DW_REG_r9                 9
 #define DW_REG_r12                12
 #define DW_REG_r15                15
-
-#include "../runtime/caml/asm.h"
 
 /******************************************************************************/
 /* Access to the current domain state block. */
@@ -1217,5 +1218,4 @@ OBJECT(caml_system$frametable)
         .align  8
 ENDOBJECT(caml_system$frametable)
 
-/* Mark stack as non-executable */
-        .section .note.GNU-stack,"",%progbits
+        NONEXECSTACK_NOTE

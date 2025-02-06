@@ -179,6 +179,7 @@ AC_SUBST([oc_ldflags])
 AC_SUBST([oc_dll_ldflags])
 AC_SUBST([cclibs])
 AC_SUBST([native_ldflags])
+AC_SUBST([with_nonexecstack_note])
 AC_SUBST([zstd_libs])
 AC_SUBST([bytecode_cflags])
 AC_SUBST([bytecode_cppflags])
@@ -233,6 +234,7 @@ AC_SUBST([ASPP])
 AC_SUBST([endianness])
 AC_SUBST([AS])
 AC_SUBST([asm_cfi_supported])
+AC_SUBST([asm_size_type_directives])
 AC_SUBST([sharedlib_cflags])
 AC_SUBST([rpath])
 AC_SUBST([mkdll])
@@ -680,6 +682,9 @@ popdef([host_vendor])dnl
 popdef([host_cpu])dnl
 popdef([host_alias])dnl
 popdef([host])dnl
+
+OCAML_WITH_NONEXECSTACK_NOTE
+OCAML_ASM_SIZE_TYPE_DIRECTIVES
 
 AS_CASE([$host],
   [sparc-sun-solaris*],

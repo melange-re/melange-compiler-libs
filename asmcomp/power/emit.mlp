@@ -1018,7 +1018,7 @@ let fundecl fundecl =
   end;
   (* Function entry point *)
   `	.globl	{emit_symbol fundecl.fun_name}\n`;
-  `	.type	{emit_symbol fundecl.fun_name}, @function\n`;
+  emit_type_directive fundecl.fun_name "@function";
   `{emit_symbol fundecl.fun_name}:\n`;
   `0:	addis	2, 12, (.TOC. - 0b)@ha\n`;
   `	addi	2, 2, (.TOC. - 0b)@l\n`;
@@ -1054,7 +1054,7 @@ let fundecl fundecl =
   (* Emit the glue code to handle bound errors *)
   emit_call_bound_errors env;
   cfi_endproc();
-  `	.size	{emit_symbol fundecl.fun_name}, . - {emit_symbol fundecl.fun_name}\n`;
+  emit_size_directive fundecl.fun_name;
   (* Emit the numeric literals *)
   if env.float_literals <> [] then begin
     emit_string rodata_space;
@@ -1082,7 +1082,7 @@ let fundecl fundecl =
 
 let declare_global_data s =
   `	.globl	{emit_symbol s}\n`;
-  `	.type	{emit_symbol s}, @object\n`
+  emit_type_directive s "@object"
 
 let emit_item = function
     Cglobal_symbol s ->
@@ -1166,8 +1166,9 @@ let end_assembly() =
       efa_def_label = (fun l -> `{emit_label l}:\n`);
       efa_string = (fun s -> emit_bytes_directive "	.byte	" (s ^ "\000"))
      };
+  emit_size_directive lbl;
   (* Emit the TOC entries *)
   emit_string toc_space;
   emit_toctable();
   Hashtbl.clear tocref_entries;
-  `	.section .note.GNU-stack,\"\",%progbits\n`
+  emit_nonexecstack_note ()
