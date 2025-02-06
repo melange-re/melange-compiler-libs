@@ -313,10 +313,9 @@ let uchar_array_of_utf_8_string s =
   done;
   uchars, !k
 
-let edit_distance ?(limit = Int.max_int) s0 s1 =
-  if limit <= 1 then (if equal s0 s1 then 0 else limit) else
+let _edit_distance ?(limit = Int.max_int) s (s0, len0) s1 =
+  if limit <= 1 then (if equal s s1 then 0 else limit) else
   let[@inline] minimum a b c = Int.min a (Int.min b c) in
-  let s0, len0 = uchar_array_of_utf_8_string s0 in
   let s1, len1 = uchar_array_of_utf_8_string s1 in
   let limit = Int.min (Int.max len0 len1) limit in
   if Int.abs (len1 - len0) > limit then limit else
@@ -358,16 +357,21 @@ let edit_distance ?(limit = Int.max_int) s0 s1 =
   let d = loop row_minus2 row_minus1 row 1 len0 limit s0 s1 in
   if d > limit then limit else d
 
+let edit_distance ?limit s0 s1 =
+  let us0 = uchar_array_of_utf_8_string s0 in
+  _edit_distance ?limit s0 us0 s1
+
 let default_max_dist s = match utf_8_uchar_length s with
   | 0 | 1 | 2 -> 0
   | 3 | 4 -> 1
   | _ -> 2
 
 let spellcheck ?(max_dist = default_max_dist) dict s =
-  let select_words (min, acc) word =
-    let d = edit_distance ~limit:(min + 1) s word in
+  let select_words s us (min, acc) word =
+    let d = _edit_distance ~limit:(min + 1) s us word in
     if d = min then min, (word :: acc) else
     if d < min then d, [word] else min, acc
   in
-  let _min, words = List.fold_left select_words (max_dist s, []) dict in
+  let us = uchar_array_of_utf_8_string s in
+  let _min, words = List.fold_left (select_words s us) (max_dist s, []) dict in
   List.rev words
