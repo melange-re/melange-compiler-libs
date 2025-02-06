@@ -402,16 +402,16 @@ val edit_distance : ?limit:int -> t -> t -> int
     (understood as insertion, deletion, substitution, transposition)
     that are needed to change [s0] into [s1].
 
+    If [limit] is provided the function returns with [limit] as soon
+    as it was determined that [s0] and [s1] have distance of at least
+    [limit]. This is faster if you have a fixed limit, for example for
+    spellchecking.
+
     The function assumes the strings are UTF-8 encoded and uses {!Uchar.t}
     for the notion of character. Decoding errors are replaced by
     {!Uchar.rep}. Normalizing the strings to
     {{:https://unicode.org/glossary/#normalization_form_c}NFC} gives
     better results.
-
-    If [limit] is provided the function returns with [limit] as soon
-    as it was determined that [s0] and [s1] have distance of at least
-    [limit]. This is faster if you have a fixed limit, for example for
-    spellchecking.
 
     {b Note.} This implements the simpler optimal string alignement
     distance, not the Damerau-Levenshtein distance. With this function
