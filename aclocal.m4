@@ -628,3 +628,16 @@ AC_DEFUN([OCAML_CHECK_LN_ON_WINDOWS], [
   )
   AC_MSG_RESULT([$ln])
 ])
+
+AC_DEFUN([OCAML_CHECK_WINDOWS_TRIPLET], [
+  AS_CASE([$1],
+    [i686-*-cygwin|x86_64-*-cygwin],[],
+    [*-*-cygwin*],
+      [AC_MSG_ERROR([unknown Cygwin variant])],
+    [i686-w64-mingw32*|x86_64-w64-mingw32*],[],
+    [*-*-mingw*],
+      [AC_MSG_ERROR([unknown mingw-w64 variant])],
+    [i686-pc-windows|x86_64-pc-windows],[],
+    [*-pc-windows*],
+      [AC_MSG_ERROR([unknown MSVC variant])])
+])

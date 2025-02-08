@@ -327,6 +327,21 @@ AS_CASE([$host],
       [export CYGWIN="\$CYGWIN\${CYGWIN:+ }winsymlinks:nativestrict"
       export MSYS="\$MSYS\${MSYS:+ }winsymlinks:nativestrict"])])
 
+# Sanitize the Windows target triplets. After this block, the patterns are:
+# *-*-cygwin - Cygwin (the vendor part is always ignored, though it should
+#              always be 'pc')
+# *-w64-mingw32* - mingw-w64. The vendor part is always matched because
+#                  *-pc-mingw* is a likely misconfiguration and the triplet
+#                  matters both for flexlink and for prefixed compilers/tools.
+#                  mingw32* is matched (rather than just mingw32) because some
+#                  cross-compilation environments from Linux may add additional
+#                  information after the mingw32
+# *-pc-windows - MSVC. The full -pc-windows is matched because that's a suffix
+#                which is specifically recognised by our build system (since
+#                autotools still doesn't have full support for recognising MSVC)
+OCAML_CHECK_WINDOWS_TRIPLET([$target])
+OCAML_CHECK_WINDOWS_TRIPLET([$host])
+
 # Systems that are known not to work, even in bytecode only.
 
 AS_CASE([$target],
@@ -1041,8 +1056,6 @@ AS_CASE([$target],
   [x86_64-*-cygwin],
     [flexdll_chain='cygwin64'
     flexlink_flags='-merge-manifest -stack 16777216'],
-  [*-*-cygwin*],
-    [AC_MSG_ERROR([unknown cygwin variant])],
   [i686-w64-mingw32*],
     [flexdll_chain='mingw'
     flexlink_flags='-stack 16777216'],

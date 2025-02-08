@@ -322,6 +322,12 @@ Working version
   (Samuel Hym, review by Miod Vallat, Xavier Leroy, Antonin Décimo and Sébastien
   Hinderer)
 
+- #13789: Strictly validate the host and target triplets when building for the
+  Windows ports to be *-*-cygwin, *-w64-mingw32* or *-pc-windows. Other Cygwin
+  variants used to be rejected - other MSVC and mingw-w64 variants are now
+  rejected too.
+  (David Allsopp, review by Antonin Décimo and Gabriel Scherer)
+
 ### Bug fixes:
 
 - #13691: Make four globals underlying Gc.control atomic to avoid C data
