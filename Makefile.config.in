@@ -49,9 +49,6 @@ datarootdir=@datarootdir@
 ### Where to install the standard library on host
 LIBDIR=@libdir@
 
-### Where to look for the standard library on target
-TARGET_LIBDIR=@TARGET_LIBDIR@
-
 ### Where to install the stub code for the standard library
 STUBLIBDIR=@libdir@/stublibs
 
