@@ -313,7 +313,7 @@ let uchar_array_of_utf_8_string s =
   done;
   uchars, !k
 
-let _edit_distance ?(limit = Int.max_int) s (s0, len0) s1 =
+let edit_distance' ?(limit = Int.max_int) s (s0, len0) s1 =
   if limit <= 1 then (if equal s s1 then 0 else limit) else
   let[@inline] minimum a b c = Int.min a (Int.min b c) in
   let s1, len1 = uchar_array_of_utf_8_string s1 in
@@ -359,7 +359,7 @@ let _edit_distance ?(limit = Int.max_int) s (s0, len0) s1 =
 
 let edit_distance ?limit s0 s1 =
   let us0 = uchar_array_of_utf_8_string s0 in
-  _edit_distance ?limit s0 us0 s1
+  edit_distance' ?limit s0 us0 s1
 
 let default_max_dist s = match utf_8_uchar_length s with
   | 0 | 1 | 2 -> 0
@@ -368,7 +368,7 @@ let default_max_dist s = match utf_8_uchar_length s with
 
 let spellcheck ?(max_dist = default_max_dist) dict s =
   let select_words s us (min, acc) word =
-    let d = _edit_distance ~limit:(min + 1) s us word in
+    let d = edit_distance' ~limit:(min + 1) s us word in
     if d = min then min, (word :: acc) else
     if d < min then d, [word] else min, acc
   in
