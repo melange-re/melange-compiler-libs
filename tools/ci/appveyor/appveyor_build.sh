@@ -52,6 +52,13 @@ function run {
 # $1:the Windows port. Recognized values: mingw, msvc and msvc64
 # $2: the prefix to use to install
 function set_configuration {
+  mkdir -p "$CACHE_DIRECTORY"
+
+  local CACHE_KEY CACHE_FILE_PREFIX CACHE_FILE
+  CACHE_KEY=$({ cat configure; uname; } | sha1sum | cut -c 1-7)
+  CACHE_FILE_PREFIX="$CACHE_DIRECTORY/config.cache-$1"
+  CACHE_FILE="$CACHE_FILE_PREFIX-$CACHE_KEY"
+
   args=('--cache-file' "$CACHE_FILE" '--prefix' "$2" '--enable-ocamltest')
 
   case "$1" in
@@ -68,13 +75,6 @@ function set_configuration {
       # Explicitly test dependency generation on msvc64
       args+=('--host=x86_64-pc-windows' '--enable-dependency-generation');;
   esac
-
-  mkdir -p "$CACHE_DIRECTORY"
-
-  local CACHE_KEY CACHE_FILE_PREFIX CACHE_FILE
-  CACHE_KEY=$({ cat configure; uname; } | sha1sum | cut -c 1-7)
-  CACHE_FILE_PREFIX="$CACHE_DIRECTORY/config.cache-$1"
-  CACHE_FILE="$CACHE_FILE_PREFIX-$CACHE_KEY"
 
   # Remove old configure cache if the configure script or the OS
   # have changed
