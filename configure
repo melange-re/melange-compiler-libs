@@ -763,6 +763,7 @@ FGREP
 EGREP
 GREP
 SED
+OBJEXT
 EXEEXT
 ac_ct_CC
 CPPFLAGS
@@ -924,8 +925,6 @@ SO
 runtime_asm_objects
 S
 libext
-OBJEXT
-exeext
 ac_tool_prefix
 CSCFLAGS
 CSC
@@ -3424,8 +3423,6 @@ LINEAR_MAGIC_NUMBER=Caml1999L035
 # Note: This is present for the flexdll bootstrap where it exposed as the old
 # TOOLPREF variable. It would be better if flexdll where updated to require
 # WINDRES instead.
-
-
 
 
 
@@ -14981,13 +14978,6 @@ case $target in #(
     unix_or_win32="unix"
   ocamltest_libunix="Some true"
   ocamlyacc_wstr_module="" ;;
-esac
-
-case $target in #(
-  *-*-cygwin|*-w64-mingw32*|*-pc-windows) :
-    exeext=".exe" ;; #(
-  *) :
-    exeext='' ;;
 esac
 
 otherlibraries="dynlink runtime_events"

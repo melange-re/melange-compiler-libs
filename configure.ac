@@ -133,8 +133,6 @@ AC_SUBST([CSCFLAGS])
 # TOOLPREF variable. It would be better if flexdll where updated to require
 # WINDRES instead.
 AC_SUBST([ac_tool_prefix])
-AC_SUBST([exeext])
-AC_SUBST([OBJEXT])
 AC_SUBST([libext])
 AC_SUBST([S])
 AC_SUBST([runtime_asm_objects])
@@ -813,11 +811,6 @@ AS_CASE([$target],
   [unix_or_win32="unix"
   ocamltest_libunix="Some true"
   ocamlyacc_wstr_module=""])
-
-AS_CASE([$target],
-  [*-*-cygwin|*-w64-mingw32*|*-pc-windows],
-    [exeext=".exe"],
-  [exeext=''])
 
 otherlibraries="dynlink runtime_events"
 otherlibs="runtime_events"

@@ -83,7 +83,7 @@ let asm_size_type_directives = @asm_size_type_directives@
 let with_frame_pointers = @frame_pointers@
 let reserved_header_bits = @reserved_header_bits@
 
-let ext_exe = {@QS@|@exeext@|@QS@}
+let ext_exe = {@QS@|@EXEEXT@|@QS@}
 let ext_obj = "." ^ {@QS@|@OBJEXT@|@QS@}
 let ext_asm = "." ^ {@QS@|@S@|@QS@}
 let ext_lib = "." ^ {@QS@|@libext@|@QS@}
