@@ -480,6 +480,7 @@ module BR = Branch_relaxation.Make (struct
     | Lreturn -> 2
     | Llabel _ -> 0
     | Lbranch _ -> 1
+    | Lcondbranch (Ifloattest(CFle | CFnle  | CFge | CFnge), _) -> 3
     | Lcondbranch _ -> 2
     | Lcondbranch3(lbl0, lbl1, lbl2) ->
       1 + (if lbl0 = None then 0 else 1)
