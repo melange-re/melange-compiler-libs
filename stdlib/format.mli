@@ -876,7 +876,7 @@ type formatter_out_functions = {
 - the [out_width] function informs the formatting engine of the width of the
   substring as rendered on the output device. Explicit width information as
   provided by [@<n>], {!pp_print_as} or {!pp_print_substring_as} takes priority
-  over this function. Moreover, the formatting engine evaluate the width of the
+  over this function. Moreover, the formatting engine evaluates the width of the
   string arguments of {!pp_print_string} and substring arguments of
   {!pp_print_substring} as a whole. Consequently, [out_width] can be used to
   compute an approximative width for unicode substrings.
@@ -894,7 +894,8 @@ type formatter_out_functions = {
   (e.g. {!Stdlib.output_string} and {!Stdlib.flush} for a
    {!Stdlib.out_channel} device, or [Buffer.add_substring] and
    {!Stdlib.ignore} for a [Buffer.t] output device),
-- fields [out_width] is the byte length of the substring
+- field [out_width] is the number of unicode scalar values
+  (see {!utf8_scalar_width}) in the substring.
 - field [out_newline] is equivalent to [out_string "\n" 0 1];
 - fields [out_spaces] and [out_indent] are equivalent to
   [out_string (String.make n ' ') 0 n].
