@@ -110,6 +110,7 @@ let () =
 
 let () =
   let test ?max_dist dict s res =
+    let dict = fun yield -> List.iter yield dict in
     assert (String.spellcheck ?max_dist dict s = res)
   in
   (* max_dist = 0 *)

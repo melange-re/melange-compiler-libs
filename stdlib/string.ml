@@ -366,12 +366,14 @@ let default_max_dist s = match utf_8_uchar_length s with
   | 3 | 4 -> 1
   | _ -> 2
 
-let spellcheck ?(max_dist = default_max_dist) dict s =
-  let select_words s us (min, acc) word =
-    let d = edit_distance' ~limit:(min + 1) s us word in
-    if d = min then min, (word :: acc) else
-    if d < min then d, [word] else min, acc
+let spellcheck ?(max_dist = default_max_dist) iter_dict s =
+  let min = ref (max_dist s) in
+  let acc = ref [] in
+  let select_words s us word =
+    let d = edit_distance' ~limit:(!min + 1) s us word in
+    if d = !min then (acc := word :: !acc) else
+    if d < !min then (min := d; acc := [word]) else ()
   in
   let us = uchar_array_of_utf_8_string s in
-  let _min, words = List.fold_left (select_words s us) (max_dist s, []) dict in
-  List.rev words
+  iter_dict (select_words s us);
+  List.rev !acc

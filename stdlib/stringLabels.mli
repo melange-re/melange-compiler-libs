@@ -421,16 +421,21 @@ val edit_distance : ?limit:int -> t -> t -> int
 *)
 
 val spellcheck :
-  ?max_dist:(string -> int) -> string list -> string -> string list
-(** [spellcheck dict s] are the elements of [dict] whose
-    {{!edit_distance}edit distance} to [s] is the smallest and at most
-    [max_dist s]. If multiple corrections are returned their order is
-    as given in [dict]. The default [max_dist s] is:
+  ?max_dist:(string -> int) -> ((string -> unit) -> unit) -> string ->
+  string list
+(** [spellcheck iter_dict s] are the strings enumerated by the
+    iterator [iter_dict] whose {{!edit_distance}edit distance} to [s]
+    is the smallest and at most [max_dist s]. If multiple corrections
+    are returned their order is as found in [iter_dict]. The default
+    [max_dist s] is:
 
     {ul
     {- [0] if [s] has 0 to 2 Unicode characters.}
     {- [1] if [s] has 3 to 4 Unicode characters.}
     {- [2] otherwise.}}
+
+    If your dictionary is a list [l], a suitable [iter_dict] is given
+    by [(fun yield -> List.iter yield l)].
 
     All strings are assumed to be UTF-8 encoded, decoding
     errors are replaced by {!Uchar.rep} characters.
