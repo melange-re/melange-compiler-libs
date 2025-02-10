@@ -318,7 +318,7 @@ let edit_distance' ?(limit = Int.max_int) s (s0, len0) s1 =
   let[@inline] minimum a b c = Int.min a (Int.min b c) in
   let s1, len1 = uchar_array_of_utf_8_string s1 in
   let limit = Int.min (Int.max len0 len1) limit in
-  if Int.abs (len1 - len0) > limit then limit else
+  if Int.abs (len1 - len0) >= limit then limit else
   let s0, s1 = if len0 > len1 then s0, s1 else s1, s0 in
   let len0, len1 = if len0 > len1 then len0, len1 else len1, len0 in
   let rec loop row_minus2 row_minus1 row i len0 limit s0 s1 =
