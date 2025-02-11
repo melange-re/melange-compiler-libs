@@ -326,7 +326,11 @@ let edit_distance' ?(limit = Int.max_int) s (s0, len0) s1 =
     let len1 = Array.length row - 1 in
     let row_min = ref Int.max_int in
     row.(0) <- i;
-    for j = Int.max 1 (i - limit) to Int.min len1 (i + limit - 1) do
+    let jmax =
+      let jmax = Int.min len1 (i + limit - 1) in
+      if jmax < 0 then (* overflow *) len1 else jmax
+    in
+    for j = Int.max 1 (i - limit) to jmax do
       let cost = if Uchar.equal s0.(i-1) s1.(j-1) then 0 else 1 in
       let min = minimum
           (row_minus1.(j-1) + cost) (* substitute *)
