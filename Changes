@@ -15,6 +15,10 @@ Working version
   (Antal Spector-Zabusky and Olivier Nicole, review by Gabriel Scherer,
   Jeremy Yallop and Vincent Laviron)
 
+- #13498: Tuple fields are now optionally labeled.
+  (Ryan Tjoa and Chris Casinghino, review by Gabriel Scherer, Chris Casinghino,
+  and Leo White)
+
 ### Runtime system:
 
 - #13774: Fix for inaccurate live blocks/words stats in compaction.
