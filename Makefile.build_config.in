@@ -136,6 +136,9 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 datarootdir = @datarootdir@
 DOCDIR=@docdir@
 
+### Where to look for the standard library on target
+TARGET_LIBDIR=@TARGET_LIBDIR@
+
 unix_directory = @unix_directory@
 unix_library = @unix_library@
 

@@ -326,11 +326,17 @@ Working version
   disk usage considerably.
   (David Allsopp, review by Nicolás Ojeda Bär and Gabriel Scherer)
 
-* #13526: Simplify the build of cross compilers
+* #13526, #13789: Simplify the build of cross compilers
   This replaces the configure `--with-target-bindir` option by an equivalent
   `TARGET_BINDIR` variable
   (Samuel Hym, review by Miod Vallat, Xavier Leroy, Antonin Décimo and Sébastien
   Hinderer)
+
+- #13789: Strictly validate the host and target triplets when building for the
+  Windows ports to be *-*-cygwin, *-w64-mingw32* or *-pc-windows. Other Cygwin
+  variants used to be rejected - other MSVC and mingw-w64 variants are now
+  rejected too.
+  (David Allsopp, review by Antonin Décimo and Gabriel Scherer)
 
 ### Bug fixes:
 
