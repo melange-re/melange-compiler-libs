@@ -326,12 +326,16 @@ let edit_distance' ?(limit = Int.max_int) s (s0, len0) s1 =
     let len1 = Array.length row - 1 in
     let row_min = ref Int.max_int in
     row.(0) <- i;
-    for j = Int.max 1 (i - limit - 1) to Int.min len1 (i + limit + 1) do
+    for j = Int.max 1 (i - limit) to Int.min len1 (i + limit - 1) do
       let cost = if Uchar.equal s0.(i-1) s1.(j-1) then 0 else 1 in
       let min = minimum
           (row_minus1.(j-1) + cost) (* substitute *)
           (row_minus1.(j) + 1)      (* delete *)
           (row.(j-1) + 1)           (* insert *)
+          (* Note when j = i - limit, the latter [row] read makes a bogus read
+             on the value that was in the matrix at d.(i-2).(i - limit - 1).
+             Since by induction for all i,j, d.(i).(j) >= abs (i - j),
+             (row.(j-1) + 1) is greater or equal to [limit]. *)
       in
       let min =
         if (i > 1 && j > 1 &&
