@@ -85,8 +85,9 @@ jobs:
         run: tools/check-typo
         if: >-
           github.event_name == 'push'
-          && (startsWith(github.event.ref, 'refs/heads/4.')
-             || github.event.ref == 'refs/heads/trunk')
+          && (github.event.ref == 'refs/heads/trunk'
+              || startsWith(github.event.ref, 'refs/heads/4.')
+              || startsWith(github.event.ref, 'refs/heads/5.'))
           && always()
 
       - name: Check that labelled/unlabelled .mli files are in sync
