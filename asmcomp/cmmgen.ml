@@ -121,9 +121,14 @@ let min_mut x y =
   | Immutable,_ | _,Immutable -> Immutable
   | Mutable,Mutable -> Mutable
 
-let get_field env mut ptr n dbg =
+let get_field env imm_or_pointer mut ptr n dbg =
   let mut = min_mut mut (mut_from_env env ptr) in
-  get_field_gen mut ptr n dbg
+  let memory_chunk =
+    match imm_or_pointer with
+    | Immediate -> Word_int
+    | Pointer -> Word_val
+  in
+  get_field_gen ~memory_chunk mut ptr n dbg
 
 (* Translate structured constants to Cmm data items *)
 
@@ -333,6 +338,15 @@ let is_unboxed_number_cmm ~strict ~kind cmm =
   in
   aux cmm;
   !r
+
+let machtype_of_value_kind (value_kind : Lambda.value_kind) =
+  match value_kind with
+  | Pgenval
+  | Pfloatval
+  | Pboxedintval _ ->
+      Cmm.typ_val
+  | Pintval ->
+      Cmm.typ_int
 
 (* Translate an expression *)
 
@@ -703,12 +717,12 @@ and transl_catch env nfail ids body handler dbg =
   let body = transl env_body body in
   let new_env, rewrite, ids =
     List.fold_right
-      (fun (id, _kind, u) (env, rewrite, ids) ->
+      (fun (id, kind, u) (env, rewrite, ids) ->
          match !u with
          | No_unboxing | Boxed (_, true) | No_result ->
              env,
              (fun x -> x) :: rewrite,
-             (id, Cmm.typ_val) :: ids
+             (id, machtype_of_value_kind kind) :: ids
          | Boxed (bn, false) ->
              let unboxed_id = V.create_local (VP.name id) in
              add_unboxed_id (VP.var id) unboxed_id bn env,
@@ -794,8 +808,8 @@ and transl_prim_1 env p arg dbg =
     Popaque ->
       opaque (transl env arg) dbg
   (* Heap operations *)
-  | Pfield(n, _, mut) ->
-      get_field env mut (transl env arg) n dbg
+  | Pfield(n, imm_or_pointer, mut) ->
+      get_field env imm_or_pointer mut (transl env arg) n dbg
   | Pfloatfield n ->
       let ptr = transl env arg in
       box_float dbg (floatfield n ptr dbg)
@@ -1388,7 +1402,6 @@ and transl_switch dbg env arg index cases = match Array.length cases with
     let cases = Array.map (transl env) cases in
     transl_switch_clambda dbg arg index cases
 
-
 (* Translate a function definition *)
 
 let transl_function f =
@@ -1408,8 +1421,13 @@ let transl_function f =
     else
       [ Reduce_code_size ]
   in
+  let fun_args =
+    List.map (fun (id, value_kind) ->
+        (id, machtype_of_value_kind value_kind))
+      f.params
+  in
   Cfunction {fun_name = f.label;
-             fun_args = List.map (fun (id, _) -> (id, typ_val)) f.params;
+             fun_args;
              fun_body = cmm_body;
              fun_codegen_options;
              fun_poll = f.poll;

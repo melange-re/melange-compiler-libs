@@ -649,8 +649,8 @@ let field_address ptr n dbg =
   then ptr
   else Cop(Cadda, [ptr; Cconst_int(n * size_addr, dbg)], dbg)
 
-let get_field_gen mutability ptr n dbg =
-  Cop(Cload {memory_chunk=Word_val; mutability; is_atomic=false},
+let get_field_gen ?(memory_chunk=Word_val) mutability ptr n dbg =
+  Cop(Cload {memory_chunk; mutability; is_atomic=false},
       [field_address ptr n dbg], dbg)
 
 let get_field_codepointer mutability ptr n dbg =
