@@ -18,11 +18,9 @@ stdlib__Arg.cmx : arg.ml \
     stdlib__Arg.cmi
 stdlib__Arg.cmi : arg.mli
 stdlib__Array.cmo : array.ml \
-    stdlib__String.cmi \
     stdlib__Seq.cmi \
     stdlib__Array.cmi
 stdlib__Array.cmx : array.ml \
-    stdlib__String.cmx \
     stdlib__Seq.cmx \
     stdlib__Array.cmi
 stdlib__Array.cmi : array.mli \
@@ -784,12 +782,20 @@ std_exit.cmx : \
     std_exit.cmi
 std_exit.cmi :
 stdlib__String.cmo : string.ml \
+    stdlib__Uchar.cmi \
     stdlib.cmi \
+    stdlib__List.cmi \
+    stdlib__Int.cmi \
     stdlib__Bytes.cmi \
+    stdlib__Array.cmi \
     stdlib__String.cmi
 stdlib__String.cmx : string.ml \
+    stdlib__Uchar.cmx \
     stdlib.cmx \
+    stdlib__List.cmx \
+    stdlib__Int.cmx \
     stdlib__Bytes.cmx \
+    stdlib__Array.cmx \
     stdlib__String.cmi
 stdlib__String.cmi : string.mli \
     stdlib__Uchar.cmi \

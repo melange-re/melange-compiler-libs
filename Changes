@@ -138,6 +138,10 @@ Working version
 
 ### Standard library:
 
+- #13760: Add String.{edit_distance,spellcheck}
+  (Daniel Bünzli, review by wikku, Nicolás Ojeda Bär, Gabriel Scherer and
+   Florian Angeletti)
+
 - #13768: Add Either.get_left and Either.get_right
   (T. Kinsart, review by Nicolás Ojeda Bär and Florian Angeletti)
 

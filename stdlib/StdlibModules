@@ -52,12 +52,12 @@ STDLIB_MODULE_BASENAMES = \
   uchar \
   list \
   int \
+  array \
+  iarray \
   bytes \
   string \
   unit \
   marshal \
-  array \
-  iarray \
   float \
   int32 \
   int64 \
