@@ -19,6 +19,7 @@
 #include "caml/config.h"
 
 #if defined(_WIN32)
+#  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
 #  include <processthreadsapi.h>
 #  include "caml/osdeps.h"
@@ -83,7 +84,7 @@ SetThreadDescription(HANDLE hThread, PCWSTR lpThreadDescription);
    functions. */
 
 /* Max computation time before rescheduling, in milliseconds */
-#define Thread_timeout 50
+#define Thread_timeout_msec 50
 
 typedef int st_retcode;
 
@@ -713,13 +714,14 @@ static void * caml_thread_tick(void * arg)
     (struct caml_thread_tick_args*) arg;
   int domain_id = tick_thread_args->domain_id;
   atomic_uintnat* stop = tick_thread_args->stop;
+  st_timeout t = st_timeout_of_msec(Thread_timeout_msec);
   caml_stat_free(tick_thread_args);
 
   caml_init_domain_self(domain_id);
   caml_domain_state *domain = Caml_state;
 
   while(! atomic_load_acquire(stop)) {
-    st_msleep(Thread_timeout);
+    st_msleep(&t);
 
     atomic_store_release(&domain->requested_external_interrupt, 1);
     caml_interrupt_self();

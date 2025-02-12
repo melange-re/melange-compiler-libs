@@ -215,7 +215,7 @@ and rw_exp iflag sexp =
     rewrite_exp_list iflag (List.map snd sargs)
 
   | Pexp_tuple sexpl ->
-    rewrite_exp_list iflag sexpl
+    List.iter (fun (_, e) -> rewrite_exp iflag e) sexpl
 
   | Pexp_construct(_, None) -> ()
   | Pexp_construct(_, Some sarg) ->
@@ -238,7 +238,7 @@ and rw_exp iflag sexp =
     rewrite_exp iflag srecord;
     rewrite_exp iflag snewval
 
-  | Pexp_array(sargl) ->
+  | Pexp_array sargl ->
     rewrite_exp_list iflag sargl
 
   | Pexp_ifthenelse(scond, sifso, None) ->
@@ -505,6 +505,8 @@ let main () =
        "-instrument", Arg.Set instr_mode, "  (undocumented)";
        "-intf", Arg.String process_intf_file,
                 "<file>  Process <file> as a .mli file";
+       "-keywords", Arg.String (fun s -> Clflags.keyword_edition := Some s),
+       "<version+keywords> Specify keyword set.";
        "-m", Arg.String (fun s -> modes := s), "<flags>    (undocumented)";
        "-version", Arg.Unit print_version,
                    "     Print version and exit";

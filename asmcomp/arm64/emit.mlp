@@ -45,23 +45,11 @@ let label_prefix =
 let emit_label lbl =
   emit_string label_prefix; emit_int lbl
 
-(* Symbols *)
-
-let emit_symbol s =
-  if macosx then emit_string "_";
-  Emitaux.emit_symbol s
-
 (* Object types *)
 
-let emit_symbol_type emit_lbl_or_sym lbl_or_sym ty =
-  if not macosx then begin
-    `	.type	{emit_lbl_or_sym lbl_or_sym}, %{emit_string ty}\n`
-  end
-
-
-let emit_symbol_size sym =
-  if not macosx then begin
-    `	.size	{emit_symbol sym}, .-{emit_symbol sym}\n`
+let emit_label_type lbl ty =
+  if Config.asm_size_type_directives then begin
+    `	.type	{emit_label lbl}, {emit_string ty}\n`
   end
 
 (* Output a pseudo-register *)
@@ -1132,7 +1120,7 @@ let fundecl fundecl =
   emit_named_text_section fundecl.fun_name;
   `	.align	3\n`;
   `	.globl	{emit_symbol fundecl.fun_name}\n`;
-  emit_symbol_type emit_symbol fundecl.fun_name "function";
+  emit_type_directive fundecl.fun_name "%function";
   (* Dynamic stack checking *)
   let stack_threshold_size = Config.stack_threshold * 8 in (* bytes *)
   let max_frame_size = frame_size env + fundecl.fun_extra_stack_used in
@@ -1183,8 +1171,8 @@ let fundecl fundecl =
   assert (List.length env.bound_error_sites = num_check_bound);
 
   cfi_endproc();
-  emit_symbol_type emit_symbol fundecl.fun_name "function";
-  emit_symbol_size fundecl.fun_name;
+  emit_type_directive fundecl.fun_name "%function";
+  emit_size_directive fundecl.fun_name;
   emit_literals env
 
 (* Emission of data *)
@@ -1257,10 +1245,10 @@ let end_assembly () =
   `{emit_symbol lbl}:\n`;
   emit_frames
     { efa_code_label = (fun lbl ->
-                       emit_symbol_type emit_label lbl "function";
+                       emit_label_type lbl "%function";
                        `	.quad	{emit_label lbl}\n`);
       efa_data_label = (fun lbl ->
-                       emit_symbol_type emit_label lbl "object";
+                       emit_label_type lbl "%object";
                        `	.quad	{emit_label lbl}\n`);
       efa_8 = (fun n -> `	.byte	{emit_int n}\n`);
       efa_16 = (fun n -> `	.short	{emit_int n}\n`);
@@ -1271,11 +1259,6 @@ let end_assembly () =
                            `	.long	{emit_label lbl} - . + {emit_int32 ofs}\n`);
       efa_def_label = (fun lbl -> `{emit_label lbl}:\n`);
       efa_string = (fun s -> emit_string_directive "	.asciz	" s) };
-  emit_symbol_type emit_symbol lbl "object";
-  emit_symbol_size lbl;
-  begin match Config.system with
-  | "linux" ->
-      (* Mark stack as non-executable *)
-      `	.section	.note.GNU-stack,\"\",%progbits\n`
-  | _ -> ()
-  end
+  emit_type_directive lbl "%object";
+  emit_size_directive lbl;
+  emit_nonexecstack_note ()

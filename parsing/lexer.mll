@@ -419,7 +419,7 @@ let prepare_error loc = function
   | Invalid_encoding s ->
     Location.errorf ~loc "Invalid encoding of identifier %s." s
   | Invalid_char_in_ident u ->
-      Location.errorf ~loc "Invalid character U+%X in identifier"
+      Location.errorf ~loc "Invalid character U+%04X in identifier"
          (Uchar.to_int u)
   | Capitalized_raw_identifier lbl ->
       Location.errorf ~loc

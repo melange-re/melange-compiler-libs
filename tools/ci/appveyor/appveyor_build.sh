@@ -29,22 +29,22 @@ fi
 git config --global --add safe.directory '*'
 
 function run {
-    if [[ $1 = "--show" ]] ; then SHOW_CMD='true'; shift; else SHOW_CMD=''; fi
-    NAME=$1
-    shift
-    echo "-=-=- $NAME -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-"
-    if [[ -n $SHOW_CMD ]]; then (set -x; "$@"); else "$@"; fi
-    CODE=$?
-    if [[ $CODE -ne 0 ]] ; then
-        echo "-=-=- $NAME failed! -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-"
-        if [[ $BUILD_PID -ne 0 ]] ; then
-          kill -KILL $BUILD_PID 2>/dev/null
-          wait $BUILD_PID 2>/dev/null
-        fi
-        exit $CODE
-    else
-        echo "-=-=- End of $NAME -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-"
+  if [[ $1 = "--show" ]] ; then SHOW_CMD='true'; shift; else SHOW_CMD=''; fi
+  NAME=$1
+  shift
+  echo "-=-=- $NAME -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-"
+  if [[ -n $SHOW_CMD ]]; then (set -x; "$@"); else "$@"; fi
+  CODE=$?
+  if [[ $CODE -ne 0 ]] ; then
+    echo "-=-=- $NAME failed! -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-"
+    if [[ $BUILD_PID -ne 0 ]] ; then
+      kill -KILL $BUILD_PID 2>/dev/null
+      wait $BUILD_PID 2>/dev/null
     fi
+    exit $CODE
+  else
+    echo "-=-=- End of $NAME -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-"
+  fi
 }
 
 # Function: set_configuration
@@ -52,60 +52,47 @@ function run {
 # $1:the Windows port. Recognized values: mingw, msvc and msvc64
 # $2: the prefix to use to install
 function set_configuration {
-    case "$1" in
-        cygwin*)
-            dep='--disable-dependency-generation'
-            man=''
-        ;;
-        mingw32)
-            host='--host=i686-w64-mingw32'
-            dep='--disable-dependency-generation'
-            man=''
-        ;;
-        mingw64)
-            host='--host=x86_64-w64-mingw32'
-            dep='--disable-dependency-generation'
-            man='--disable-stdlib-manpages'
-        ;;
-        msvc32)
-            host='--host=i686-pc-windows'
-            dep='--disable-dependency-generation'
-            man=''
-        ;;
-        msvc64)
-            host='--host=x86_64-pc-windows'
-            # Explicitly test dependency generation on msvc64
-            dep='--enable-dependency-generation'
-            man=''
-        ;;
-    esac
+  mkdir -p "$CACHE_DIRECTORY"
 
-    mkdir -p "$CACHE_DIRECTORY"
+  local CACHE_KEY CACHE_FILE_PREFIX CACHE_FILE
+  CACHE_KEY=$({ cat configure; uname; } | sha1sum | cut -c 1-7)
+  CACHE_FILE_PREFIX="$CACHE_DIRECTORY/config.cache-$1"
+  CACHE_FILE="$CACHE_FILE_PREFIX-$CACHE_KEY"
 
-    local CACHE_KEY CACHE_FILE_PREFIX CACHE_FILE
-    CACHE_KEY=$({ cat configure; uname; } | sha1sum | cut -c 1-7)
-    CACHE_FILE_PREFIX="$CACHE_DIRECTORY/config.cache-$1"
-    CACHE_FILE="$CACHE_FILE_PREFIX-$CACHE_KEY"
+  args=('--cache-file' "$CACHE_FILE" '--prefix' "$2" '--enable-ocamltest')
 
-    # Remove old configure cache if the configure script or the OS
-    # have changed
-    if [[ ! -f "$CACHE_FILE" ]] ; then
-        rm -f -- "$CACHE_FILE_PREFIX"*
-    fi
+  case "$1" in
+    cygwin*)
+      args+=('--disable-dependency-generation');;
+    mingw32)
+      args+=('--host=i686-w64-mingw32' '--disable-dependency-generation');;
+    mingw64)
+      args+=('--host=x86_64-w64-mingw32' '--disable-dependency-generation' \
+             '--disable-stdlib-manpages');;
+    msvc32)
+      args+=('--host=i686-pc-windows' '--disable-dependency-generation');;
+    msvc64)
+      # Explicitly test dependency generation on msvc64
+      args+=('--host=x86_64-pc-windows' '--enable-dependency-generation');;
+  esac
 
+  # Remove old configure cache if the configure script or the OS
+  # have changed
+  if [[ ! -f "$CACHE_FILE" ]] ; then
+      rm -f -- "$CACHE_FILE_PREFIX"*
+  fi
+
+  echo './configure' "${args[@]@Q}"
+  if ! ./configure "${args[@]}"; then
     # Remove configure cache if the script has failed
-    if ! ./configure --cache-file="$CACHE_FILE" $dep $build $man $host \
-                     --prefix="$2" --enable-ocamltest ; then
-        rm -f -- "$CACHE_FILE"
-        local failed
-        ./configure --cache-file="$CACHE_FILE" $dep $build $man $host \
-                    --prefix="$2" --enable-ocamltest \
-            || failed=$?
-        if ((failed)) ; then cat config.log ; exit $failed ; fi
-    fi
+    rm -f -- "$CACHE_FILE"
+    local failed
+    ./configure "${args[@]}" || failed=$?
+    if ((failed)) ; then cat config.log ; exit $failed ; fi
+  fi
 
-#    FILE=$(pwd | cygpath -f - -m)/Makefile.config
-#    run "Content of $FILE" cat Makefile.config
+#  FILE=$(pwd | cygpath -f - -m)/Makefile.config
+#  run "Content of $FILE" cat Makefile.config
 }
 
 PARALLEL_URL='https://git.savannah.gnu.org/cgit/parallel.git/plain/src/parallel'

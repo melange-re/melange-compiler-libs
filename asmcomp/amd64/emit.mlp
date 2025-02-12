@@ -943,14 +943,12 @@ let fundecl fundecl =
     end;
   end;
   cfi_endproc ();
-  begin match system with
-  | S_gnu | S_linux ->
+  if Config.asm_size_type_directives then begin
       D.type_ (emit_symbol fundecl.fun_name) "@function";
       D.size (emit_symbol fundecl.fun_name)
         (ConstSub (
             ConstThis,
             ConstLabel (emit_symbol fundecl.fun_name)))
-  | _ -> ()
   end
 
 (* Emission of data *)
@@ -1080,12 +1078,13 @@ let end_assembly() =
       efa_string = (fun s -> D.bytes (s ^ "\000"))
     };
 
-  if system = S_linux || system = S_freebsd || system = S_netbsd || system = S_openbsd then begin
+  if Config.asm_size_type_directives then begin
     let frametable = emit_symbol (Compilenv.make_symbol (Some "frametable")) in
+    D.type_ frametable "@object";
     D.size frametable (ConstSub (ConstThis, ConstLabel frametable))
   end;
 
-  if system = S_linux || system = S_freebsd then
+  if Config.with_nonexecstack_note then
     (* Mark stack as non-executable, PR#4564 *)
     D.section [".note.GNU-stack"] (Some "") [ "%progbits" ];
 

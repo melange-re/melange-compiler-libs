@@ -164,9 +164,7 @@ CAMLdeprecated_typedef(addr, char *);
 /* Prefetching */
 
 #ifdef CAML_INTERNALS
-#if (__has_builtin(__builtin_prefetch) || defined(__GNUC__)) && \
-    (defined(__i386__) || defined(__x86_64__) || \
-     defined(_M_IX86) || defined(_M_AMD64))
+#if (__has_builtin(__builtin_prefetch) || defined(__GNUC__))
 #define caml_prefetch(p) __builtin_prefetch((p), 1, 3)
 /* 1 = intent to write; 3 = all cache levels */
 #elif defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_AMD64))
@@ -772,6 +770,7 @@ CAMLextern int caml_snwprintf(wchar_t * buf,
 #define CAML_GENSYM(name) CAML_GENSYM_2(name, __LINE__)
 
 #define MSEC_PER_SEC  UINT64_C(1000)
+#define USEC_PER_MSEC UINT64_C(1000)
 #define USEC_PER_SEC  UINT64_C(1000000)
 #define NSEC_PER_USEC UINT64_C(1000)
 #define NSEC_PER_MSEC UINT64_C(1000000)
@@ -802,6 +801,10 @@ Caml_inline struct timespec caml_timespec_of_nsec(uint64_t nsec)
  * so it is just exposed as a [void *].
  */
 typedef void * backtrace_slot;
+
+#ifndef IO_BUFFER_SIZE
+#define IO_BUFFER_SIZE 65536
+#endif
 
 #ifdef __cplusplus
 }

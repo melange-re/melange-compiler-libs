@@ -669,8 +669,8 @@ let rec expression : Typedtree.expression -> term_judg =
               list expression applied << Dereference;
               list expression delayed << Guard]
     | Texp_tuple exprs ->
-      list expression exprs << Guard
-    | Texp_array exprs ->
+      list expression (List.map snd exprs) << Guard
+    | Texp_array (_, exprs) ->
       let array_mode = match Typeopt.array_kind exp with
         | Lambda.Pfloatarray ->
             (* (flat) float arrays unbox their elements *)
@@ -1349,7 +1349,7 @@ and is_destructuring_pattern : type k . k general_pattern -> bool =
   fun pat -> match pat.pat_desc with
     | Tpat_any -> false
     | Tpat_var (_, _, _) -> false
-    | Tpat_alias (pat, _, _, _) -> is_destructuring_pattern pat
+    | Tpat_alias (pat, _, _, _, _) -> is_destructuring_pattern pat
     | Tpat_constant _ -> true
     | Tpat_tuple _ -> true
     | Tpat_construct _ -> true

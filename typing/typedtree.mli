@@ -81,12 +81,16 @@ and 'k pattern_desc =
   | Tpat_var : Ident.t * string loc * Uid.t -> value pattern_desc
         (** x *)
   | Tpat_alias :
-      value general_pattern * Ident.t * string loc * Uid.t -> value pattern_desc
+      value general_pattern * Ident.t * string loc * Uid.t * Types.type_expr ->
+      value pattern_desc
         (** P as a *)
   | Tpat_constant : constant -> value pattern_desc
         (** 1, 'a', "true", 1.0, 1l, 1L, 1n *)
-  | Tpat_tuple : value general_pattern list -> value pattern_desc
-        (** (P1, ..., Pn)
+  | Tpat_tuple :
+      (string option * value general_pattern) list -> value pattern_desc
+        (** (P1, ..., Pn)                  [(None,P1); ...; (None,Pn)])
+            (L1:P1, ... Ln:Pn)             [(Some L1,P1); ...; (Some Ln,Pn)])
+            Any mix, e.g. (L1:P1, P2)      [(Some L1,P1); ...; (None,P2)])
 
             Invariant: n >= 2
          *)
@@ -122,7 +126,7 @@ and 'k pattern_desc =
 
             Invariant: n > 0
          *)
-  | Tpat_array : value general_pattern list -> value pattern_desc
+  | Tpat_array : mutable_flag * value general_pattern list -> value pattern_desc
         (** [| P1; ...; Pn |] *)
   | Tpat_lazy : value general_pattern -> value pattern_desc
         (** lazy P *)
@@ -230,8 +234,15 @@ and expression_desc =
             | effect P2 k -> E2
             [Texp_try (E, [(P1, E1)], [(P2, E2)])]
           *)
-  | Texp_tuple of expression list
-        (** (E1, ..., EN) *)
+  | Texp_tuple of (string option * expression) list
+        (** [Texp_tuple(el)] represents
+            - [(E1, ..., En)]
+                 when [el] is [(None, E1);...;(None, En)],
+            - [(L1:E1, ..., Ln:En)]
+                 when [el] is [(Some L1, E1);...;(Some Ln, En)],
+            - Any mix, e.g. [(L1: E1, E2)]
+                 when [el] is [(Some L1, E1); (None, E2)]
+          *)
   | Texp_construct of
       Longident.t loc * Data_types.constructor_description * expression list
         (** C                []
@@ -258,7 +269,7 @@ and expression_desc =
   | Texp_field of expression * Longident.t loc * Data_types.label_description
   | Texp_setfield of
       expression * Longident.t loc * Data_types.label_description * expression
-  | Texp_array of expression list
+  | Texp_array of mutable_flag * expression list
   | Texp_ifthenelse of expression * expression * expression option
   | Texp_sequence of expression * expression
   | Texp_while of expression * expression
@@ -664,7 +675,7 @@ and core_type_desc =
     Ttyp_any
   | Ttyp_var of string
   | Ttyp_arrow of arg_label * core_type * core_type
-  | Ttyp_tuple of core_type list
+  | Ttyp_tuple of (string option * core_type) list
   | Ttyp_constr of Path.t * Longident.t loc * core_type list
   | Ttyp_object of object_field list * closed_flag
   | Ttyp_class of Path.t * Longident.t loc * core_type list

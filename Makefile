@@ -673,8 +673,9 @@ ifeq "$(BOOTSTRAPPING_FLEXDLL)" "true"
 # The recipe for runtime/ocamlruns$(EXE) also produces runtime/primitives
 boot/ocamlrun$(EXE): runtime/ocamlruns$(EXE)
 
-$(foreach runtime, ocamlrun ocamlrund ocamlruni, \
-  $(eval runtime/$(runtime)$(EXE): | $(BYTE_BINDIR)/flexlink$(EXE)))
+$(foreach runtime, ocamlrun$(EXE) ocamlrund$(EXE) ocamlruni$(EXE) \
+                   libcamlrun_shared$(EXT_DLL) libasmrun_shared$(EXT_DLL), \
+  $(eval runtime/$(runtime): | $(BYTE_BINDIR)/flexlink$(EXE)))
 
 tools/checkstack$(EXE): | $(BYTE_BINDIR)/flexlink$(EXE)
 else
@@ -1393,9 +1394,12 @@ runtime/sak.$(O): runtime/sak.c runtime/caml/misc.h runtime/caml/config.h
 C_LITERAL = $(shell $(SAK) $(ENCODE_C_LITERAL) '$(1)')
 
 runtime/build_config.h: $(ROOTDIR)/Makefile.config $(SAK)
-	$(V_GEN)echo '/* This file is generated from $(ROOTDIR)/Makefile.config */' > $@ && \
-	echo '#define OCAML_STDLIB_DIR $(call C_LITERAL,$(TARGET_LIBDIR))' >> $@ && \
-	echo '#define HOST "$(HOST)"' >> $@
+	$(V_GEN){ \
+	  echo '/* This file is generated from $(ROOTDIR)/Makefile.config */'; \
+	  printf '#define OCAML_STDLIB_DIR %s\n' \
+	         '$(call C_LITERAL,$(TARGET_LIBDIR))'; \
+	  echo '#define HOST "$(HOST)"'; \
+	} > $@
 
 ## Runtime libraries and programs
 

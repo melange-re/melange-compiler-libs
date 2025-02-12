@@ -35,7 +35,10 @@ let emit_printf fmt =
 
 let emit_int32 n = emit_printf "0x%lx" n
 
+let macosx = Config.system = "macosx"
+
 let emit_symbol s =
+  if macosx then output_char !output_channel '_';
   for i = 0 to String.length s - 1 do
     let c = s.[i] in
     match c with
@@ -110,6 +113,29 @@ let emit_float64_split_directive directive x =
 
 let emit_float32_directive directive x =
   emit_printf "\t%s\t0x%lx\n" directive x
+
+let emit_size_directive symbol =
+  if Config.asm_size_type_directives then begin
+    emit_string "\t.size\t";
+    emit_symbol symbol;
+    emit_string ", . - ";
+    emit_symbol symbol;
+    emit_char '\n'
+  end
+
+let emit_type_directive symbol ty =
+  if Config.asm_size_type_directives then begin
+    emit_string "\t.type\t";
+    emit_symbol symbol;
+    emit_string ", ";
+    emit_string ty;
+    emit_char '\n'
+  end
+
+let emit_nonexecstack_note () =
+  if Config.with_nonexecstack_note then begin
+    emit_string "\t.section .note.GNU-stack,\"\",%progbits\n"
+  end
 
 (* Record live pointers at call points *)
 

@@ -19,6 +19,7 @@
 /* PIC mode support based on contribution by Paul Stravers (see PR#4795) */
 
 #include "caml/m.h"
+#include "caml/asm.h"
 
 #if defined(SYS_macosx)
 
@@ -68,7 +69,7 @@ G(name):
 #define FUNCTION(name) \
         TEXT_SECTION(G(name)); \
         .globl G(name); \
-        .type G(name),@function; \
+        TYPE_DIRECTIVE(G(name),@function); \
         .align FUNCTION_ALIGN; \
 G(name):
 
@@ -79,18 +80,11 @@ G(name):
         .align EIGHT_ALIGN; \
 G(name):
 
-#if defined(SYS_linux) || defined(SYS_gnu)
 #define END_FUNCTION(name) \
-        .size G(name), . - G(name)
+        SIZE_DIRECTIVE(G(name))
 #define END_OBJECT(name) \
-        .type G(name), @object; \
-        .size G(name), . - G(name)
-#else
-#define END_FUNCTION(name)
-#define END_OBJECT(name)
-#endif
-
-#include "../runtime/caml/asm.h"
+        TYPE_DIRECTIVE(G(name),@object) \
+        SIZE_DIRECTIVE(G(name))
 
 #ifdef WITH_FRAME_POINTERS
 #define FRAME_POINTER_SIZE   8
@@ -1377,7 +1371,4 @@ G(caml_negf_mask):
 G(caml_absf_mask):
         .quad   0x7FFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF
 
-#if defined(SYS_linux) || defined(SYS_freebsd)
-    /* Mark stack as non-executable, PR#4564 */
-        .section .note.GNU-stack,"",%progbits
-#endif
+        NONEXECSTACK_NOTE

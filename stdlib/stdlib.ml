@@ -74,6 +74,7 @@ external compare : 'a -> 'a -> int = "%compare"
 let min x y = if x <= y then x else y
 let max x y = if x >= y then x else y
 
+external phys_equal : 'a -> 'a -> bool = "%eq"
 external ( == ) : 'a -> 'a -> bool = "%eq"
 external ( != ) : 'a -> 'a -> bool = "%noteq"
 
@@ -607,6 +608,7 @@ module Format         = Format
 module Fun            = Fun
 module Gc             = Gc
 module Hashtbl        = Hashtbl
+module Iarray         = Iarray
 module In_channel     = In_channel
 module Int            = Int
 module Int32          = Int32

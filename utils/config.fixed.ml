@@ -37,6 +37,7 @@ let native_c_compiler = c_compiler
 let native_c_libraries = ""
 let compression_c_libraries = ""
 let native_ldflags = ""
+let with_nonexecstack_note = false
 let native_pack_linker = boot_cannot_call "the linker"
 let default_rpath = ""
 let mksharedlibrpath = ""
@@ -65,6 +66,7 @@ let target_os_type =
   "The boot compiler should not be using Config.target_os_type"
 let asm = boot_cannot_call "the assembler"
 let asm_cfi_supported = false
+let asm_size_type_directives = false
 let with_frame_pointers = false
 let reserved_header_bits = 0
 let ext_exe = ".ex_The boot compiler should not be using Config.ext_exe"

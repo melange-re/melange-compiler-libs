@@ -314,6 +314,7 @@ static pool* pool_global_adopt(struct caml_heap_state* local, sizeclass sz)
     if( r ) {
       atomic_store_relaxed(&pool_freelist.global_avail_pools[sz], r->next);
       r->next = 0;
+      r->owner = local->owner;
       local->avail_pools[sz] = r;
       adopt_pool_stats_with_lock(local, r, sz);
 
@@ -338,6 +339,7 @@ static pool* pool_global_adopt(struct caml_heap_state* local, sizeclass sz)
     if( r ) {
       atomic_store_relaxed(&pool_freelist.global_full_pools[sz], r->next);
       r->next = local->full_pools[sz];
+      r->owner = local->owner;
       local->full_pools[sz] = r;
       adopt_pool_stats_with_lock(local, r, sz);
 
@@ -353,6 +355,8 @@ static pool* pool_global_adopt(struct caml_heap_state* local, sizeclass sz)
       pool_sweep(local, &local->full_pools[sz], sz, 0);
     r = local->avail_pools[sz];
   }
+
+  CAMLassert(r == NULL || r->owner == local->owner);
   return r;
 }
 
@@ -485,6 +489,8 @@ static intnat pool_sweep(struct caml_heap_state* local, pool** plist,
     mlsize_t wh = wsize_sizeclass[sz];
     int all_used = 1;
     struct heap_stats* s = &local->stats;
+
+    CAMLassert(a->owner == local->owner);
 
     /* conceptually, this is incremented by [wh] for every iteration
        below, however we can hoist these increments knowing that [p ==
@@ -1248,6 +1254,10 @@ void caml_compact_heap(caml_domain_state* domain_state,
               void (*final_fun)(value) = Custom_ops_val(Val_hp(p))->finalize;
               if (final_fun) final_fun(Val_hp(p));
             }
+
+            heap->stats.pool_live_blocks--;
+            heap->stats.pool_live_words -= Whsize_hd(hd);
+            heap->stats.pool_frag_words -= (wh - Whsize_hd(hd));
 
             /* In the DEBUG runtime, we should overwrite the fields of swept
                blocks. Note: this pool can't be allocated in to again and so

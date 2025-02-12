@@ -46,6 +46,7 @@ let native_c_compiler =
 let native_c_libraries = {@QS@|@cclibs@|@QS@}
 let compression_c_libraries = {@QS@|@zstd_libs@|@QS@}
 let native_ldflags = {@QS@|@native_ldflags@|@QS@}
+let with_nonexecstack_note = @with_nonexecstack_note@
 let native_pack_linker = {@QS@|@PACKLD@|@QS@}
 let default_rpath = {@QS@|@rpath@|@QS@}
 let mksharedlibrpath = {@QS@|@mksharedlibrpath@|@QS@}
@@ -78,6 +79,7 @@ let target_os_type = {@QS@|@target_os_type@|@QS@}
 
 let asm = {@QS@|@AS@|@QS@}
 let asm_cfi_supported = @asm_cfi_supported@
+let asm_size_type_directives = @asm_size_type_directives@
 let with_frame_pointers = @frame_pointers@
 let reserved_header_bits = @reserved_header_bits@
 
