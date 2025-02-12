@@ -92,7 +92,13 @@ Working version
   Jan Midtgaard)
 
 - #13736: Fix major GC pacing bug triggered by synchronous collections.
-  (Nick Barnes, review by ?)
+  (Nick Barnes, review by Damien Doligez and Tim McGilchrist)
+
+- #13582: Enable software prefetching support for ARM64, s390x, PPC64 and RiscV.
+  Used during GC marking and sweeping to speed up both operations by
+  prefetching data.
+  (Tim McGilchrist, review by Nick Barnes, Antonin Décimo,
+   Stephen Dolan and Miod Vallat)
 
 ### Code generation and optimizations:
 
