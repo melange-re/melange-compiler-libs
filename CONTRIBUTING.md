@@ -92,6 +92,22 @@ page](https://github.com/orgs/ocaml/teams/ocaml-dev/members), plus
 Anil as co-owner of the github/ocaml/ organization. Oddly enough,
 Github does not make the page publicly accessible. -->
 
+### OCaml Language Committee
+
+Sometimes, consensus or decisions might be elusive during the review process, or
+you might feel that some of the proposed design choices might warrant a wider
+discussion.
+
+For those situations, we are experimenting with a new OCaml Language Committee
+as a collegial instance for shepherding deliberations on the evolution of the
+OCaml language and its standard library in a timely fashion.
+
+If you think that your PR or issue might be a good fit for consideration by the
+OCaml Language Committee (see
+https://github.com/ocaml/RFCs/blob/master/Committee.md for a more detailed
+description), you just have to mention it to the current chair (@Octachron) in
+the PR or issue.
+
 ### Releases
 
 For more information about when and how new releases are published, see [the release introduction](release-info/introduction.md).
