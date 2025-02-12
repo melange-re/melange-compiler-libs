@@ -339,7 +339,8 @@ let edit_distance' ?(limit = Int.max_int) s (s0, len0) s1 =
           (* Note when j = i - limit, the latter [row] read makes a bogus read
              on the value that was in the matrix at d.(i-2).(i - limit - 1).
              Since by induction for all i,j, d.(i).(j) >= abs (i - j),
-             (row.(j-1) + 1) is greater or equal to [limit]. *)
+             (row.(j-1) + 1) is greater or equal to [limit] and thus does
+             not affect adversely the minimum computation. *)
       in
       let min =
         if (i > 1 && j > 1 &&
