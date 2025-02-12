@@ -137,6 +137,10 @@ Working version
 
 ### Standard library:
 
+- #13796: Add Uchar.utf_8_decode_length_of_byte and
+  Uchar.max_utf_8_decode_length.
+  (Daniel Bünzli, review by Nicolás Ojeda Bär and Florian Angeletti)
+
 - #12871: Add the Pqueue module to the stdlib. It implements priority queues.
   (Jean-Christophe Filliâtre, review by Daniel Bünzli, Léo Andrès and
   Gabriel Scherer)
