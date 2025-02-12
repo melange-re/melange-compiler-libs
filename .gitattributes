@@ -123,7 +123,7 @@ testsuite/tests/tool-toplevel/strings.ml                typo.non-ascii
 testsuite/tests/win-unicode/*.ml                        typo.non-ascii
 testsuite/tests/unicode/見.ml                           typo.non-ascii
 testsuite/tests/lib-format/unicode.ml                   typo.non-ascii
-testsuite/tests/lib-string/test_string.ml               type.non-ascii
+testsuite/tests/lib-string/test_string.ml               typo.non-ascii
 testsuite/tests/lexing/reject_bad_encoding.ml           typo.prune
 testsuite/tests/asmgen/immediates.cmm                   typo.very-long-line
 testsuite/tests/generated-parse-errors/errors.*         typo.very-long-line
