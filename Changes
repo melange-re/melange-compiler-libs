@@ -137,9 +137,6 @@ Working version
 
 - #13570, #13794: Format, add an out_width function to Format device for
    approximating unicode width.
-
-- #13570, Format: add an out_width function to Format device for approximating
-   unicode width.
   (Florian Angeletti, review by Nicolás Ojeda Bär, Daniel Bünzli,
    and Gabriel Scherer)
 
