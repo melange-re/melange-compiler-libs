@@ -143,6 +143,20 @@ val utf_decode_invalid : int -> utf_decode
     smaller or equal to [4] (this is not checked by the module). The
     resulting decode has {!rep} as the decoded Unicode character. *)
 
+val utf_8_decode_length_of_byte : char -> int
+(** [utf_8_decode_length_of_byte byte] is the number of bytes, from 1
+    to {!max_utf8_decode_length}, that a valid UTF-8 decode starting
+    with byte [byte] would consume or [0] if [byte] cannot start a
+    valid decode.
+
+    @since 5.4 *)
+
+val max_utf_8_decode_length : int
+(** [max_utf_8_decode_length] is [4], the maximal number of bytes
+    a valid or invalid UTF-8 decode can consume.
+
+    @since 5.4 *)
+
 val utf_8_byte_length : t -> int
 (** [utf_8_byte_length u] is the number of bytes needed to encode
     [u] in UTF-8. *)

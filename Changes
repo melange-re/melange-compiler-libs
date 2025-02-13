@@ -135,8 +135,15 @@ Working version
   `.size` and `.type` directives and the `.note.GNU-stack` section
   (Samuel Hym, review by Miod Vallat, Antonin Décimo and Gabriel Scherer)
 
-
 ### Standard library:
+
+- #13796: Add Uchar.utf_8_decode_length_of_byte and
+  Uchar.max_utf_8_decode_length.
+  (Daniel Bünzli, review by Nicolás Ojeda Bär and Florian Angeletti)
+
+- #12871: Add the Pqueue module to the stdlib. It implements priority queues.
+  (Jean-Christophe Filliâtre, review by Daniel Bünzli, Léo Andrès and
+  Gabriel Scherer)
 
 - #13760: Add String.{edit_distance,spellcheck}
   (Daniel Bünzli, review by wikku, Nicolás Ojeda Bär, Gabriel Scherer and
@@ -642,10 +649,6 @@ OCaml 5.3.0 (8 January 2025)
 - #13296: Add mem, memq, find_opt, find_index, find_map and find_mapi
   to Dynarray.
   (Jake H, review by Gabriel Scherer and Florian Angeletti)
-
-- #12871: Add the Pqueue module to the stdlib. It implements priority queues.
-  (Jean-Christophe Filliâtre, review by Daniel Bünzli, Léo Andrès and
-  Gabriel Scherer)
 
 ### Other libraries:
 

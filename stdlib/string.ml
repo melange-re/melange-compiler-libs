@@ -283,19 +283,11 @@ let get_int64_be s i = B.get_int64_be (bos s) i
 
 (* Spellchecking *)
 
-let uchar_utf_8_byte_decode_length = function
-  | '\x00' .. '\x7F' -> 1
-  | '\x80' .. '\xC1' -> 0
-  | '\xC2' .. '\xDF' -> 2
-  | '\xE0' .. '\xEF' -> 3
-  | '\xF0' .. '\xF4' -> 4
-  | _ -> 0
-
 let utf_8_uchar_length s =
   let slen = length s in
   let i = ref 0 and ulen = ref 0 in
   while (!i < slen) do
-    let dec_len = uchar_utf_8_byte_decode_length (unsafe_get s !i) in
+    let dec_len = Uchar.utf_8_decode_length_of_byte (unsafe_get s !i) in
     i := (!i + if dec_len = 0 then 1 (* count one Uchar.rep *) else dec_len);
     incr ulen;
   done;
