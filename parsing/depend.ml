@@ -255,7 +255,8 @@ let rec add_expr bv exp =
   | Pexp_object { pcstr_self = pat; pcstr_fields = fieldl } ->
       let bv = add_pattern bv pat in List.iter (add_class_field bv) fieldl
   | Pexp_newtype (_, e) -> add_expr bv e
-  | Pexp_pack m -> add_module_expr bv m
+  | Pexp_pack (m, opty) ->
+      add_module_expr bv m; add_opt add_package_type bv opty
   | Pexp_open (o, e) ->
       let bv = open_declaration bv o in
       add_expr bv e

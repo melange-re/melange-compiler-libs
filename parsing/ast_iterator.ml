@@ -451,7 +451,9 @@ module E = struct
         sub.expr sub e; iter_opt (sub.typ sub) t
     | Pexp_object cls -> sub.class_structure sub cls
     | Pexp_newtype (_s, e) -> sub.expr sub e
-    | Pexp_pack me -> sub.module_expr sub me
+    | Pexp_pack (me, optyp) ->
+        sub.module_expr sub me;
+        Option.iter (sub.package_type sub) optyp
     | Pexp_open (o, e) ->
         sub.open_declaration sub o; sub.expr sub e
     | Pexp_letop {let_; ands; body} ->

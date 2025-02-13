@@ -542,7 +542,7 @@ let expression sub exp =
     | Texp_object (cl, _) ->
         Pexp_object (sub.class_structure sub cl)
     | Texp_pack (mexpr) ->
-        Pexp_pack (sub.module_expr sub mexpr)
+        Pexp_pack (sub.module_expr sub mexpr, None)
     | Texp_letop {let_; ands; body; _} ->
         let pat, and_pats =
           extract_letop_patterns (List.length ands) body.c_lhs

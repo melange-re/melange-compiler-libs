@@ -386,9 +386,10 @@ and expression i ppf x =
   | Pexp_newtype (s, e) ->
       line i ppf "Pexp_newtype \"%s\"\n" s.txt;
       expression i ppf e
-  | Pexp_pack me ->
+  | Pexp_pack (me, optyp) ->
       line i ppf "Pexp_pack\n";
-      module_expr i ppf me
+      module_expr i ppf me;
+      option i package_type ppf optyp
   | Pexp_open (o, e) ->
       line i ppf "Pexp_open %a\n" fmt_override_flag o.popen_override;
       module_expr i ppf o.popen_expr;

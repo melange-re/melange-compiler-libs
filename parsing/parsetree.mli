@@ -428,11 +428,8 @@ and expression_desc =
            values). *)
   | Pexp_object of class_structure  (** [object ... end] *)
   | Pexp_newtype of string loc * expression  (** [fun (type t) -> E] *)
-  | Pexp_pack of module_expr
-      (** [(module ME)].
-
-           [(module ME : S)] is represented as
-           [Pexp_constraint(Pexp_pack ME, Ptyp_package S)] *)
+  | Pexp_pack of module_expr * package_type option
+      (** [(module ME)] or [(module ME : S)]. *)
   | Pexp_open of open_declaration * expression
       (** - [M.(E)]
             - [let open M in E]

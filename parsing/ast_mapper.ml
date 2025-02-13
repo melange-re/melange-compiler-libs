@@ -509,7 +509,9 @@ module E = struct
     | Pexp_object cls -> object_ ~loc ~attrs (sub.class_structure sub cls)
     | Pexp_newtype (s, e) ->
         newtype ~loc ~attrs (map_loc sub s) (sub.expr sub e)
-    | Pexp_pack me -> pack ~loc ~attrs (sub.module_expr sub me)
+    | Pexp_pack (me, optyp) ->
+        let optyp = Option.map (sub.package_type sub) optyp in
+        pack ~loc ~attrs (sub.module_expr sub me) optyp
     | Pexp_open (o, e) ->
         open_ ~loc ~attrs (sub.open_declaration sub o) (sub.expr sub e)
     | Pexp_letop {let_; ands; body} ->
