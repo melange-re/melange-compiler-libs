@@ -191,7 +191,7 @@ Working version
 
 - #13727: Reimplement Sys.getenv_opt not to use exceptions internally, meaning
   that the current backtrace is preserved when Sys.getenv_opt returns None.
-  (David Allsopp, review by Nicolás Ojeda Bär, Josh Berdine and Gabriel Scherer
+  (David Allsopp, review by Nicolás Ojeda Bär, Josh Berdine and Gabriel Scherer)
 
 - #13737: Avoid closure allocations in Weak.Make.add when resizing the
   table
