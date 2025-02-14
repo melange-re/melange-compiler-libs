@@ -462,3 +462,25 @@ type 'a x = [ `X of 'e ] constraint 'a = 'e list
 type p = private [> a x ]
 and a = int list
 |}]
+
+(* PR #13605 *)
+
+type 'a t3 = < m : 'b. (int -> 'b) as 'a >
+
+[%%expect{|
+Line 1, characters 23-40:
+1 | type 'a t3 = < m : 'b. (int -> 'b) as 'a >
+                           ^^^^^^^^^^^^^^^^^
+Error: This type "'a" should be an instance of type "int -> 'b"
+       The universal variable "'b" would escape its scope
+|}]
+
+type 'a t4 = < m : 'b. int -> ('b as 'a) > * 'a
+
+[%%expect{|
+Line 1, characters 31-39:
+1 | type 'a t4 = < m : 'b. int -> ('b as 'a) > * 'a
+                                   ^^^^^^^^
+Error: This type "'a" should be an instance of type "'b"
+       The universal variable "'b" would escape its scope
+|}]

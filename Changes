@@ -372,6 +372,9 @@ Working version
   backtraces to be truncated when calling no alloc C code.
   (Tim McGilchrist, report by Nick Barnes, review by Nick Barnes)
 
+* #13605: Fix ungenerated constraints when they where impossible due to polyvars
+  issues (Samuel Vivien, review by Florian Angeletti and Jacques Garrigue)
+
 - #13677, #13679: domain.c: remove backup_thread_running to simplify
   concurrent state updates to the backup thread status.
   (Gabriel Scherer, review by Jan Midtgaard and Miod Vallat,
