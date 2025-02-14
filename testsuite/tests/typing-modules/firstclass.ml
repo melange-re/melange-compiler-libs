@@ -146,3 +146,23 @@ Error: Type "(module Nested_coercion)" is not a subtype of
        The two first-class module types differ by a coercion of
        the primitive "%identity" to a value, in module "M".
 |}]
+
+(* Test if it is typed correctly *)
+module type T = sig type t end
+
+let valid_fcm = (module Int : T)
+
+[%%expect{|
+module type T = sig type t end
+val valid_fcm : (module T) = <module>
+|}]
+
+(* Test location in the error message *)
+let x = (module struct end : T with type t2 = int);;
+
+[%%expect{|
+Line 1, characters 29-49:
+1 | let x = (module struct end : T with type t2 = int);;
+                                 ^^^^^^^^^^^^^^^^^^^^
+Error: The signature constrained by "with" has no component named "t2"
+|}]
