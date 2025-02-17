@@ -135,6 +135,9 @@ Working version
   `.size` and `.type` directives and the `.note.GNU-stack` section
   (Samuel Hym, review by Miod Vallat, Antonin Décimo and Gabriel Scherer)
 
+- #13807: Allow unaligned memory accesses on ARM64. (Matthew Else, review by
+  Xavier Leroy)
+
 ### Standard library:
 
 - #13796: Add Uchar.utf_8_decode_length_of_byte and
