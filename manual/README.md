@@ -80,8 +80,7 @@ chapters (or sometimes sections) are mapped to a distinct `.etex` file:
     - Dependency generator (ocamldep): `ocamldep.etex`
     - The documentation generator (ocamldoc): `ocamldoc.etex`
     - The debugger (ocamldebug): `debugger.etex`
-    - Profiling (ocamlprof): `profil.etex`
-    - Profiling (perf): `profile-perf.etex`
+    - Profiling (ocamlprof, perf): `profil.etex`
     - Interfacing C with OCaml: `intf-c.etex`
     - Optimisation with Flambda: `flambda.etex`
     - Fuzzing with afl-fuzz: `afl-fuzz.etex`

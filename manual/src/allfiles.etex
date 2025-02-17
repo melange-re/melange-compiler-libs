@@ -70,7 +70,6 @@ and as a
 \input{ocamldoc.tex}
 \input{debugger.tex}
 \input{profil.tex}
-\input{profile-perf.tex}
 \input{intf-c.tex}
 \input{flambda.tex}
 \input{afl-fuzz.tex}
