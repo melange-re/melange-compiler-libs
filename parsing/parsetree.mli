@@ -179,10 +179,16 @@ and core_type_desc =
   | Ptyp_open of Longident.t loc * core_type (** [M.(T)] *)
   | Ptyp_extension of extension  (** [[%id]]. *)
 
-and package_type = Longident.t loc * (Longident.t loc * core_type) list
+and package_type =
+    {
+     ppt_path: Longident.t loc;
+     ppt_cstrs: (Longident.t loc * core_type) list;
+     ppt_loc: Location.t;
+     ppt_attrs: attributes;
+    }
 (** As {!package_type} typed values:
-         - [(S, [])] represents [(module S)],
-         - [(S, [(t1, T1) ; ... ; (tn, Tn)])]
+         - [{ppt_path: S; ppt_cstrs: []}] represents [(module S)],
+         - [{ppt_path: S; ppt_cstrs: [(t1, T1) ; ... ; (tn, Tn)]}]
           represents [(module S with type t1 = T1 and ... and tn = Tn)].
        *)
 

@@ -183,15 +183,21 @@ let rec core_type i ppf x =
   | Ptyp_poly (sl, ct) ->
       line i ppf "Ptyp_poly%a\n" typevars sl;
       core_type i ppf ct;
-  | Ptyp_package (s, l) ->
-      line i ppf "Ptyp_package %a\n" fmt_longident_loc s;
-      list i package_with ppf l;
+  | Ptyp_package ptyp ->
+      line i ppf "Ptyp_package\n";
+      package_type i ppf ptyp;
   | Ptyp_open (mod_ident, t) ->
       line i ppf "Ptyp_open \"%a\"\n" fmt_longident_loc mod_ident;
       core_type i ppf t
   | Ptyp_extension (s, arg) ->
       line i ppf "Ptyp_extension \"%s\"\n" s.txt;
       payload i ppf arg
+
+and package_type i ppf ptyp =
+  let i = i + 1 in
+  line i ppf "package_type %a\n" fmt_longident_loc ptyp.ppt_path;
+  list i package_with ppf ptyp.ppt_cstrs;
+  attributes i ppf ptyp.ppt_attrs
 
 and package_with i ppf (s, t) =
   line i ppf "with type %a\n" fmt_longident_loc s;

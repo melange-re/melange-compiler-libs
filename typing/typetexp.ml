@@ -666,9 +666,8 @@ and transl_type_aux env ~row_context ~aliased ~policy styp =
       let ty' = Btype.newgenty (Tpoly(ty, ty_list)) in
       unify_var env (newvar()) ty';
       ctyp (Ttyp_poly (vars, cty)) ty'
-  | Ptyp_package (p, l) ->
-      let path, mty, ptys =
-        transl_package env ~policy ~row_context styp.ptyp_loc p l in
+  | Ptyp_package ptyp ->
+      let path, mty, ptys = transl_package env ~policy ~row_context ptyp in
       let ty = newty (Tpackage (path,
                        List.map (fun (s, cty) -> (s.txt, cty.ctyp_type)) ptys))
       in
@@ -676,7 +675,7 @@ and transl_type_aux env ~row_context ~aliased ~policy styp =
             pack_path = path;
             pack_type = mty;
             pack_fields = ptys;
-            pack_txt = p;
+            pack_txt = ptyp.ppt_path;
            }) ty
   | Ptyp_open (mod_ident, t) ->
       let path, new_env =
@@ -753,9 +752,10 @@ and transl_fields env ~policy ~row_context o fields =
       newty (Tfield (s, field_public, ty', ty))) ty_init fields in
   ty, object_fields
 
-and transl_package env ~policy ~row_context loc p l =
-  let l = sort_constraints_no_duplicates loc env l in
-  let mty = Ast_helper.Mty.mk ~loc (Pmty_ident p) in
+and transl_package env ~policy ~row_context ptyp =
+  let loc = ptyp.ppt_loc in
+  let l = sort_constraints_no_duplicates loc env ptyp.ppt_cstrs in
+  let mty = Ast_helper.Mty.mk ~loc (Pmty_ident ptyp.ppt_path) in
   let mty = TyVarEnv.with_local_scope (fun () -> !transl_modtype env mty) in
   let ptys =
     List.map (fun (s, pty) -> s, transl_type env ~policy ~row_context pty) l
@@ -765,7 +765,7 @@ and transl_package env ~policy ~row_context loc p l =
       !check_package_with_type_constraints loc env mty.mty_type ptys
     else mty.mty_type
   in
-  let path = !transl_modtype_longident loc env p.txt in
+  let path = !transl_modtype_longident loc env ptyp.ppt_path.txt in
   path, mty, ptys
 
 (* Make the rows "fixed" in this type, to make universal check easier *)

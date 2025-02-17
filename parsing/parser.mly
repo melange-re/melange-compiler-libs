@@ -3876,8 +3876,8 @@ atomic_type:
 
 %inline package_type: module_type
       { let (lid, cstrs, attrs) = package_type_of_module_type $1 in
-        let descr = Ptyp_package (lid, cstrs) in
-        mktyp ~loc:$sloc ~attrs descr }
+        let ptyp = Typ.package_type ~loc:(make_loc $sloc) ~attrs lid cstrs in
+        mktyp ~loc:$sloc (Ptyp_package ptyp) }
 ;
 %inline row_field_list:
   separated_nonempty_llist(BAR, row_field)

@@ -120,9 +120,9 @@ let rec add_type bv ty =
     add_type bv t
   | Ptyp_extension e -> handle_extension e
 
-and add_package_type bv (lid, l) =
-  add bv lid;
-  List.iter (add_type bv) (List.map (fun (_, e) -> e) l)
+and add_package_type bv ptyp =
+  add bv ptyp.ppt_path;
+  List.iter (fun (_, ty) -> add_type bv ty) ptyp.ppt_cstrs
 
 let add_opt add_fn bv = function
     None -> ()

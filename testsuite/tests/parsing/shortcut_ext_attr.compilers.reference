@@ -528,8 +528,9 @@
               core_type (shortcut_ext_attr.ml[61,1304+2]..[61,1304+22])
                 attribute "foo"
                   []
-                Ptyp_package "M" (shortcut_ext_attr.ml[61,1304+20]..[61,1304+21])
-                []
+                Ptyp_package
+                  package_type "M" (shortcut_ext_attr.ml[61,1304+20]..[61,1304+21])
+                  []
     ]
   structure_item (shortcut_ext_attr.ml[64,1353+0]..[67,1409+22])
     Pstr_module

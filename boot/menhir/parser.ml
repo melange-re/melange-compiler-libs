@@ -7135,8 +7135,8 @@ module Tables = struct
             
 # 3878 "parsing/parser.mly"
       ( let (lid, cstrs, attrs) = package_type_of_module_type _1 in
-        let descr = Ptyp_package (lid, cstrs) in
-        mktyp ~loc:_sloc ~attrs descr )
+        let ptyp = Typ.package_type ~loc:(make_loc _sloc) ~attrs lid cstrs in
+        mktyp ~loc:_sloc (Ptyp_package ptyp) )
 # 7141 "parsing/parser.ml"
             
           in
@@ -39023,8 +39023,8 @@ module Tables = struct
               
 # 3878 "parsing/parser.mly"
       ( let (lid, cstrs, attrs) = package_type_of_module_type _1 in
-        let descr = Ptyp_package (lid, cstrs) in
-        mktyp ~loc:_sloc ~attrs descr )
+        let ptyp = Typ.package_type ~loc:(make_loc _sloc) ~attrs lid cstrs in
+        mktyp ~loc:_sloc (Ptyp_package ptyp) )
 # 39029 "parsing/parser.ml"
               
             in
@@ -39162,8 +39162,8 @@ module Tables = struct
               
 # 3878 "parsing/parser.mly"
       ( let (lid, cstrs, attrs) = package_type_of_module_type _1 in
-        let descr = Ptyp_package (lid, cstrs) in
-        mktyp ~loc:_sloc ~attrs descr )
+        let ptyp = Typ.package_type ~loc:(make_loc _sloc) ~attrs lid cstrs in
+        mktyp ~loc:_sloc (Ptyp_package ptyp) )
 # 39168 "parsing/parser.ml"
               
             in
@@ -39346,8 +39346,8 @@ module Tables = struct
               
 # 3878 "parsing/parser.mly"
       ( let (lid, cstrs, attrs) = package_type_of_module_type _1 in
-        let descr = Ptyp_package (lid, cstrs) in
-        mktyp ~loc:_sloc ~attrs descr )
+        let ptyp = Typ.package_type ~loc:(make_loc _sloc) ~attrs lid cstrs in
+        mktyp ~loc:_sloc (Ptyp_package ptyp) )
 # 39352 "parsing/parser.ml"
               
             in
@@ -39360,8 +39360,8 @@ module Tables = struct
               
 # 3878 "parsing/parser.mly"
       ( let (lid, cstrs, attrs) = package_type_of_module_type _1 in
-        let descr = Ptyp_package (lid, cstrs) in
-        mktyp ~loc:_sloc ~attrs descr )
+        let ptyp = Typ.package_type ~loc:(make_loc _sloc) ~attrs lid cstrs in
+        mktyp ~loc:_sloc (Ptyp_package ptyp) )
 # 39366 "parsing/parser.ml"
               
             in
@@ -39512,8 +39512,8 @@ module Tables = struct
               
 # 3878 "parsing/parser.mly"
       ( let (lid, cstrs, attrs) = package_type_of_module_type _1 in
-        let descr = Ptyp_package (lid, cstrs) in
-        mktyp ~loc:_sloc ~attrs descr )
+        let ptyp = Typ.package_type ~loc:(make_loc _sloc) ~attrs lid cstrs in
+        mktyp ~loc:_sloc (Ptyp_package ptyp) )
 # 39518 "parsing/parser.ml"
               
             in
@@ -39526,8 +39526,8 @@ module Tables = struct
               
 # 3878 "parsing/parser.mly"
       ( let (lid, cstrs, attrs) = package_type_of_module_type _1 in
-        let descr = Ptyp_package (lid, cstrs) in
-        mktyp ~loc:_sloc ~attrs descr )
+        let ptyp = Typ.package_type ~loc:(make_loc _sloc) ~attrs lid cstrs in
+        mktyp ~loc:_sloc (Ptyp_package ptyp) )
 # 39532 "parsing/parser.ml"
               
             in
@@ -39695,8 +39695,8 @@ module Tables = struct
               
 # 3878 "parsing/parser.mly"
       ( let (lid, cstrs, attrs) = package_type_of_module_type _1 in
-        let descr = Ptyp_package (lid, cstrs) in
-        mktyp ~loc:_sloc ~attrs descr )
+        let ptyp = Typ.package_type ~loc:(make_loc _sloc) ~attrs lid cstrs in
+        mktyp ~loc:_sloc (Ptyp_package ptyp) )
 # 39701 "parsing/parser.ml"
               
             in
@@ -39834,8 +39834,8 @@ module Tables = struct
               
 # 3878 "parsing/parser.mly"
       ( let (lid, cstrs, attrs) = package_type_of_module_type _1 in
-        let descr = Ptyp_package (lid, cstrs) in
-        mktyp ~loc:_sloc ~attrs descr )
+        let ptyp = Typ.package_type ~loc:(make_loc _sloc) ~attrs lid cstrs in
+        mktyp ~loc:_sloc (Ptyp_package ptyp) )
 # 39840 "parsing/parser.ml"
               
             in
@@ -55088,8 +55088,8 @@ module Tables = struct
               
 # 3878 "parsing/parser.mly"
       ( let (lid, cstrs, attrs) = package_type_of_module_type _1 in
-        let descr = Ptyp_package (lid, cstrs) in
-        mktyp ~loc:_sloc ~attrs descr )
+        let ptyp = Typ.package_type ~loc:(make_loc _sloc) ~attrs lid cstrs in
+        mktyp ~loc:_sloc (Ptyp_package ptyp) )
 # 55094 "parsing/parser.ml"
               
             in
@@ -57951,8 +57951,8 @@ module Tables = struct
                 
 # 3878 "parsing/parser.mly"
       ( let (lid, cstrs, attrs) = package_type_of_module_type _1 in
-        let descr = Ptyp_package (lid, cstrs) in
-        mktyp ~loc:_sloc ~attrs descr )
+        let ptyp = Typ.package_type ~loc:(make_loc _sloc) ~attrs lid cstrs in
+        mktyp ~loc:_sloc (Ptyp_package ptyp) )
 # 57957 "parsing/parser.ml"
                 
               in
@@ -58458,8 +58458,8 @@ module Tables = struct
             
 # 3878 "parsing/parser.mly"
       ( let (lid, cstrs, attrs) = package_type_of_module_type _1 in
-        let descr = Ptyp_package (lid, cstrs) in
-        mktyp ~loc:_sloc ~attrs descr )
+        let ptyp = Typ.package_type ~loc:(make_loc _sloc) ~attrs lid cstrs in
+        mktyp ~loc:_sloc (Ptyp_package ptyp) )
 # 58464 "parsing/parser.ml"
             
           in
@@ -59645,8 +59645,8 @@ module Tables = struct
                 
 # 3878 "parsing/parser.mly"
       ( let (lid, cstrs, attrs) = package_type_of_module_type _1 in
-        let descr = Ptyp_package (lid, cstrs) in
-        mktyp ~loc:_sloc ~attrs descr )
+        let ptyp = Typ.package_type ~loc:(make_loc _sloc) ~attrs lid cstrs in
+        mktyp ~loc:_sloc (Ptyp_package ptyp) )
 # 59651 "parsing/parser.ml"
                 
               in

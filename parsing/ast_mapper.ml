@@ -66,6 +66,7 @@ type mapper = {
                            -> module_type_declaration;
   open_declaration: mapper -> open_declaration -> open_declaration;
   open_description: mapper -> open_description -> open_description;
+  package_type: mapper -> package_type -> package_type;
   pat: mapper -> pattern -> pattern;
   payload: mapper -> payload -> payload;
   signature: mapper -> signature -> signature;
@@ -162,9 +163,8 @@ module T = struct
         variant ~loc ~attrs (List.map (row_field sub) rl) b ll
     | Ptyp_poly (sl, t) -> poly ~loc ~attrs
                              (List.map (map_loc sub) sl) (sub.typ sub t)
-    | Ptyp_package (lid, l) ->
-        package ~loc ~attrs (map_loc sub lid)
-          (List.map (map_tuple (map_loc sub) (sub.typ sub)) l)
+    | Ptyp_package ptyp ->
+        package ~loc ~attrs (sub.package_type sub ptyp)
     | Ptyp_open (mod_ident, t) ->
         open_ ~loc ~attrs (map_loc sub mod_ident) (sub.typ sub t)
     | Ptyp_extension x -> extension ~loc ~attrs (sub.extension sub x)
@@ -238,6 +238,12 @@ module T = struct
     Te.constructor ~loc ~attrs
       (map_loc sub pext_name)
       (map_extension_constructor_kind sub pext_kind)
+
+  let map_package_type sub {ppt_loc; ppt_path; ppt_cstrs; ppt_attrs} =
+    let loc = sub.location sub ppt_loc in
+    let attrs = sub.attributes sub ppt_attrs in
+    Typ.package_type ~loc ~attrs (map_loc sub ppt_path)
+      (List.map (map_tuple (map_loc sub) (sub.typ sub)) ppt_cstrs)
 
 end
 
@@ -660,6 +666,7 @@ let default_mapper =
     type_extension = T.map_type_extension;
     type_exception = T.map_type_exception;
     extension_constructor = T.map_extension_constructor;
+    package_type = T.map_package_type;
     value_description =
       (fun this {pval_name; pval_type; pval_prim; pval_loc;
                  pval_attributes} ->
