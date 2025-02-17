@@ -357,11 +357,13 @@ AS_CASE([$target],
     S=asm
     SO=dll
     outputexe=-Fe
+    outputobj=-Fo
     syslib='$(1).lib'],
   [ccomptype=cc
   S=s
   SO=so
   outputexe='-o '
+  outputobj='-o '
   syslib='-l$(1)'])
 
 AC_CHECK_PROG([csc],[csc],[csc])
@@ -918,21 +920,18 @@ AS_CASE([$target],
 
 AS_CASE([$ocaml_cc_vendor],
   [xlc-*],
-    [outputobj='-o '
-    warn_error_flag=''
+    [warn_error_flag=''
     cc_warnings='-qflag=i:i'], # all warnings enabled
   [sunc-*],
-    [outputobj='-o '; cc_warnings=""],
+    [cc_warnings=""],
   [msvc-*],
-    [outputobj='-Fo'
-    AS_CASE([$ocaml_cc_vendor],
+    [AS_CASE([$ocaml_cc_vendor],
       [msvc-*-clang-*],
         [cc_warnings='-W4 -Wno-unused-parameter -Wno-sign-compare -Wundef'
          warn_error_flag='-WX'],
       [cc_warnings='-W2'
        warn_error_flag='-WX -options:strict'])],
-  [outputobj='-o '
-  warn_error_flag='-Werror'
+  [warn_error_flag='-Werror'
   cc_warnings="-Wall -Wint-conversion -Wstrict-prototypes \
 -Wold-style-definition -Wundef"])
 
