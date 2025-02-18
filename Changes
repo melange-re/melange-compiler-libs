@@ -306,6 +306,10 @@ Working version
   references another recursive module type.
   (Stefan Muenzel, review by Florian Angeletti and Gabriel Scherer)
 
+- #13809: Distinguish `(module M : S)` and `(module M) : (module S)` and
+  change locations of error messages when `S` is ill-typed in `(module S)`
+  (Samuel Vivien, review by Florian Angeletti and Gabriel Scherer)
+
 ### Internal/compiler-libs changes:
 
 - #13314: Comment the code of Translclass
