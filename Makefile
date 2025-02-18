@@ -1385,11 +1385,8 @@ runtime/caml/jumptbl.h : runtime/caml/instruct.h
 	sed -n -e '/^  /s/ \([A-Z]\)/ \&\&lbl_\1/gp' \
 	       -e '/^}/q' > $@
 
-$(SAK): runtime/sak.$(O)
-	$(V_MKEXE)$(call SAK_LINK,$@,$^)
-
-runtime/sak.$(O): runtime/sak.c runtime/caml/misc.h runtime/caml/config.h
-	$(V_CC)$(SAK_CC) $(SAK_CFLAGS) $(OUTPUTOBJ)$@ -c $<
+$(SAK): runtime/sak.c runtime/caml/misc.h runtime/caml/config.h
+	$(V_MKEXE)$(call SAK_BUILD,$@,$<)
 
 C_LITERAL = $(shell $(SAK) $(ENCODE_C_LITERAL) '$(1)')
 

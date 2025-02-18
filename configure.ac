@@ -122,9 +122,8 @@ AC_SUBST([CMXS_MAGIC_NUMBER], [CMXS__MAGIC_NUMBER])
 AC_SUBST([CMT_MAGIC_NUMBER], [CMT__MAGIC_NUMBER])
 AC_SUBST([LINEAR_MAGIC_NUMBER], [LINEAR__MAGIC_NUMBER])
 AC_SUBST([CC])
-AC_SUBST([SAK_CC])
-AC_SUBST([SAK_CFLAGS])
-AC_SUBST([SAK_LINK])
+AC_SUBST([SAK_BUILD])
+AC_SUBST([SAK])
 AC_SUBST([encode_C_literal])
 AC_SUBST([DIFF_FLAGS])
 AC_SUBST([CSC])
@@ -133,8 +132,6 @@ AC_SUBST([CSCFLAGS])
 # TOOLPREF variable. It would be better if flexdll where updated to require
 # WINDRES instead.
 AC_SUBST([ac_tool_prefix])
-AC_SUBST([exeext])
-AC_SUBST([OBJEXT])
 AC_SUBST([libext])
 AC_SUBST([S])
 AC_SUBST([runtime_asm_objects])
@@ -359,11 +356,13 @@ AS_CASE([$target],
     S=asm
     SO=dll
     outputexe=-Fe
+    outputobj=-Fo
     syslib='$(1).lib'],
   [ccomptype=cc
   S=s
   SO=so
   outputexe='-o '
+  outputobj='-o '
   syslib='-l$(1)'])
 
 AC_CHECK_PROG([csc],[csc],[csc])
@@ -814,11 +813,6 @@ AS_CASE([$target],
   ocamltest_libunix="Some true"
   ocamlyacc_wstr_module=""])
 
-AS_CASE([$target],
-  [*-*-cygwin|*-w64-mingw32*|*-pc-windows],
-    [exeext=".exe"],
-  [exeext=''])
-
 otherlibraries="dynlink runtime_events"
 otherlibs="runtime_events"
 optional_libraries="$optional_libraries otherlibs/dynlink/dynlink"
@@ -893,27 +887,6 @@ dnl nefarious single quotes which may appear in any of the strings.
   ocaml_bindir='$(echo "$ocaml_bindir" | sed -e "s/'/'\"'\"'/g")'
   TARGET_BINDIR='$(echo "$TARGET_BINDIR" | sed -e "s/'/'\"'\"'/g")'])
 
-# How to build sak
-
-AS_IF(
-  [test x"$build" = x"$target" -o x"$target_runnable" = xtrue],
-    [SAK_CC='$(CC)'
-    SAK_CFLAGS='$(OC_CFLAGS) $(CFLAGS) $(OC_CPPFLAGS) $(CPPFLAGS)'
-    SAK_LINK='$(MKEXE_VIA_CC)'],
-    [AC_MSG_NOTICE([detecting the C toolchain for build])
-    AX_PROG_CC_FOR_BUILD
-    SAK_CC="$CC_FOR_BUILD"
-    SAK_CFLAGS="$CFLAGS_FOR_BUILD $CPPFLAGS_FOR_BUILD"
-    # Note that *-pc-windows is not supported for _build_ so we can use '-o'
-    SAK_LINK='$(SAK_CC) $(SAK_CFLAGS) -o $(1) $(2)'])
-
-# sak command to use to encode C literal strings
-
-AS_CASE([$target],
-  [*-w64-mingw32*|*-pc-windows],
-    [encode_C_literal="encode-C-utf16-literal"],
-  [encode_C_literal="encode-C-utf8-literal"])
-
 # Checks for programs
 
 ## Check for the C compiler: done by libtool
@@ -926,21 +899,18 @@ AS_CASE([$target],
 
 AS_CASE([$ocaml_cc_vendor],
   [xlc-*],
-    [outputobj='-o '
-    warn_error_flag=''
+    [warn_error_flag=''
     cc_warnings='-qflag=i:i'], # all warnings enabled
   [sunc-*],
-    [outputobj='-o '; cc_warnings=""],
+    [cc_warnings=""],
   [msvc-*],
-    [outputobj='-Fo'
-    AS_CASE([$ocaml_cc_vendor],
+    [AS_CASE([$ocaml_cc_vendor],
       [msvc-*-clang-*],
         [cc_warnings='-W4 -Wno-unused-parameter -Wno-sign-compare -Wundef'
          warn_error_flag='-WX'],
       [cc_warnings='-W2'
        warn_error_flag='-WX -options:strict'])],
-  [outputobj='-o '
-  warn_error_flag='-Werror'
+  [warn_error_flag='-Werror'
   cc_warnings="-Wall -Wint-conversion -Wstrict-prototypes \
 -Wold-style-definition -Wundef"])
 
@@ -1199,6 +1169,31 @@ AS_CASE([$ocaml_cc_vendor,$target],
     AC_DEFINE([HAS_ARCH_CODE32], [1])],
   [gcc-*,powerpc-*-linux*],
     [oc_ldflags="-mbss-plt"])
+
+# How to build sak
+
+AS_IF([test x"$build" = x"$target" -o x"$target_runnable" = xtrue],
+  [AS_CASE([$target],
+    [*-pc-windows],
+      [SAK_BUILD=m4_normalize([
+        "\$(CC) \$(OC_CFLAGS) \$(CFLAGS) \$(OC_CPPFLAGS) \$(CPPFLAGS) \$(2)
+        /link /out:\$(1) $oc_exe_ldflags \$(OC_LDFLAGS) \$(LDFLAGS)"])],
+    [SAK_BUILD=m4_normalize([
+      '$(MKEXE_VIA_CC) $(OC_CFLAGS) $(CFLAGS) $(OC_CPPFLAGS) $(CPPFLAGS)'])])
+  SAK="\$(ROOTDIR)/runtime/sak${EXEEXT}"],
+  [AC_MSG_NOTICE([detecting the C toolchain for build])
+  AX_PROG_CC_FOR_BUILD
+  # Note that *-pc-windows is not supported for _build_ so we can use '-o'
+  SAK_BUILD=m4_normalize(["$CC_FOR_BUILD $LDFLAGS_FOR_BUILD -o \$(1) \$(2)
+    $CFLAGS_FOR_BUILD $CPPFLAGS_FOR_BUILD"])
+  SAK="\$(ROOTDIR)/runtime/sak${BUILD_EXEEXT}"])
+
+# sak command to use to encode C literal strings
+
+AS_CASE([$target],
+  [*-w64-mingw32*|*-pc-windows],
+    [encode_C_literal="encode-C-utf16-literal"],
+  [encode_C_literal="encode-C-utf8-literal"])
 
 # Winpthreads emulation library for the MSVC port
 AC_MSG_CHECKING([for winpthreads sources])

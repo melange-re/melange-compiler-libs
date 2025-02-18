@@ -114,9 +114,9 @@ jobs:
           printf %s "$STR_UTF16" > utf16.ref
           printf %s "$STR_UTF8" > utf8.ref
           set -x
-          runtime/sak.exe encode-C-utf16-literal "$TESTDIR" > utf16
+          runtime/sak encode-C-utf16-literal "$TESTDIR" > utf16
           git diff --no-index utf16.ref utf16
-          runtime/sak.exe encode-C-utf8-literal "$TESTDIR" > utf8
+          runtime/sak encode-C-utf8-literal "$TESTDIR" > utf8
           git diff --no-index utf8.ref utf8
 
   run-windows:
