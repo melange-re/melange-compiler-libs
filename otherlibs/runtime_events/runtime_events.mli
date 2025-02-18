@@ -521,6 +521,11 @@ module Timestamp : sig
     (** Type for the int64 timestamp to allow for future changes. *)
 
     val to_int64 : t -> int64
+
+    val get_current : unit -> t
+    (** Access the current timestamp. The timestamp is incremented by one
+        every nanosecond, but the starting point is unspecified.
+        @since 5.4 *)
 end
 
 module Type : sig
