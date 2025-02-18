@@ -406,6 +406,10 @@ Working version
 - #13763: Track type of variables bound by as-patterns
   (Leo White, review by Gabriel Scherer, port by Vincent Laviron)
 
+- #13778, #13811: do not warn for unused type declarations when the type is used
+  in a first-class module type (`module S with type t = int)`.
+  (Florian Angeletti, report by Nicolás Ojeda Bär, review by Gabriel Scherer)
+
 - #13790: Fix bytecode-only build of Cygwin when flexlink is being bootstrapped
   with the compiler.
   (David Allsopp, review by Antonin Décimo and Miod Vallat)
