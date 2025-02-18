@@ -22,7 +22,7 @@ Line 1, characters 8-19:
 1 | let _ = Fun.pratect
             ^^^^^^^^^^^
 Error: Unbound value "Fun.pratect"
-Hint: Did you mean "protect"?
+Hint: Did you mean "Fun.protect"?
 |}];;
 
 type 'a t = 'a aray
@@ -40,7 +40,7 @@ Line 1, characters 11-22:
 1 | module _ = Stdlib.Aray
                ^^^^^^^^^^^
 Error: Unbound module "Stdlib.Aray"
-Hint: Did you mean "Array"?
+Hint: Did you mean "Stdlib.Array"?
 |}];;
 
 let x = Same 42
@@ -213,3 +213,18 @@ Line 3, characters 18-35:
 Error: Unbound instance variable "foobaz"
 Hint: Did you mean "foobar"?
 |}];;
+
+let closely = ()
+module M = struct
+  let close = ()
+end
+let () = M.closer
+[%%expect {|
+val closely : unit = ()
+module M : sig val close : unit end
+Line 5, characters 9-17:
+5 | let () = M.closer
+             ^^^^^^^^
+Error: Unbound value "M.closer"
+Hint: Did you mean "M.close"?
+|}]

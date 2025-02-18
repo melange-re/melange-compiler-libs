@@ -3536,6 +3536,11 @@ open Format_doc
 let print_path: Path.t printer ref = ref (fun _ _ -> assert false)
 let pp_path ppf l = !print_path ppf l
 
+module Style = Misc.Style
+
+let quoted_longident = Style.as_inline_code Pprintast.Doc.longident
+let quoted_constr = Style.as_inline_code Pprintast.Doc.constr
+
 let spellcheck ppf extract env lid =
   let choices ~path name = Misc.spellcheck (extract path env) name in
   match lid with
@@ -3543,7 +3548,8 @@ let spellcheck ppf extract env lid =
     | Longident.Lident s ->
        Misc.did_you_mean ppf (fun () -> choices ~path:None s)
     | Longident.Ldot (r, s) ->
-       Misc.did_you_mean ppf (fun () -> choices ~path:(Some r) s)
+       let pp ppf s = quoted_longident ppf (Longident.Ldot(r,s)) in
+       Misc.did_you_mean ~pp ppf (fun () -> choices ~path:(Some r) s)
 
 let spellcheck_name ppf extract env name =
   Misc.did_you_mean ppf
@@ -3571,11 +3577,6 @@ let extract_instance_variables env =
        match descr.val_kind with
        | Val_ivar _ -> name :: acc
        | _ -> acc) None env []
-
-module Style = Misc.Style
-
-let quoted_longident = Style.as_inline_code Pprintast.Doc.longident
-let quoted_constr = Style.as_inline_code Pprintast.Doc.constr
 
 let report_lookup_error_doc _loc env ppf = function
   | Unbound_value(lid, hint) -> begin
