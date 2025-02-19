@@ -2204,6 +2204,7 @@ typing/types.cmi : \
     typing/ident.cmi \
     parsing/asttypes.cmi
 typing/typetexp.cmo : \
+    utils/warnings.cmi \
     typing/types.cmi \
     typing/typedtree.cmi \
     typing/printtyp.cmi \
@@ -2227,6 +2228,7 @@ typing/typetexp.cmo : \
     parsing/ast_helper.cmi \
     typing/typetexp.cmi
 typing/typetexp.cmx : \
+    utils/warnings.cmx \
     typing/types.cmx \
     typing/typedtree.cmx \
     typing/printtyp.cmx \
