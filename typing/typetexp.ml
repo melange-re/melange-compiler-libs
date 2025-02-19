@@ -369,6 +369,10 @@ let newvar ?name () =
 let valid_tyvar_name name =
   name <> "" && name.[0] <> '_'
 
+let check_tyvar_name env loc name =
+  if not (valid_tyvar_name name) then
+    raise (Error (loc, env, Invalid_variable_name ("'" ^ name)))
+
 let transl_type_param env styp =
   let loc = styp.ptyp_loc in
   match styp.ptyp_desc with
@@ -378,8 +382,7 @@ let transl_type_param env styp =
           ctyp_loc = loc; ctyp_attributes = styp.ptyp_attributes; }
   | Ptyp_var name ->
       let ty =
-          if not (valid_tyvar_name name) then
-            raise (Error (loc, Env.empty, Invalid_variable_name ("'" ^ name)));
+          check_tyvar_name Env.empty loc name;
           if TyVarEnv.is_in_scope name then
             raise Already_bound;
           let v = new_global_var ~name () in
@@ -420,8 +423,7 @@ and transl_type_aux env ~row_context ~aliased ~policy styp =
       ctyp Ttyp_any ty
   | Ptyp_var name ->
     let ty =
-      if not (valid_tyvar_name name) then
-        raise (Error (styp.ptyp_loc, env, Invalid_variable_name ("'" ^ name)));
+      check_tyvar_name env styp.ptyp_loc name;
       begin try
         TyVarEnv.lookup_local ~row_context:row_context name
       with Not_found ->
@@ -518,6 +520,7 @@ and transl_type_aux env ~row_context ~aliased ~policy styp =
   | Ptyp_alias(st, alias) ->
       let cty =
         try
+          check_tyvar_name env alias.loc alias.txt;
           let t = TyVarEnv.lookup_local ~row_context alias.txt in
           let ty = transl_type env ~policy ~aliased:true ~row_context st in
           begin try unify_var env t ty.ctyp_type with Unify err ->
