@@ -239,3 +239,14 @@ Line 1, characters 21-60:
 Error: In the constrained signature, type "t" is defined to be "[< `A ]".
        Package "with" constraints may only be used on abstract types.
 |}]
+
+(** Issue 13778: constraining a type should count as using it *)
+module X: sig
+  type t
+end = struct
+  module type S = sig type s end
+  type t = (module S with type s = int)
+end
+[%%expect {|
+module X : sig type t end
+|}]

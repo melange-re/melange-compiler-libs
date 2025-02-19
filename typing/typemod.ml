@@ -570,6 +570,7 @@ let merge_constraint initial_env loc sg lid constr =
         | Some ty ->
           raise (Error(loc, outer_sig_env, With_package_manifest (lid.txt, ty)))
         end;
+        Env.mark_type_used sig_decl.type_uid;
         let tdecl =
           Typedecl.transl_package_constraint ~loc outer_sig_env cty.ctyp_type
         in
