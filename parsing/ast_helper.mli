@@ -84,8 +84,7 @@ module Typ :
     val variant: ?loc:loc -> ?attrs:attrs -> row_field list -> closed_flag
                  -> label list option -> core_type
     val poly: ?loc:loc -> ?attrs:attrs -> str list -> core_type -> core_type
-    val package: ?loc:loc -> ?attrs:attrs -> lid -> (lid * core_type) list
-                 -> core_type
+    val package: ?loc:loc -> ?attrs:attrs -> package_type -> core_type
     val open_ : ?loc:loc -> ?attrs:attrs -> lid -> core_type -> core_type
     val extension: ?loc:loc -> ?attrs:attrs -> extension -> core_type
 
@@ -99,6 +98,10 @@ module Typ :
         appears in [newtypes].
         @since 4.05
      *)
+
+    val package_type: ?loc:loc -> ?attrs:attrs -> lid -> (lid * core_type) list
+      -> package_type
+    (** @since 5.4 *)
   end
 
 (** Patterns *)
@@ -189,7 +192,8 @@ module Exp:
               -> expression
     val object_: ?loc:loc -> ?attrs:attrs -> class_structure -> expression
     val newtype: ?loc:loc -> ?attrs:attrs -> str -> expression -> expression
-    val pack: ?loc:loc -> ?attrs:attrs -> module_expr -> expression
+    val pack: ?loc:loc -> ?attrs:attrs -> module_expr -> package_type option
+               -> expression
     val open_: ?loc:loc -> ?attrs:attrs -> open_declaration -> expression
                -> expression
     val letop: ?loc:loc -> ?attrs:attrs -> binding_op

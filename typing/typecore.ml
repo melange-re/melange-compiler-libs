@@ -3258,6 +3258,10 @@ let rec type_approx env sexp =
   | Pexp_coerce (e, sty1, sty2) ->
       let ty = type_approx env e in
       type_approx_constraint env ty (Pcoerce (sty1, sty2)) ~loc
+  | Pexp_pack (_, Some ptyp) ->
+      let ty = newvar () in
+      let sty = Ast_helper.Typ.package ~loc ptyp in
+      type_approx_constraint env ty (Pconstraint sty) ~loc
   | _ -> newvar ()
 
 and type_approx_function env params c body ~loc =
@@ -3586,7 +3590,7 @@ let name_cases default lst =
 let rec is_inferred sexp =
   match sexp.pexp_desc with
   | Pexp_ident _ | Pexp_apply _ | Pexp_field _ | Pexp_constraint _
-  | Pexp_coerce _ | Pexp_send _ | Pexp_new _ -> true
+  | Pexp_coerce _ | Pexp_send _ | Pexp_new _ | Pexp_pack (_, Some _) -> true
   | Pexp_sequence (_, e) | Pexp_open (_, e) -> is_inferred e
   | Pexp_ifthenelse (_, e1, Some e2) -> is_inferred e1 && is_inferred e2
   | _ -> false
@@ -4671,30 +4675,50 @@ and type_expect_
             exp_extra =
             (Texp_newtype name.txt, loc, sexp.pexp_attributes) :: body.exp_extra
           }
-  | Pexp_pack m ->
-      let (p, fl) =
-        match get_desc (Ctype.expand_head env (instance ty_expected)) with
-          Tpackage (p, fl) ->
-            if !Clflags.principal &&
-              get_level (Ctype.expand_head env
-                           (protect_expansion env ty_expected))
-                < Btype.generic_level
-            then
-              Location.prerr_warning loc
-                (not_principal "this module packing");
-            (p, fl)
-        | Tvar _ ->
-            raise (Error (loc, env, Cannot_infer_signature))
-        | _ ->
-            raise (Error (loc, env, Not_a_packed_module ty_expected))
-      in
-      let (modl, fl') = !type_package env m p fl in
-      rue {
-        exp_desc = Texp_pack modl;
-        exp_loc = loc; exp_extra = [];
-        exp_type = newty (Tpackage (p, fl'));
-        exp_attributes = sexp.pexp_attributes;
-        exp_env = env }
+  | Pexp_pack (m, optyp) ->
+      begin match optyp with
+      | Some ptyp ->
+        let t = Ast_helper.Typ.package ~loc:ptyp.ppt_loc ptyp in
+        let pty, exp_extra = type_constraint env t in
+        begin match get_desc (instance pty) with
+          | Tpackage (p, fl) ->
+            let (modl, fl') = !type_package env m p fl in
+            let ty = newty (Tpackage (p, fl')) in
+            unify_exp_types m.pmod_loc env (instance pty) ty;
+            rue {
+              exp_desc = Texp_pack modl;
+              exp_loc = loc; exp_extra = [exp_extra, loc, []];
+              exp_type = instance pty;
+              exp_attributes = sexp.pexp_attributes;
+              exp_env = env }
+          | _ ->
+            fatal_error "[type_expect] Package not translated to a package"
+        end
+      | None ->
+        let (p, fl) =
+          match get_desc (Ctype.expand_head env (instance ty_expected)) with
+            Tpackage (p, fl) ->
+              if !Clflags.principal &&
+                get_level (Ctype.expand_head env
+                            (protect_expansion env ty_expected))
+                  < Btype.generic_level
+              then
+                Location.prerr_warning loc
+                  (not_principal "this module packing");
+              (p, fl)
+          | Tvar _ ->
+              raise (Error (loc, env, Cannot_infer_signature))
+          | _ ->
+              raise (Error (loc, env, Not_a_packed_module ty_expected))
+          in
+          let (modl, fl') = !type_package env m p fl in
+          rue {
+            exp_desc = Texp_pack modl;
+            exp_loc = loc; exp_extra = [];
+            exp_type = newty (Tpackage (p, fl'));
+            exp_attributes = sexp.pexp_attributes;
+            exp_env = env }
+      end
   | Pexp_open (od, e) ->
       let tv = newvar () in
       let (od, _, newenv) = !type_open_decl env od in

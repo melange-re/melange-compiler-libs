@@ -56,6 +56,7 @@ type iterator = {
   module_type_declaration: iterator -> module_type_declaration -> unit;
   open_declaration: iterator -> open_declaration -> unit;
   open_description: iterator -> open_description -> unit;
+  package_type: iterator -> package_type -> unit;
   pat: iterator -> pattern -> unit;
   payload: iterator -> payload -> unit;
   signature: iterator -> signature -> unit;
@@ -132,9 +133,8 @@ module T = struct
     | Ptyp_variant (rl, _b, _ll) ->
         List.iter (row_field sub) rl
     | Ptyp_poly (_, t) -> sub.typ sub t
-    | Ptyp_package (lid, l) ->
-        iter_loc sub lid;
-        List.iter (iter_tuple (iter_loc sub) (sub.typ sub)) l
+    | Ptyp_package ptyp ->
+        sub.package_type sub ptyp
     | Ptyp_open (mod_ident, t) ->
         iter_loc sub mod_ident;
         sub.typ sub t
@@ -204,6 +204,12 @@ module T = struct
     iter_extension_constructor_kind sub pext_kind;
     sub.location sub pext_loc;
     sub.attributes sub pext_attributes
+
+  let iter_package_type sub {ppt_path; ppt_cstrs; ppt_loc; ppt_attrs} =
+    sub.location sub ppt_loc;
+    iter_loc sub ppt_path;
+    List.iter (iter_tuple (iter_loc sub) (sub.typ sub)) ppt_cstrs;
+    sub.attributes sub ppt_attrs
 
 end
 
@@ -445,7 +451,9 @@ module E = struct
         sub.expr sub e; iter_opt (sub.typ sub) t
     | Pexp_object cls -> sub.class_structure sub cls
     | Pexp_newtype (_s, e) -> sub.expr sub e
-    | Pexp_pack me -> sub.module_expr sub me
+    | Pexp_pack (me, optyp) ->
+        sub.module_expr sub me;
+        Option.iter (sub.package_type sub) optyp
     | Pexp_open (o, e) ->
         sub.open_declaration sub o; sub.expr sub e
     | Pexp_letop {let_; ands; body} ->
@@ -592,6 +600,7 @@ let default_iterator =
     type_extension = T.iter_type_extension;
     type_exception = T.iter_type_exception;
     extension_constructor = T.iter_extension_constructor;
+    package_type = T.iter_package_type;
     value_description =
       (fun this {pval_name; pval_type; pval_prim = _; pval_loc;
                  pval_attributes} ->

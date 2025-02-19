@@ -542,7 +542,7 @@ let expression sub exp =
     | Texp_object (cl, _) ->
         Pexp_object (sub.class_structure sub cl)
     | Texp_pack (mexpr) ->
-        Pexp_pack (sub.module_expr sub mexpr)
+        Pexp_pack (sub.module_expr sub mexpr, None)
     | Texp_letop {let_; ands; body; _} ->
         let pat, and_pats =
           extract_letop_patterns (List.length ands) body.c_lhs
@@ -572,9 +572,10 @@ let binding_op sub bop pat =
   {pbop_op; pbop_pat; pbop_exp; pbop_loc}
 
 let package_type sub pack =
-  (map_loc sub pack.pack_txt,
-    List.map (fun (s, ct) ->
-        (s, sub.typ sub ct)) pack.pack_fields)
+  { ppt_path = map_loc sub pack.pack_txt;
+    ppt_cstrs = List.map (fun (s, ct) -> (s, sub.typ sub ct)) pack.pack_fields;
+    ppt_attrs = [];
+    ppt_loc = sub.location sub pack.pack_txt.loc }
 
 let module_type_declaration sub mtd =
   let loc = sub.location sub mtd.mtd_loc in

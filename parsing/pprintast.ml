@@ -522,16 +522,16 @@ and core_type1 ctxt f x =
     | (Ptyp_arrow _ | Ptyp_alias _ | Ptyp_poly _) ->
        paren true (core_type ctxt) f x
 
-and package_type ctxt f (lid, cstrs) =
+and package_type ctxt f ptyp =
   let aux f (s, ct) =
     pp f "type %a@ =@ %a" (with_loc type_longident) s (core_type ctxt) ct
   in
-  match cstrs with
-  | [] -> with_loc type_longident f lid
+  match ptyp.ppt_cstrs with
+  | [] -> with_loc type_longident f ptyp.ppt_path
   | _ ->
     pp f "%a@ with@ %a"
-      (with_loc type_longident) lid
-      (list aux  ~sep:"@ and@ ")  cstrs
+      (with_loc type_longident) ptyp.ppt_path
+      (list aux ~sep:"@ and@ ") ptyp.ppt_cstrs
 
 (********************pattern********************)
 (* be cautious when use [pattern], [pattern1] is preferred *)
@@ -1009,8 +1009,10 @@ and simple_expr ctxt f x =
     (* |`Normal -> longident_loc f li *)
     (* | `Prefix _ | `Infix _ -> pp f "( %a )" longident_loc li) *)
     | Pexp_constant c -> constant f c;
-    | Pexp_pack me ->
-        pp f "(module@;%a)" (module_expr ctxt) me
+    | Pexp_pack (me, opty) ->
+        pp f "(module@;%a" (module_expr ctxt) me;
+        Option.iter (pp f " :@ %a" (package_type ctxt)) opty;
+        pp f ")"
     | Pexp_tuple l ->
         pp f "@[<hov2>(%a)@]" (list (tuple_expr_component ctxt) ~sep:",@;") l
     | Pexp_constraint (e, ct) ->
