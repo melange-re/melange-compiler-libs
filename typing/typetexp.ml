@@ -518,6 +518,9 @@ and transl_type_aux env ~row_context ~aliased ~policy styp =
   | Ptyp_alias(st, alias) ->
       let cty =
         try
+          if not (valid_tyvar_name alias.txt) then
+            raise (Error (alias.loc, env,
+              Invalid_variable_name ("'" ^ alias.txt)));
           let t = TyVarEnv.lookup_local ~row_context alias.txt in
           let ty = transl_type env ~policy ~aliased:true ~row_context st in
           begin try unify_var env t ty.ctyp_type with Unify err ->

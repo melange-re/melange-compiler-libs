@@ -32,6 +32,14 @@ Line 1, characters 6-9:
 Error: The type variable name "'_a" is not allowed in programs
 |}]
 
+type underscored_bis = (int -> int as '_a)
+[%%expect{|
+Line 1, characters 38-41:
+1 | type underscored_bis = (int -> int as '_a)
+                                          ^^^
+Error: The type variable name "'_a" is not allowed in programs
+|}]
+
 (* The next two hit the unification error case at the end of
    Typetexp.globalize_used_variables. *)
 let f (x: int as 'a) (y: float as 'a) = (x,y)
