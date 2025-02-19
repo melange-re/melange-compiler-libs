@@ -57,7 +57,7 @@ module TyVarEnv : sig
 
   val is_in_scope : string -> bool
 
-  val add : string -> type_expr -> unit
+  val add : check:bool -> Location.t -> string -> type_expr -> unit
   (* add a global type variable to the environment *)
 
   val with_local_scope : (unit -> 'a) -> 'a
@@ -104,7 +104,7 @@ module TyVarEnv : sig
     row_context:type_expr option ref list -> string -> type_expr
     (* look up a local type variable; throws Not_found if it isn't in scope *)
 
-  val remember_used : string -> type_expr -> Location.t -> unit
+  val remember_used : check:bool -> string -> type_expr -> Location.t -> unit
     (* remember that a given name is bound to a given type *)
 
   val globalize_used_variables : policy -> Env.t -> unit -> unit
@@ -127,13 +127,13 @@ end = struct
   (* These are the "global" type variables: they were in scope before
      we started processing the current type.
   *)
-  let type_variables = ref (TyVarMap.empty : type_expr TyVarMap.t)
+  let type_variables = ref (TyVarMap.empty : (type_expr * bool ref) TyVarMap.t)
 
   (* These are variables that have been used in the currently-being-checked
      type.
   *)
   let used_variables =
-    ref (TyVarMap.empty : (type_expr * Location.t) TyVarMap.t)
+    ref (TyVarMap.empty : (type_expr * Location.t * bool ref) TyVarMap.t)
 
   (* These are variables we expect to become univars (they were introduced with
      e.g. ['a .]), but we need to make sure they don't unify first.  Why not
@@ -165,9 +165,16 @@ end = struct
   let is_in_scope name =
     TyVarMap.mem name !type_variables
 
-  let add name v =
+  let add ~check loc name v =
     assert (not_generic v);
-    type_variables := TyVarMap.add name v !type_variables
+    let unused = ref check in
+    if check then
+      !Env.add_delayed_check_forward begin fun () ->
+          let warn = Warnings.Unused_type_declaration ("'" ^ name) in
+          if !unused && Warnings.is_active warn
+          then Location.prerr_warning loc warn
+        end;
+    type_variables := TyVarMap.add name (v, unused) !type_variables
 
   let narrow () =
     (increase_global_level (), !type_variables)
@@ -184,7 +191,9 @@ end = struct
 
   (* throws Not_found if the variable is not in scope *)
   let lookup_global_type_variable name =
-    TyVarMap.find name !type_variables
+    let (v, unused) = TyVarMap.find name !type_variables in
+    unused := false;
+    v
 
   let get_in_scope_names () =
     let add_name name _ l =
@@ -267,14 +276,16 @@ end = struct
       associate row_context p;
       p.univar
     with Not_found ->
-      instance (fst (TyVarMap.find name !used_variables))
+      let (v, _, unused) = TyVarMap.find name !used_variables in
+      unused := false;
+      instance v
       (* This call to instance might be redundant; all variables
          inserted into [used_variables] are non-generic, but some
          might get generalized. *)
 
-  let remember_used name v loc =
+  let remember_used ~check name v loc =
     assert (not_generic v);
-    used_variables := TyVarMap.add name (v, loc) !used_variables
+    used_variables := TyVarMap.add name (v, loc, ref check) !used_variables
 
 
   type flavor = Unification | Universal
@@ -309,7 +320,7 @@ end = struct
   let globalize_used_variables { flavor; extensibility } env =
     let r = ref [] in
     TyVarMap.iter
-      (fun name (ty, loc) ->
+      (fun name (ty, loc, c) ->
         if flavor = Unification || is_in_scope name then
           let v = new_global_var () in
           let snap = Btype.snapshot () in
@@ -327,7 +338,7 @@ end = struct
                                                  get_in_scope_names ())));
             let v2 = new_global_var () in
             r := (loc, v, v2) :: !r;
-            add name v2)
+            add ~check:!c loc name v2)
       !used_variables;
     used_variables := TyVarMap.empty;
     fun () ->
@@ -386,7 +397,7 @@ let transl_type_param env styp =
           if TyVarEnv.is_in_scope name then
             raise Already_bound;
           let v = new_global_var ~name () in
-          TyVarEnv.add name v;
+          TyVarEnv.add ~check:false loc name v;
           v
       in
         { ctyp_desc = Ttyp_var name; ctyp_type = ty; ctyp_env = env;
@@ -428,7 +439,7 @@ and transl_type_aux env ~row_context ~aliased ~policy styp =
         TyVarEnv.lookup_local ~row_context:row_context name
       with Not_found ->
         let v = TyVarEnv.new_var ~name policy in
-        TyVarEnv.remember_used name v styp.ptyp_loc;
+        TyVarEnv.remember_used ~check:false name v styp.ptyp_loc;
         v
       end
     in
@@ -533,7 +544,7 @@ and transl_type_aux env ~row_context ~aliased ~policy styp =
             with_local_level_generalize_structure_if_principal begin fun () ->
               let t = newvar () in
               (* Use the whole location, which is used by [Type_mismatch]. *)
-              TyVarEnv.remember_used alias.txt t styp.ptyp_loc;
+              TyVarEnv.remember_used ~check:true alias.txt t styp.ptyp_loc;
               let ty = transl_type env ~policy ~row_context st in
               begin try unify_var env t ty.ctyp_type with Unify err ->
                 let err = Errortrace.swap_unification_error err in
