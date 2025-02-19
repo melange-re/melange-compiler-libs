@@ -407,9 +407,9 @@ Working version
   with the compiler.
   (David Allsopp, review by Antonin Décimo and Miod Vallat)
 
-- #XXXXX: Add forgotten check about the validity of the type variable name on
+- #13812: Add forgotten check about the validity of the type variable name on
   the right-hand side of `_ as _`.
-  (Samuel Vivien, review by ...)
+  (Samuel Vivien, review by Gabriel Scherer)
 
 OCaml 5.3.0 (8 January 2025)
 ----------------------------
