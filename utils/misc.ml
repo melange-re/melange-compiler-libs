@@ -1014,7 +1014,7 @@ let spellcheck env name =
   fst (List.fold_left (compare name) ([], max_int) env)
 
 
-let did_you_mean ppf get_choices =
+let did_you_mean ?(pp=Style.inline_code) ppf get_choices =
   let open Format_doc in
   (* flush now to get the error report early, in the (unheard of) case
      where the search in the get_choices function would take a bit of
@@ -1026,9 +1026,9 @@ let did_you_mean ppf get_choices =
   | choices ->
     let rest, last = split_last choices in
      fprintf ppf "@\n@[@{<hint>Hint@}: Did you mean %a%s%a?@]"
-       (pp_print_list ~pp_sep:comma Style.inline_code) rest
+       (pp_print_list ~pp_sep:comma pp) rest
        (if rest = [] then "" else " or ")
-       Style.inline_code last
+       pp last
 
 module Error_style = struct
   type setting =

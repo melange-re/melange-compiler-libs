@@ -306,6 +306,11 @@ Working version
   references another recursive module type.
   (Stefan Muenzel, review by Florian Angeletti and Gabriel Scherer)
 
+- #13788, #13813: Keep the module context in spellchecking hints.
+  `Fun.protact` now prompts `Did you mean "Fun.protect?"` rather than
+  `Did you mean "protect?"`.
+  (Florian Angeletti, suggestion by Daniel Bünzli, review by Gabriel Scherer)
+
 - #13809: Distinguish `(module M : S)` and `(module M) : (module S)` and
   change locations of error messages when `S` is ill-typed in `(module S)`
   (Samuel Vivien, review by Florian Angeletti and Gabriel Scherer)

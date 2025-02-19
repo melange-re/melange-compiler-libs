@@ -876,7 +876,7 @@ let report_error_doc env ppf = function
   | Unbound_type_variable (name, in_scope_names) ->
     fprintf ppf "The type variable %a is unbound in this type declaration.@ %a"
       Style.inline_code name
-      did_you_mean (fun () -> Misc.spellcheck in_scope_names name )
+      (did_you_mean ?pp:None) (fun () -> Misc.spellcheck in_scope_names name )
   | No_type_wildcards ->
       fprintf ppf "A type wildcard %a is not allowed in this type declaration."
         Style.inline_code "_"
