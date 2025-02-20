@@ -1351,6 +1351,53 @@ let pp_print_text ppf s =
   done;
   if !left <> len then flush ()
 
+(* To format free-flowing text *)
+let format_text fmt6 =
+  let open CamlinternalFormatBasics in
+  let Format(fmt,_) = fmt6 in
+  let cons_space ~spaces fmt = Formatting_lit (Break("",spaces,0), fmt) in
+  let rec skip_and_count_whites spaces newlines len s pos =
+    if pos >= len then pos, spaces, newlines else
+    match s.[pos] with
+    | ' ' -> skip_and_count_whites (1+spaces) newlines len s (1+pos)
+    | '\n' -> skip_and_count_whites spaces (1+newlines) len s (1+pos)
+    | _ -> pos, spaces, newlines
+  in
+  let[@tail_mod_cons] rec split len s pos fmt =
+    if pos >= len then fmt
+    else
+      let space = String.index_from_opt s pos ' ' in
+      let newline = String.index_from_opt s pos '\n' in
+      let first = match space, newline with
+        | Some x, Some y -> Some (min x y)
+        | None, x | x, None -> x
+      in
+      match first with
+      | None ->
+          String_literal(String.sub s pos (len-pos), fmt)
+      | Some sep ->
+          let before = String.sub s pos (sep-pos) in
+          let pos, spaces, newlines = skip_and_count_whites 0 0 len s sep in
+          let repeat, break =
+            match newlines, spaces with
+            | (0|1), spaces -> 1, Break("", max spaces 1, 0)
+            | bl, _ -> bl, Force_newline
+          in
+          String_literal(before, cons ~repeat break len s pos fmt)
+  and[@tail_mod_cons] cons ~repeat break len s pos fmt =
+    if repeat = 0 then
+      split len s pos fmt
+    else
+      Formatting_lit (break, cons ~repeat:(repeat-1) break len s pos fmt)
+  in
+  let concat s fmt = match s with
+    | `Char (' '|'\n') -> cons_space ~spaces:1 fmt
+    | `Char c -> Char_literal(c,fmt)
+    | `String s -> split (String.length s) s 0 fmt in
+  let fmt = string_concat_map {f=concat} fmt in
+  Format(fmt, CamlinternalFormat.string_of_fmt fmt)
+
+
 let pp_print_option ?(none = fun _ () -> ()) pp_v ppf = function
 | None -> none ppf ()
 | Some v -> pp_v ppf v

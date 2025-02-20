@@ -215,6 +215,10 @@ Working version
   (Yves Ndiaye and Nicolás Ojeda Bär, review by Daniel Bünzli and Nicolás Ojeda
   Bär)
 
+- #13569: add a `Format.format_text` which adds break hints to format literals.
+  (Florian Angeletti, review by Nicolás Ojeda Bär, Daniel Bünzli,
+   and Gabriel Scherer)
+
 ### Other libraries:
 
 * #13376: Allow Dynlink.loadfile_private to load bytecode libraries with
