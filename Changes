@@ -216,7 +216,8 @@ Working version
   Bär)
 
 - #13569: add a `Format.format_text` which adds break hints to format literals.
-  (Florian Angeletti, review by Daniel Bünzli and Gabriel Scherer)
+  (Florian Angeletti, review by Nicolás Ojeda Bär, Daniel Bünzli,
+   and Gabriel Scherer)
 
 ### Other libraries:
 
