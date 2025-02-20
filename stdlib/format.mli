@@ -1270,8 +1270,8 @@ val pp_print_text : formatter -> string -> unit
 *)
 
 val format_text: ('a,'b,'c,'d,'e,'f) format6 -> ('a,'b,'c,'d,'e,'f) format6
-(** [text fmt] replaces spaces and newlines in the format string literal [fmt]
-    with hint breaks or forced newlines:
+(** [format_text fmt] replaces spaces and newlines in the format string literal
+    [fmt] with hint breaks or forced newlines:
   - Blank lines (lines made only of spaces ([U+0020])) are replaced by ["\@n"].
   - Sequences of spaces and a newline ([U+000A]) preceding a blank line are
     replaced by ["\@n"]: blank lines remain blank lines in the output.
