@@ -79,8 +79,8 @@ let rec iter_loc_lid sub lid =
       iter_loc sub lid'; iter_loc_lid sub lid'.txt
 
 let iter_loc_lid sub {loc; txt} =
-  iter_loc_lid sub txt;
-  iter_loc sub {loc; txt}
+  iter_loc sub {loc; txt};
+  iter_loc_lid sub txt
 
 let location _sub _l = ()
 
