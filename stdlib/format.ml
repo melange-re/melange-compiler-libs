@@ -1378,15 +1378,12 @@ let format_text fmt6 =
       | Some sep ->
           let before = String.sub s pos (sep-pos) in
           let pos, spaces, newlines = skip_and_count_whites 0 0 len s sep in
-          match newlines, spaces with
-          | (0|1), spaces ->
-              let break = Break("", max spaces 1, 0) in
-              String_literal(before, cons ~repeat:1 break len s pos fmt)
-          | bl, _ ->
-              String_literal(
-                before,
-                cons ~repeat:bl Force_newline len s pos fmt
-              )
+          let repeat, break =
+            match newlines, spaces with
+            | (0|1), spaces -> 1, Break("", max spaces 1, 0)
+            | bl, _ -> bl, Force_newline
+          in
+          String_literal(before, cons ~repeat break len s pos fmt)
   and[@tail_mod_cons] cons ~repeat break len s pos fmt =
     if repeat = 0 then
       split len s pos fmt
