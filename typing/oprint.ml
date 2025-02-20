@@ -448,7 +448,11 @@ let print_type_parameter ?(non_gen=false) ppf s =
 let type_parameter ppf {ot_non_gen=non_gen; ot_name=ty; ot_variance=var,inj} =
   let open Asttypes in
   fprintf ppf "%s%s%a"
-    (match var with Covariant -> "+" | Contravariant -> "-" | NoVariance ->  "")
+    (match var with
+    | Covariant -> "+"
+    | Contravariant -> "-"
+    | NoVariance ->  ""
+    | Bivariant -> "+-")
     (match inj with Injective -> "!" | NoInjectivity -> "")
     (print_type_parameter ~non_gen) ty
 
