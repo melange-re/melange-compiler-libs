@@ -215,7 +215,7 @@ module Make(O : OBJ)(EVP : EVALPATH with type valu = O.t) = struct
       (* Start by transforming the path [M.N.t] into the Longident [M.N.Foo]. *)
       let lid = match Untypeast.lident_of_path ty_path with
         | Lident _ -> Lident name
-        | Ldot (p,_) -> Ldot(p,name)
+        | Ldot (p,_) -> Ldot(p, Location.mknoloc name)
         | x -> x
       in
 
@@ -225,7 +225,7 @@ module Make(O : OBJ)(EVP : EVALPATH with type valu = O.t) = struct
         (* [loop M.N [Foo]] is [[Foo]; [N; Foo]; [M; N; Foo]] *)
         let rec loop lid suff = match lid with
           | Lident last -> [suff; (last :: suff)]
-          | Ldot(p, s) -> suff :: loop p (s :: suff)
+          | Ldot({txt=p; _}, {txt=s; _}) -> suff :: loop p (s :: suff)
           | Lapply _ -> raise apply_exn
         in
         loop lid [] (* [[]; [Foo]; [N; Foo]; [M; N; Foo]] *)
@@ -248,9 +248,9 @@ module Make(O : OBJ)(EVP : EVALPATH with type valu = O.t) = struct
       let rec tree_of_lident = function
         | Lident name ->
             tree_of_name name
-        | Ldot (lid, name) ->
+        | Ldot ({txt=lid; _}, {txt=name; _}) ->
             Oide_dot (tree_of_lident lid, name)
-        | Lapply (lid1, lid2) ->
+        | Lapply ({txt=lid1; _}, {txt=lid2; _}) ->
             Oide_apply (tree_of_lident lid1, tree_of_lident lid2)
       in
 
