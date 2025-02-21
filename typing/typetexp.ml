@@ -280,8 +280,8 @@ end = struct
   let remember_used ?check name v loc =
     assert (not_generic v);
     let unused = match check with
-      | None -> ref false
-      | Some check_loc ->
+      | Some check_loc
+          when Warnings.is_active (Warnings.Unused_type_declaration "") ->
         let unused = ref true in
         !Env.add_delayed_check_forward begin fun () ->
             let warn = Warnings.Unused_type_declaration ("'" ^ name) in
@@ -289,6 +289,7 @@ end = struct
             then Location.prerr_warning check_loc warn
           end;
         unused
+      | _ -> ref false
     in
     used_variables := TyVarMap.add name (v, loc, unused) !used_variables
 
