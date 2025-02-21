@@ -679,12 +679,12 @@ let f (x1 : int as 'unused1) (x2 : int as 'unused2)
 Line 1, characters 19-27:
 1 | let f (x1 : int as 'unused1) (x2 : int as 'unused2)
                        ^^^^^^^^
-Warning 34 [unused-type-declaration]: unused type "'unused1".
+Warning 34 [unused-type-declaration]: unused type alias "'unused1".
 
 Line 1, characters 42-50:
 1 | let f (x1 : int as 'unused1) (x2 : int as 'unused2)
                                               ^^^^^^^^
-Warning 34 [unused-type-declaration]: unused type "'unused2".
+Warning 34 [unused-type-declaration]: unused type alias "'unused2".
 
 val f : int -> int -> int -> int -> 'used2 -> int * int * int * int * 'used2 =
   <fun>

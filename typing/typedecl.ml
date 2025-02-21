@@ -1125,7 +1125,7 @@ let transl_type_decl env rec_flag sdecl_list =
       (* Translate each declaration. *)
       let current_slot = ref None in
       let warn_unused =
-        Warnings.is_active (Warnings.Unused_type_declaration "") in
+        Warnings.(is_active (Unused_type_declaration ("", Declaration))) in
       let ids_slots (id, _uid as ids) =
         match rec_flag with
         | Asttypes.Recursive when warn_unused ->

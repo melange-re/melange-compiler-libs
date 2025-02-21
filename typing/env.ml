@@ -2004,7 +2004,7 @@ and store_type ~check id info shape env =
   let loc = info.type_loc in
   if check then
     check_usage loc id info.type_uid
-      (fun s -> Warnings.Unused_type_declaration s)
+      (fun s -> Warnings.Unused_type_declaration (s, Warnings.Declaration))
       !type_declarations;
   let descrs, env =
     let path = Pident id in

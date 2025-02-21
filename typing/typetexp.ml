@@ -281,10 +281,11 @@ end = struct
     assert (not_generic v);
     let unused = match check with
       | Some check_loc
-          when Warnings.is_active (Warnings.Unused_type_declaration "") ->
+          when Warnings.(is_active (Unused_type_declaration ("", Alias))) ->
         let unused = ref true in
         !Env.add_delayed_check_forward begin fun () ->
-            let warn = Warnings.Unused_type_declaration ("'" ^ name) in
+            let warn = Warnings.(Unused_type_declaration ("'" ^ name, Alias))
+            in
             if !unused && Warnings.is_active warn
             then Location.prerr_warning check_loc warn
           end;

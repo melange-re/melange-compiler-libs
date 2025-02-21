@@ -34,6 +34,10 @@ type constructor_usage_warning =
   | Not_constructed
   | Only_exported_private
 
+type type_declaration_usage_warning =
+  | Declaration
+  | Alias
+
 type t =
   | Comment_start                           (*  1 *)
   | Comment_not_end                         (*  2 *)
@@ -69,7 +73,7 @@ type t =
      was turned into a hard error *)
   | Unused_value_declaration of string      (* 32 *)
   | Unused_open of string                   (* 33 *)
-  | Unused_type_declaration of string       (* 34 *)
+  | Unused_type_declaration of string * type_declaration_usage_warning (* 34 *)
   | Unused_for_index of string              (* 35 *)
   | Unused_ancestor of string               (* 36 *)
   | Unused_constructor of string * constructor_usage_warning (* 37 *)
@@ -1011,7 +1015,10 @@ let message = function
       msg "unused value %a." Style.inline_code v
   | Unused_open s -> msg "unused open %a." Style.inline_code s
   | Unused_open_bang s -> msg "unused open! %a." Style.inline_code s
-  | Unused_type_declaration s -> msg "unused type %a." Style.inline_code s
+  | Unused_type_declaration (s, Declaration) ->
+      msg "unused type %a." Style.inline_code s
+  | Unused_type_declaration (s, Alias) ->
+      msg "unused type alias %a." Style.inline_code s
   | Unused_for_index s -> msg "unused for-loop index %a." Style.inline_code s
   | Unused_ancestor s -> msg "unused ancestor variable %a." Style.inline_code s
   | Unused_constructor (s, Unused) ->
