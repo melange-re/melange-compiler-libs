@@ -56,3 +56,11 @@ module M :
     module Not_ok : sig type t end
   end
 |}]
+
+module Avoidance_fail = (functor (Y:sig type t end) -> struct
+             module type A = sig type u = Y.t end
+           end)(struct type t end)
+
+[%%expect{|
+module Avoidance_fail : sig module type A end
+|}]

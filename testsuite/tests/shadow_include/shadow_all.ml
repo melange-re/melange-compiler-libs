@@ -156,14 +156,14 @@ Line 3, characters 2-26:
 |}]
 
 
-module type Module_type = sig
+module type Module_type_fail = sig
   include S
   module type U = T
   include S
 end
 ;;
 [%%expect{|
-module type Module_type =
+module type Module_type_fail =
   sig
     module type U
     type t
