@@ -477,12 +477,16 @@ let save_cmt target binary_annots initial_env cmi shape =
          let cmt_annots = clear_env binary_annots in
          let cmt_uid_to_decl = index_declarations cmt_annots in
          let source_digest = Option.map Digest.file sourcefile in
+         let cmt_args =
+           let cmt_args = Array.copy Sys.argv in
+           cmt_args.(0) <- Location.rewrite_absolute_path Sys.argv.(0);
+           cmt_args in
          let cmt = {
            cmt_modname = Unit_info.Artifact.modname target;
            cmt_annots;
            cmt_declaration_dependencies = !uids_deps;
            cmt_comments = Lexer.comments ();
-           cmt_args = Sys.argv;
+           cmt_args;
            cmt_sourcefile = sourcefile;
            cmt_builddir = Location.rewrite_absolute_path (Sys.getcwd ());
            cmt_loadpath = Load_path.get_paths ();
