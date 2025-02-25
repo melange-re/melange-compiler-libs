@@ -62,5 +62,12 @@ module Avoidance_fail = (functor (Y:sig type t end) -> struct
            end)(struct type t end)
 
 [%%expect{|
-module Avoidance_fail : sig module type A end
+Lines 1-3, characters 24-34:
+1 | ........................(functor (Y:sig type t end) -> struct
+2 |              module type A = sig type u = Y.t end
+3 |            end)(struct type t end)
+Error: This functor has type
+       "(Y : sig type t end) -> sig module type A = sig type u = Y.t end end"
+       The parameter cannot be eliminated in the result type.
+       Please bind the argument to a module identifier.
 |}]

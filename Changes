@@ -1227,6 +1227,10 @@ OCaml 5.3.0 (8 January 2025)
   identifier `\#mod`.
   (Florian Angeletti, report by Chris Casinghino, review by Gabriel Scherer)
 
+* #13830: removed abstraction of whole module types when trying to avoid a
+  single type, failing instead.
+  (Clement Blaudeau, review by Gabriel Scherer)
+
 OCaml 5.2.0 (13 May 2024)
 -------------------------
 

@@ -1090,7 +1090,6 @@ typing/mtype.cmo : \
     typing/types.cmi \
     typing/subst.cmi \
     typing/path.cmi \
-    parsing/location.cmi \
     typing/ident.cmi \
     typing/env.cmi \
     typing/ctype.cmi \
@@ -1102,7 +1101,6 @@ typing/mtype.cmx : \
     typing/types.cmx \
     typing/subst.cmx \
     typing/path.cmx \
-    parsing/location.cmx \
     typing/ident.cmx \
     typing/env.cmx \
     typing/ctype.cmx \
