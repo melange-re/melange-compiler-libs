@@ -21,6 +21,9 @@ Working version
 
 ### Runtime system:
 
+- #13819: Fix field initialisation bug in runtime events subsystem.
+  (Nick Barnes, review by Gabriel Scherer).
+
 - #13785: Add `Runtime_events.Timestamp.get_current`.
   (Simon Cruanes)
 

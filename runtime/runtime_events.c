@@ -485,18 +485,17 @@ CAMLprim value caml_ml_runtime_events_resume(value vunit) {
 
 CAMLprim value caml_ml_runtime_events_path(value vunit) {
   CAMLparam0();
-  CAMLlocal1 (res);
+  CAMLlocal2 (res, str);
   res = Val_none;
   if (atomic_load_acquire(&runtime_events_enabled)) {
-    res = caml_alloc_small(1, Tag_some);
     /* The allocation might GC, which could allow another domain to
-     * nuke current_ring_loc, so we check again. */
-    if (atomic_load_acquire(&runtime_events_enabled)) {
-      Field(res, 0) = caml_copy_string_of_os(current_ring_loc);
-    } else {
-      res = Val_none;
-    }
+     * nuke current_ring_loc, so we snapshot it first. */
+    char_os *current_ring_loc_str = caml_stat_strdup_os(current_ring_loc);
+    str = caml_copy_string_of_os(current_ring_loc_str);
+    caml_stat_free(current_ring_loc_str);
+    res = caml_alloc_some(str);
   }
+
   CAMLreturn(res);
 }
 
