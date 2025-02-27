@@ -454,17 +454,15 @@ val pp_hint: Format_doc.t option Format_doc.printer
 val pp_align: Format_doc.t option -> int Format_doc.printer
 val did_you_mean :
     align:int -> ?pp:string Format_doc.printer ->
-    (unit -> string list) -> Format_doc.t option
-(** [did_you_mean ppf get_choices] hints that the user may have meant
-    one of the option returned by calling [get_choices]. It does nothing
-    if the returned list is empty.
+    string list -> Format_doc.t option
+(** [did_you_mean ~align ~pp choices] hints that the user may have meant one of
+  the option in [choices].
 
-    The [unit -> ...] thunking is meant to delay any potentially-slow
-    computation (typically computing edit-distance with many things
-    from the current environment) to when the hint message is to be
-    printed. You should print an understandable error message before
-    calling [did_you_mean], so that users get a clear notification of
-    the failure even if producing the hint is slow.
+  The [align] parameter can be used to align the first suggestion with the
+  original.
+
+  Each choice is printed with the [pp] function, or [Style.inline_code] if
+  [pp]=[None].
 *)
 
 (** {1 Color support detection }*)

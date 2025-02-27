@@ -6756,7 +6756,7 @@ open Format_doc
 module Fmt = Format_doc
 
 let spellcheck ~align unbound_name valid_names =
-  Misc.did_you_mean ~align (fun () -> Misc.spellcheck valid_names unbound_name)
+  Misc.did_you_mean ~align (Misc.spellcheck valid_names unbound_name)
 
 let pp_spellcheck ~align ppf unbound_name valid_names =
   Misc.pp_hint ppf (spellcheck ~align unbound_name valid_names)

@@ -3547,22 +3547,19 @@ let quoted_constr = Style.as_inline_code Pprintast.Doc.constr
 
 let spellcheck ?(align=0) ppf extract env lid =
   let choices ~path name = Misc.spellcheck (extract path env) name in
-  let sub =
+  Misc.pp_hint ppf @@
     match lid with
     | Longident.Lapply _ -> None
     | Longident.Lident s ->
-       Misc.did_you_mean ~align (fun () -> choices ~path:None s)
+       Misc.did_you_mean ~align (choices ~path:None s)
     | Longident.Ldot (r, s) ->
        let pp ppf s =
          quoted_longident ppf (Longident.Ldot(r, Location.mknoloc s))
        in
-       Misc.did_you_mean ~align ~pp (fun () -> choices ~path:(Some r.txt) s.txt)
-  in
-  Option.iter (fprintf ppf "@.%a" pp_doc) sub
+       Misc.did_you_mean ~align ~pp (choices ~path:(Some r.txt) s.txt)
 
 let spellcheck_name ~align extract env name =
-  Misc.did_you_mean ~align
-    (fun () -> Misc.spellcheck (extract env) name)
+  Misc.did_you_mean ~align (Misc.spellcheck (extract env) name)
 
 let extract_values path env =
   fold_values (fun name _ _ acc -> name :: acc) path env []

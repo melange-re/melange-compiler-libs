@@ -894,8 +894,8 @@ let pp_type ppf ty = Style.as_inline_code Printtyp.Doc.type_expr ppf ty
 let report_error_doc env ppf = function
   | Unbound_type_variable (name, in_scope_names) ->
     let sub ppf =
-      Misc.pp_hint ppf @@
-        did_you_mean ~align:7  (fun () -> Misc.spellcheck in_scope_names name)
+      Misc.pp_hint ppf
+      @@ did_you_mean ~align:7 (Misc.spellcheck in_scope_names name)
     in
     fprintf ppf "The type variable %a is unbound in this type declaration.%t"
       Style.inline_code name
@@ -954,7 +954,7 @@ let report_error_doc env ppf = function
         match get_desc ty with
         | Tvar (Some s) ->
            (* PR#7012: help the user that wrote 'Foo instead of `Foo *)
-           Misc.did_you_mean ~align:1 (fun () -> ["`" ^ s])
+           Misc.did_you_mean ~align:1 ["`" ^ s]
         | _ -> None
       in
       fprintf ppf

@@ -1018,9 +1018,9 @@ let pp_spaces ppf a = for _i = 1 to a do Format_doc.pp_print_string ppf " " done
 let pp_hint ppf d = Option.iter Format_doc.(fprintf ppf "@.%a" pp_doc) d
 let pp_align d ppf n = Option.iter (fun _ -> pp_spaces ppf n) d
 
-let did_you_mean ~align ?(pp=Style.inline_code) get_choices =
+let did_you_mean ~align ?(pp=Style.inline_code) choices =
   let open Format_doc in
-  match get_choices () with
+  match choices with
   | [] -> None
   | choices ->
     let rest, last = split_last choices in
