@@ -893,9 +893,13 @@ let pp_type ppf ty = Style.as_inline_code Printtyp.Doc.type_expr ppf ty
 
 let report_error_doc env ppf = function
   | Unbound_type_variable (name, in_scope_names) ->
-    fprintf ppf "The type variable %a is unbound in this type declaration.@ %a"
+    let sub ppf =
+      Misc.pp_hint ppf @@
+        did_you_mean ~align:7  (fun () -> Misc.spellcheck in_scope_names name)
+    in
+    fprintf ppf "The type variable %a is unbound in this type declaration.%t"
       Style.inline_code name
-      (did_you_mean ?pp:None) (fun () -> Misc.spellcheck in_scope_names name )
+      sub
   | No_type_wildcards ->
       fprintf ppf "A type wildcard %a is not allowed in this type declaration."
         Style.inline_code "_"
@@ -946,15 +950,16 @@ let report_error_doc env ppf = function
           "which should be"
           pp_out_type (Out_type.tree_of_typexp Type ty'))
   | Not_a_variant ty ->
-      fprintf ppf
-        "@[The type %a@ does not expand to a polymorphic variant type@]"
-        pp_type ty;
-      begin match get_desc ty with
+      let sub =
+        match get_desc ty with
         | Tvar (Some s) ->
            (* PR#7012: help the user that wrote 'Foo instead of `Foo *)
-           Misc.did_you_mean ppf (fun () -> ["`" ^ s])
-        | _ -> ()
-      end
+           Misc.did_you_mean ~align:1 (fun () -> ["`" ^ s])
+        | _ -> None
+      in
+      fprintf ppf
+        "%aThe type %a@ does not expand to a polymorphic variant type%a"
+        (Misc.pp_align sub) 3 pp_type ty Misc.pp_hint sub
   | Variant_tags (lab1, lab2) ->
       fprintf ppf
         "@[Variant tags %a@ and %a have the same hash value.@ %s@]"

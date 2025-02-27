@@ -124,7 +124,7 @@ let f (x : [`A | `B] as 'a) (y : [> 'a]) = ();;
 Line 1, characters 61-63:
 1 | let f : ([`A | `B ] as 'a) -> [> 'a] -> unit = fun x (y : [> 'a]) -> ();;
                                                                  ^^
-Error: The type "'a" does not expand to a polymorphic variant type
+Error:    The type "'a" does not expand to a polymorphic variant type
 Hint: Did you mean "`a"?
 |}]
 

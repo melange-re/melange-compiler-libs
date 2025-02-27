@@ -360,8 +360,10 @@ let try_run_directive ppf dir_name pdir_arg =
   | None ->
       fprintf ppf "Unknown directive %a." inline_code dir_name;
       let directives = all_directive_names () in
-      Format_doc.compat Misc.did_you_mean ppf
-        (fun () -> Misc.spellcheck directives dir_name);
+      Format_doc.compat Misc.pp_hint ppf
+      (Misc.did_you_mean ~align:0
+         (fun () -> Misc.spellcheck directives dir_name)
+      );
       fprintf ppf "@.";
       false
   | Some d ->

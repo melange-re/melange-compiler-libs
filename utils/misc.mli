@@ -449,9 +449,12 @@ val spellcheck : string list -> string -> string list
     list of suggestions taken from [env], that are close enough to
     [name] that it may be a typo for one of them. *)
 
+val pp_spaces: int Format_doc.printer
+val pp_hint: Format_doc.t option Format_doc.printer
+val pp_align: Format_doc.t option -> int Format_doc.printer
 val did_you_mean :
-    ?pp:string Format_doc.printer -> Format_doc.formatter ->
-    (unit -> string list) -> unit
+    align:int -> ?pp:string Format_doc.printer ->
+    (unit -> string list) -> Format_doc.t option
 (** [did_you_mean ppf get_choices] hints that the user may have meant
     one of the option returned by calling [get_choices]. It does nothing
     if the returned list is empty.

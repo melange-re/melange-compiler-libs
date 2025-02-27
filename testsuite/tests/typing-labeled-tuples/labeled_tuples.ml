@@ -296,7 +296,7 @@ Line 1, characters 22-30:
 1 | type bad_t = {x : lbl:bad_type * int}
                           ^^^^^^^^
 Error: Unbound type constructor "bad_type"
-Hint: Did you mean "bad_t"?
+Hint:              Did you mean "bad_t"?
 |}]
 
 type tx = { x : foo:int * bar:int }

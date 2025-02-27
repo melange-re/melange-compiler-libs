@@ -1014,21 +1014,23 @@ let spellcheck env name =
   fst (List.fold_left (compare name) ([], max_int) env)
 
 
-let did_you_mean ?(pp=Style.inline_code) ppf get_choices =
+let pp_spaces ppf a = for _i = 1 to a do Format_doc.pp_print_string ppf " " done
+let pp_hint ppf d = Option.iter Format_doc.(fprintf ppf "@.%a" pp_doc) d
+let pp_align d ppf n = Option.iter (fun _ -> pp_spaces ppf n) d
+
+let did_you_mean ~align ?(pp=Style.inline_code) get_choices =
   let open Format_doc in
-  (* flush now to get the error report early, in the (unheard of) case
-     where the search in the get_choices function would take a bit of
-     time; in the worst case, the user has seen the error, she can
-     interrupt the process before the spell-checking terminates. *)
-  fprintf ppf "@?";
   match get_choices () with
-  | [] -> ()
+  | [] -> None
   | choices ->
     let rest, last = split_last choices in
-     fprintf ppf "@\n@[@{<hint>Hint@}: Did you mean %a%s%a?@]"
-       (pp_print_list ~pp_sep:comma pp) rest
-       (if rest = [] then "" else " or ")
-       pp last
+    Some (doc_printf
+            "@[@{<hint>Hint@}:%aDid you mean %a%s%a?@]"
+            pp_spaces align
+            (pp_print_list ~pp_sep:comma pp) rest
+            (if rest = [] then "" else " or ")
+            pp last
+      )
 
 module Error_style = struct
   type setting =
