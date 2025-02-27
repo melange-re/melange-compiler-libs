@@ -337,8 +337,9 @@ and expression_desc =
       [C] represents a type constraint or coercion placed immediately before the
       arrow, e.g. [fun P1 ... Pn : ty -> ...] when [C = Some (Pconstraint ty)].
 
-      A function must have parameters. [Pexp_function (params, _, body)] must
-      have non-empty [params] or a [Pfunction_cases _] body.
+      A function must have parameters: in [Pexp_function (params, _, body)],
+      if [params] does not contain a [Pparam_val _], [body] must be
+      [Pfunction_cases _].
   *)
   | Pexp_apply of expression * (arg_label * expression) list
       (** [Pexp_apply(E0, [(l1, E1) ; ... ; (ln, En)])]
