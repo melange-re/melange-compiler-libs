@@ -888,6 +888,7 @@ module Style = struct
     | Format.String_tag "loc" -> (!cur_styles).loc
     | Format.String_tag "hint" -> (!cur_styles).hint
     | Format.String_tag "inline_code" -> (!cur_styles).inline_code
+    | Format.String_tag "ralign" -> no_markup []
     | Style s -> no_markup s
     | _ -> raise Not_found
 
@@ -1013,20 +1014,23 @@ let spellcheck env name =
   let env = List.sort_uniq (fun s1 s2 -> String.compare s2 s1) env in
   fst (List.fold_left (compare name) ([], max_int) env)
 
+let with_aligned_hint ?(prefix="Error: ") ppf main hint =
+  let open Format_doc in
+  match hint with
+  | None -> pp_doc ppf main
+  | Some h ->
+    let error_shift = String.length prefix in
+    let h, main = Format_doc.Doc.align_prefix2 (h,0) (main,error_shift) in
+    fprintf ppf "%a@.%a" pp_doc main pp_doc h
 
-let pp_spaces ppf a = for _i = 1 to a do Format_doc.pp_print_string ppf " " done
-let pp_hint ppf d = Option.iter Format_doc.(fprintf ppf "@.%a" pp_doc) d
-let pp_align d ppf n = Option.iter (fun _ -> pp_spaces ppf n) d
-
-let did_you_mean ~align ?(pp=Style.inline_code) choices =
+let did_you_mean ?(pp=Style.inline_code) choices =
   let open Format_doc in
   match choices with
   | [] -> None
   | choices ->
     let rest, last = split_last choices in
     Some (doc_printf
-            "@[@{<hint>Hint@}:%aDid you mean %a%s%a?@]"
-            pp_spaces align
+            "@[@{<hint>Hint@}: @{<ralign>Did you mean @}%a%s%a?@]"
             (pp_print_list ~pp_sep:comma pp) rest
             (if rest = [] then "" else " or ")
             pp last

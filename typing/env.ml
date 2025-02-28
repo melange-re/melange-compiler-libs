@@ -3545,21 +3545,20 @@ module Style = Misc.Style
 let quoted_longident = Style.as_inline_code Pprintast.Doc.longident
 let quoted_constr = Style.as_inline_code Pprintast.Doc.constr
 
-let spellcheck ?(align=0) ppf extract env lid =
+let spellcheck extract env lid =
   let choices ~path name = Misc.spellcheck (extract path env) name in
-  Misc.pp_hint ppf @@
     match lid with
     | Longident.Lapply _ -> None
     | Longident.Lident s ->
-       Misc.did_you_mean ~align (choices ~path:None s)
+       Misc.did_you_mean (choices ~path:None s)
     | Longident.Ldot (r, s) ->
        let pp ppf s =
          quoted_longident ppf (Longident.Ldot(r, Location.mknoloc s))
        in
-       Misc.did_you_mean ~align ~pp (choices ~path:(Some r.txt) s.txt)
+       Misc.did_you_mean ~pp (choices ~path:(Some r.txt) s.txt)
 
-let spellcheck_name ~align extract env name =
-  Misc.did_you_mean ~align (Misc.spellcheck (extract env) name)
+let spellcheck_name extract env name =
+  Misc.did_you_mean (Misc.spellcheck (extract env) name)
 
 let extract_values path env =
   fold_values (fun name _ _ acc -> name :: acc) path env []
@@ -3586,8 +3585,9 @@ let extract_instance_variables env =
 
 let report_lookup_error_doc _loc env ppf = function
   | Unbound_value(lid, hint) -> begin
-      fprintf ppf "Unbound value %a" quoted_longident lid;
-      spellcheck ~align:3 ppf extract_values env lid;
+      Misc.with_aligned_hint ppf
+        (doc_printf "@{<ralign>Unbound value @}%a" quoted_longident lid)
+        (spellcheck extract_values env lid);
       match hint with
       | No_hint -> ()
       | Missing_rec def_loc ->
@@ -3601,63 +3601,76 @@ let report_lookup_error_doc _loc env ppf = function
             line
     end
   | Unbound_type lid ->
-      fprintf ppf "Unbound type constructor %a"
-         quoted_longident lid;
-      spellcheck ~align:14 ppf extract_types env lid;
+     Misc.with_aligned_hint ppf
+       (doc_printf "@{<ralign>Unbound type constructor @}%a"
+          quoted_longident lid)
+       (spellcheck extract_types env lid)
   | Unbound_module lid -> begin
-      fprintf ppf "Unbound module %a"
-        quoted_longident lid;
+      let main =
+        doc_printf "@{<ralign>Unbound module @}%a" quoted_longident lid in
        match find_modtype_by_name lid env with
-      | exception Not_found -> spellcheck ~align:4 ppf extract_modules env lid;
+      | exception Not_found ->
+         Misc.with_aligned_hint ppf main (spellcheck extract_modules env lid);
       | _ ->
          fprintf ppf
-           "@.@[@{<hint>Hint@}: There is a module type named %a, %s@]"
+           "%a@.@[@{<hint>Hint@}: There is a module type named %a, %s@]"
+           pp_doc main
            quoted_longident lid
            "but module types are not modules"
     end
   | Unbound_constructor lid ->
-      fprintf ppf "Unbound constructor %a"
-        quoted_constr lid;
-      spellcheck ~align:9 ppf extract_constructors env lid;
+      Misc.with_aligned_hint ppf
+        (doc_printf "@{<ralign>Unbound constructor @}%a" quoted_constr lid)
+        (spellcheck extract_constructors env lid)
   | Unbound_label lid ->
-      fprintf ppf "Unbound record field %a"
-        quoted_longident lid;
-      spellcheck ~align:10 ppf extract_labels env lid;
+     Misc.with_aligned_hint ppf
+        (doc_printf "@{<ralign>Unbound record field @}%a"
+        quoted_longident lid)
+        (spellcheck extract_labels env lid)
   | Unbound_class lid -> begin
-      fprintf ppf "Unbound class %a"
-        quoted_longident lid;
+      let main =
+        doc_printf "@{<ralign>Unbound class @}%a" quoted_longident lid
+      in
       match find_cltype_by_name lid env with
-      | exception Not_found -> spellcheck ~align:3 ppf extract_classes env lid;
+      | exception Not_found ->
+         Misc.with_aligned_hint ppf main (spellcheck extract_classes env lid)
       | _ ->
          fprintf ppf
-           "@.@[@{<hint>Hint@}: There is a class type named %a, %s@]"
+           "%a@.@[@{<hint>Hint@}: There is a class type named %a, %s@]"
+           pp_doc main
            quoted_longident lid
            "but classes are not class types"
     end
   | Unbound_modtype lid -> begin
-      fprintf ppf "Unbound module type %a"
-        quoted_longident lid;
+      let main =
+        doc_printf "@{<ralign>Unbound module type @}%a"
+          quoted_longident lid in
       match find_module_by_name lid env with
-      | exception Not_found -> spellcheck ~align:9 ppf extract_modtypes env lid;
+      | exception Not_found ->
+         Misc.with_aligned_hint ppf main (spellcheck extract_modtypes env lid)
       | _ ->
          fprintf ppf
-           "@.@[@{<hint>Hint@}: There is a module named %a, %s@]"
+           "%a@.@[@{<hint>Hint@}: There is a module named %a, %s@]"
+           pp_doc main
            quoted_longident lid
            "but modules are not module types"
     end
   | Unbound_cltype lid ->
-      fprintf ppf "Unbound class type %a"
-       quoted_longident lid;
-      spellcheck ~align:8 ppf extract_cltypes env lid;
+     Misc.with_aligned_hint ppf
+       (doc_printf "@{<ralign>Unbound class type @}%a"
+          quoted_longident lid)
+      (spellcheck extract_cltypes env lid)
   | Unbound_instance_variable s ->
-      fprintf ppf "Unbound instance variable %a" Style.inline_code s;
-      pp_hint ppf (spellcheck_name ~align:15 extract_instance_variables env s);
+        Misc.with_aligned_hint ppf
+          (doc_printf "@{<ralign>Unbound instance variable @}%a"
+             Style.inline_code s
+          )
+          (spellcheck_name extract_instance_variables env s)
   | Not_an_instance_variable s ->
-     let h = spellcheck_name ~align:1 extract_instance_variables env s in
-      fprintf ppf "%aThe value %a is not an instance variable%a"
-        (pp_align h) 2
-        Style.inline_code s
-        pp_hint h
+     Misc.with_aligned_hint ppf
+        (doc_printf "@{<ralign>The value @}%a is not an instance variable"
+           Style.inline_code s)
+        (spellcheck_name extract_instance_variables env s)
   | Masked_instance_variable lid ->
       fprintf ppf
         "The instance variable %a@ \

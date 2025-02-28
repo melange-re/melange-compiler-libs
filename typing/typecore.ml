@@ -6755,14 +6755,11 @@ let type_expression env sexp =
 open Format_doc
 module Fmt = Format_doc
 
-let spellcheck ~align unbound_name valid_names =
-  Misc.did_you_mean ~align (Misc.spellcheck valid_names unbound_name)
+let spellcheck unbound_name valid_names =
+  Misc.did_you_mean (Misc.spellcheck valid_names unbound_name)
 
-let pp_spellcheck ~align ppf unbound_name valid_names =
-  Misc.pp_hint ppf (spellcheck ~align unbound_name valid_names)
-
-let spellcheck_idents ~align unbound valid_idents =
-  spellcheck ~align (Ident.name unbound) (List.map Ident.name valid_idents)
+let spellcheck_idents unbound valid_idents =
+  spellcheck (Ident.name unbound) (List.map Ident.name valid_idents)
 
 module Printtyp = Printtyp.Doc
 
@@ -7011,15 +7008,16 @@ let report_error ~loc env = function
         "Variable %a is bound several times in this matching"
         Style.inline_code name
   | Orpat_vars (id, valid_idents) ->
-      Location.error_of_printer ~loc (fun ppf () ->
-        let hint = spellcheck_idents ~align:1 id valid_idents in
-        fprintf ppf
-          "%aVariable %a must occur on both sides of this %a pattern%a"
-          (pp_align hint) 3
-          Style.inline_code (Ident.name id)
-          Style.inline_code "|"
-         pp_hint hint
-      ) ()
+     Location.error_of_printer ~loc (fun ppf () ->
+         Misc.with_aligned_hint ppf
+           (doc_printf
+              "@{<ralign>Variable @}%a must occur on both sides of \
+               this %a pattern"
+              Style.inline_code (Ident.name id)
+              Style.inline_code "|"
+           )
+           (spellcheck_idents id valid_idents)
+       ) ()
   | Expr_type_clash (err, explanation, exp) ->
       let diff = type_clash_of_trace err.trace in
       let sub = report_expr_type_clash_hints exp diff in
@@ -7118,28 +7116,27 @@ let report_error ~loc env = function
       Location.error_of_printer ~loc (fun ppf () ->
         Printtyp.wrap_printing_env ~error:true env (fun () ->
           let { ty; explanation } = ty_expected in
-          if Path.is_constructor_typath type_path then begin
-            let hint = spellcheck ~align:1 name.txt valid_names in
+          if Path.is_constructor_typath type_path then
+              Misc.with_aligned_hint ppf
+                (doc_printf
+                   "@{<ralign>The field @}%a is not part of the record \
+                    argument for the %a constructor"
+                   Style.inline_code name.txt
+                   (Style.as_inline_code Printtyp.type_path) type_path
+                )
+                (spellcheck name.txt valid_names)
+          else begin
             fprintf ppf
-              "%aThe field %a is not part of the record \
-               argument for the %a constructor%a"
-              (pp_align hint) 2
-              Style.inline_code name.txt
-              (Style.as_inline_code Printtyp.type_path) type_path
-              pp_hint hint
-            end else begin
-            let label_name = Datatype_kind.label_name kind in
-            let align = 2 + String.length label_name in
-            let hint = spellcheck ~align name.txt valid_names in
-            fprintf ppf
-              "@[@[<2>%s type@ %a%a@]@ \
-               There is no %s %a within type %a@]%a"
+              "@[<2>%s type@ %a%a@]@\n"
               eorp (Style.as_inline_code Printtyp.type_expr) ty
-              pp_doc (report_type_expected_explanation_opt explanation)
-              label_name
-              Style.inline_code name.txt
-              (Style.as_inline_code Printtyp.type_path) type_path
-              pp_hint hint
+              pp_doc (report_type_expected_explanation_opt explanation);
+            Misc.with_aligned_hint ppf
+              (doc_printf "@{<ralign>There is no %s @}%a within type %a"
+                 (Datatype_kind.label_name kind)
+                 Style.inline_code name.txt
+                 (Style.as_inline_code Printtyp.type_path) type_path
+              )
+              (spellcheck name.txt valid_names)
           end;
       )) ()
   | Name_type_mismatch (kind, lid, tp, tpl) ->
@@ -7171,28 +7168,32 @@ let report_error ~loc env = function
       Location.error_of_printer ~loc (fun ppf () ->
         Printtyp.wrap_printing_env ~error:true env (fun () ->
           fprintf ppf
-            "@[<v>@[This expression has type@;<1 2>%a@]@,\
-             It has no method %a@]"
-            (Style.as_inline_code Printtyp.type_expr) ty
-            Style.inline_code me;
+            "@[<v>@[This expression has type@;<1 2>%a@]@,@]"
+            (Style.as_inline_code Printtyp.type_expr) ty;
+          Misc.with_aligned_hint ppf
+            (doc_printf "@{<ralign>It has no method @}%a" Style.inline_code me)
           begin match valid_methods with
-            | None -> ()
-            | Some valid_methods -> pp_spellcheck ~align:5 ppf me valid_methods
+            | None -> None
+            | Some valid_methods -> spellcheck me valid_methods
           end
       )) ()
   | Undefined_self_method (me, valid_methods) ->
       Location.error_of_printer ~loc (fun ppf () ->
-        fprintf ppf "This expression has no method %a" Style.inline_code me;
-        pp_spellcheck ~align:19 ppf me valid_methods;
+        Misc.with_aligned_hint ppf
+          (doc_printf "@{<ralign>This expression has no method @}%a"
+             Style.inline_code me)
+          (spellcheck me valid_methods)
       ) ()
   | Virtual_class cl ->
       Location.errorf ~loc "Cannot instantiate the virtual class %a"
         quoted_longident cl
   | Unbound_instance_variable (var, valid_vars) ->
-      Location.error_of_printer ~loc (fun ppf () ->
-        fprintf ppf "Unbound instance variable %a" Style.inline_code var;
-        pp_spellcheck ~align:15 ppf var valid_vars;
-      ) ()
+     Location.error_of_printer ~loc (fun ppf () ->
+         Misc.with_aligned_hint ppf
+           (doc_printf "@{<ralign>Unbound instance variable @}%a"
+              Style.inline_code var)
+           (spellcheck var valid_vars)
+       ) ()
   | Instance_variable_not_mutable v ->
       Location.errorf ~loc "The instance variable %a is not mutable"
         Style.inline_code v

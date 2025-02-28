@@ -449,17 +449,15 @@ val spellcheck : string list -> string -> string list
     list of suggestions taken from [env], that are close enough to
     [name] that it may be a typo for one of them. *)
 
-val pp_spaces: int Format_doc.printer
-val pp_hint: Format_doc.t option Format_doc.printer
-val pp_align: Format_doc.t option -> int Format_doc.printer
+val with_aligned_hint:
+  ?prefix:string -> Format_doc.formatter ->
+  Format_doc.t -> Format_doc.t option -> unit
+
 val did_you_mean :
-    align:int -> ?pp:string Format_doc.printer ->
+    ?pp:string Format_doc.printer ->
     string list -> Format_doc.t option
 (** [did_you_mean ~align ~pp choices] hints that the user may have meant one of
   the option in [choices].
-
-  The [align] parameter can be used to align the first suggestion with the
-  original.
 
   Each choice is printed with the [pp] function, or [Style.inline_code] if
   [pp]=[None].
