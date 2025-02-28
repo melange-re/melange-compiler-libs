@@ -336,6 +336,11 @@ Working version
   occurences of `'a`
   (Samuel Vivien, review by Florian Angeletti)
 
+- #13817: align spellchecking hints with the possibly misspelled identifier/
+              Error: Unbound type constructor "aray"
+              Hint:              Did you mean "array"?
+  (Florian Angeletti, suggestion by Daniel Bünzli, review by Gabriel Scherer)
+
 ### Internal/compiler-libs changes:
 
 - #13314: Comment the code of Translclass
