@@ -271,9 +271,8 @@ module Doc = struct
     | elt :: rest ->
         split_on_close opened (elt::rbefore) rest
 
-
    let rec approx_len acc = function
-     | [] -> acc
+     | [] -> Some acc
      | Text x :: r->
          let len = Format.utf_8_scalar_width ~pos:0 ~len:(String.length x) x in
          approx_len (acc + len) r
@@ -284,7 +283,7 @@ module Doc = struct
         approx_len acc r
     | (Tab_break _ | Break _ | Simple_break _ | Flush _ | Newline | If_newline
        | Deprecated _ ) :: _ ->
-        0
+        None
 
    type ralign_split = {
        close_pos:int;
@@ -298,23 +297,31 @@ module Doc = struct
      let before, rest =
        split_on_open_tag ralign_tag [] l in
      let mid, after = split_on_close 0 [] rest in
-     let close_pos = shift + approx_len (approx_len 0 before) mid in
-     { close_pos; before; mid; after }
+     let len = Option.bind (approx_len 0 before) (fun n -> approx_len n mid) in
+     match len with
+     | None -> Error doc
+     | Some len ->
+         Ok { close_pos= shift + len; before; mid; after }
+
+   let align_doc max_pos r =
+     let aligned_before =
+       let before = Open_tag ralign_tag :: r.before in
+       if r.close_pos >= max_pos then before
+       else Text (String.make (max_pos - r.close_pos) ' ') :: before
+     in
+     let mid_to_start = Close_tag :: r.mid @ aligned_before in
+     { rev = List.rev_append r.after mid_to_start }
 
    let align_prefix l =
      let l = List.map split_ralign l in
      let max_pos =
-       List.fold_left (fun mx r -> max mx r.close_pos) 0 l
+       List.fold_left (fun mx r ->
+           match r with
+           | Ok r -> max mx r.close_pos
+           | Error _ -> mx
+         ) 0 l
      in
-     List.map (fun r ->
-         let aligned_before =
-           let before = Open_tag ralign_tag :: r.before in
-           if r.close_pos >= max_pos then before
-           else Text (String.make (max_pos - r.close_pos) ' ') :: before
-         in
-         let mid_to_start = Close_tag :: r.mid @ aligned_before in
-         { rev = List.rev_append r.after mid_to_start }
-       ) l
+     List.map (Result.fold ~ok:(align_doc max_pos) ~error:Fun.id) l
 
    let align_prefix2 x y = match align_prefix [x;y] with
      | [x;y] -> x, y
