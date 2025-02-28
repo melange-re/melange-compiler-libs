@@ -894,11 +894,9 @@ let pp_type ppf ty = Style.as_inline_code Printtyp.Doc.type_expr ppf ty
 let report_error_doc env ppf = function
   | Unbound_type_variable (name, in_scope_names) ->
     Misc.with_aligned_hint ppf
-      (doc_printf
-        "@{<ralign>The type variable @}%a is unbound in this type declaration."
+      "@{<ralign>The type variable @}%a is unbound in this type declaration."
         Style.inline_code name
-      )
-     (did_you_mean (Misc.spellcheck in_scope_names name))
+        (did_you_mean (Misc.spellcheck in_scope_names name))
   | No_type_wildcards ->
       fprintf ppf "A type wildcard %a is not allowed in this type declaration."
         Style.inline_code "_"
@@ -950,11 +948,8 @@ let report_error_doc env ppf = function
           pp_out_type (Out_type.tree_of_typexp Type ty'))
   | Not_a_variant ty ->
       Misc.with_aligned_hint ppf
-        (doc_printf
-           "@{<ralign>The type @}%a@ does not expand to \
-            a polymorphic variant type"
-           pp_type ty
-        )
+        "@{<ralign>The type @}%a@ does not expand to a polymorphic variant type"
+        pp_type ty
         (match get_desc ty with
         | Tvar (Some s) ->
            (* PR#7012: help the user that wrote 'Foo instead of `Foo *)

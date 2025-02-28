@@ -451,7 +451,7 @@ val spellcheck : string list -> string -> string list
 
 val with_aligned_hint:
   ?prefix:string -> Format_doc.formatter ->
-  Format_doc.t -> Format_doc.t option -> unit
+  ('a, Format_doc.formatter, unit, Format_doc.t option -> unit) format4 -> 'a
 
 val did_you_mean :
     ?pp:string Format_doc.printer ->

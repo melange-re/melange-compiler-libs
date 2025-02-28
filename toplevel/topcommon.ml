@@ -359,12 +359,11 @@ let try_run_directive ppf dir_name pdir_arg =
   begin match get_directive dir_name with
   | None ->
       let print ppf () =
+        let directives = all_directive_names () in
         Misc.with_aligned_hint ~prefix:"" ppf
-          (Format_doc.doc_printf "@{<ralign>Unknown directive @}%a."
-             Style.inline_code dir_name)
-          (Misc.did_you_mean
-             (Misc.spellcheck (all_directive_names ()) dir_name)
-          )
+          "@{<ralign>Unknown directive @}%a."
+          Style.inline_code dir_name
+          (Misc.did_you_mean (Misc.spellcheck directives dir_name))
       in
       fprintf ppf "%a@." (Format_doc.compat print) ();
       false
