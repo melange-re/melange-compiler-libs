@@ -7009,7 +7009,7 @@ let report_error ~loc env = function
         Style.inline_code name
   | Orpat_vars (id, valid_idents) ->
      Location.error_of_printer ~loc (fun ppf () ->
-         Misc.with_aligned_hint ppf
+         Misc.aligned_error_hint ppf
            "@{<ralign>Variable @}%a must occur on both sides of this %a pattern"
            Style.inline_code (Ident.name id)
            Style.inline_code "|"
@@ -7114,7 +7114,7 @@ let report_error ~loc env = function
         Printtyp.wrap_printing_env ~error:true env (fun () ->
           let { ty; explanation } = ty_expected in
           if Path.is_constructor_typath type_path then
-            Misc.with_aligned_hint ppf
+            Misc.aligned_error_hint ppf
               "@{<ralign>The field @}%a is not part of the record argument \
                for the %a constructor"
               Style.inline_code name.txt
@@ -7125,7 +7125,7 @@ let report_error ~loc env = function
               "@[<2>%s type@ %a%a@]@\n"
               eorp (Style.as_inline_code Printtyp.type_expr) ty
               pp_doc (report_type_expected_explanation_opt explanation);
-            Misc.with_aligned_hint ppf
+            Misc.aligned_error_hint ppf
               "@{<ralign>There is no %s @}%a within type %a"
               (Datatype_kind.label_name kind)
               Style.inline_code name.txt
@@ -7164,7 +7164,7 @@ let report_error ~loc env = function
           fprintf ppf
             "@[<v>@[This expression has type@;<1 2>%a@]@,@]"
             (Style.as_inline_code Printtyp.type_expr) ty;
-          Misc.with_aligned_hint ppf
+          Misc.aligned_error_hint ppf
             "@{<ralign>It has no method @}%a" Style.inline_code me
             (match valid_methods with
              | None -> None
@@ -7173,7 +7173,7 @@ let report_error ~loc env = function
       )) ()
   | Undefined_self_method (me, valid_methods) ->
       Location.error_of_printer ~loc (fun ppf () ->
-        Misc.with_aligned_hint ppf
+        Misc.aligned_error_hint ppf
           "@{<ralign>This expression has no method @}%a"
           Style.inline_code me
           (spellcheck me valid_methods)
@@ -7183,7 +7183,7 @@ let report_error ~loc env = function
         quoted_longident cl
   | Unbound_instance_variable (var, valid_vars) ->
      Location.error_of_printer ~loc (fun ppf () ->
-         Misc.with_aligned_hint ppf
+         Misc.aligned_error_hint ppf
            "@{<ralign>Unbound instance variable @}%a" Style.inline_code var
            (spellcheck var valid_vars)
        ) ()

@@ -360,7 +360,7 @@ let try_run_directive ppf dir_name pdir_arg =
   | None ->
       let print ppf () =
         let directives = all_directive_names () in
-        Misc.with_aligned_hint ~prefix:"" ppf
+        Misc.aligned_hint ~prefix:"" ppf
           "@{<ralign>Unknown directive @}%a."
           Style.inline_code dir_name
           (Misc.did_you_mean (Misc.spellcheck directives dir_name))

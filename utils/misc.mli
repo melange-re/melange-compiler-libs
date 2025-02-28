@@ -449,9 +449,18 @@ val spellcheck : string list -> string -> string list
     list of suggestions taken from [env], that are close enough to
     [name] that it may be a typo for one of them. *)
 
-val with_aligned_hint:
-  ?prefix:string -> Format_doc.formatter ->
+val aligned_hint:
+  prefix:string -> Format_doc.formatter ->
   ('a, Format_doc.formatter, unit, Format_doc.t option -> unit) format4 -> 'a
+(** [aligned_hint ppf fmt ... hint] align the right end of
+    [@{<ralign>...@}] box in the main error message and the hint under the
+    assumption that there is an implicit [prefix] before the main
+    error message. *)
+
+val aligned_error_hint:
+  Format_doc.formatter ->
+  ('a, Format_doc.formatter, unit, Format_doc.t option -> unit) format4 -> 'a
+(** Same as [aligned_hint ~prefix:"Error: "] *)
 
 val did_you_mean :
     ?pp:string Format_doc.printer ->

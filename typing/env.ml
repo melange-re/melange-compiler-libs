@@ -3585,7 +3585,7 @@ let extract_instance_variables env =
 
 let report_lookup_error_doc _loc env ppf = function
   | Unbound_value(lid, hint) -> begin
-      Misc.with_aligned_hint ppf
+      Misc.aligned_error_hint ppf
         "@{<ralign>Unbound value @}%a" quoted_longident lid
         (spellcheck extract_values env lid);
       match hint with
@@ -3601,7 +3601,7 @@ let report_lookup_error_doc _loc env ppf = function
             line
     end
   | Unbound_type lid ->
-     Misc.with_aligned_hint ppf
+     Misc.aligned_error_hint ppf
        "@{<ralign>Unbound type constructor @}%a"
        quoted_longident lid
        (spellcheck extract_types env lid)
@@ -3610,7 +3610,7 @@ let report_lookup_error_doc _loc env ppf = function
         fprintf ppf "@{<ralign>Unbound module @}%a" quoted_longident lid in
        match find_modtype_by_name lid env with
       | exception Not_found ->
-         Misc.with_aligned_hint ppf "%t" main
+         Misc.aligned_error_hint ppf "%t" main
            (spellcheck extract_modules env lid)
       | _ ->
          fprintf ppf
@@ -3620,12 +3620,12 @@ let report_lookup_error_doc _loc env ppf = function
            "but module types are not modules"
     end
   | Unbound_constructor lid ->
-     Misc.with_aligned_hint ppf
+     Misc.aligned_error_hint ppf
        "@{<ralign>Unbound constructor @}%a"
        quoted_constr lid
        (spellcheck extract_constructors env lid)
   | Unbound_label lid ->
-     Misc.with_aligned_hint ppf
+     Misc.aligned_error_hint ppf
        "@{<ralign>Unbound record field @}%a"
        quoted_longident lid
        (spellcheck extract_labels env lid)
@@ -3635,7 +3635,7 @@ let report_lookup_error_doc _loc env ppf = function
       in
       match find_cltype_by_name lid env with
       | exception Not_found ->
-         Misc.with_aligned_hint ppf "%t" main
+         Misc.aligned_error_hint ppf "%t" main
            (spellcheck extract_classes env lid)
       | _ ->
          fprintf ppf
@@ -3650,7 +3650,7 @@ let report_lookup_error_doc _loc env ppf = function
           quoted_longident lid in
       match find_module_by_name lid env with
       | exception Not_found ->
-         Misc.with_aligned_hint ppf "%t" main
+         Misc.aligned_error_hint ppf "%t" main
            (spellcheck extract_modtypes env lid)
       | _ ->
          fprintf ppf
@@ -3660,16 +3660,16 @@ let report_lookup_error_doc _loc env ppf = function
            "but modules are not module types"
     end
   | Unbound_cltype lid ->
-     Misc.with_aligned_hint ppf
+     Misc.aligned_error_hint ppf
        "@{<ralign>Unbound class type @}%a" quoted_longident lid
       (spellcheck extract_cltypes env lid)
   | Unbound_instance_variable s ->
-        Misc.with_aligned_hint ppf
+        Misc.aligned_error_hint ppf
           "@{<ralign>Unbound instance variable @}%a"
           Style.inline_code s
           (spellcheck_name extract_instance_variables env s)
   | Not_an_instance_variable s ->
-     Misc.with_aligned_hint ppf
+     Misc.aligned_error_hint ppf
         "@{<ralign>The value @}%a is not an instance variable"
         Style.inline_code s
         (spellcheck_name extract_instance_variables env s)
