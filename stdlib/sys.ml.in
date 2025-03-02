@@ -112,6 +112,40 @@ let sigxfsz = -28
 let sigio = -29
 let sigwinch = -30
 
+let signal_to_string s =
+  match s with
+  | s' when s' == sigabrt -> "SIGABRT"
+  | s' when s' == sigalrm -> "SIGALRM"
+  | s' when s' == sigfpe -> "SIGFPE"
+  | s' when s' == sighup -> "SIGHUP"
+  | s' when s' == sigill -> "SIGILL"
+  | s' when s' == sigint -> "SIGINT"
+  | s' when s' == sigkill -> "SIGKILL"
+  | s' when s' == sigpipe -> "SIGPIPE"
+  | s' when s' == sigquit -> "SIGQUIT"
+  | s' when s' == sigsegv -> "SIGSEGV"
+  | s' when s' == sigterm -> "SIGTERM"
+  | s' when s' == sigusr1 -> "SIGUSR1"
+  | s' when s' == sigusr2 -> "SIGUSR2"
+  | s' when s' == sigchld -> "SIGCHLD"
+  | s' when s' == sigcont -> "SIGCONT"
+  | s' when s' == sigstop -> "SIGSTOP"
+  | s' when s' == sigtstp -> "SIGTSTP"
+  | s' when s' == sigttin -> "SIGTTIN"
+  | s' when s' == sigttou -> "SIGTTOU"
+  | s' when s' == sigvtalrm -> "SIGVTALRM"
+  | s' when s' == sigprof -> "SIGPROF"
+  | s' when s' == sigbus -> "SIGBUS"
+  | s' when s' == sigpoll -> "SIGPOLL"
+  | s' when s' == sigsys -> "SIGSYS"
+  | s' when s' == sigtrap -> "SIGTRAP"
+  | s' when s' == sigurg -> "SIGURG"
+  | s' when s' == sigxcpu -> "SIGXCPU"
+  | s' when s' == sigxfsz -> "SIGXFSZ"
+  | s' when s' == sigio -> "SIGIO"
+  | s' when s' == sigwinch -> "SIGWINCH"
+  | s' -> "SIG(" ^ string_of_int s' ^ ")"
+
 exception Break
 
 let catch_break on =
