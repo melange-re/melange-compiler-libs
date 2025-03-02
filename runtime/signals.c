@@ -499,12 +499,18 @@ CAMLexport value caml_process_pending_actions_exn(void)
 #ifndef SIGXFSZ
 #define SIGXFSZ -1
 #endif
+#ifndef SIGIO
+#define SIGIO -1
+#endif
+#ifndef SIGWINCH
+#define SIGWINCH -1
+#endif
 
 static const int posix_signals[] = {
   SIGABRT, SIGALRM, SIGFPE, SIGHUP, SIGILL, SIGINT, SIGKILL, SIGPIPE,
   SIGQUIT, SIGSEGV, SIGTERM, SIGUSR1, SIGUSR2, SIGCHLD, SIGCONT,
   SIGSTOP, SIGTSTP, SIGTTIN, SIGTTOU, SIGVTALRM, SIGPROF, SIGBUS,
-  SIGPOLL, SIGSYS, SIGTRAP, SIGURG, SIGXCPU, SIGXFSZ
+  SIGPOLL, SIGSYS, SIGTRAP, SIGURG, SIGXCPU, SIGXFSZ, SIGIO, SIGWINCH
 };
 
 CAMLexport int caml_convert_signal_number(int signo)

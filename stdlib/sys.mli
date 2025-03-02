@@ -299,7 +299,7 @@ val sigcont : int
 (** Continue *)
 
 val sigstop : int
-(** Stop *)
+(** Stop (cannot be caught or ignored) *)
 
 val sigtstp : int
 (** Interactive stop *)
@@ -344,11 +344,17 @@ val sigxfsz : int
 (** File size limit exceeded
     @since 4.03 *)
 
+val sigio : int
+(** I/O is possible on a descriptor
+    @since 5.4 *)
+
+val sigwinch : int
+(** Window size change
+    @since 5.4 *)
 
 exception Break
 (** Exception raised on interactive interrupt if {!Sys.catch_break}
    is enabled. *)
-
 
 val catch_break : bool -> unit
 (** [catch_break] governs whether interactive interrupt (ctrl-C)
