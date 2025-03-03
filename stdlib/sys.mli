@@ -227,11 +227,12 @@ external poll_actions : unit -> unit = "%poll"
 
 (** {1 Signal handling} *)
 
+type signal = int
 
 type signal_behavior =
     Signal_default
   | Signal_ignore
-  | Signal_handle of (int -> unit)   (** *)
+  | Signal_handle of (signal -> unit)   (** *)
 (** What to do when receiving a signal:
    - [Signal_default]: take the default behavior
      (usually: abort the program)
@@ -240,119 +241,119 @@ type signal_behavior =
    number as argument. *)
 
 external signal :
-  int -> signal_behavior -> signal_behavior = "caml_install_signal_handler"
+  signal -> signal_behavior -> signal_behavior = "caml_install_signal_handler"
 (** Set the behavior of the system on receipt of a given signal.  The
    first argument is the signal number.  Return the behavior
    previously associated with the signal. If the signal number is
    invalid (or not available on your system), an [Invalid_argument]
    exception is raised. *)
 
-val set_signal : int -> signal_behavior -> unit
+val set_signal : signal -> signal_behavior -> unit
 (** Same as {!Sys.signal} but return value is ignored. *)
 
 
 (** {2 Signal numbers for the standard POSIX signals.} *)
 
-val sigabrt : int
+val sigabrt : signal
 (** Abnormal termination *)
 
-val sigalrm : int
+val sigalrm : signal
 (** Timeout *)
 
-val sigfpe : int
+val sigfpe : signal
 (** Arithmetic exception *)
 
-val sighup : int
+val sighup : signal
 (** Hangup on controlling terminal *)
 
-val sigill : int
+val sigill : signal
 (** Invalid hardware instruction *)
 
-val sigint : int
+val sigint : signal
 (** Interactive interrupt (ctrl-C) *)
 
-val sigkill : int
+val sigkill : signal
 (** Termination (cannot be ignored) *)
 
-val sigpipe : int
+val sigpipe : signal
 (** Broken pipe *)
 
-val sigquit : int
+val sigquit : signal
 (** Interactive termination *)
 
-val sigsegv : int
+val sigsegv : signal
 (** Invalid memory reference *)
 
-val sigterm : int
+val sigterm : signal
 (** Termination *)
 
-val sigusr1 : int
+val sigusr1 : signal
 (** Application-defined signal 1 *)
 
-val sigusr2 : int
+val sigusr2 : signal
 (** Application-defined signal 2 *)
 
-val sigchld : int
+val sigchld : signal
 (** Child process terminated *)
 
-val sigcont : int
+val sigcont : signal
 (** Continue *)
 
-val sigstop : int
+val sigstop : signal
 (** Stop (cannot be caught or ignored) *)
 
-val sigtstp : int
+val sigtstp : signal
 (** Interactive stop *)
 
-val sigttin : int
+val sigttin : signal
 (** Terminal read from background process *)
 
-val sigttou : int
+val sigttou : signal
 (** Terminal write from background process *)
 
-val sigvtalrm : int
+val sigvtalrm : signal
 (** Timeout in virtual time *)
 
-val sigprof : int
+val sigprof : signal
 (** Profiling interrupt *)
 
-val sigbus : int
+val sigbus : signal
 (** Bus error
     @since 4.03 *)
 
-val sigpoll : int
+val sigpoll : signal
 (** Pollable event
     @since 4.03 *)
 
-val sigsys : int
+val sigsys : signal
 (** Bad argument to routine
     @since 4.03 *)
 
-val sigtrap : int
+val sigtrap : signal
 (** Trace/breakpoint trap
     @since 4.03 *)
 
-val sigurg : int
+val sigurg : signal
 (** Urgent condition on socket
     @since 4.03 *)
 
-val sigxcpu : int
+val sigxcpu : signal
 (** Timeout in cpu time
     @since 4.03 *)
 
-val sigxfsz : int
+val sigxfsz : signal
 (** File size limit exceeded
     @since 4.03 *)
 
-val sigio : int
+val sigio : signal
 (** I/O is possible on a descriptor
     @since 5.4 *)
 
-val sigwinch : int
+val sigwinch : signal
 (** Window size change
     @since 5.4 *)
 
-val signal_to_string : int -> string
+val signal_to_string : signal -> string
 (** Signal name as a string, based on POSIX names.
     @since 5.4 *)
 

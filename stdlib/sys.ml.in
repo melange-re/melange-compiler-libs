@@ -71,12 +71,14 @@ let io_buffer_size = io_buffer_size ()
 
 let interactive = ref false
 
+type signal = int
+
 type signal_behavior =
     Signal_default
   | Signal_ignore
-  | Signal_handle of (int -> unit)
+  | Signal_handle of (signal -> unit)
 
-external signal : int -> signal_behavior -> signal_behavior
+external signal : signal -> signal_behavior -> signal_behavior
                 = "caml_install_signal_handler"
 
 let set_signal sig_num sig_beh = ignore(signal sig_num sig_beh)
@@ -113,38 +115,37 @@ let sigio = -29
 let sigwinch = -30
 
 let signal_to_string s =
-  match s with
-  | s' when s' == sigabrt -> "SIGABRT"
-  | s' when s' == sigalrm -> "SIGALRM"
-  | s' when s' == sigfpe -> "SIGFPE"
-  | s' when s' == sighup -> "SIGHUP"
-  | s' when s' == sigill -> "SIGILL"
-  | s' when s' == sigint -> "SIGINT"
-  | s' when s' == sigkill -> "SIGKILL"
-  | s' when s' == sigpipe -> "SIGPIPE"
-  | s' when s' == sigquit -> "SIGQUIT"
-  | s' when s' == sigsegv -> "SIGSEGV"
-  | s' when s' == sigterm -> "SIGTERM"
-  | s' when s' == sigusr1 -> "SIGUSR1"
-  | s' when s' == sigusr2 -> "SIGUSR2"
-  | s' when s' == sigchld -> "SIGCHLD"
-  | s' when s' == sigcont -> "SIGCONT"
-  | s' when s' == sigstop -> "SIGSTOP"
-  | s' when s' == sigtstp -> "SIGTSTP"
-  | s' when s' == sigttin -> "SIGTTIN"
-  | s' when s' == sigttou -> "SIGTTOU"
-  | s' when s' == sigvtalrm -> "SIGVTALRM"
-  | s' when s' == sigprof -> "SIGPROF"
-  | s' when s' == sigbus -> "SIGBUS"
-  | s' when s' == sigpoll -> "SIGPOLL"
-  | s' when s' == sigsys -> "SIGSYS"
-  | s' when s' == sigtrap -> "SIGTRAP"
-  | s' when s' == sigurg -> "SIGURG"
-  | s' when s' == sigxcpu -> "SIGXCPU"
-  | s' when s' == sigxfsz -> "SIGXFSZ"
-  | s' when s' == sigio -> "SIGIO"
-  | s' when s' == sigwinch -> "SIGWINCH"
-  | s' -> "SIG(" ^ string_of_int s' ^ ")"
+  if s = sigabrt then "SIGABRT"
+  else if s = sigalrm then "SIGALRM"
+  else if s = sigfpe then "SIGFPE"
+  else if s = sighup then "SIGHUP"
+  else if s = sigill then "SIGILL"
+  else if s = sigint then "SIGINT"
+  else if s = sigkill then "SIGKILL"
+  else if s = sigpipe then "SIGPIPE"
+  else if s = sigquit then "SIGQUIT"
+  else if s = sigsegv then "SIGSEGV"
+  else if s = sigterm then "SIGTERM"
+  else if s = sigusr1 then "SIGUSR1"
+  else if s = sigusr2 then "SIGUSR2"
+  else if s = sigchld then "SIGCHLD"
+  else if s = sigcont then "SIGCONT"
+  else if s = sigstop then "SIGSTOP"
+  else if s = sigtstp then "SIGTSTP"
+  else if s = sigttin then "SIGTTIN"
+  else if s = sigttou then "SIGTTOU"
+  else if s = sigvtalrm then "SIGVTALRM"
+  else if s = sigprof then "SIGPROF"
+  else if s = sigbus then "SIGBUS"
+  else if s = sigpoll then "SIGPOLL"
+  else if s = sigsys then "SIGSYS"
+  else if s = sigtrap then "SIGTRAP"
+  else if s = sigurg then "SIGURG"
+  else if s = sigxcpu then "SIGXCPU"
+  else if s = sigxfsz then "SIGXFSZ"
+  else if s = sigio then "SIGIO"
+  else if s = sigwinch then "SIGWINCH"
+  else "SIG(" ^ string_of_int s ^ ")"
 
 exception Break
 
