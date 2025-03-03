@@ -452,10 +452,32 @@ val spellcheck : string list -> string -> string list
 val aligned_hint:
   prefix:string -> Format_doc.formatter ->
   ('a, Format_doc.formatter, unit, Format_doc.t option -> unit) format4 -> 'a
-(** [aligned_hint ppf fmt ... hint] align the right end of
-    [@{<ralign>...@}] box in the main error message and the hint under the
-    assumption that there is an implicit [prefix] before the main
-    error message. *)
+(** [aligned_hint ~prefix ppf fmt ... hint] vertically aligns a main message
+    (described by the [fmt] format string) and a possible hint message. The
+    vertical alignment is controlled by the use of [@{<ralign> ... @}] boxes:
+    the start of one box, in either the hint or the main message, will be
+    shifted on the left to ensure that the end of the two boxes are vertically
+    aligned, taking in account a pre-existing [prefix] before the main message.
+    For instance, if you have already printed ["Error: "] at the beginning of
+    the current line
+
+{[aligned_hint
+    ~prefix:"Error: " "@{<ralign>The value @}%a is not an instance variable"
+      Style.inline_code "foobar"
+    (Some(doc_printf
+      "@{<ralign>Did you mean @}%a" Style.inline_code "foobaz"
+    ))]}
+
+  produces the following text:
+
+{[
+Error:   The value "foobaz" is not an instance variable
+Hint: Did you mean "foobar"?
+]}
+
+  where the main message has been shifted to the left to align ["foobaz"] and
+  ["foobar"].
+*)
 
 val aligned_error_hint:
   Format_doc.formatter ->
@@ -463,10 +485,9 @@ val aligned_error_hint:
 (** Same as [aligned_hint ~prefix:"Error: "] *)
 
 val did_you_mean :
-    ?pp:string Format_doc.printer ->
-    string list -> Format_doc.t option
-(** [did_you_mean ~align ~pp choices] hints that the user may have meant one of
-  the option in [choices].
+    ?pp:string Format_doc.printer -> string list -> Format_doc.t option
+(** [did_you_mean ~pp choices] hints that the user may have meant one of the
+  option in [choices].
 
   Each choice is printed with the [pp] function, or [Style.inline_code] if
   [pp]=[None].
