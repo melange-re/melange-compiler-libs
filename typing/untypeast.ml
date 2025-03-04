@@ -390,7 +390,7 @@ let value_binding sub vb =
   let pat = sub.pat sub vb.vb_pat in
   let pat, value_constraint =
     match pat.ppat_desc with
-    | Ppat_constraint (pat, cty) ->
+    | Ppat_constraint (pat, ({ ptyp_desc = Ptyp_poly _; _ } as cty)) ->
       let constr =
         Pvc_constraint { locally_abstract_univars = []; typ = cty }
       in
