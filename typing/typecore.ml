@@ -6752,16 +6752,15 @@ let type_expression env sexp =
 
 (* Error report *)
 
-let spellcheck ppf unbound_name valid_names =
-  Misc.did_you_mean ppf (fun () ->
-    Misc.spellcheck valid_names unbound_name
-  )
-
-let spellcheck_idents ppf unbound valid_idents =
-  spellcheck ppf (Ident.name unbound) (List.map Ident.name valid_idents)
-
 open Format_doc
 module Fmt = Format_doc
+
+let spellcheck unbound_name valid_names =
+  Misc.did_you_mean (Misc.spellcheck valid_names unbound_name)
+
+let spellcheck_idents unbound valid_idents =
+  spellcheck (Ident.name unbound) (List.map Ident.name valid_idents)
+
 module Printtyp = Printtyp.Doc
 
 let quoted_longident = Style.as_inline_code Pprintast.Doc.longident
@@ -7009,14 +7008,13 @@ let report_error ~loc env = function
         "Variable %a is bound several times in this matching"
         Style.inline_code name
   | Orpat_vars (id, valid_idents) ->
-      Location.error_of_printer ~loc (fun ppf () ->
-        fprintf ppf
-          "Variable %a must occur on both sides of this %a pattern"
-          Style.inline_code (Ident.name id)
-          Style.inline_code "|"
-        ;
-        spellcheck_idents ppf id valid_idents
-      ) ()
+     Location.error_of_printer ~loc (fun ppf () ->
+         Misc.aligned_error_hint ppf
+           "@{<ralign>Variable @}%a must occur on both sides of this %a pattern"
+           Style.inline_code (Ident.name id)
+           Style.inline_code "|"
+           (spellcheck_idents id valid_idents)
+       ) ()
   | Expr_type_clash (err, explanation, exp) ->
       let diff = type_clash_of_trace err.trace in
       let sub = report_expr_type_clash_hints exp diff in
@@ -7115,23 +7113,25 @@ let report_error ~loc env = function
       Location.error_of_printer ~loc (fun ppf () ->
         Printtyp.wrap_printing_env ~error:true env (fun () ->
           let { ty; explanation } = ty_expected in
-          if Path.is_constructor_typath type_path then begin
-            fprintf ppf
-              "@[The field %a is not part of the record \
-               argument for the %a constructor@]"
+          if Path.is_constructor_typath type_path then
+            Misc.aligned_error_hint ppf
+              "@{<ralign>The field @}%a is not part of the record argument \
+               for the %a constructor"
               Style.inline_code name.txt
-              (Style.as_inline_code Printtyp.type_path) type_path;
-          end else begin
+              (Style.as_inline_code Printtyp.type_path) type_path
+              (spellcheck name.txt valid_names)
+          else begin
             fprintf ppf
-              "@[@[<2>%s type@ %a%a@]@ \
-               There is no %s %a within type %a@]"
+              "@[<2>%s type@ %a%a@]@\n"
               eorp (Style.as_inline_code Printtyp.type_expr) ty
-              pp_doc (report_type_expected_explanation_opt explanation)
+              pp_doc (report_type_expected_explanation_opt explanation);
+            Misc.aligned_error_hint ppf
+              "@{<ralign>There is no %s @}%a within type %a"
               (Datatype_kind.label_name kind)
               Style.inline_code name.txt
-              (Style.as_inline_code Printtyp.type_path) type_path;
+              (Style.as_inline_code Printtyp.type_path) type_path
+              (spellcheck name.txt valid_names)
           end;
-          spellcheck ppf name.txt valid_names
       )) ()
   | Name_type_mismatch (kind, lid, tp, tpl) ->
       let type_name = Datatype_kind.type_name kind in
@@ -7162,28 +7162,31 @@ let report_error ~loc env = function
       Location.error_of_printer ~loc (fun ppf () ->
         Printtyp.wrap_printing_env ~error:true env (fun () ->
           fprintf ppf
-            "@[<v>@[This expression has type@;<1 2>%a@]@,\
-             It has no method %a@]"
-            (Style.as_inline_code Printtyp.type_expr) ty
-            Style.inline_code me;
-          begin match valid_methods with
-            | None -> ()
-            | Some valid_methods -> spellcheck ppf me valid_methods
-          end
+            "@[<v>@[This expression has type@;<1 2>%a@]@,@]"
+            (Style.as_inline_code Printtyp.type_expr) ty;
+          Misc.aligned_error_hint ppf
+            "@{<ralign>It has no method @}%a" Style.inline_code me
+            (match valid_methods with
+             | None -> None
+             | Some valid_methods -> spellcheck me valid_methods
+            )
       )) ()
   | Undefined_self_method (me, valid_methods) ->
       Location.error_of_printer ~loc (fun ppf () ->
-        fprintf ppf "This expression has no method %a" Style.inline_code me;
-        spellcheck ppf me valid_methods;
+        Misc.aligned_error_hint ppf
+          "@{<ralign>This expression has no method @}%a"
+          Style.inline_code me
+          (spellcheck me valid_methods)
       ) ()
   | Virtual_class cl ->
       Location.errorf ~loc "Cannot instantiate the virtual class %a"
         quoted_longident cl
   | Unbound_instance_variable (var, valid_vars) ->
-      Location.error_of_printer ~loc (fun ppf () ->
-        fprintf ppf "Unbound instance variable %a" Style.inline_code var;
-        spellcheck ppf var valid_vars;
-      ) ()
+     Location.error_of_printer ~loc (fun ppf () ->
+         Misc.aligned_error_hint ppf
+           "@{<ralign>Unbound instance variable @}%a" Style.inline_code var
+           (spellcheck var valid_vars)
+       ) ()
   | Instance_variable_not_mutable v ->
       Location.errorf ~loc "The instance variable %a is not mutable"
         Style.inline_code v

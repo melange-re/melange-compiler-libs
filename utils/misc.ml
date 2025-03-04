@@ -888,6 +888,7 @@ module Style = struct
     | Format.String_tag "loc" -> (!cur_styles).loc
     | Format.String_tag "hint" -> (!cur_styles).hint
     | Format.String_tag "inline_code" -> (!cur_styles).inline_code
+    | Format.String_tag "ralign" -> no_markup []
     | Style s -> no_markup s
     | _ -> raise Not_found
 
@@ -1013,22 +1014,32 @@ let spellcheck env name =
   let env = List.sort_uniq (fun s1 s2 -> String.compare s2 s1) env in
   fst (List.fold_left (compare name) ([], max_int) env)
 
-
-let did_you_mean ?(pp=Style.inline_code) ppf get_choices =
+let aligned_hint ~prefix ppf main_fmt  =
   let open Format_doc in
-  (* flush now to get the error report early, in the (unheard of) case
-     where the search in the get_choices function would take a bit of
-     time; in the worst case, the user has seen the error, she can
-     interrupt the process before the spell-checking terminates. *)
-  fprintf ppf "@?";
-  match get_choices () with
-  | [] -> ()
+  kdoc_printf (fun main hint ->
+      match hint with
+      | None -> pp_doc ppf main
+      | Some h ->
+        let error_shift = String.length prefix in
+        let h, main = Format_doc.Doc.align_prefix2 (h,0) (main,error_shift) in
+        fprintf ppf "%a@.%a" pp_doc main pp_doc h
+    ) main_fmt
+
+let aligned_error_hint ppf main_fmt =
+  aligned_hint ~prefix:"Error: " ppf main_fmt
+
+let did_you_mean ?(pp=Style.inline_code) choices =
+  let open Format_doc in
+  match choices with
+  | [] -> None
   | choices ->
     let rest, last = split_last choices in
-     fprintf ppf "@\n@[@{<hint>Hint@}: Did you mean %a%s%a?@]"
-       (pp_print_list ~pp_sep:comma pp) rest
-       (if rest = [] then "" else " or ")
-       pp last
+    Some (doc_printf
+            "@[@{<hint>Hint@}: @{<ralign>Did you mean @}%a%s%a?@]"
+            (pp_print_list ~pp_sep:comma pp) rest
+            (if rest = [] then "" else " or ")
+            pp last
+      )
 
 module Error_style = struct
   type setting =

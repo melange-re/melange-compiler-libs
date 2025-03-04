@@ -449,19 +449,48 @@ val spellcheck : string list -> string -> string list
     list of suggestions taken from [env], that are close enough to
     [name] that it may be a typo for one of them. *)
 
-val did_you_mean :
-    ?pp:string Format_doc.printer -> Format_doc.formatter ->
-    (unit -> string list) -> unit
-(** [did_you_mean ppf get_choices] hints that the user may have meant
-    one of the option returned by calling [get_choices]. It does nothing
-    if the returned list is empty.
+val aligned_hint:
+  prefix:string -> Format_doc.formatter ->
+  ('a, Format_doc.formatter, unit, Format_doc.t option -> unit) format4 -> 'a
+(** [aligned_hint ~prefix ppf fmt ... hint] vertically aligns a main message
+    (described by the [fmt] format string) and a possible hint message. The
+    vertical alignment is controlled by the use of [@{<ralign> ... @}] boxes:
+    the start of one box, in either the hint or the main message, will be
+    shifted on the left to ensure that the end of the two boxes are vertically
+    aligned, taking in account a pre-existing [prefix] before the main message.
+    For instance, if you have already printed ["Error: "] at the beginning of
+    the current line
 
-    The [unit -> ...] thunking is meant to delay any potentially-slow
-    computation (typically computing edit-distance with many things
-    from the current environment) to when the hint message is to be
-    printed. You should print an understandable error message before
-    calling [did_you_mean], so that users get a clear notification of
-    the failure even if producing the hint is slow.
+{[aligned_hint
+    ~prefix:"Error: " "@{<ralign>The value @}%a is not an instance variable"
+      Style.inline_code "foobar"
+    (Some(doc_printf
+      "@{<ralign>Did you mean @}%a" Style.inline_code "foobaz"
+    ))]}
+
+  produces the following text:
+
+{[
+Error:   The value "foobaz" is not an instance variable
+Hint: Did you mean "foobar"?
+]}
+
+  where the main message has been shifted to the left to align ["foobaz"] and
+  ["foobar"].
+*)
+
+val aligned_error_hint:
+  Format_doc.formatter ->
+  ('a, Format_doc.formatter, unit, Format_doc.t option -> unit) format4 -> 'a
+(** Same as [aligned_hint ~prefix:"Error: "] *)
+
+val did_you_mean :
+    ?pp:string Format_doc.printer -> string list -> Format_doc.t option
+(** [did_you_mean ~pp choices] hints that the user may have meant one of the
+  option in [choices].
+
+  Each choice is printed with the [pp] function, or [Style.inline_code] if
+  [pp]=[None].
 *)
 
 (** {1 Color support detection }*)
