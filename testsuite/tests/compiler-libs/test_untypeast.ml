@@ -37,3 +37,12 @@ run {| fun x y z -> (function w -> x y z w) |};;
 [%%expect{|
 - : string = "fun x y z -> (function | w -> x y z w)"
 |}];;
+
+(***********************************)
+(* Untypeast/pprintast correctly handle value binding type annotations. *)
+
+run {| let foo : 'a. 'a -> 'a = fun x -> x in foo |};;
+
+[%%expect{|
+- : string = "let (foo : 'a . 'a -> 'a) = fun x -> x in foo"
+|}]
