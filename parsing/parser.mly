@@ -108,7 +108,7 @@ let reloc_pat ~loc x =
 let reloc_exp ~loc x =
   { x with pexp_loc = make_loc loc;
            pexp_loc_stack = push_loc x.pexp_loc x.pexp_loc_stack }
-let reloc_typ ~loc x =
+let _reloc_typ ~loc x =
   { x with ptyp_loc = make_loc loc;
            ptyp_loc_stack = push_loc x.ptyp_loc x.ptyp_loc_stack }
 
@@ -437,32 +437,40 @@ let wrap_type_annotation ~loc newtypes core_type body =
   (exp, ghtyp(Ptyp_poly(newtypes, Typ.varify_constructors newtypes core_type)))
 
 let wrap_exp_attrs ~loc body (ext, attrs) =
-  let ghexp = ghexp ~loc in
   (* todo: keep exact location for the entire attribute *)
   let body = {body with pexp_attributes = attrs @ body.pexp_attributes} in
   match ext with
   | None -> body
-  | Some id -> ghexp(Pexp_extension (id, PStr [mkstrexp body []]))
+  | Some id -> mkexp ~loc (Pexp_extension (id, PStr [mkstrexp body []]))
 
-let mkexp_attrs ~loc d attrs =
-  wrap_exp_attrs ~loc (mkexp ~loc d) attrs
+let mkexp_attrs ~loc d ext_attrs =
+  wrap_exp_attrs ~loc (if Option.is_some (fst ext_attrs)
+                       then ghexp ~loc d
+                       else mkexp ~loc d) ext_attrs
 
 let wrap_typ_attrs ~loc typ (ext, attrs) =
   (* todo: keep exact location for the entire attribute *)
   let typ = {typ with ptyp_attributes = attrs @ typ.ptyp_attributes} in
   match ext with
   | None -> typ
-  | Some id -> ghtyp ~loc (Ptyp_extension (id, PTyp typ))
+  | Some id -> mktyp ~loc (Ptyp_extension (id, PTyp typ))
+
+let mktyp_attrs ~loc d ext_attrs =
+  wrap_typ_attrs ~loc (if Option.is_some (fst ext_attrs)
+                       then ghtyp ~loc d
+                       else mktyp ~loc d) ext_attrs
 
 let wrap_pat_attrs ~loc pat (ext, attrs) =
   (* todo: keep exact location for the entire attribute *)
   let pat = {pat with ppat_attributes = attrs @ pat.ppat_attributes} in
   match ext with
   | None -> pat
-  | Some id -> ghpat ~loc (Ppat_extension (id, PPat (pat, None)))
+  | Some id -> mkpat ~loc (Ppat_extension (id, PPat (pat, None)))
 
-let mkpat_attrs ~loc d attrs =
-  wrap_pat_attrs ~loc (mkpat ~loc d) attrs
+let mkpat_attrs ~loc d ext_attrs =
+  wrap_pat_attrs ~loc (if Option.is_some (fst ext_attrs)
+                       then ghpat ~loc d
+                       else mkpat ~loc d) ext_attrs
 
 let wrap_class_attrs ~loc:_ body attrs =
   {body with pcl_attributes = attrs @ body.pcl_attributes}
@@ -474,18 +482,22 @@ let wrap_mty_attrs ~loc:_ attrs body =
 let wrap_str_ext ~loc body ext =
   match ext with
   | None -> body
-  | Some id -> ghstr ~loc (Pstr_extension ((id, PStr [body]), []))
+  | Some id -> mkstr ~loc (Pstr_extension ((id, PStr [body]), []))
 
 let wrap_mkstr_ext ~loc (item, ext) =
-  wrap_str_ext ~loc (mkstr ~loc item) ext
+  wrap_str_ext ~loc (if Option.is_some ext
+                     then ghstr ~loc item
+                     else mkstr ~loc item) ext
 
 let wrap_sig_ext ~loc body ext =
   match ext with
   | None -> body
-  | Some id -> ghsig ~loc (Psig_extension ((id, PSig [body]), []))
+  | Some id -> mksig ~loc (Psig_extension ((id, PSig [body]), []))
 
 let wrap_mksig_ext ~loc (item, ext) =
-  wrap_sig_ext ~loc (mksig ~loc item) ext
+  wrap_sig_ext ~loc (if Option.is_some ext
+                     then ghsig ~loc item
+                     else mksig ~loc item) ext
 
 let mk_quotedext ~loc (id, idloc, str, strloc, delim) =
   let exp_id = mkloc id idloc in
@@ -2174,8 +2186,8 @@ class_signature:
 class_self_type:
     LPAREN core_type RPAREN
       { $2 }
-  | mktyp((* empty *) { Ptyp_any })
-      { $1 }
+  | (* empty *)
+      { ghtyp ~loc:$sloc Ptyp_any }
 ;
 %inline class_sig_fields:
   flatten(text_csig(class_sig_field)*)
@@ -2338,7 +2350,7 @@ fun_seq_expr:
     { Pexp_sequence($1, $3) })
     { $1 }
   | fun_expr SEMI PERCENT attr_id seq_expr
-    { let seq = mkexp ~loc:$sloc (Pexp_sequence ($1, $5)) in
+    { let seq = ghexp ~loc:$sloc (Pexp_sequence ($1, $5)) in
       let payload = PStr [mkstrexp seq []] in
       mkexp ~loc:$sloc (Pexp_extension ($4, payload)) }
 ;
@@ -3780,8 +3792,8 @@ tuple_type:
 delimited_type_supporting_local_open:
   | LPAREN type_ = core_type RPAREN
       { type_ }
-  | LPAREN MODULE attrs = ext_attributes package_type = package_type RPAREN
-      { wrap_typ_attrs ~loc:$sloc (reloc_typ ~loc:$sloc package_type) attrs }
+  | LPAREN MODULE ext_attrs = ext_attributes package_type = package_type_ RPAREN
+      { mktyp_attrs ~loc:$sloc (Ptyp_package package_type) ext_attrs }
   | mktyp(
       LBRACKET field = tag_field RBRACKET
         { Ptyp_variant([ field ], Closed, None) }

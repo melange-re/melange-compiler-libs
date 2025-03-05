@@ -244,7 +244,7 @@ let check_loc_ghost meth v ~source_contents =
         f v;
     )
   in
-  let check ?(wrap = Fun.id) meth parse ast1 (loc : Location.t) =
+  let check ?print ?(wrap = Fun.id) meth parse ast1 (loc : Location.t) =
     let source_fragment =
       wrap (
           String.sub source_contents
@@ -265,7 +265,11 @@ let check_loc_ghost meth v ~source_contents =
     in
     if loc.loc_ghost <> should_be_loc_ghost
     then (
-      Format.eprintf "@[%a: %s@]@." Location.print_loc loc error_if_not
+      Format.eprintf "@[<2>%a: %s%t@]@." Location.print_loc loc error_if_not
+        (fun f ->
+          match print with
+          | None -> ()
+          | Some print -> Format.fprintf f "@\n%a" print ast1)
     )
   in
   let self =
@@ -274,6 +278,7 @@ let check_loc_ghost meth v ~source_contents =
         limit_quadratic_complexity (fun s -> s.expr)
           (fun v ->
             check (fun s -> s.expr) Parse.expression v v.pexp_loc
+              (* ~print:(fun f ty -> Printast.expression 0 f ty) *)
               (* Add parens because in 1 + 2, + gets assigned a non-ghost
                  location, but + without parens is not a valid expression. *)
               ~wrap:(fun s -> "( " ^ s ^ " )"))
@@ -282,7 +287,10 @@ let check_loc_ghost meth v ~source_contents =
           (fun v -> check (fun s -> s.pat) Parse.pattern v v.ppat_loc )
     ; typ =
         limit_quadratic_complexity (fun s -> s.typ)
-          (fun v -> check (fun s -> s.typ) Parse.core_type v v.ptyp_loc )
+          (fun v ->
+            check
+              (* ~print:(fun f ty -> Printast.payload 0 f (PTyp ty)) *)
+              (fun s -> s.typ) Parse.core_type v v.ptyp_loc )
     ; attribute = (fun self attr ->
       (* Doc comments would probably need some special case to check they are
          correctly placed. *)
