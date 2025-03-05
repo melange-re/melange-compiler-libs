@@ -134,7 +134,8 @@ type type_desc =
       where 'a1 ... 'an are names given to types in tyl
       and occurrences of those types in ty. *)
 
-  | Tpackage of Path.t * (string list * type_expr) list
+  | Tpackage of
+    { pack_path : Path.t; pack_cstrs : (string list * type_expr) list }
   (** Type of a first-class module (a.k.a package). *)
 
 and fixed_explanation =

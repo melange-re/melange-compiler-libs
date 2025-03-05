@@ -688,9 +688,10 @@ and transl_type_aux env ~row_context ~aliased ~policy styp =
       ctyp (Ttyp_poly (vars, cty)) ty'
   | Ptyp_package ptyp ->
       let path, mty, ptys = transl_package env ~policy ~row_context ptyp in
-      let ty = newty (Tpackage (path,
-                       List.map (fun (s, cty) ->
-                         (Longident.flatten s.txt, cty.ctyp_type)) ptys))
+      let ty = newty (Tpackage {
+          pack_path = path;
+          pack_cstrs = List.map (fun (s, cty) ->
+                         (Longident.flatten s.txt, cty.ctyp_type)) ptys})
       in
       ctyp (Ttyp_package {
             pack_path = path;

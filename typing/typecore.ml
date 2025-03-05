@@ -4684,9 +4684,9 @@ and type_expect_
         let t = Ast_helper.Typ.package ~loc:ptyp.ppt_loc ptyp in
         let pty, exp_extra = type_constraint env t in
         begin match get_desc (instance pty) with
-          | Tpackage (p, fl) ->
+          | Tpackage {pack_path = p; pack_cstrs = fl} ->
             let (modl, fl') = !type_package env m p fl in
-            let ty = newty (Tpackage (p, fl')) in
+            let ty = newty (Tpackage {pack_path = p; pack_cstrs = fl'}) in
             unify_exp_types m.pmod_loc env (instance pty) ty;
             rue {
               exp_desc = Texp_pack modl;
@@ -4700,7 +4700,7 @@ and type_expect_
       | None ->
         let (p, fl) =
           match get_desc (Ctype.expand_head env (instance ty_expected)) with
-            Tpackage (p, fl) ->
+            Tpackage {pack_path = p; pack_cstrs = fl} ->
               if !Clflags.principal &&
                 get_level (Ctype.expand_head env
                             (protect_expansion env ty_expected))
@@ -4718,7 +4718,7 @@ and type_expect_
           rue {
             exp_desc = Texp_pack modl;
             exp_loc = loc; exp_extra = [];
-            exp_type = newty (Tpackage (p, fl'));
+            exp_type = newty (Tpackage {pack_path = p; pack_cstrs = fl'});
             exp_attributes = sexp.pexp_attributes;
             exp_env = env }
       end

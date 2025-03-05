@@ -2265,14 +2265,15 @@ and type_module_aux ~alias ~strengthen ~funct_body anchor env smod =
       in
       let mty =
         match get_desc (Ctype.expand_head env exp.exp_type) with
-          Tpackage (p, fl) ->
-            check_package_closed ~loc:smod.pmod_loc ~env ~typ:exp.exp_type fl;
+          Tpackage pack ->
+            check_package_closed ~loc:smod.pmod_loc ~env ~typ:exp.exp_type
+              pack.pack_cstrs;
             if !Clflags.principal &&
               not (Typecore.generalizable (Btype.generic_level-1) exp.exp_type)
             then
               Location.prerr_warning smod.pmod_loc
                 (not_principal "this module unpacking");
-            modtype_of_package env smod.pmod_loc p fl
+            modtype_of_package env smod.pmod_loc pack.pack_path pack.pack_cstrs
         | Tvar _ ->
             raise (Typecore.Error
                      (smod.pmod_loc, env, Typecore.Cannot_infer_signature))

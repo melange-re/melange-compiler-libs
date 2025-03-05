@@ -742,10 +742,10 @@ module Digraph = struct
             fields
         in
         { elts; graph = add_subgraph (labelr "polyvar", fields) main }
-    | Types.Tpackage (p, fl) ->
+    | Types.Tpackage {pack_path; pack_cstrs = fl} ->
         let types = List.map snd fl in
         mk "[mod %a with %a]"
-          pp_path p
+          pp_path pack_path
           Pp.(list ~sep:semi longident)
             (List.map (fun (l, _) -> Longident.unflatten l |> Option.get) fl)
         |> numbered types

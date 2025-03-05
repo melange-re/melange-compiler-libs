@@ -777,9 +777,9 @@ let rec copy_spine copy_scope ty =
           Tpoly (copy_rec ty', tvl)
       | Ttuple tyl ->
           Ttuple (List.map (fun (lbl, ty) -> (lbl, copy_rec ty)) tyl)
-      | Tpackage (path, fl) ->
+      | Tpackage {pack_path; pack_cstrs = fl} ->
           let fl = List.map (fun (n, ty) -> n, copy_rec ty) fl in
-          Tpackage (path, fl)
+          Tpackage {pack_path; pack_cstrs = fl}
       | Tconstr (path, tyl, _) ->
           Tconstr (path, List.map copy_rec tyl, ref Mnil)
       | _ -> assert false
@@ -827,11 +827,12 @@ let rec check_scope_escape mark env level ty =
         | exception Cannot_expand ->
             raise_escape_exn (Constructor p)
         end
-    | Tpackage (p, fl) when level < Path.scope p ->
+    | Tpackage {pack_path = p; pack_cstrs = fl} when level < Path.scope p ->
         let p' = normalize_package_path env p in
         if Path.same p p' then raise_escape_exn (Module_type p);
         check_scope_escape mark env level
-          (newty2 ~level:orig_level (Tpackage (p', fl)))
+          (newty2 ~level:orig_level
+            (Tpackage {pack_path = p'; pack_cstrs = fl}))
     | _ ->
         iter_type_expr (check_scope_escape mark env level) ty
     end;
@@ -903,10 +904,10 @@ let rec update_level env level expand ty =
           set_level ();
           iter_type_expr (update_level env level expand) ty
         end
-    | Tpackage (p, fl) when level < Path.scope p ->
+    | Tpackage {pack_path = p; pack_cstrs = fl} when level < Path.scope p ->
         let p' = normalize_package_path env p in
         if Path.same p p' then raise_escape_exn (Module_type p);
-        set_type_desc ty (Tpackage (p', fl));
+        set_type_desc ty (Tpackage {pack_path = p'; pack_cstrs = fl});
         update_level env level expand ty
     | Tobject (_, ({contents=Some(p, _tl)} as nm))
       when level < Path.scope p ->
@@ -986,8 +987,8 @@ let rec lower_contravariant env var_level visited contra ty =
             | ty -> lower_rec contra ty
             | exception Cannot_expand -> not_expanded ()
           else not_expanded ()
-    | Tpackage (_, fl) ->
-        List.iter (fun (_n, ty) -> lower_rec true ty) fl
+    | Tpackage p ->
+        List.iter (fun (_n, ty) -> lower_rec true ty) p.pack_cstrs
     | Tarrow (_, t1, t2, _) ->
         lower_rec true t1;
         lower_rec contra t2
@@ -2972,7 +2973,8 @@ and unify3 uenv t1 t1' t2 t2' =
       | (Tpoly (t1, tl1), Tpoly (t2, tl2)) ->
           enter_poly_for Unify (get_env uenv) t1 tl1 t2 tl2
             (unify uenv)
-      | (Tpackage (p1, fl1), Tpackage (p2, fl2)) ->
+      | (Tpackage {pack_path = p1; pack_cstrs = fl1},
+         Tpackage {pack_path = p2; pack_cstrs = fl2}) ->
           begin match
             compare_package (get_env uenv) (unify_list uenv)
               (get_level t1) p1 fl1 (get_level t2) p2 fl2
@@ -3845,7 +3847,8 @@ let rec moregen inst_nongen type_pairs env t1 t2 =
           | (Tconstr (p1, tl1, _), Tconstr (p2, tl2, _))
                 when Path.same p1 p2 ->
               moregen_list inst_nongen type_pairs env tl1 tl2
-          | (Tpackage (p1, fl1), Tpackage (p2, fl2)) ->
+          | (Tpackage {pack_path = p1; pack_cstrs = fl1},
+             Tpackage {pack_path = p2; pack_cstrs = fl2}) ->
               begin match
                 compare_package env (moregen_list inst_nongen type_pairs env)
                   (get_level t1') p1 fl1 (get_level t2') p2 fl2
@@ -4218,7 +4221,8 @@ let rec eqtype rename type_pairs subst env t1 t2 =
           | (Tconstr (p1, tl1, _), Tconstr (p2, tl2, _))
                 when Path.same p1 p2 ->
               eqtype_list_same_length rename type_pairs subst env tl1 tl2
-          | (Tpackage (p1, fl1), Tpackage (p2, fl2)) ->
+          | (Tpackage {pack_path = p1; pack_cstrs = fl1},
+             Tpackage {pack_path = p2; pack_cstrs = fl2}) ->
               begin match
                 compare_package env (eqtype_list rename type_pairs subst env)
                   (get_level t1') p1 fl1 (get_level t2') p2 fl2
@@ -5044,7 +5048,8 @@ let rec subtype_rec env trace t1 t2 cstrs =
         with Escape _ ->
           (trace, t1, t2, !univar_pairs)::cstrs
         end
-    | (Tpackage (p1, fl1), Tpackage (p2, fl2)) ->
+    | (Tpackage {pack_path = p1; pack_cstrs = fl1},
+       Tpackage {pack_path = p2; pack_cstrs = fl2}) ->
         begin try
           let ntl1 =
             complete_type_list env fl2 (get_level t1) (Mty_ident p1) fl1
@@ -5474,13 +5479,16 @@ let rec nondep_type_rec ?(expand_private=false) env ids ty =
                *)
             with Cannot_expand -> raise exn
           end
-      | Tpackage(p, fl) when Path.exists_free ids p ->
+      | Tpackage{pack_path = p; pack_cstrs = fl} when Path.exists_free ids p ->
           let p' = normalize_package_path env p in
           begin match Path.find_free_opt ids p' with
           | Some id -> raise (Nondep_cannot_erase id)
           | None ->
             let nondep_field_rec (n, ty) = (n, nondep_type_rec env ids ty) in
-            Tpackage (p', List.map nondep_field_rec fl)
+            Tpackage {
+              pack_path = p';
+              pack_cstrs = List.map nondep_field_rec fl
+            }
           end
       | Tobject (t1, name) ->
           Tobject (nondep_type_rec env ids t1,

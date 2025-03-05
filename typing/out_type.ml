@@ -1128,9 +1128,9 @@ let rec tree_of_typexp mode ty =
         end
     | Tunivar _ ->
         Otyp_var (false, Variable_names.(name_of_type new_name) tty)
-    | Tpackage (p, fl) ->
-        let fl = tree_of_pack_fields mode fl in
-        Otyp_module (tree_of_path (Some Module_type) p, fl)
+    | Tpackage {pack_path; pack_cstrs = fl} ->
+        let fl = tree_of_pack_cstrs mode fl in
+        Otyp_module (tree_of_path (Some Module_type) pack_path, fl)
   in
   Aliases.remove_delay px;
   alias_nongen_row mode px ty;
@@ -1200,7 +1200,7 @@ and tree_of_typfields mode rest = function
       let (fields, rest) = tree_of_typfields mode rest l in
       (field :: fields, rest)
 
-and tree_of_pack_fields mode fl =
+and tree_of_pack_cstrs mode fl =
   List.map
     (fun (li, ty) -> (
       String.concat "." li,
