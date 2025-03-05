@@ -386,32 +386,34 @@ static unsigned int hash_value_name(char const *name)
 
 CAMLprim value caml_register_named_value(value vname, value val)
 {
+  CAMLparam2(vname, val);
   const char * name = String_val(vname);
   unsigned int h = hash_value_name(name);
   int found = 0;
 
   caml_plat_lock_non_blocking(&named_value_lock);
+  name = NULL; /* block may have moved while we waited for the lock. */
   for (struct named_value *nv = named_value_table[h];
        nv != NULL;
        nv = nv->next) {
-    if (strcmp(name, nv->name) == 0) {
+    if (strcmp(String_val(vname), nv->name) == 0) {
       caml_modify_generational_global_root(&nv->val, val);
       found = 1;
       break;
     }
   }
   if (!found) {
-    size_t namelen = strlen(name) + 1;
+    size_t namelen = strlen(String_val(vname));
     struct named_value * nv =
-      caml_stat_alloc(sizeof(struct named_value) + namelen);
-    memcpy(nv->name, name, namelen);
+      caml_stat_alloc(sizeof(struct named_value) + namelen + 1);
+    memcpy(nv->name, String_val(vname), namelen + 1);
     nv->val = val;
     nv->next = named_value_table[h];
     named_value_table[h] = nv;
     caml_register_generational_global_root(&nv->val);
   }
   caml_plat_unlock(&named_value_lock);
-  return Val_unit;
+  CAMLreturn(Val_unit);
 }
 
 CAMLexport const value* caml_named_value(char const *name)
