@@ -2678,7 +2678,7 @@ let complete_type_list ?(allow_absent=false) env fl1 lv2 mty2 fl2 =
   | exception Exit -> raise Not_found
 
 (* raise Not_found rather than Unify if the module types are incompatible *)
-let unify_package env unify_list lv1 p1 fl1 lv2 p2 fl2 =
+let compare_package env unify_list lv1 p1 fl1 lv2 p2 fl2 =
   let ntl2 = complete_type_list env fl1 lv2 (Mty_ident p2) fl2
   and ntl1 = complete_type_list env fl2 lv1 (Mty_ident p1) fl1 in
   unify_list (List.map snd ntl1) (List.map snd ntl2);
@@ -2974,7 +2974,7 @@ and unify3 uenv t1 t1' t2 t2' =
             (unify uenv)
       | (Tpackage (p1, fl1), Tpackage (p2, fl2)) ->
           begin match
-            unify_package (get_env uenv) (unify_list uenv)
+            compare_package (get_env uenv) (unify_list uenv)
               (get_level t1) p1 fl1 (get_level t2) p2 fl2
           with
           | Ok () -> ()
@@ -3847,7 +3847,7 @@ let rec moregen inst_nongen type_pairs env t1 t2 =
               moregen_list inst_nongen type_pairs env tl1 tl2
           | (Tpackage (p1, fl1), Tpackage (p2, fl2)) ->
               begin match
-                unify_package env (moregen_list inst_nongen type_pairs env)
+                compare_package env (moregen_list inst_nongen type_pairs env)
                   (get_level t1') p1 fl1 (get_level t2') p2 fl2
               with
               | Ok () -> ()
@@ -4220,7 +4220,7 @@ let rec eqtype rename type_pairs subst env t1 t2 =
               eqtype_list_same_length rename type_pairs subst env tl1 tl2
           | (Tpackage (p1, fl1), Tpackage (p2, fl2)) ->
               begin match
-                unify_package env (eqtype_list rename type_pairs subst env)
+                compare_package env (eqtype_list rename type_pairs subst env)
                   (get_level t1') p1 fl1 (get_level t2') p2 fl2
               with
               | Ok () -> ()
