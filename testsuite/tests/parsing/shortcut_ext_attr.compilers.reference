@@ -1,3 +1,35 @@
+File "shortcut_ext_attr.ml", line 12, characters 3-35: non-ghost location points to a range of source code that contains the wrong ast
+File "shortcut_ext_attr.ml", line 13, characters 3-29: non-ghost location points to a range of source code that contains the wrong ast
+File "shortcut_ext_attr.ml", line 14, characters 3-24: non-ghost location points to a range of source code that contains the wrong ast
+File "shortcut_ext_attr.ml", line 15, characters 3-29: non-ghost location points to a range of source code that contains the wrong ast
+File "shortcut_ext_attr.ml", line 16, characters 3-32: non-ghost location points to a range of source code that contains the wrong ast
+File "shortcut_ext_attr.ml", line 17, characters 3-34: non-ghost location points to a range of source code that contains the wrong ast
+File "shortcut_ext_attr.ml", line 18, characters 2-31: non-ghost location points to a range of source code that contains the wrong ast
+File "shortcut_ext_attr.ml", line 18, characters 2-31: ghost location should be non-ghost
+File "shortcut_ext_attr.ml", line 19, characters 2-39: non-ghost location points to a range of source code that contains the wrong ast
+File "shortcut_ext_attr.ml", line 19, characters 2-39: ghost location should be non-ghost
+File "shortcut_ext_attr.ml", line 21, characters 2-23: non-ghost location points to a range of source code that contains the wrong ast
+File "shortcut_ext_attr.ml", line 21, characters 2-23: ghost location should be non-ghost
+File "shortcut_ext_attr.ml", line 22, characters 2-18: non-ghost location points to a range of source code that contains the wrong ast
+File "shortcut_ext_attr.ml", line 22, characters 2-18: ghost location should be non-ghost
+File "shortcut_ext_attr.ml", line 23, characters 2-22: non-ghost location points to a range of source code that contains the wrong ast
+File "shortcut_ext_attr.ml", line 23, characters 2-22: ghost location should be non-ghost
+File "shortcut_ext_attr.ml", line 24, characters 2-23: non-ghost location points to a range of source code that contains the wrong ast
+File "shortcut_ext_attr.ml", line 24, characters 2-23: ghost location should be non-ghost
+File "shortcut_ext_attr.ml", line 25, characters 2-17: non-ghost location points to a range of source code that contains the wrong ast
+File "shortcut_ext_attr.ml", line 25, characters 2-17: ghost location should be non-ghost
+File "shortcut_ext_attr.ml", line 29, characters 4-20: non-ghost location points to a range of source code that contains the wrong ast
+File "shortcut_ext_attr.ml", line 29, characters 4-20: ghost location should be non-ghost
+File "shortcut_ext_attr.ml", line 30, characters 4-25: non-ghost location points to a range of source code that contains the wrong ast
+File "shortcut_ext_attr.ml", line 30, characters 4-25: ghost location should be non-ghost
+File "shortcut_ext_attr.ml", lines 27-30, characters 2-31: non-ghost location points to a range of source code that contains the wrong ast
+File "shortcut_ext_attr.ml", lines 27-30, characters 2-31: ghost location should be non-ghost
+File "shortcut_ext_attr.ml", lines 20-30, characters 2-31: non-ghost location points to a range of source code that contains the wrong ast
+File "shortcut_ext_attr.ml", lines 10-30, characters 2-31: non-ghost location points to a range of source code that contains the wrong ast
+File "shortcut_ext_attr.ml", lines 10-30, characters 2-31: ghost location should be non-ghost
+File "shortcut_ext_attr.ml", line 50, characters 14-14: non-ghost location points to a non parsable range
+File "shortcut_ext_attr.ml", line 61, characters 2-22: non-ghost location points to a range of source code that contains the wrong ast
+File "shortcut_ext_attr.ml", line 61, characters 2-22: ghost location should be non-ghost
 [
   structure_item (shortcut_ext_attr.ml[9,170+0]..[30,721+31])
     Pstr_value Nonrec
