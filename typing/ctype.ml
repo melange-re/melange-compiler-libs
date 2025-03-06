@@ -777,8 +777,8 @@ let rec copy_spine copy_scope ty =
           Tpoly (copy_rec ty', tvl)
       | Ttuple tyl ->
           Ttuple (List.map (fun (lbl, ty) -> (lbl, copy_rec ty)) tyl)
-      | Tpackage {pack_path; pack_cstrs = fl} ->
-          let fl = List.map (fun (n, ty) -> n, copy_rec ty) fl in
+      | Tpackage {pack_path; pack_cstrs} ->
+          let fl = List.map (fun (n, ty) -> n, copy_rec ty) pack_cstrs in
           Tpackage {pack_path; pack_cstrs = fl}
       | Tconstr (path, tyl, _) ->
           Tconstr (path, List.map copy_rec tyl, ref Mnil)
@@ -827,12 +827,12 @@ let rec check_scope_escape mark env level ty =
         | exception Cannot_expand ->
             raise_escape_exn (Constructor p)
         end
-    | Tpackage {pack_path = p; pack_cstrs = fl} when level < Path.scope p ->
+    | Tpackage ({pack_path = p} as pack) when level < Path.scope p ->
         let p' = normalize_package_path env p in
         if Path.same p p' then raise_escape_exn (Module_type p);
         check_scope_escape mark env level
           (newty2 ~level:orig_level
-            (Tpackage {pack_path = p'; pack_cstrs = fl}))
+            (Tpackage {pack with pack_path = p'}))
     | _ ->
         iter_type_expr (check_scope_escape mark env level) ty
     end;
@@ -904,10 +904,10 @@ let rec update_level env level expand ty =
           set_level ();
           iter_type_expr (update_level env level expand) ty
         end
-    | Tpackage {pack_path = p; pack_cstrs = fl} when level < Path.scope p ->
+    | Tpackage ({pack_path = p} as pack) when level < Path.scope p ->
         let p' = normalize_package_path env p in
         if Path.same p p' then raise_escape_exn (Module_type p);
-        set_type_desc ty (Tpackage {pack_path = p'; pack_cstrs = fl});
+        set_type_desc ty (Tpackage {pack with pack_path = p'});
         update_level env level expand ty
     | Tobject (_, ({contents=Some(p, _tl)} as nm))
       when level < Path.scope p ->
@@ -5492,15 +5492,15 @@ let rec nondep_type_rec ?(expand_private=false) env ids ty =
                *)
             with Cannot_expand -> raise exn
           end
-      | Tpackage{pack_path = p; pack_cstrs = fl} when Path.exists_free ids p ->
-          let p' = normalize_package_path env p in
+      | Tpackage pack when Path.exists_free ids pack.pack_path ->
+          let p' = normalize_package_path env pack.pack_path in
           begin match Path.find_free_opt ids p' with
           | Some id -> raise (Nondep_cannot_erase id)
           | None ->
             let nondep_field_rec (n, ty) = (n, nondep_type_rec env ids ty) in
             Tpackage {
               pack_path = p';
-              pack_cstrs = List.map nondep_field_rec fl
+              pack_cstrs = List.map nondep_field_rec pack.pack_cstrs
             }
           end
       | Tobject (t1, name) ->
