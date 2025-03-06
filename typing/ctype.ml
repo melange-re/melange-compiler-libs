@@ -2975,22 +2975,8 @@ and unify3 uenv t1 t1' t2 t2' =
       | (Tpoly (t1, tl1), Tpoly (t2, tl2)) ->
           enter_poly_for Unify (get_env uenv) t1 tl1 t2 tl2
             (unify uenv)
-      | (Tpackage ({pack_cstrs = fl1} as pack1),
-         Tpackage ({pack_cstrs = fl2} as pack2)) ->
-          begin match
-            compare_package (get_env uenv) (unify_list uenv)
-              (get_level t1) pack1 (get_level t2) pack2
-          with
-          | Ok () -> ()
-          | Error fm_err ->
-              if not (in_pattern_mode uenv) then
-                raise_for Unify (Errortrace.First_class_module fm_err);
-              List.iter (fun (_n, ty) -> reify uenv ty) (fl1 @ fl2);
-          | exception Not_found ->
-            if not (in_pattern_mode uenv) then raise_unexplained_for Unify;
-            List.iter (fun (_n, ty) -> reify uenv ty) (fl1 @ fl2);
-            (* if !generate_equations then List.iter2 (mcomp !env) tl1 tl2 *)
-          end
+      | (Tpackage pack1, Tpackage pack2) ->
+          unify_package uenv (get_level t1) pack1 (get_level t2) pack2
       | (Tnil,  Tconstr _ ) ->
           raise_for Unify (Obj (Abstract_row Second))
       | (Tconstr _,  Tnil ) ->
@@ -3027,6 +3013,22 @@ and unify_labeled_list env labeled_tl1 labeled_tl2 =
         raise_unexplained_for Unify;
       unify env ty1 ty2)
     labeled_tl1 labeled_tl2
+
+and unify_package uenv lvl1 pack1 lvl2 pack2 =
+  match
+    compare_package (get_env uenv) (unify_list uenv) lvl1 pack1 lvl2 pack2
+  with
+  | Ok () -> ()
+  | Error fm_err ->
+      if not (in_pattern_mode uenv) then
+        raise_for Unify (Errortrace.First_class_module fm_err);
+      List.iter (fun (_n, ty) -> reify uenv ty)
+        (pack1.pack_cstrs @ pack2.pack_cstrs);
+  | exception Not_found ->
+    if not (in_pattern_mode uenv) then raise_unexplained_for Unify;
+    List.iter (fun (_n, ty) -> reify uenv ty)
+        (pack1.pack_cstrs @ pack2.pack_cstrs);
+    (* if !generate_equations then List.iter2 (mcomp !env) tl1 tl2 *)
 
 (* Build a fresh row variable for unification *)
 and make_rowvar level use1 rest1 use2 rest2  =
