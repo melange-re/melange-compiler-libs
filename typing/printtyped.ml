@@ -235,12 +235,7 @@ and pattern : type k . _ -> _ -> k general_pattern -> unit = fun i ppf x ->
   line i ppf "pattern %a\n" fmt_location x.pat_loc;
   attributes i ppf x.pat_attributes;
   let i = i+1 in
-  begin match x.pat_extra with
-  | [] -> ()
-  | extra ->
-    line i ppf "extra\n";
-    List.iter (pattern_extra (i+1) ppf) extra;
-  end;
+  List.iter (pattern_extra i ppf) x.pat_extra;
   match x.pat_desc with
   | Tpat_any -> line i ppf "Tpat_any\n";
   | Tpat_var (s,_,_) -> line i ppf "Tpat_var \"%a\"\n" fmt_ident s;
@@ -289,7 +284,9 @@ and labeled_pattern
     tuple_component_label i ppf label;
     pattern i ppf x
 
-and pattern_extra i ppf (extra_pat, _, attrs) =
+and pattern_extra i ppf (extra_pat, loc, attrs) =
+  line i ppf "extra %a\n" fmt_location loc;
+  let i = i + 1 in
   match extra_pat with
   | Tpat_unpack ->
      line i ppf "Tpat_extra_unpack\n";
@@ -316,12 +313,15 @@ and function_body i ppf (body : function_body) =
       line i ppf "Tfunction_cases%a %a\n"
         fmt_partiality partial
         fmt_location loc;
-      attributes (i+1) ppf attrs;
-      Option.iter (fun e -> expression_extra (i+1) ppf e []) exp_extra;
-      list (i+1) case ppf cases
+      let i = i+1 in
+      attributes i ppf attrs;
+      Option.iter (fun e -> expression_extra i ppf (e, loc, [])) exp_extra;
+      list i case ppf cases
 
-and expression_extra i ppf x attrs =
-  match x with
+and expression_extra i ppf (extra, loc, attrs) =
+  line i ppf "extra %a\n" fmt_location loc;
+  let i = i + 1 in
+  match extra with
   | Texp_constraint ct ->
       line i ppf "Texp_constraint\n";
       attributes i ppf attrs;
@@ -343,12 +343,7 @@ and expression i ppf x =
   line i ppf "expression %a\n" fmt_location x.exp_loc;
   attributes i ppf x.exp_attributes;
   let i = i+1 in
-  begin match x.exp_extra with
-  | [] -> ()
-  | extra ->
-    line i ppf "extra\n";
-    List.iter (fun (x, _, attrs) -> expression_extra (i+1) ppf x attrs) extra;
-  end;
+  List.iter (expression_extra i ppf) x.exp_extra;
   match x.exp_desc with
   | Texp_ident (li,_,_) -> line i ppf "Texp_ident %a\n" fmt_path li;
   | Texp_instvar (_, li,_) -> line i ppf "Texp_instvar %a\n" fmt_path li;
