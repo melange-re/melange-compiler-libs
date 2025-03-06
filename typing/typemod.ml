@@ -2057,13 +2057,13 @@ let modtype_of_package env loc p fl =
   in
   Subst.modtype Keep Subst.identity mty
 
-let package_subtype env p1 fl1 p2 fl2 =
-  let mkmty p fl =
+let package_subtype env pack1 pack2 =
+  let mkmty (pack : Types.package) =
     let fl =
-      List.filter (fun (_n,t) -> Ctype.closed_type_expr t) fl in
-    modtype_of_package env Location.none p fl
+      List.filter (fun (_n,t) -> Ctype.closed_type_expr t) pack.pack_cstrs in
+    modtype_of_package env Location.none pack.pack_path fl
   in
-  match mkmty p1 fl1, mkmty p2 fl2 with
+  match mkmty pack1, mkmty pack2 with
   | exception Error(_, _, Cannot_scrape_package_type r) ->
       Result.Error (Errortrace.Package_cannot_scrape r)
   | mty1, mty2 ->

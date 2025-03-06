@@ -2623,7 +2623,7 @@ let eq_package_path env p1 p2 =
   Path.same (normalize_package_path env p1) (normalize_package_path env p2)
 
 let nondep_type' = ref (fun _ _ _ -> assert false)
-let package_subtype = ref (fun _ _ _ _ _ -> assert false)
+let package_subtype = ref (fun _ _ _ -> assert false)
 
 exception Nondep_cannot_erase of Ident.t
 
@@ -2687,8 +2687,8 @@ let compare_package env unify_list lv1 pack1 lv2 pack2 =
   unify_list (List.map snd ntl1) (List.map snd ntl2);
   if eq_package_path env p1 p2 then Ok ()
   else Result.bind
-      (!package_subtype env p1 fl1 p2 fl2)
-      (fun () -> !package_subtype env p2 fl2 p1 fl1)
+      (!package_subtype env pack1 pack2)
+      (fun () -> !package_subtype env pack2 pack1)
 
 (* force unification in Reither when one side has a non-conjunctive type *)
 (* Code smell: this could also be put in unification_environment.
@@ -5088,7 +5088,7 @@ and subtype_package env trace lvl1 pack1 lvl2 pack2 cstrs =
       (* need to check module subtyping *)
       let snap = Btype.snapshot () in
       match List.iter (fun (_, t1, t2, _) -> unify env t1 t2) cstrs' with
-      | () when Result.is_ok (!package_subtype env p1 fl1 p2 fl2) ->
+      | () when Result.is_ok (!package_subtype env pack1 pack2) ->
         Btype.backtrack snap; cstrs' @ cstrs
       | () | exception Unify _ ->
         Btype.backtrack snap; raise Not_found
