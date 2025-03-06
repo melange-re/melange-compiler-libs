@@ -3852,14 +3852,8 @@ let rec moregen inst_nongen type_pairs env t1 t2 =
                 when Path.same p1 p2 ->
               moregen_list inst_nongen type_pairs env tl1 tl2
           | (Tpackage pack1, Tpackage pack2) ->
-              begin match
-                compare_package env (moregen_list inst_nongen type_pairs env)
-                  (get_level t1') pack1 (get_level t2') pack2
-              with
-              | Ok () -> ()
-              | Error fme -> raise_for Moregen (First_class_module fme)
-              | exception Not_found -> raise_unexplained_for Moregen
-              end
+              moregen_package inst_nongen type_pairs env (get_level t1') pack1
+                (get_level t2') pack2
           | (Tnil,  Tconstr _ ) -> raise_for Moregen (Obj (Abstract_row Second))
           | (Tconstr _,  Tnil ) -> raise_for Moregen (Obj (Abstract_row First))
           | (Tvariant row1, Tvariant row2) ->
@@ -3900,6 +3894,15 @@ and moregen_labeled_list inst_nongen type_pairs env labeled_tl1
         raise_unexplained_for Moregen;
       moregen inst_nongen type_pairs env ty1 ty2)
     labeled_tl1 labeled_tl2
+
+and moregen_package inst_nongen type_pairs env lvl1 pack1 lvl2 pack2 =
+  match
+    compare_package env (moregen_list inst_nongen type_pairs env)
+      lvl1 pack1 lvl2 pack2
+  with
+  | Ok () -> ()
+  | Error fme -> raise_for Moregen (First_class_module fme)
+  | exception Not_found -> raise_unexplained_for Moregen
 
 and moregen_fields inst_nongen type_pairs env ty1 ty2 =
   let (fields1, rest1) = flatten_fields ty1
