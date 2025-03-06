@@ -2949,7 +2949,7 @@ let lookup_type_in_sig sg =
     | Ldot({ txt = m; _ }, { txt = name; _ }) -> Pdot(module_path m, name)
     | Lapply _ -> assert false
 
-let type_package env m p fl =
+let type_package env m (pack : Types.package) =
   (* Same as Pexp_letmodule *)
   let modl, scope =
     Typetexp.TyVarEnv.with_local_scope begin fun () ->
@@ -2962,7 +2962,7 @@ let type_package env m p fl =
     end
   in
   let fl', env =
-    match fl with
+    match pack.pack_cstrs with
     | [] -> [], env
     | fl ->
       let type_path, env =
@@ -3002,8 +3002,8 @@ let type_package env m p fl =
       fl', env
   in
   let mty =
-    if fl = [] then (Mty_ident p)
-    else modtype_of_package env modl.mod_loc p fl'
+    if pack.pack_cstrs = [] then (Mty_ident pack.pack_path)
+    else modtype_of_package env modl.mod_loc pack.pack_path fl'
   in
   List.iter
     (fun (n, ty) ->
@@ -3013,7 +3013,7 @@ let type_package env m p fl =
         raise (Error(modl.mod_loc, env, Scoping_pack (lid,ty))))
     fl';
   let modl = wrap_constraint_package env true modl mty Tmodtype_implicit in
-  modl, fl'
+  modl, {pack with pack_cstrs = fl'}
 
 (* Fill in the forward declarations *)
 
