@@ -2679,7 +2679,9 @@ let complete_type_list ?(allow_absent=false) env fl1 lv2 mty2 fl2 =
   | exception Exit -> raise Not_found
 
 (* raise Not_found rather than Unify if the module types are incompatible *)
-let compare_package env unify_list lv1 p1 fl1 lv2 p2 fl2 =
+let compare_package env unify_list lv1 pack1 lv2 pack2 =
+  let {pack_path = p1; pack_cstrs = fl1} = pack1 in
+  let {pack_path = p2; pack_cstrs = fl2} = pack2 in
   let ntl2 = complete_type_list env fl1 lv2 (Mty_ident p2) fl2
   and ntl1 = complete_type_list env fl2 lv1 (Mty_ident p1) fl1 in
   unify_list (List.map snd ntl1) (List.map snd ntl2);
@@ -2973,11 +2975,11 @@ and unify3 uenv t1 t1' t2 t2' =
       | (Tpoly (t1, tl1), Tpoly (t2, tl2)) ->
           enter_poly_for Unify (get_env uenv) t1 tl1 t2 tl2
             (unify uenv)
-      | (Tpackage {pack_path = p1; pack_cstrs = fl1},
-         Tpackage {pack_path = p2; pack_cstrs = fl2}) ->
+      | (Tpackage ({pack_cstrs = fl1} as pack1),
+         Tpackage ({pack_cstrs = fl2} as pack2)) ->
           begin match
             compare_package (get_env uenv) (unify_list uenv)
-              (get_level t1) p1 fl1 (get_level t2) p2 fl2
+              (get_level t1) pack1 (get_level t2) pack2
           with
           | Ok () -> ()
           | Error fm_err ->
@@ -3847,11 +3849,10 @@ let rec moregen inst_nongen type_pairs env t1 t2 =
           | (Tconstr (p1, tl1, _), Tconstr (p2, tl2, _))
                 when Path.same p1 p2 ->
               moregen_list inst_nongen type_pairs env tl1 tl2
-          | (Tpackage {pack_path = p1; pack_cstrs = fl1},
-             Tpackage {pack_path = p2; pack_cstrs = fl2}) ->
+          | (Tpackage pack1, Tpackage pack2) ->
               begin match
                 compare_package env (moregen_list inst_nongen type_pairs env)
-                  (get_level t1') p1 fl1 (get_level t2') p2 fl2
+                  (get_level t1') pack1 (get_level t2') pack2
               with
               | Ok () -> ()
               | Error fme -> raise_for Moregen (First_class_module fme)
@@ -4221,11 +4222,10 @@ let rec eqtype rename type_pairs subst env t1 t2 =
           | (Tconstr (p1, tl1, _), Tconstr (p2, tl2, _))
                 when Path.same p1 p2 ->
               eqtype_list_same_length rename type_pairs subst env tl1 tl2
-          | (Tpackage {pack_path = p1; pack_cstrs = fl1},
-             Tpackage {pack_path = p2; pack_cstrs = fl2}) ->
+          | (Tpackage pack1, Tpackage pack2) ->
               begin match
                 compare_package env (eqtype_list rename type_pairs subst env)
-                  (get_level t1') p1 fl1 (get_level t2') p2 fl2
+                  (get_level t1') pack1 (get_level t2') pack2
               with
               | Ok () -> ()
               | Error fme -> raise_for Equality (First_class_module fme)
