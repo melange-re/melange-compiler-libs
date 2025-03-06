@@ -4228,14 +4228,8 @@ let rec eqtype rename type_pairs subst env t1 t2 =
                 when Path.same p1 p2 ->
               eqtype_list_same_length rename type_pairs subst env tl1 tl2
           | (Tpackage pack1, Tpackage pack2) ->
-              begin match
-                compare_package env (eqtype_list rename type_pairs subst env)
-                  (get_level t1') pack1 (get_level t2') pack2
-              with
-              | Ok () -> ()
-              | Error fme -> raise_for Equality (First_class_module fme)
-              | exception Not_found -> raise_unexplained_for Equality
-              end
+              eqtype_package rename type_pairs subst env
+                (get_level t1') pack1 (get_level t2') pack2
           | (Tnil,  Tconstr _ ) ->
               raise_for Equality (Obj (Abstract_row Second))
           | (Tconstr _,  Tnil ) ->
@@ -4279,6 +4273,15 @@ and eqtype_labeled_list rename type_pairs subst env labeled_tl1 labeled_tl2 =
         raise_unexplained_for Equality;
       eqtype rename type_pairs subst env ty1 ty2)
     labeled_tl1 labeled_tl2
+
+and eqtype_package rename type_pairs subst env lvl1 pack1 lvl2 pack2 =
+  match
+    compare_package env (eqtype_list rename type_pairs subst env)
+      lvl1 pack1 lvl2 pack2
+  with
+  | Ok () -> ()
+  | Error fme -> raise_for Equality (First_class_module fme)
+  | exception Not_found -> raise_unexplained_for Equality
 
 and eqtype_fields rename type_pairs subst env ty1 ty2 =
   let (fields1, rest1) = flatten_fields ty1 in
