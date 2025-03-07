@@ -1,6 +1,7 @@
 (* TEST
  include unix;
- libunix;
+ hasunix;
+ not-windows;
  native;
 *)
 open Sys
@@ -71,5 +72,15 @@ let () =
   let x = !r in
   (* Should trigger signal_handle for signal corresponding to 1 SIGHUP? *)
   assert (x == true);
+
+  (* Should convert known signals between OCaml numbering and
+     platform numbering. *)
+  let platform_sighup = 1 (* SIGHUP on Linux and various BSDs *) in
+  let platform_signal = Sys.signal_to_int sighup in
+  let ocaml_signal = Sys.signal_of_int platform_sighup in
+  Printf.printf "SIGHUP platform_no: %d ocaml_no: %d\n"
+    platform_signal ocaml_signal;
+  assert (ocaml_signal == sighup &&
+          platform_signal == platform_sighup);
 
   print_endline "Sys.set_signal works!"

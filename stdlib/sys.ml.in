@@ -147,6 +147,15 @@ let signal_to_string s =
   else if s = sigwinch then "SIGWINCH"
   else "SIG(" ^ string_of_int s ^ ")"
 
+external rev_convert_signal_number: int -> int =
+  "caml_sys_rev_convert_signal_number"
+external convert_signal_number: int -> int =
+  "caml_sys_convert_signal_number"
+
+let signal_of_int i = rev_convert_signal_number i
+
+let signal_to_int i = convert_signal_number i
+
 exception Break
 
 let catch_break on =
