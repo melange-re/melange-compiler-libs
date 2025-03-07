@@ -229,6 +229,9 @@ Working version
 - #13578: On Windows, use the OS CSPRNG to seed the Stdlib.Random generator.
   (Antonin Décimo, review by Miod Vallat, Nicolás Ojeda Bär, and Xavier Leroy)
 
+- #13859: Fix Weak.get_copy not darkening custom blocks
+  (Josh Berdine, review by ?)
+
 ### Other libraries:
 
 * #13376: Allow Dynlink.loadfile_private to load bytecode libraries with
