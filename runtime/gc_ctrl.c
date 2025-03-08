@@ -38,6 +38,7 @@
 #include "caml/signals.h"
 #include "caml/startup.h"
 #include "caml/fail.h"
+#include "caml/callback.h"
 
 atomic_uintnat caml_max_stack_wsize;
 uintnat caml_fiber_wsz;
