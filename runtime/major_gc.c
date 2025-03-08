@@ -722,6 +722,7 @@ update_major_slice_work(intnat howmuch,
 {
   intnat alloc_work, dependent_work, extra_work, new_work;
   intnat my_alloc_count, my_alloc_direct_count, my_dependent_count;
+  intnat my_alloc_suspended_count, my_alloc_resumed_count;
   double my_extra_count;
   caml_domain_state *dom_st = Caml_state;
   uintnat heap_words, heap_size, heap_sweep_words, total_cycle_work;
@@ -729,13 +730,20 @@ update_major_slice_work(intnat howmuch,
 
   my_alloc_count = dom_st->allocated_words;
   my_alloc_direct_count = dom_st->allocated_words_direct;
+  my_alloc_suspended_count = dom_st->allocated_words_suspended;
+  my_alloc_resumed_count = dom_st->allocated_words_resumed;
   my_dependent_count = dom_st->dependent_allocated;
   my_extra_count = dom_st->extra_heap_resources;
+
   dom_st->stat_major_words += dom_st->allocated_words;
+
   dom_st->allocated_words = 0;
   dom_st->allocated_words_direct = 0;
+  dom_st->allocated_words_suspended = 0;
+  dom_st->allocated_words_resumed = 0;
   dom_st->dependent_allocated = 0;
   dom_st->extra_heap_resources = 0.0;
+
   /*
      Free memory at the start of the GC cycle (garbage + free list) (assumed):
                  FM = heap_words * caml_percent_free
@@ -784,7 +792,10 @@ update_major_slice_work(intnat howmuch,
       total_cycle_work
       * 3.0 * (100 + percent_free)
       / heap_words / percent_free / 2.0;
-    alloc_work = (intnat) (my_alloc_count * alloc_ratio);
+    intnat current_alloc_count =
+      my_alloc_count - my_alloc_suspended_count + my_alloc_resumed_count;
+    CAMLassert (current_alloc_count >= 0);
+    alloc_work = (intnat) (current_alloc_count * alloc_ratio);
   } else {
     alloc_work = 0;
   }
@@ -810,6 +821,13 @@ update_major_slice_work(intnat howmuch,
   CAML_GC_MESSAGE(SLICESIZE,
                   "allocated_words_direct = %" ARCH_INTNAT_PRINTF_FORMAT "u\n",
                    my_alloc_direct_count);
+  CAML_GC_MESSAGE(SLICESIZE,
+                  "allocated_words_suspended = "
+                  "%" ARCH_INTNAT_PRINTF_FORMAT "u\n",
+                   my_alloc_suspended_count);
+  CAML_GC_MESSAGE(SLICESIZE,
+                  "allocated_words_resumed = %" ARCH_INTNAT_PRINTF_FORMAT "u\n",
+                   my_alloc_resumed_count);
   CAML_GC_MESSAGE(SLICESIZE,
                   "alloc work-to-do = %" ARCH_INTNAT_PRINTF_FORMAT "d\n",
                    alloc_work);
@@ -843,6 +861,9 @@ update_major_slice_work(intnat howmuch,
   caml_gc_log("Updated major work: [%c] "
               " %"ARCH_INTNAT_PRINTF_FORMAT "u heap_words, "
               " %"ARCH_INTNAT_PRINTF_FORMAT "u allocated, "
+              " %"ARCH_INTNAT_PRINTF_FORMAT "u allocated (direct), "
+              " %"ARCH_INTNAT_PRINTF_FORMAT "u allocated (suspended), "
+              " %"ARCH_INTNAT_PRINTF_FORMAT "u allocated (resumed), "
               " %"ARCH_INTNAT_PRINTF_FORMAT "d alloc_work, "
               " %"ARCH_INTNAT_PRINTF_FORMAT "d dependent_work, "
               " %"ARCH_INTNAT_PRINTF_FORMAT "d extra_work,  "
@@ -852,7 +873,9 @@ update_major_slice_work(intnat howmuch,
               " %"ARCH_INTNAT_PRINTF_FORMAT "d slice budget"
               ,
               caml_gc_phase_char(may_access_gc_phase),
-              (uintnat)heap_words, my_alloc_count,
+              (uintnat)heap_words,
+              my_alloc_count, my_alloc_direct_count,
+              my_alloc_suspended_count, my_alloc_resumed_count,
               alloc_work, dependent_work, extra_work,
               atomic_load (&work_counter),
               atomic_load (&work_counter) > atomic_load (&alloc_counter)
@@ -864,6 +887,7 @@ update_major_slice_work(intnat howmuch,
   if (log_events) {
     CAML_EV_COUNTER(EV_C_MAJOR_HEAP_WORDS, (uintnat)heap_words);
     CAML_EV_COUNTER(EV_C_MAJOR_ALLOCATED_WORDS, my_alloc_count);
+    /* TODO: add counters for direct, suspended, resumed allocs. */
     CAML_EV_COUNTER(EV_C_MAJOR_ALLOCATED_WORK, alloc_work);
     CAML_EV_COUNTER(EV_C_MAJOR_DEPENDENT_WORK, dependent_work);
     CAML_EV_COUNTER(EV_C_MAJOR_EXTRA_WORK, extra_work);
@@ -2133,6 +2157,8 @@ void caml_finish_marking (void)
     Caml_state->stat_major_words += Caml_state->allocated_words;
     Caml_state->allocated_words = 0;
     Caml_state->allocated_words_direct = 0;
+    Caml_state->allocated_words_suspended = 0;
+    Caml_state->allocated_words_resumed = 0;
     CAML_EV_END(EV_MAJOR_FINISH_MARKING);
   }
 }

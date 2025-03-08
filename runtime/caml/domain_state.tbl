@@ -74,12 +74,24 @@ DOMAIN_STATE(uintnat, sweeping_done)
 /* Is sweeping done for the current major cycle. */
 
 DOMAIN_STATE(uintnat, allocated_words)
-/* Number of words promoted or allocated directly to the major heap since
-   latest slice. */
+/* Number of words allocated in the major heap (by promotion or
+   direct allocation) since the latest slice. */
 
 DOMAIN_STATE(uintnat, allocated_words_direct)
-/* Number of words allocated directly to the major heap since the latest
-   slice. (subset of allocated_words) */
+/* Subset of [allocated_words] that was allocated directly to the
+   major heap since the latest slice. */
+
+DOMAIN_STATE(uintnat, allocated_words_suspended)
+/* Subset of [allocated_words] that were allocated in ramp-up
+   phases since the latest slice.
+
+   The corresponding deallocation work is "suspended" for later
+   ramp-down phases, instead of being performed in the next slice. */
+
+DOMAIN_STATE(uintnat, allocated_words_resumed)
+/* A number of allocated words (disjoint from [allocated_words])
+   whose deallocation work was suspended by a previous ramp-up phase,
+   and was resumed during a ramp-down phase since the latest slice. */
 
 DOMAIN_STATE(uintnat, swept_words)
 
