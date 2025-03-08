@@ -95,6 +95,9 @@ DOMAIN_STATE(uintnat, allocated_words_resumed)
 
 DOMAIN_STATE(uintnat, swept_words)
 
+DOMAIN_STATE(caml_gc_policy, gc_policy)
+/* Domain-local GC policy setting. */
+
 DOMAIN_STATE(uintnat, major_slice_epoch)
 
 DOMAIN_STATE(struct caml__roots_block*, local_roots)

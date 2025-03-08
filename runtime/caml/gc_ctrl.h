@@ -43,6 +43,16 @@ value caml_gc_major(value);
 void caml_heap_check (void);
 #endif
 
+/* Put the current domain in a "ramp-up" phase to run the provided
+   callback. During ramp-up, allocations do not increase the
+   collection work to be performed immediately, this collection
+.  work is suspended. */
+caml_result caml_gc_ramp_up(value callback);
+
+/* Notify the GC about some amount of collection work that was
+   suspended during a ramp-up phase, to be resumed now. */
+void caml_gc_ramp_down(uintnat ramp_up_words);
+
 #endif /* CAML_INTERNALS */
 
 #endif /* CAML_GC_CTRL_H */

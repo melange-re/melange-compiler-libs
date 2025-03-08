@@ -64,6 +64,9 @@ Caml_inline void caml_update_major_allocated_words(
   if (direct) {
     self->allocated_words_direct += words;
   }
+  if (self->gc_policy & CAML_GC_RAMP_UP) {
+    self->allocated_words_suspended += words;
+  }
 }
 
 #endif /* CAML_INTERNALS */

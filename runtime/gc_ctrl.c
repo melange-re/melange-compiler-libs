@@ -418,3 +418,21 @@ CAMLprim value caml_ml_runtime_warnings_enabled(value unit)
   CAMLassert (unit == Val_unit);
   return Val_bool(caml_runtime_warnings);
 }
+
+
+/* Ramp-up phase. */
+
+caml_result caml_gc_ramp_up(value callback) {
+    /* Set the GC policy to ramp-up. */
+    Caml_state->gc_policy = (Caml_state->gc_policy | CAML_GC_RAMP_UP);
+
+    caml_result res = caml_callback_res(callback, Val_unit);
+
+    Caml_state->gc_policy = (Caml_state->gc_policy & ~CAML_GC_RAMP_UP);
+
+    return res;
+}
+
+void caml_gc_ramp_down(uintnat ramp_up_words) {
+  Caml_state->allocated_words_resumed += ramp_up_words;
+}
