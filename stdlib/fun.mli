@@ -102,9 +102,11 @@ exception Finally_raised of exn
     ]}
 
     Dispatching functions of type [foo -> foo] conditionally is another place
-    where [id] may be useful
+    where [id] may be useful. Consider a function which either uses
+    {!val:String.map} on a path to convert unix-style slashes to windows-style
+    backslashes or leaves it as it is depending on the {!val:Sys.win32} value
     {[
-    if Sys.win32 then String.map (function '\\' -> '/' | c -> c) else Fun.id
+    if Sys.win32 then String.map (function '/' -> '\\' | c -> c) else Fun.id
     ]}
 
     {!val:const}
