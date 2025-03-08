@@ -43,27 +43,10 @@ value caml_gc_major(value);
 void caml_heap_check (void);
 #endif
 
-/* Put the current domain in a "ramp-up" phase to run the provided
-   callback. During ramp-up, allocations do not increase the
-   collection work to be performed immediately, this collection
-.  work is suspended.
-
-   The total number of suspended deallocation work, counted in
-   number of allocated words, is written to [*out_suspended_work].
-
-   If the user discards this suspended work (by doing nothing with
-   it), the GC will not try to recover the corresponding amount
-   of memory. This is appropriate if the ramp-up work allocates
-   long-lived memory that remains live until the end of the program
-   execution.
-
-   If the ramp-up memory is likely to become unused at some point,
-   then the user should call [gc_ramp_down] below with the suspended amount,
-   to resume the corresponding deallocation work. */
+/* See the documentation of [Gc.ramp_up] in the standard library. */
 caml_result caml_gc_ramp_up(value callback, uintnat *out_suspended_work);
 
-/* Notify the GC about some amount of collection work that was
-   suspended during a ramp-up phase, to be resumed now. */
+/* See the documentation of [Gc.ramp_down] in the standard library. */
 void caml_gc_ramp_down(uintnat suspended_ramp_up_words);
 
 #endif /* CAML_INTERNALS */

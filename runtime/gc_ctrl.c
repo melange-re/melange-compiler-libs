@@ -468,3 +468,17 @@ caml_result caml_gc_ramp_up(value callback, uintnat *out_suspended_words) {
 void caml_gc_ramp_down(uintnat ramp_up_words) {
   Caml_state->allocated_words_resumed += ramp_up_words;
 }
+
+CAMLprim value caml_ml_gc_ramp_up(value callback) {
+  CAMLparam1(callback);
+  CAMLlocal1(v);
+  uintnat deferred_words;
+  caml_result res = caml_gc_ramp_up(callback, &deferred_words);
+  v = caml_get_value_or_raise(res);
+  CAMLreturn (caml_alloc_2(0, v, Val_long(deferred_words)));
+}
+
+CAMLprim value caml_ml_gc_ramp_down(value work) {
+  caml_gc_ramp_down(Long_val(work));
+  return Val_unit;
+}
