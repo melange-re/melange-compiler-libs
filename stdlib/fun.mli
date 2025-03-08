@@ -79,17 +79,28 @@ exception Finally_raised of exn
     arguments rather than standalone definitions. The examples below will
     demonstrate this mainly with the {!module:List} module.
 
+
     {!val:id}
+
+    {!val:List.init} with the index itself
     {[
     # List.init 3 Fun.id;;
     - : int list = [0; 1; 2]
+    ]}
 
+    Using {!val:List.filter_map} on an [int option list] to filter out
+    {{!const:Option.t.None}[None]} elements
+    {[
     # List.filter_map Fun.id [None; Some 2; Some 3; None; Some 5];;
     - : int list = [2; 3; 5]
+    ]}
 
-    # let to_flat = Float.Array.map_from_array Fun.id
+    Using {!val:Float.Array.map_from_array} to flatten a [float array]
+    {[
+    # let to_flat arr = Float.Array.map_from_array Fun.id arr;;
     val to_flat : float array -> Float.Array.t
     ]}
+
     Dispatching functions of type [foo -> foo] conditionally is another place
     where [id] may be useful
     {[
@@ -97,17 +108,13 @@ exception Finally_raised of exn
     ]}
 
     {!val:const}
+
+    {!val:List.init} a list of zeros
     {[
     # List.init 3 (Fun.const 0);;
     - : int list = [0; 0; 0]
-
-    # let last xs = List.fold_left (Fun.const Option.some) None xs;;
-    val last : 'a list -> 'a option
-    # last [1; 2; 3];;
-    - : int option = Some 3
-    # last [];;
-    - : int option = None
     ]}
+
     Note that applying [const (...)] evaluates the expression [(...)] once, and
     returns a function that only has the result of this evaluation. To
     demonstrate this, consider if [(...)] was a call to {!val:Random.bool}[()]:
@@ -121,29 +128,48 @@ exception Finally_raised of exn
     outcomes, because the randomness effect is performed with every element.
 
     {!val:flip}
+
+    Use [flip] to reverse the comparator passed to {!val:List.sort}, resulting
+    in a reversed sorting
     {[
     # List.sort (Fun.flip Int.compare) [5; 3; 9; 0; 1; 6; 8];;
     - : int list = [9; 8; 6; 5; 3; 1; 0]
+    ]}
 
-    # let subtract = Fun.flip (-) in
-      List.map (subtract 2) [4; 6; 8];;
-    - : int list = [2; 4; 6]
-
+    Reverse a list by accumulating a new list using {!val:List.fold_left},
+    which expects the accumulator to be the first argument of the function
+    passed to it. We pass {!val:List.cons} which has the list as the second
+    argument, so [flip] is useful here
+    {[
     # List.fold_left (Fun.flip List.cons) [] [1; 2; 3];;
     - : int list = [3; 2; 1]
     ]}
-    Thanks to currying, [flip] can work with functions that take more than two
-    arguments, by flipping the first two and leaving the rest in order. Given a
-    function [f : a -> b -> c -> d]:
-    - [flip f m] will have type [a -> c -> d], whereas
-    - [flip (f n)] will have type [c -> b -> d]
+
+    Interestingly, [flip] can work with functions that aren't binary, by
+    flipping the first two arguments and leaving the rest in order. This is
+    because a function that takes [n+2] arguments is, conceptually, a binary
+    function which returns a function that takes [n] arguments.
+    Given a function [f : a -> b -> c -> d]:
+    {ul
+    {- [flip f] will have type [b -> a -> c -> d]}
+    {- [fun x -> flip (f x)] will have type [a -> c -> b -> d]}}
+
 
     {!val:negate}
+
+    Mainly used for reversing a predicate in a function which expects one, like
+    {!val:List.find_all} and similar functions
+
+    Find all lists which are {i not} empty using {!val:List.is_empty}
     {[
     # List.find_all (Fun.negate List.is_empty) [[0]; [1; 2; 3]; []; [4; 5]];;
     - : int list list = [[0]; [1; 2; 3]; [4; 5]]
+    ]}
 
-    # let is_free_path = Fun.negate Sys.file_exists
-    val is_free_path : string -> bool = <fun>
+    From a given list of paths, find all paths which are {i not} occupied using
+    {!val:Sys.file_exists}
+    {[
+    # List.find_all (Fun.negate Sys.file_exists)
+    - : string list -> string list = <fun>
     ]}
 *)
