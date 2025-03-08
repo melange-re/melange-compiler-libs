@@ -72,200 +72,196 @@ exception Finally_raised of exn
 
 (** {1:examples Examples}
 
-    {2 Combinators}
+{2 Combinators}
 
-    {{!combinators}Combinators} provide a lightweight and sometimes more
-    readable way to create anonymous functions, best used as short-lived
-    arguments rather than standalone definitions. The examples below will
-    demonstrate this mainly with the {!module:List} module.
-
-
-    {3:hid {{!val:id}id}}
-
-    {!val:List.init} with the index itself
-    {[
-    # List.init 3 Fun.id;;
-    - : int list = [0; 1; 2]
-    ]}
-
-    Using {!val:List.filter_map} on an [int option list] to filter out
-    {{!const:Option.t.None}[None]} elements
-    {[
-    # List.filter_map Fun.id [None; Some 2; Some 3; None; Some 5];;
-    - : int list = [2; 3; 5]
-    ]}
-
-    Using {!val:Float.Array.map_from_array} to flatten a [float array]
-    {[
-    # let to_flat arr = Float.Array.map_from_array Fun.id arr;;
-    val to_flat : float array -> Float.Array.t
-    ]}
-
-    Dispatching functions of type [foo -> foo] conditionally is another place
-    where [id] may be useful. Consider a function which either uses
-    {!val:String.map} on a path to convert unix-style slashes to windows-style
-    backslashes or leaves it as it is depending on the {!val:Sys.win32} value
-    {[
-    if Sys.win32 then String.map (function '/' -> '\\' | c -> c) else Fun.id
-    ]}
-
-    And for more advanced uses, where we may build up closures, [id] is often
-    used for the base-case as a no-op. Consider a function which chains a list
-    of unary functions:
-    {[
-    let rec chain = function
-      | [] -> Fun.id
-      | f :: fs -> fun x -> f (chain fs x)
-    ]}
+{{!combinators}Combinators} provide a lightweight and sometimes more readable
+way to create anonymous functions, best used as short-lived arguments rather
+than standalone definitions. The examples below will demonstrate this mainly
+with the {!module:List} module.
 
 
-    {3:hconst {{!val:const}const}}
+{3:hid {{!val:id}id}}
 
-    {!val:List.init} a list of zeros
-    {[
-    # List.init 3 (Fun.const 0);;
-    - : int list = [0; 0; 0]
-    ]}
+{!val:List.init} with the index itself
+{[
+# List.init 3 Fun.id;;
+- : int list = [0; 1; 2]
+]}
 
-    Note that applying [const (...)] evaluates the expression [(...)] once, and
-    returns a function that only has the result of this evaluation. To
-    demonstrate this, consider if [(...)] was a call to {!val:Random.bool}[()]:
+Using {!val:List.filter_map} on an [int option list] to filter out
+{{!const:Option.t.None}[None]} elements
+{[
+# List.filter_map Fun.id [None; Some 2; Some 3; None; Some 5];;
+- : int list = [2; 3; 5]
+]}
 
-    [List.init n (Fun.const (Random.bool()))] for any [n > 0] will have
-    {i exactly two} possible outcomes,
-    - [[true; true; ...; true]] or
-    - [[false; false; ...; false]].
+Using {!val:Float.Array.map_from_array} to flatten a [float array]
+{[
+# let to_flat arr = Float.Array.map_from_array Fun.id arr;;
+val to_flat : float array -> Float.Array.t
+]}
 
-    whereas [List.init n (fun _ -> Random.bool())] will have 2{^n} possible
-    outcomes, because the randomness effect is performed with every element.
+Dispatching functions of type [foo -> foo] conditionally is another place where
+[id] may be useful. Consider a function which either uses {!val:String.map} on
+a path to convert unix-style slashes to windows-style backslashes or leaves it
+as it is depending on the {!val:Sys.win32} value
+{[
+if Sys.win32 then String.map (function '/' -> '\\' | c -> c) else Fun.id
+]}
 
-    For more real-world uses, consider {!val:String.spellcheck} with a constant
-    max distance of 2
-    {[
-    # let spellcheck known_words word =
-        let dict_iter yield = List.iter yield known_words in
-        String.spellcheck ~max_dist:(Fun.const 2) dict_iter word
-      ;;
-    val spellcheck : string list -> string -> string list
-    ]}
-
-
-    {3:hflip {{!val:flip}flip}}
-
-    Use [flip] to reverse the comparator passed to {!val:List.sort}, resulting
-    in a reversed sorting
-    {[
-    # List.sort (Fun.flip Int.compare) [5; 3; 9; 0; 1; 6; 8];;
-    - : int list = [9; 8; 6; 5; 3; 1; 0]
-    ]}
-
-    Reverse a list by accumulating a new list using {!val:List.fold_left},
-    which expects the accumulator to be the first argument of the function
-    passed to it. We pass {!val:List.cons} which has the list as the second
-    argument, so [flip] is useful here
-    {[
-    # List.fold_left (Fun.flip List.cons) [] [1; 2; 3];;
-    - : int list = [3; 2; 1]
-    ]}
-
-    Using {!val:List.find_all} and a flipped {!val:List.mem} to get an
-    intersection of two lists (with order and duplicates from the second)
-    {[
-    # List.find_all (Fun.flip List.mem [2; 3; 5]) [0; 3; 3; 2; 4; 6; 8]
-    - : int list = [3; 3; 2]
-    ]}
-
-    From the {{!hconst}[spellcheck] example}, [flip] could've been used instead
-    of naming the dictionary iterator and its [yield] argument
-    {[
-    let spellcheck known_words word =
-      let dict_iter yield = List.iter yield known_words in
-      String.spellcheck ~max_dist:(Fun.const 2) dict_iter word
-    ]}
-    becomes
-    {[
-    let spellcheck known_words =
-      String.spellcheck ~max_dist:(Fun.const 2)
-        (Fun.flip List.iter known_words)
-    ]}
-
-    Interestingly, [flip] can work with functions that aren't binary, by
-    flipping the first two arguments and leaving the rest in order. This is
-    because a function that takes [n+2] arguments is, conceptually, a binary
-    function which returns a function that takes [n] arguments.
-    Given a function [f : a -> b -> c -> d]:
-    {ul
-    {- [flip f] will have type [b -> a -> c -> d]}
-    {- [fun x -> flip (f x)] will have type [a -> c -> b -> d]}}
-    Using [flip] with non-binary functions is discouraged, for its negative
-    impact on readability and reasoning.
+And for more advanced uses, where we may build up closures, [id] is often used
+for the base-case as a no-op. Consider a function which chains a list of unary
+functions:
+{[
+let rec chain = function
+  | [] -> Fun.id
+  | f :: fs -> fun x -> f (chain fs x)
+]}
 
 
-    {3:hnegate {{!val:negate}negate}}
+{3:hconst {{!val:const}const}}
 
-    Mainly used for reversing a predicate in a function which expects one, like
-    {!val:List.find_all} and similar functions
+{!val:List.init} a list of zeros
+{[
+# List.init 3 (Fun.const 0);;
+- : int list = [0; 0; 0]
+]}
 
-    Find all lists which are {i not} empty using {!val:List.is_empty}
-    {[
-    # List.find_all (Fun.negate List.is_empty) [[0]; [1; 2; 3]; []; [4; 5]];;
-    - : int list list = [[0]; [1; 2; 3]; [4; 5]]
-    ]}
+Note that applying [const (...)] evaluates the expression [(...)] once, and
+returns a function that only has the result of this evaluation. To demonstrate
+this, consider if [(...)] was a call to {!val:Random.bool}[()]:
 
-    From a given list of paths, find all paths which are {i not} occupied using
-    {!val:Sys.file_exists}
-    {[
-    # List.find_all (Fun.negate Sys.file_exists)
-    - : string list -> string list = <fun>
-    ]}
+[List.init n (Fun.const (Random.bool()))] for any [n > 0] will have {e exactly
+two} possible outcomes, [[true; true; ...; true]] or
+[[false; false; ...; false]], whereas [List.init n (fun _ -> Random.bool())]
+will have 2{^n} possible outcomes, because the randomness effect is performed
+with every element.
+
+For more real-world uses, consider {!val:String.spellcheck} with a constant max
+distance of 2
+{[
+# let spellcheck known_words word =
+    let dict_iter yield = List.iter yield known_words in
+    String.spellcheck ~max_dist:(Fun.const 2) dict_iter word
+  ;;
+val spellcheck : string list -> string -> string list
+]}
 
 
-    {3:hcompose {{!val:compose}compose}}
+{3:hflip {{!val:flip}flip}}
 
-    {!val:List.map} pair elements with a function on the second element
-    {[
-    # List.map (Fun.compose String.length snd) [1, "one"; 2, "two"; 3, "three"]
-    - : int list = [3; 3; 5]
-    ]}
+Use [flip] to reverse the comparator passed to {!val:List.sort}, resulting in a
+reversed sorting
+{[
+# List.sort (Fun.flip Int.compare) [5; 3; 9; 0; 1; 6; 8];;
+- : int list = [9; 8; 6; 5; 3; 1; 0]
+]}
 
-    {!val:List.find_all} string elements with length of exactly 3
-    {[
-    # List.find_all (Fun.compose ((=)3) String.length) ["one"; "two"; "three"]
-    - : string list = ["one"; "two"]
-    ]}
+Reverse a list by accumulating a new list using {!val:List.fold_left}, which
+expects the accumulator to be the first argument of the function passed to it.
+We pass {!val:List.cons} which has the list as the second argument, so [flip]
+is useful here
+{[
+# List.fold_left (Fun.flip List.cons) [] [1; 2; 3];;
+- : int list = [3; 2; 1]
+]}
 
-    A potential implementation of {!val:negate}
-    {[
-    # let negate f = Fun.compose not f
-    val negate : ('a -> bool) -> 'a -> bool
-    ]}
+Using {!val:List.find_all} and a flipped {!val:List.mem} to get an intersection
+of two lists (with order and duplicates from the second)
+{[
+# List.find_all (Fun.flip List.mem [2; 3; 5]) [0; 3; 3; 2; 4; 6; 8]
+- : int list = [3; 3; 2]
+]}
 
-    From the {{!hid}[chain] example}, [compose] could've been used in the
-    recursive branch
-    {[
-    let rec chain = function
-      | [] -> Fun.id
-      | f :: fs -> Fun.compose f (chain fs)
-    ]}
-    Or even more concisely
-    {[
-    let chain fs = List.fold_right Fun.compose fs Fun.id
-    ]}
+From the {{!hconst}[spellcheck] example}, [flip] could've been used instead of
+naming the dictionary iterator and its [yield] argument
+{[
+let spellcheck known_words word =
+  let dict_iter yield = List.iter yield known_words in
+  String.spellcheck ~max_dist:(Fun.const 2) dict_iter word
+]}
+becomes
+{[
+let spellcheck known_words =
+  String.spellcheck ~max_dist:(Fun.const 2) (Fun.flip List.iter known_words)
+]}
 
-    From the {{!hflip}[spellcheck] example}, [compose] could be used to
-    further condense the function definition so it becomes
-    {[
-    # Fun.compose (String.spellcheck ~max_dist:(Fun.const 2))
-        (Fun.flip List.iter);;
-    - : string list -> string -> string list
-    ]}
-    As can be seen here, this heavily impacts readability and the ability to
-    reason about the function. Both [String.spellcheck] and [Fun.flip] are not
-    unary, so there's a non-trivial interaction with partial-application with
-    this definition.
+Interestingly, [flip] can work with functions that aren't binary, by flipping
+the first two arguments and leaving the rest in order. This is because a
+function that takes [n+2] arguments is, conceptually, a binary function which
+returns a function that takes [n] arguments.
+Given a function [f : a -> b -> c -> d]:
+{ul
+{- [flip f] will have type [b -> a -> c -> d]}
+{- [fun x -> flip (f x)] will have type [a -> c -> b -> d]}}
+Using [flip] with non-binary functions is discouraged, for its negative impact
+on readability and reasoning.
 
-    Heavy use of these combinators in OCaml is generally discouraged, not only
-    because they can quickly impact readability and reasoning, but also because
-    the produced functions are often in value form, thus subject to the Value
-    Restriction (see the manual 6.1.2).
+
+{3:hnegate {{!val:negate}negate}}
+
+Mainly used for reversing a predicate in a function which expects one, like
+{!val:List.find_all} and similar functions
+
+Find all lists which are {e not} empty using {!val:List.is_empty}
+{[
+# List.find_all (Fun.negate List.is_empty) [[0]; [1; 2; 3]; []; [4; 5]];;
+- : int list list = [[0]; [1; 2; 3]; [4; 5]]
+]}
+
+From a given list of paths, find all paths which are {e not} occupied using
+{!val:Sys.file_exists}
+{[
+# List.find_all (Fun.negate Sys.file_exists)
+- : string list -> string list = <fun>
+]}
+
+
+{3:hcompose {{!val:compose}compose}}
+
+{!val:List.map} pair elements with a function on the second element
+{[
+# List.map (Fun.compose String.length snd) [1, "one"; 2, "two"; 3, "three"]
+- : int list = [3; 3; 5]
+]}
+
+{!val:List.find_all} string elements with length of exactly 3
+{[
+# List.find_all (Fun.compose ((=)3) String.length) ["one"; "two"; "three"]
+- : string list = ["one"; "two"]
+]}
+
+A potential implementation of {!val:negate}
+{[
+# let negate f = Fun.compose not f
+val negate : ('a -> bool) -> 'a -> bool
+]}
+
+From the {{!hid}[chain] example}, [compose] could've been used in the recursive
+branch
+{[
+let rec chain = function
+  | [] -> Fun.id
+  | f :: fs -> Fun.compose f (chain fs)
+]}
+Or even more concisely
+{[
+let chain fs = List.fold_right Fun.compose fs Fun.id
+]}
+
+From the {{!hflip}[spellcheck] example}, [compose] could be used to further
+condense the function definition so it becomes
+{[
+# Fun.compose (String.spellcheck ~max_dist:(Fun.const 2)) (Fun.flip List.iter);;
+- : string list -> string -> string list
+]}
+As can be seen here, this heavily impacts readability and the ability to reason
+about the function. Both [String.spellcheck] and [Fun.flip] are not unary, so
+there's a non-trivial interaction with partial-application with this
+definition.
+
+Heavy use of these combinators in OCaml is generally discouraged, not only
+because they can quickly impact readability and reasoning, but also because the
+produced functions are often in value form, thus subject to the Value
+Restriction (see the manual 6.1.2).
 *)
