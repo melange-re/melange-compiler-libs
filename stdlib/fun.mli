@@ -197,6 +197,8 @@ exception Finally_raised of exn
     {ul
     {- [flip f] will have type [b -> a -> c -> d]}
     {- [fun x -> flip (f x)] will have type [a -> c -> b -> d]}}
+    Using [flip] with non-binary functions is discouraged, for its negative
+    impact on readability and reasoning.
 
 
     {3:hnegate {{!val:negate}negate}}
@@ -216,4 +218,54 @@ exception Finally_raised of exn
     # List.find_all (Fun.negate Sys.file_exists)
     - : string list -> string list = <fun>
     ]}
+
+
+    {3:hcompose {{!val:compose}compose}}
+
+    {!val:List.map} pair elements with a function on the second element
+    {[
+    # List.map (Fun.compose String.length snd) [1, "one"; 2, "two"; 3, "three"]
+    - : int list = [3; 3; 5]
+    ]}
+
+    {!val:List.find_all} string elements with length of exactly 3
+    {[
+    # List.find_all (Fun.compose ((=)3) String.length) ["one"; "two"; "three"]
+    - : string list = ["one"; "two"]
+    ]}
+
+    A potential implementation of {!val:negate}
+    {[
+    # let negate f = Fun.compose not f
+    val negate : ('a -> bool) -> 'a -> bool
+    ]}
+
+    From the {{!hid}[chain] example}, [compose] could've been used in the
+    recursive branch
+    {[
+    let rec chain = function
+      | [] -> Fun.id
+      | f :: fs -> Fun.compose f (chain fs)
+    ]}
+    Or even more concisely
+    {[
+    let chain fs = List.fold_right Fun.compose fs Fun.id
+    ]}
+
+    From the {{!hflip}[spellcheck] example}, [compose] could be used to
+    further condense the function definition so it becomes
+    {[
+    # Fun.compose (String.spellcheck ~max_dist:(Fun.const 2))
+        (Fun.flip List.iter);;
+    - : string list -> string -> string list
+    ]}
+    As can be seen here, this heavily impacts readability and the ability to
+    reason about the function. Both [String.spellcheck] and [Fun.flip] are not
+    unary, so there's a non-trivial interaction with partial-application with
+    this definition.
+
+    Heavy use of these combinators in OCaml is generally discouraged, not only
+    because they can quickly impact readability and reasoning, but also because
+    the produced functions are often in value form, thus subject to the Value
+    Restriction (see the manual 6.1.2).
 *)
