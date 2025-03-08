@@ -422,26 +422,45 @@ CAMLprim value caml_ml_runtime_warnings_enabled(value unit)
 
 /* Ramp-up phase. */
 
-caml_result caml_gc_ramp_up(value callback, uintnat *out_suspended_words) {
-    /* Set the GC policy to ramp-up. */
-    Caml_state->gc_policy = (Caml_state->gc_policy | CAML_GC_RAMP_UP);
+static uintnat get_ramp_up_suspended_words(void) {
+  return (Caml_state->current_ramp_up_allocated_words_diff
+          + Caml_state->allocated_words_suspended);
+}
 
-    /* Start a new ramp_up phase: the sum
-         [current_ramp_up_allocated_words_diff + allocated_words_suspended]
-       must be 0. */
-    Caml_state->current_ramp_up_allocated_words_diff =
-      0 - Caml_state->allocated_words_suspended;
+static void set_ramp_up_suspended_words(uintnat suspended_words) {
+  Caml_state->current_ramp_up_allocated_words_diff =
+    suspended_words - Caml_state->allocated_words_suspended;
+}
+
+caml_result caml_gc_ramp_up(value callback, uintnat *out_suspended_words) {
+    /* Calls to [caml_gc_ramp_up] could be nested, so we are careful
+       to save the current setting beforehand and restore it afterwards.
+
+       When nesting an inner ramp-up phase within an outer ramp-up
+       phase, the allocations suspended during the inner phase should
+       be returned as the suspended count of the inner call, and
+       should not be double-counted as suspended allocations of the
+       outer phase. */
+
+    intnat ramp_up_already = (Caml_state->gc_policy & CAML_GC_RAMP_UP);
+    if (!ramp_up_already)
+      Caml_state->gc_policy = (Caml_state->gc_policy | CAML_GC_RAMP_UP);
+
+    /* Save the suspended words of a potential outer phase,
+       and start a new ramp_up phase. */
+    uintnat suspended_words_outer = get_ramp_up_suspended_words();
+    if (!ramp_up_already) CAMLassert(suspended_words_outer == 0);
+    set_ramp_up_suspended_words(0);
 
     caml_result res = caml_callback_res(callback, Val_unit);
 
-    /* Count the suspended allocation for the phase. */
-    intnat suspended_words =
-      Caml_state->current_ramp_up_allocated_words_diff
-      + Caml_state->allocated_words_suspended;
+    /* Write the suspended words of the inner phase,
+       restore the suspended words of the outer phase. */
+    *out_suspended_words = get_ramp_up_suspended_words();
+    set_ramp_up_suspended_words(suspended_words_outer);
 
-    *out_suspended_words = suspended_words;
-
-    Caml_state->gc_policy = (Caml_state->gc_policy & ~CAML_GC_RAMP_UP);
+    if (!ramp_up_already)
+      Caml_state->gc_policy = (Caml_state->gc_policy & ~CAML_GC_RAMP_UP);
 
     return res;
 }
