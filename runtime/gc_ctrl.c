@@ -422,11 +422,24 @@ CAMLprim value caml_ml_runtime_warnings_enabled(value unit)
 
 /* Ramp-up phase. */
 
-caml_result caml_gc_ramp_up(value callback) {
+caml_result caml_gc_ramp_up(value callback, uintnat *out_suspended_words) {
     /* Set the GC policy to ramp-up. */
     Caml_state->gc_policy = (Caml_state->gc_policy | CAML_GC_RAMP_UP);
 
+    /* Start a new ramp_up phase: the sum
+         [current_ramp_up_allocated_words_diff + allocated_words_suspended]
+       must be 0. */
+    Caml_state->current_ramp_up_allocated_words_diff =
+      0 - Caml_state->allocated_words_suspended;
+
     caml_result res = caml_callback_res(callback, Val_unit);
+
+    /* Count the suspended allocation for the phase. */
+    intnat suspended_words =
+      Caml_state->current_ramp_up_allocated_words_diff
+      + Caml_state->allocated_words_suspended;
+
+    *out_suspended_words = suspended_words;
 
     Caml_state->gc_policy = (Caml_state->gc_policy & ~CAML_GC_RAMP_UP);
 

@@ -736,6 +736,8 @@ update_major_slice_work(intnat howmuch,
   my_extra_count = dom_st->extra_heap_resources;
 
   dom_st->stat_major_words += dom_st->allocated_words;
+  dom_st->current_ramp_up_allocated_words_diff +=
+    dom_st->allocated_words_suspended;
 
   dom_st->allocated_words = 0;
   dom_st->allocated_words_direct = 0;
@@ -2155,6 +2157,8 @@ void caml_finish_marking (void)
     caml_empty_mark_stack();
     caml_shrink_mark_stack();
     Caml_state->stat_major_words += Caml_state->allocated_words;
+    Caml_state->current_ramp_up_allocated_words_diff +=
+      Caml_state->allocated_words_suspended;
     Caml_state->allocated_words = 0;
     Caml_state->allocated_words_direct = 0;
     Caml_state->allocated_words_suspended = 0;
