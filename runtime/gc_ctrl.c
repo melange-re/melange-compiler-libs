@@ -442,6 +442,8 @@ caml_result caml_gc_ramp_up(value callback, uintnat *out_suspended_words) {
        should not be double-counted as suspended allocations of the
        outer phase. */
 
+    CAML_GC_MESSAGE(SLICESIZE, "Entering a GC ramp-up phase.\n");
+
     intnat ramp_up_already = (Caml_state->gc_policy & CAML_GC_RAMP_UP);
     if (!ramp_up_already)
       Caml_state->gc_policy = (Caml_state->gc_policy | CAML_GC_RAMP_UP);
@@ -456,8 +458,14 @@ caml_result caml_gc_ramp_up(value callback, uintnat *out_suspended_words) {
 
     /* Write the suspended words of the inner phase,
        restore the suspended words of the outer phase. */
-    *out_suspended_words = get_ramp_up_suspended_words();
+    uintnat suspended_words_inner = get_ramp_up_suspended_words();
+    *out_suspended_words = suspended_words_inner;
     set_ramp_up_suspended_words(suspended_words_outer);
+
+    CAML_GC_MESSAGE(SLICESIZE,
+      "Leaving a GC ramp-up phase; "
+      "suspended words: %"ARCH_INTNAT_PRINTF_FORMAT"u\n",
+      suspended_words_inner);
 
     if (!ramp_up_already)
       Caml_state->gc_policy = (Caml_state->gc_policy & ~CAML_GC_RAMP_UP);
@@ -479,6 +487,10 @@ CAMLprim value caml_ml_gc_ramp_up(value callback) {
 }
 
 CAMLprim value caml_ml_gc_ramp_down(value work) {
-  caml_gc_ramp_down(Long_val(work));
+  uintnat resumed_words = Long_val(work);
+  CAML_GC_MESSAGE(SLICESIZE,
+    "GC ramp-down; resumed words: %"ARCH_INTNAT_PRINTF_FORMAT"u\n",
+    resumed_words);
+  caml_gc_ramp_down(resumed_words);
   return Val_unit;
 }
