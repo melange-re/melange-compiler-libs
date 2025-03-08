@@ -80,7 +80,7 @@ exception Finally_raised of exn
     demonstrate this mainly with the {!module:List} module.
 
 
-    {!val:id}
+    {3:hid {{!val:id}id}}
 
     {!val:List.init} with the index itself
     {[
@@ -119,7 +119,7 @@ exception Finally_raised of exn
     ]}
 
 
-    {!val:const}
+    {3:hconst {{!val:const}const}}
 
     {!val:List.init} a list of zeros
     {[
@@ -150,7 +150,7 @@ exception Finally_raised of exn
     ]}
 
 
-    {!val:flip}
+    {3:hflip {{!val:flip}flip}}
 
     Use [flip] to reverse the comparator passed to {!val:List.sort}, resulting
     in a reversed sorting
@@ -175,8 +175,8 @@ exception Finally_raised of exn
     - : int list = [3; 3; 2]
     ]}
 
-    From the [spellcheck] example, [flip] could've been used instead of naming
-    the dictionary iterator and its [yield] argument
+    From the {{!hconst}[spellcheck] example}, [flip] could've been used instead
+    of naming the dictionary iterator and its [yield] argument
     {[
     let spellcheck known_words word =
       let dict_iter yield = List.iter yield known_words in
@@ -199,7 +199,7 @@ exception Finally_raised of exn
     {- [fun x -> flip (f x)] will have type [a -> c -> b -> d]}}
 
 
-    {!val:negate}
+    {3:hnegate {{!val:negate}negate}}
 
     Mainly used for reversing a predicate in a function which expects one, like
     {!val:List.find_all} and similar functions
