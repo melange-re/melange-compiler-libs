@@ -521,11 +521,21 @@ CAMLexport int caml_convert_signal_number(int signo)
     return signo;
 }
 
+CAMLprim value caml_sys_convert_signal_number(value signo)
+{
+  return Val_int(caml_convert_signal_number(Int_val(signo)));
+}
+
 CAMLexport int caml_rev_convert_signal_number(int signo)
 {
   for (int i = 0; i < (int)(sizeof(posix_signals) / sizeof(int)); i++)
     if (signo == posix_signals[i]) return -i - 1;
   return signo;
+}
+
+CAMLprim value caml_sys_rev_convert_signal_number(value signo)
+{
+  return Val_int(caml_rev_convert_signal_number(Int_val(signo)));
 }
 
 void * caml_init_signal_stack(void)
