@@ -109,6 +109,16 @@ exception Finally_raised of exn
     if Sys.win32 then String.map (function '/' -> '\\' | c -> c) else Fun.id
     ]}
 
+    And for more advanced uses, where we may build up closures, [id] is often
+    used for the base-case as a no-op. Consider a function which chains a list
+    of unary functions:
+    {[
+    let rec chain = function
+      | [] -> Fun.id
+      | f :: fs -> fun x -> f (chain fs x)
+    ]}
+
+
     {!val:const}
 
     {!val:List.init} a list of zeros
@@ -129,6 +139,17 @@ exception Finally_raised of exn
     whereas [List.init n (fun _ -> Random.bool())] will have 2{^n} possible
     outcomes, because the randomness effect is performed with every element.
 
+    For more real-world uses, consider {!val:String.spellcheck} with a constant
+    max distance of 2
+    {[
+    # let spellcheck known_words word =
+        let dict_iter yield = List.iter yield known_words in
+        String.spellcheck ~max_dist:(Fun.const 2) dict_iter word
+      ;;
+    val spellcheck : string list -> string -> string list
+    ]}
+
+
     {!val:flip}
 
     Use [flip] to reverse the comparator passed to {!val:List.sort}, resulting
@@ -145,6 +166,27 @@ exception Finally_raised of exn
     {[
     # List.fold_left (Fun.flip List.cons) [] [1; 2; 3];;
     - : int list = [3; 2; 1]
+    ]}
+
+    Using {!val:List.find_all} and a flipped {!val:List.mem} to get an
+    intersection of two lists (with order and duplicates from the second)
+    {[
+    # List.find_all (Fun.flip List.mem [2; 3; 5]) [0; 3; 3; 2; 4; 6; 8]
+    - : int list = [3; 3; 2]
+    ]}
+
+    From the [spellcheck] example, [flip] could've been used instead of naming
+    the dictionary iterator and its [yield] argument
+    {[
+    let spellcheck known_words word =
+      let dict_iter yield = List.iter yield known_words in
+      String.spellcheck ~max_dist:(Fun.const 2) dict_iter word
+    ]}
+    becomes
+    {[
+    let spellcheck known_words =
+      String.spellcheck ~max_dist:(Fun.const 2)
+        (Fun.flip List.iter known_words)
     ]}
 
     Interestingly, [flip] can work with functions that aren't binary, by
