@@ -205,12 +205,11 @@ From a given list of paths, find all paths which are {e not} occupied using
 - : int list = [3; 3; 5]
 ]}
 
-
-Construct a UTF-8 string from code points using {!module:Buffer} and
-{!module:Uchar}
+Construct a UTF-8 string from code points using {!val:Buffer.add_utf_8_uchar}
+and {!val:Uchar.of_int}
 {[
 # let buf = Buffer.create 16 in
-  List.iter (Fun.compose (Buffer.add_utf8_uchar buf) Uchar.of_int)
+  List.iter (Fun.compose (Buffer.add_utf_8_uchar buf) Uchar.of_int)
     [0x49; 0x2764; 0xfe0f; 0x1f42b];
   Buffer.contents buf
 - : string = "I❤️🐫"
