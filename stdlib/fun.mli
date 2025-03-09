@@ -233,7 +233,7 @@ Or even more concisely
 let chain fs = List.fold_right Fun.compose fs Fun.id
 ]}
 
-From the {{!hflip}[spellcheck] example}, [compose] could be used to further
+From the {{!hflip}[spellcheck] example}, [compose] and [flip] could be used to
 condense the function definition so it becomes
 {[
 # Fun.compose (String.spellcheck ~max_dist:(Fun.const 2)) (Fun.flip List.iter);;
@@ -241,11 +241,10 @@ condense the function definition so it becomes
 ]}
 As can be seen here, this heavily impacts readability and the ability to reason
 about the function. Both [String.spellcheck] and [Fun.flip] are not unary, so
-there's a non-trivial interaction with partial-application with this
-definition.
+there is a non-trivial interaction with partial-application in this definition.
 
 Heavy use of these combinators in OCaml is generally discouraged, not only
 because they can quickly impact readability and reasoning, but also because the
 produced functions are often in value form, thus subject to the Value
-Restriction (see the manual 6.1.2).
+Restriction (see the manual section 6.1.2).
 *)
