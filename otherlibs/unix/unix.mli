@@ -190,15 +190,14 @@ type process_status =
     WEXITED of int
         (** The process terminated normally by [exit];
            the argument is the return code. *)
-  | WSIGNALED of int
+  | WSIGNALED of Sys.signal
         (** The process was killed by a signal;
            the argument is the signal number. *)
-  | WSTOPPED of int
+  | WSTOPPED of Sys.signal
         (** The process was stopped by a signal; the argument is the
            signal number. *)
-(** The termination status of a process.  See module {!Sys} for the
-    definitions of the standard signal numbers.  Note that they are
-    not the numbers used by the OS.
+(** The termination status of a process. See {!Sys.signal} for the
+    definitions of the standard signal numbers.
 
     On Windows: only [WEXITED] is used (as there are no inter-process signals)
     but with specific return codes to indicate special termination causes.
@@ -1152,7 +1151,7 @@ val lockf : file_descr -> lock_command -> int -> unit
    the functions {!Sys.signal} and {!Sys.set_signal}.
 *)
 
-val kill : int -> int -> unit
+val kill : int -> Sys.signal -> unit
 (** [kill pid signal] sends signal number [signal] to the process
    with id [pid].
 
@@ -1163,7 +1162,7 @@ type sigprocmask_command =
   | SIG_BLOCK
   | SIG_UNBLOCK
 
-val sigprocmask : sigprocmask_command -> int list -> int list
+val sigprocmask : sigprocmask_command -> Sys.signal list -> Sys.signal list
 (** [sigprocmask mode sigs] changes the set of blocked signals.
    If [mode] is [SIG_SETMASK], blocked signals are set to those in
    the list [sigs].
@@ -1180,13 +1179,13 @@ val sigprocmask : sigprocmask_command -> int list -> int list
    @raise Invalid_argument on Windows (no inter-process signals on
    Windows) *)
 
-val sigpending : unit -> int list
+val sigpending : unit -> Sys.signal list
 (** Return the set of blocked signals that are currently pending.
 
    @raise Invalid_argument on Windows (no inter-process
    signals on Windows) *)
 
-val sigsuspend : int list -> unit
+val sigsuspend : Sys.signal list -> unit
 (** [sigsuspend sigs] atomically sets the blocked signals to [sigs]
    and waits for a non-ignored, non-blocked signal to be delivered.
    On return, the blocked signals are reset to their initial value.
@@ -1200,7 +1199,7 @@ val pause : unit -> unit
    @raise Invalid_argument on Windows (no inter-process signals on
    Windows) *)
 
-val sigwait : int list -> int
+val sigwait : Sys.signal list -> Sys.signal
 (** [sigwait sigs] waits until one of the signals in the list [sigs]
    becomes pending.  It then removes this signal from the set of pending
    signals, and returns the number of this signal.

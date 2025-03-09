@@ -230,11 +230,12 @@ external poll_actions : unit -> unit = "%poll"
 type signal = int
 (** The type for signal numbers.
 
-  This is either a platform independent negative number for those signals
-  that OCaml recognizes or a positive number for a platform dependent
-  signal number. The function {!signal_of_int} converts known platform dependent
-  numbers to independent ones, and {!signal_to_int} does the reverse converting
-  known platform independent numbers to dependent ones. *)
+  Negative numbers are used by OCaml to provide a platform-independent
+  number for signals recognised by OCaml. Positive numbers are always the
+  platform-dependent value for a given signal.
+  The function {!signal_of_int} converts known platform-dependent numbers
+  to independent ones, and {!signal_to_int} does the reverse.
+  @since 5.4 *)
 
 type signal_behavior =
     Signal_default
@@ -253,11 +254,15 @@ external signal :
    first argument is the signal number.  Return the behavior
    previously associated with the signal. If the signal number is
    invalid (or not available on your system), an [Invalid_argument]
-   exception is raised. *)
+   exception is raised.
+
+   If a platform-dependent signal number is used, it will be converted
+   to a platform-independent signal using {!signal_of_int} before
+   calling the handler.
+*)
 
 val set_signal : signal -> signal_behavior -> unit
-(** Same as {!Sys.signal} but return value is ignored. *)
-
+(** Same as {!Sys.signal} but the return value is ignored. *)
 
 (** {2 Signal numbers for the standard POSIX signals.} *)
 
@@ -362,20 +367,22 @@ val sigwinch : signal
 
 val signal_to_string : signal -> string
 (** [signal_to_string] formats an OCaml [signal] as a C POSIX
-    {{:http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/signal.h.html}
+    {{:http://pubs.opengroup.org/onlinepubs/9799919799/basedefs/signal.h.html}
     constant} or ["SIG(%d)"] for an unrecognised signal number.
     @since 5.4 *)
 
 val signal_of_int : int -> signal
-(** [signal_of_int n] converts a platform dependent signal number [n] to
+(** [signal_of_int n] converts a platform-dependent signal number [n] to
     an OCaml signal number.
-    This is [n] itself if the number is unknown.
+    This is [n] itself if OCaml does not have a platform-independent signal
+    number for [n].
     @since 5.4 *)
 
 val signal_to_int : signal -> int
 (** [signal_to_int n] converts an OCaml signal number [n] to
-    a platform dependent signal number.
-    This is [n] itself if the number is unknown.
+    a platform-dependent signal number.
+    This is [n] itself if OCaml does not have a platform-dependent signal
+    number for [n].
     @since 5.4 *)
 
 exception Break
