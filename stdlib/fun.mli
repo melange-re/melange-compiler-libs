@@ -101,17 +101,16 @@ Using {!val:Float.Array.map_from_array} to flatten a [float array]
 val to_flat : float array -> Float.Array.t
 ]}
 
-Dispatching functions of type [foo -> foo] conditionally is another place where
-[id] may be useful. Consider a function which either uses {!val:String.map} on
-a path to convert unix-style slashes to windows-style backslashes or leaves it
-as it is depending on the {!val:Sys.win32} value
+Conditionally dispatching functions of type [foo -> foo] or taking them as
+arguments is another place where [id] may be useful. Consider a primitive
+logging function which prints a string but gives its user the option to
+preformat the string before printing, e.g. to insert a time-stamp
 {[
-if Sys.win32 then String.map (function '/' -> '\\' | c -> c) else Fun.id
+let log ?(preformat : string -> string = Fun.id) message =
+  print_endline (preformat message)
 ]}
-
-And for more advanced uses, where we may build up closures, [id] is often used
-for the base-case as a no-op. Consider a function which chains a list of unary
-functions:
+Whenever we may build up closures, [id] is often used for the base-case as a
+no-op. Consider a function which chains a list of unary functions:
 {[
 let rec chain = function
   | [] -> Fun.id
