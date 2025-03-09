@@ -166,26 +166,6 @@ is useful here
 - : int list = [3; 2; 1]
 ]}
 
-Using {!val:List.find_all} and a flipped {!val:List.mem} to get an intersection
-of two lists (with order and duplicates from the second)
-{[
-# List.find_all (Fun.flip List.mem [2; 3; 5]) [0; 3; 3; 2; 4; 6; 8]
-- : int list = [3; 3; 2]
-]}
-
-From the {{!hconst}[spellcheck] example}, [flip] could've been used instead of
-naming the dictionary iterator and its [yield] argument
-{[
-let spellcheck known_words word =
-  let dict_iter yield = List.iter yield known_words in
-  String.spellcheck ~max_dist:(Fun.const 2) dict_iter word
-]}
-becomes
-{[
-let spellcheck known_words =
-  String.spellcheck ~max_dist:(Fun.const 2) (Fun.flip List.iter known_words)
-]}
-
 Interestingly, [flip] can work with functions that aren't binary, by flipping
 the first two arguments and leaving the rest in order. This is because a
 function that takes [n+2] arguments is, conceptually, a binary function which
