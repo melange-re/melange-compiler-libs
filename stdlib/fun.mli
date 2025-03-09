@@ -150,8 +150,8 @@ val spellcheck : string list -> string -> string list
 
 {3:hflip {{!val:flip}flip}}
 
-Use [flip] to reverse the comparator passed to {!val:List.sort}, resulting in a
-reversed sorting
+Use [flip] to reverse the comparator passed to {!val:List.sort}, which sorts in
+the opposite order
 {[
 # List.sort (Fun.flip Int.compare) [5; 3; 9; 0; 1; 6; 8];;
 - : int list = [9; 8; 6; 5; 3; 1; 0]
@@ -194,8 +194,8 @@ Given a function [f : a -> b -> c -> d]:
 {ul
 {- [flip f] will have type [b -> a -> c -> d]}
 {- [fun x -> flip (f x)] will have type [a -> c -> b -> d]}}
-Using [flip] with non-binary functions is discouraged, for its negative impact
-on readability and reasoning.
+Using [flip] with non-binary functions like this is discouraged, for its
+negative impact on readability and reasoning.
 
 
 {3:hnegate {{!val:negate}negate}}
@@ -237,8 +237,8 @@ A potential implementation of {!val:negate}
 val negate : ('a -> bool) -> 'a -> bool
 ]}
 
-From the {{!hid}[chain] example}, [compose] could've been used in the recursive
-branch
+From the {{!hid}[chain] example}, [compose] could have been used in the
+recursive branch
 {[
 let rec chain = function
   | [] -> Fun.id
