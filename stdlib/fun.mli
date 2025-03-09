@@ -101,6 +101,13 @@ Using {!val:Float.Array.map_from_array} to flatten a [float array]
 val to_flat : float array -> Float.Array.t
 ]}
 
+Pass identity as a {!val:Scanf.scanf} receiver
+{[
+# Scanf.scanf "%d" Fun.id;;
+42
+- : int = 42
+]}
+
 Conditionally dispatching functions of type [foo -> foo] or taking them as
 arguments is another place where [id] may be useful. Consider a primitive
 logging function which prints a string but gives its user the option to
