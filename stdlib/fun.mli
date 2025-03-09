@@ -199,16 +199,21 @@ From a given list of paths, find all paths which are {e not} occupied using
 
 {3:hcompose {{!val:compose}compose}}
 
-{!val:List.map} pair elements with a function on the second element
+{!val:List.map} on pair elements with a function on the second element
 {[
 # List.map (Fun.compose String.length snd) [1, "one"; 2, "two"; 3, "three"]
 - : int list = [3; 3; 5]
 ]}
 
-{!val:List.find_all} string elements with length of exactly 3
+
+Construct a UTF-8 string from code points using {!module:Buffer} and
+{!module:Uchar}
 {[
-# List.find_all (Fun.compose ((=)3) String.length) ["one"; "two"; "three"]
-- : string list = ["one"; "two"]
+# let buf = Buffer.create 16 in
+  List.iter (Fun.compose (Buffer.add_utf8_uchar buf) Uchar.of_int)
+    [0x49; 0x2764; 0xfe0f; 0x1f42b];
+  Buffer.contents buf
+- : string = "I❤️🐫"
 ]}
 
 A potential implementation of {!val:negate}
