@@ -95,20 +95,6 @@ Using {!val:List.filter_map} on an [int option list] to filter out
   - : int list = [2; 3; 5]
 ]}
 
-Passing [id] as a {!val:Scanf.scanf} receiver
-{[
-  # Scanf.scanf "%d" Fun.id;;
-  42
-  - : int = 42
-]}
-
-Using {!val:Float.Array.map_from_array} to create a function which flattens a
-[float array]
-{[
-  # Float.Array.map_from_array Fun.id;;
-  - : float array -> Float.Array.t = <fun>
-]}
-
 Conditionally dispatching functions of type [foo -> foo] or taking them as
 arguments is another place where [id] may be useful. Consider a primitive
 logging function which prints a string but gives its user the option to
@@ -152,7 +138,7 @@ whereas [List.init n (fun _ -> Random.bool())] will have 2{^n} possible
 outcomes, because the randomness effect is performed with every element.
 
 For more real-world uses, consider {!val:String.spellcheck} with a constant max
-distance of 2
+distance of 2, instead of the default variable max distance
 {[
   let spellcheck known_words word =
     let dict_iter yield = List.iter yield known_words in
