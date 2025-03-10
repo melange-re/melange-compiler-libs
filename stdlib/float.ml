@@ -185,7 +185,7 @@ module Array = struct
 
   external unsafe_fill
     : t -> (int[@untagged]) -> (int[@untagged]) -> (float[@unboxed]) -> unit
-    = "caml_floatarray_fill" "caml_floatarray_fill_unboxed"
+    = "caml_floatarray_fill" "caml_floatarray_fill_unboxed" [@@noalloc]
 
   external unsafe_blit: t -> int -> t -> int -> int -> unit =
     "caml_floatarray_blit" [@@noalloc]
