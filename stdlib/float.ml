@@ -271,7 +271,8 @@ module Array = struct
     else if length a2 = 0 then unsafe_sub a1 0 l1
     else append_prim a1 a2
 
-  let fill a ofs len v =
+  (* inlining exposes a float-unboxing opportunity for [v] *)
+  let[@inline] fill a ofs len v =
     check a ofs len "Float.Array.fill";
     unsafe_fill a ofs len v
 
