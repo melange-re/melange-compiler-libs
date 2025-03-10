@@ -6,7 +6,7 @@ Resolved: Index.5 : A (File "index.ml", line 68, characters 14-15)
 Resolved: Index.25 : u (File "index.ml", line 67, characters 28-29)
 Resolved: Index.2 : AS (File "index.ml", line 67, characters 10-12)
 Resolved: Index.5 : A (File "index.ml", line 63, characters 4-5)
-Alias: Index.6 -> Resolved: Index.5  :
+Alias: Index.6 -> Resolved: Index.5 :
   B (File "index.ml", line 60, characters 15-16)
 Resolved: Index.3 : B.t (File "index.ml", line 60, characters 15-18)
 Resolved: Index.2 : AS (File "index.ml", line 59, characters 23-25)
