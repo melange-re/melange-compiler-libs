@@ -40,7 +40,7 @@ type tag_info =
   | Blk_module of string list
   | Blk_module_export of Ident.t list
   | Blk_extension_slot
-  | Blk_extension
+  | Blk_extension of { exn: bool }
     (* underlying is the same as tuple, immutable block
       {[
          exception A of int * int
@@ -51,7 +51,7 @@ type tag_info =
       ]}
 
     *)
-  | Blk_na of string (* This string only for debugging*)
+  | Blk_na of string (* This string only for debugging *)
   | Blk_some
   | Blk_some_not_nested (* ['a option] where ['a] can not inhabit a non-like value *)
   | Blk_record_inlined of
@@ -60,19 +60,20 @@ type tag_info =
       ; fields : string array
       ; attributes: Parsetree.attributes
       }
-  | Blk_record_ext of string array
+  | Blk_record_ext of { fields: string array; exn: bool }
   | Blk_lazy_general
   | Blk_class (* ocaml style class *)
 
 val blk_record :
   (
-    (Types.label_description* Typedtree.record_label_definition) array ->
+    (Types.label_description * Typedtree.record_label_definition) array ->
     tag_info
   ) ref
 
 val blk_record_ext :
   (
-    (Types.label_description* Typedtree.record_label_definition) array ->
+    is_exn:bool ->
+    (Types.label_description * Typedtree.record_label_definition) array ->
     tag_info
   ) ref
 

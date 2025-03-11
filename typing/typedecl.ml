@@ -1331,7 +1331,7 @@ let transl_extension_constructor ~scope env type_path type_params
         end;
         let path =
           match cdescr.cstr_tag with
-            Cstr_extension(path, _) -> path
+            Cstr_extension{path; _} -> path
           | _ -> assert false
         in
         let args =
@@ -1357,6 +1357,7 @@ let transl_extension_constructor ~scope env type_path type_params
         args, ret_type, Text_rebind(path, lid)
   in
   let ext =
+    let is_exception = Path.same type_path Predef.path_exn in
     { ext_type_path = type_path;
       ext_type_params = typext_params;
       ext_args = args;
@@ -1365,6 +1366,7 @@ let transl_extension_constructor ~scope env type_path type_params
       Types.ext_loc = sext.pext_loc;
       Types.ext_attributes = sext.pext_attributes;
       ext_uid = Uid.mk ~current_unit:(Env.get_current_unit ());
+      ext_exn = is_exception
     }
   in
   let ext_cstrs =
