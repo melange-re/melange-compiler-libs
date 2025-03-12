@@ -71,18 +71,18 @@ jobs:
           arch: ${{ matrix.x86_64 && 'x64' || 'x86' }}
 
       - name: Compute a key to cache configure results
+        id: autoconf-cache-key
         env:
           HOST: ${{ matrix.x86_64 && 'x86_64-pc-windows' || 'i686-pc-windows' }}
-          CC: ${{ matrix.cc }}
         run: |
-          echo "AUTOCONF_CACHE_KEY=$HOST-$CC-$({ cat configure; uname; } | sha1sum | cut -c 1-7)" >> $GITHUB_ENV
+          echo "key=${{ env.HOST }}-${{ matrix.cc }}-${{ hashFiles('configure') }}" >> $GITHUB_OUTPUT
 
       - name: Restore Autoconf cache
         uses: actions/cache/restore@v4
         with:
           path: |
             config.cache
-          key: ${{ env.AUTOCONF_CACHE_KEY }}
+          key: ${{ steps.autoconf-cache-key.outputs.key }}
 
       - name: Build OCaml
         env:
@@ -108,7 +108,7 @@ jobs:
         with:
           path: |
             config.cache
-          key: ${{ env.AUTOCONF_CACHE_KEY }}
+          key: ${{ steps.autoconf-cache-key.outputs.key }}
 
       - name: Assemble backend with MinGW GASM and compare
         run: |
