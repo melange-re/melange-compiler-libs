@@ -87,15 +87,16 @@ jobs:
       - name: Build OCaml
         env:
           HOST: ${{ matrix.x86_64 && 'x86_64-pc-windows' || 'i686-pc-windows' }}
-          CC: ${{ matrix.cc }}
         run: |
           eval $(tools/msvs-promote-path)
-          if ! ./configure --cache-file=config.cache --host=$HOST CC=$CC \
-               --prefix "$PROGRAMFILES/Бактріан🐫"; then
+          if ! ./configure --cache-file=config.cache --host=$HOST \
+               --prefix="$PROGRAMFILES/Бактріан🐫" \
+               CC=${{ matrix.cc }}; then
             rm -rf config.cache
             failed=0
-            ./configure --cache-file=config.cache --host=$HOST CC=$CC \
-                --prefix "$PROGRAMFILES/Бактріан🐫" \
+            ./configure --cache-file=config.cache --host=$HOST \
+                --prefix="$PROGRAMFILES/Бактріан🐫" \
+                CC=${{ matrix.cc }} \
               || failed=$?
             if ((failed)) ; then cat config.log ; exit $failed ; fi
           fi
