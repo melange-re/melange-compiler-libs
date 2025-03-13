@@ -118,6 +118,8 @@ be called from C \\
 \begin{tabular}{lll}
 "Fun" & p.~\stdpageref{Fun} & function values \\
 "Type" & p.~\stdpageref{Type} & type introspection \\
+"Repr" & p.~\stdpageref{Repr} & functions defined on the low-level
+representation of values \\
 \end{tabular}
 \end{latexonly}
 
@@ -171,6 +173,7 @@ be called from C \\
 \stddocitem{Printf}{formatting printing functions}
 \stddocitem{Queue}{first-in first-out queues}
 \stddocitem{Random}{pseudo-random number generator (PRNG)}
+\stddocitem{Repr}{functions defined on the low-level representation of values}
 \stddocitem{Result}{result values}
 \stddocitem{Scanf}{formatted input functions}
 \stddocitem{Seq}{functional iterators}

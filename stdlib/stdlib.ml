@@ -74,7 +74,6 @@ external compare : 'a -> 'a -> int = "%compare"
 let min x y = if x <= y then x else y
 let max x y = if x >= y then x else y
 
-external phys_equal : 'a -> 'a -> bool = "%eq"
 external ( == ) : 'a -> 'a -> bool = "%eq"
 external ( != ) : 'a -> 'a -> bool = "%noteq"
 
@@ -634,6 +633,7 @@ module Printf         = Printf
 module Queue          = Queue
 module Random         = Random
 module Result         = Result
+module Repr           = Repr
 module Scanf          = Scanf
 module Semaphore      = Semaphore
 module Seq            = Seq

@@ -173,8 +173,9 @@ Working version
   (Florian Angeletti, review by Nicolás Ojeda Bär, Daniel Bünzli,
    and Gabriel Scherer)
 
-- #13753: Add Stdlib.phys_equal
-  (Thomas Blanc and Léo Andrès, review by Gabriel Scherer and Florian Angeletti)
+- #13753 #13755: Add Stdlib.Repr
+  (Kate Deplaix, Thomas Blanc and Léo Andrès, review by Gabriel Scherer,
+   Florian Angeletti, Nicolás Ojeda Bär, Daniel Bünzli and Jeremy Yallop)
 
 - #13731: Add Either.retract
   (Daniel Bünzli, review by Nicolás Ojeda Bär and David Allsopp)
