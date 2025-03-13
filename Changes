@@ -216,7 +216,7 @@ Working version
 - #13740: Improve performance of Weak.find_aux
   (Josh Berdine, review by Gabriel Scherer)
 
-- #15049: Improve performance and type safety of Type.Id by using
+- #13782: Improve performance and type safety of Type.Id by using
   [%extension_constructor] instead of Obj.Extension_constructor.of_val.
   (Basile Clément, review by Vincent Laviron and Nicolás Ojeda Bär)
 
