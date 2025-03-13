@@ -230,7 +230,7 @@ Working version
   (Antonin Décimo, review by Miod Vallat, Nicolás Ojeda Bär, and Xavier Leroy)
 
 - #13859: Fix Weak.get_copy not darkening custom blocks
-  (Josh Berdine, review by ?)
+  (Josh Berdine, review by Stephen Dolan)
 
 ### Other libraries:
 
