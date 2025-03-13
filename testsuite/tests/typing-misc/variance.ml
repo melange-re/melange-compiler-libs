@@ -1,5 +1,30 @@
 (* TEST
+ flags = "-i-variance";
  expect;
+*)
+
+(* Syntax *)
+type +'a t;;
+type -'a t;;
+type +-'a t;;
+type -+'a t;;
+type + 'a t;;
+type - 'a t;;
+type +- 'a t;;
+type -+ 'a t;;
+[%%expect{|
+type +'a t
+type -'a t
+type +-'a t
+type +-'a t
+type +'a t
+type -'a t
+type +-'a t
+type +-'a t
+|}]
+(* Expect doesn't support syntax errors
+type + - 'a t
+[%%expect]
 *)
 
 (* #8698 *)
@@ -7,9 +32,9 @@
 (* Actually, this is not a bug *)
 type +'a t = [> `Foo of 'a -> unit] as 'a;;
 [%%expect{|
-type 'a t = 'a constraint 'a = [> `Foo of 'a -> unit ]
+type !'a t = 'a constraint 'a = [> `Foo of 'a -> unit ]
 |}, Principal{|
-type +'a t = 'a constraint 'a = [> `Foo of 'a -> unit ]
+type +!'a t = 'a constraint 'a = [> `Foo of 'a -> unit ]
 |}]
 
 (* strengthening *)
@@ -17,14 +42,14 @@ type +'a t = 'a constraint 'a = [> `Foo of 'a -> unit ]
 type 'a t = (('a -> unit) -> unit);;
 let tl = !(ref ([] : 'a t list));;
 [%%expect{|
-type 'a t = ('a -> unit) -> unit
+type +!'a t = ('a -> unit) -> unit
 val tl : '_a t list = []
 |}]
 
 type 'a u = U of (('a -> unit) -> unit);;
 let ul = !(ref ([] : 'a u list));;
 [%%expect{|
-type 'a u = U of (('a -> unit) -> unit)
+type +!'a u = U of (('a -> unit) -> unit)
 val ul : 'a u list = []
 |}]
 
@@ -34,7 +59,7 @@ module type s = sig type t end;;
 type !'a t = (module s with type t = 'a);;
 [%%expect{|
 module type s = sig type t end
-type 'a t = (module s with type t = 'a)
+type !'a t = (module s with type t = 'a)
 |}]
 
 (* Composition *)
