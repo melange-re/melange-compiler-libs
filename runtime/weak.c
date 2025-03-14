@@ -330,8 +330,15 @@ static value ephe_get_field_copy (value e, mlsize_t offset)
     }
     infix_offs = 0;
 
-    /* Don't copy immediates or custom blocks #7279 */
-    if (!Is_block(val) || Tag_val(val) == Custom_tag) {
+    /* Don't copy immediates */
+    if (!Is_block(val)) {
+      copy = val;
+      goto some;
+    }
+
+    /* Don't copy, but do darken, custom blocks #7279 */
+    if (Tag_val(val) == Custom_tag) {
+      caml_darken (Caml_state, val, 0);
       copy = val;
       goto some;
     }
