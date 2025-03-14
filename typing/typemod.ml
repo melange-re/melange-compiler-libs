@@ -2048,7 +2048,7 @@ and package_constraints env loc mty constrs =
     | Mty_ident p -> raise(Error(loc, env, Cannot_scrape_package_type p))
   end
 
-let modtype_of_package env loc (pack : Types.package) =
+let modtype_of_package env loc pack =
   (* We call Ctype.duplicate_type to ensure that the types being added to the
      module type are at generic_level. *)
   let mty =
@@ -2058,7 +2058,7 @@ let modtype_of_package env loc (pack : Types.package) =
   Subst.modtype Keep Subst.identity mty
 
 let package_subtype env pack1 pack2 =
-  let mkmty (pack : Types.package) =
+  let mkmty pack =
     let fl =
       List.filter (fun (_n,t) -> Ctype.closed_type_expr t) pack.pack_cstrs in
     modtype_of_package env Location.none {pack with pack_cstrs = fl}
@@ -2949,7 +2949,7 @@ let lookup_type_in_sig sg =
     | Ldot({ txt = m; _ }, { txt = name; _ }) -> Pdot(module_path m, name)
     | Lapply _ -> assert false
 
-let type_package env m (pack : Types.package) =
+let type_package env m pack =
   (* Same as Pexp_letmodule *)
   let modl, scope =
     Typetexp.TyVarEnv.with_local_scope begin fun () ->

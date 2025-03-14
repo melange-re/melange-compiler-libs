@@ -694,10 +694,10 @@ and transl_type_aux env ~row_context ~aliased ~policy styp =
                          (Longident.flatten s.txt, cty.ctyp_type)) ptys})
       in
       ctyp (Ttyp_package {
-            pack_path = path;
-            pack_type = mty;
-            pack_cstrs = ptys;
-            pack_txt = ptyp.ppt_path;
+            tpt_path = path;
+            tpt_type = mty;
+            tpt_cstrs = ptys;
+            tpt_txt = ptyp.ppt_path;
            }) ty
   | Ptyp_open (mod_ident, t) ->
       let path, new_env =
