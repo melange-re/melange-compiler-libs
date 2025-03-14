@@ -643,7 +643,7 @@ After parsing, pipe the abstract syntax tree through the preprocessor
 \ifouthtml
 chapter~\ref{c:parsinglib}:
 \ahref{compilerlibref/Ast\_mapper.html}{ \texttt{Ast_mapper} }
-\else section~\ref{Ast-underscoremapper}\fi,
+\else section~\ref{Ast_mapper}\fi,
 implements the external interface of a preprocessor.
 
 \item["-principal"]
@@ -702,7 +702,7 @@ compiler's intermediate representation of the program
 using "compiler-libs" library (see
 \ifouthtml chapter~\ref{c:parsinglib} and
 \ahref{compilerlibref/Compiler\_libs.html}{ \texttt{Compiler_libs} }
-\else section~\ref{Compiler-underscorelibs}\fi
+\else section~\ref{Compiler_libs}\fi
 ).
 }%nat
 
