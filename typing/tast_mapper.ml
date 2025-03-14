@@ -518,9 +518,9 @@ let expr sub x =
 
 let package_type sub x =
   let pack_txt = map_loc_lid sub x.pack_txt in
-  let pack_fields = List.map
-    (tuple2 (map_loc_lid sub) (sub.typ sub)) x.pack_fields in
-  {x with pack_txt; pack_fields}
+  let pack_cstrs = List.map
+    (tuple2 (map_loc_lid sub) (sub.typ sub)) x.pack_cstrs in
+  {x with pack_txt; pack_cstrs}
 
 let binding_op sub x =
   let bop_loc = sub.location sub x.bop_loc in

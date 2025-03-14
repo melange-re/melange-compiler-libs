@@ -696,7 +696,7 @@ and transl_type_aux env ~row_context ~aliased ~policy styp =
       ctyp (Ttyp_package {
             pack_path = path;
             pack_type = mty;
-            pack_fields = ptys;
+            pack_cstrs = ptys;
             pack_txt = ptyp.ppt_path;
            }) ty
   | Ptyp_open (mod_ident, t) ->

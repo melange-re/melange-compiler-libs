@@ -398,8 +398,8 @@ let expr sub {exp_loc; exp_extra; exp_desc; exp_env; exp_attributes; _} =
       sub.expr sub e
 
 
-let package_type sub {pack_fields; pack_txt; _} =
-  List.iter (fun (lid, p) -> iter_loc_lid sub lid; sub.typ sub p) pack_fields;
+let package_type sub {pack_cstrs; pack_txt; _} =
+  List.iter (fun (lid, p) -> iter_loc_lid sub lid; sub.typ sub p) pack_cstrs;
   iter_loc_lid sub pack_txt
 
 let binding_op sub {bop_loc; bop_op_name; bop_exp; _} =

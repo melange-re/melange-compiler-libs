@@ -583,7 +583,7 @@ let binding_op sub bop pat =
 
 let package_type sub pack =
   { ppt_path = map_loc sub pack.pack_txt;
-    ppt_cstrs = List.map (fun (s, ct) -> (s, sub.typ sub ct)) pack.pack_fields;
+    ppt_cstrs = List.map (fun (s, ct) -> (s, sub.typ sub ct)) pack.pack_cstrs;
     ppt_attrs = [];
     ppt_loc = sub.location sub pack.pack_txt.loc }
 
