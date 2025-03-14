@@ -47,6 +47,7 @@ let latex_class_prefix = ref Odoc_messages.default_latex_class_prefix
 let latex_class_type_prefix = ref Odoc_messages.default_latex_class_type_prefix
 let latex_attribute_prefix = ref Odoc_messages.default_latex_attribute_prefix
 let latex_method_prefix = ref Odoc_messages.default_latex_method_prefix
+let latex_escape_underscore = ref true
 
 let new_buf () = Buffer.create 1024
 let new_fmt () =
@@ -186,7 +187,10 @@ class text =
       for i = 0 to len - 1 do
         let (s_no_, s) =
           match name.[i] with
-          '_' -> ("-underscore", "_")
+        |  '_' ->
+              if !latex_escape_underscore then
+                ("-underscore", "_")
+              else ("_","_")
         | '~' -> ("-tilde", "~")
         | '%' -> ("-percent", "%")
         | '@' -> ("-at", "\"@")
