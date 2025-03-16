@@ -241,6 +241,7 @@ let build_initial_env add_type add_extension empty_env =
                             (Location.mknoloc "ocaml.warn_on_literal_pattern")
                             (Parsetree.PStr [])];
         ext_uid = Uid.of_predef_id id;
+        ext_exn = true;
       }
   in
   let variant constrs = Type_variant (constrs, Variant_regular) in

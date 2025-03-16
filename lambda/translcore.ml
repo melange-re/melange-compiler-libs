@@ -117,7 +117,7 @@ let assert_failed loc ~scopes exp =
   in
   let loc = of_location ~scopes exp.exp_loc in
   Lprim(Praise Raise_regular, [event_after ~scopes exp
-    (Lprim(Pmakeblock(0, Blk_extension, Immutable, None),
+    (Lprim(Pmakeblock(0, Blk_extension { exn = true }, Immutable, None),
           [slot;
            Lconst(Const_block(0, Blk_tuple,
               [Const_base(Const_string (fname, exp.exp_loc, None), default_pointer_info);
@@ -333,12 +333,12 @@ and transl_exp0 ~in_new_scope ~scopes e =
             Lprim(Pmakeblock(n, tag_info, Immutable, Some shape), ll,
                   of_location ~scopes e.exp_loc)
           end
-      | Cstr_extension(path, is_const) ->
+      | Cstr_extension{path; const=is_const; exn} ->
           let lam = transl_extension_path
                       (of_location ~scopes e.exp_loc) e.exp_env path in
           if not !Config.bs_only && is_const then lam
           else
-            Lprim(Pmakeblock(0, Blk_extension, Immutable, Some (Pgenval :: shape)),
+            Lprim(Pmakeblock(0, Blk_extension { exn }, Immutable, Some (Pgenval :: shape)),
                   lam :: ll, of_location ~scopes e.exp_loc)
       end
   | Texp_extension_constructor (_, path) ->
@@ -1102,9 +1102,9 @@ and transl_record ~scopes loc env fields repres opt_init_expr =
             if !Config.bs_only then Lprim(Pmakeblock(0, !Lambda.blk_record fields, mut, Some shape), ll, loc)
             else
             Lprim(Pmakearray (Pfloatarray, mut), ll, loc)
-        | Record_extension path ->
+        | Record_extension {path;exn} ->
             let slot = transl_extension_path loc env path in
-            Lprim(Pmakeblock(0, !Lambda.blk_record_ext fields, mut, Some (Pgenval :: shape)), slot :: ll, loc)
+            Lprim(Pmakeblock(0, !Lambda.blk_record_ext ~is_exn:exn fields, mut, Some (Pgenval :: shape)), slot :: ll, loc)
     in
     begin match opt_init_expr with
       None -> lam
