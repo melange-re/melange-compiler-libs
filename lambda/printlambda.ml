@@ -111,8 +111,10 @@ let record_rep ppf r =
   | Record_unboxed false -> fprintf ppf "unboxed"
   | Record_unboxed true -> fprintf ppf "inlined(unboxed)"
   | Record_float -> fprintf ppf "float"
-  | Record_extension path -> fprintf ppf "ext(%a)" Printtyp.path path
-;;
+  | Record_extension {path;exn} ->
+    if exn
+    then fprintf ppf "exn(%a)" Printtyp.path path
+    else fprintf ppf "ext(%a)" Printtyp.path path
 
 let block_shape ppf shape = match shape with
   | None | Some [] -> ()
@@ -159,8 +161,12 @@ let str_of_field_info (fld_info : Lambda.field_dbg_info)=
   | Fld_cons -> "cons"
   | Fld_array -> "[||]"
 let print_taginfo ppf = function
-  | Blk_extension -> fprintf ppf "ext"
-  | Blk_record_ext ss -> fprintf ppf "[%s]" (String.concat ";" (Array.to_list ss) )
+  | Blk_extension { exn = true } -> fprintf ppf "exn"
+  | Blk_extension { exn = false } -> fprintf ppf "ext"
+  | Blk_record_ext {fields=ss; exn=false} ->
+    fprintf ppf "[%s]" (String.concat ";" (Array.to_list ss) )
+  | Blk_record_ext {fields=ss; exn=true} ->
+    fprintf ppf "(exn)[%s]" (String.concat ";" (Array.to_list ss) )
   | Blk_tuple -> fprintf ppf "tuple"
   | Blk_constructor {name ;num_nonconst} -> fprintf ppf "%s/%i" name num_nonconst
   | Blk_array -> fprintf ppf "array"
