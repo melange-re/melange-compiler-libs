@@ -1800,7 +1800,8 @@ let cache_public_method meths tag cache dbg =
        (Clet(
         VP.create mi,
         Cop(Cor,
-            [Cop(Clsr, [Cop(Caddi, [Cvar li; Cvar hi], dbg); cconst_int 1],
+            [Cop(Clsr, [Cop(Caddi, [Cvar_mut li; Cvar_mut hi], dbg);
+                        cconst_int 1],
                dbg);
              cconst_int 1],
             dbg),
@@ -1817,7 +1818,7 @@ let cache_public_method meths tag cache dbg =
            dbg, Cassign(li, Cvar mi),
            dbg),
         Cifthenelse
-          (Cop(Ccmpi Cge, [Cvar li; Cvar hi], dbg),
+          (Cop(Ccmpi Cge, [Cvar_mut li; Cvar_mut hi], dbg),
            dbg, Cexit (raise_num, []),
            dbg, Ctuple [],
            dbg))))
@@ -1826,7 +1827,7 @@ let cache_public_method meths tag cache dbg =
      dbg),
   Clet (
     VP.create tagged,
-      Cop(Caddi, [lsl_const (Cvar li) log2_size_addr dbg;
+      Cop(Caddi, [lsl_const (Cvar_mut li) log2_size_addr dbg;
         cconst_int(1 - 3 * size_addr)], dbg),
     Csequence(Cop (Cstore (Word_int, Assignment), [cache; Cvar tagged], dbg),
               Cvar tagged)))))

@@ -168,6 +168,7 @@ let rec expr ppf = function
   | Cconst_float (n, _dbg) -> fprintf ppf "%F" n
   | Cconst_symbol (s, _dbg) -> fprintf ppf "\"%s\"" s
   | Cvar id -> V.print ppf id
+  | Cvar_mut id -> fprintf ppf "!%a" V.print id
   | Creturn_addr -> fprintf ppf "return_addr"
   | Clet(id, def, (Clet(_, _, _) as body)) ->
       let print_binding id ppf def =

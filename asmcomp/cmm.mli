@@ -178,6 +178,7 @@ and expression =
   | Cconst_float of float * Debuginfo.t
   | Cconst_symbol of string * Debuginfo.t
   | Cvar of Backend_var.t
+  | Cvar_mut of Backend_var.t
   | Clet of Backend_var.With_provenance.t * expression * expression
   | Clet_mut of Backend_var.With_provenance.t * machtype
                 * expression * expression

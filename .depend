@@ -2997,10 +2997,12 @@ asmcomp/cmm_helpers.cmi : \
 asmcomp/cmm_invariants.cmo : \
     utils/numbers.cmi \
     asmcomp/cmm.cmi \
+    middle_end/backend_var.cmi \
     asmcomp/cmm_invariants.cmi
 asmcomp/cmm_invariants.cmx : \
     utils/numbers.cmx \
     asmcomp/cmm.cmx \
+    middle_end/backend_var.cmx \
     asmcomp/cmm_invariants.cmi
 asmcomp/cmm_invariants.cmi : \
     asmcomp/cmm.cmi
@@ -10597,17 +10599,20 @@ testsuite/tools/parsecmmaux.cmo : \
     parsing/location.cmi \
     lambda/lambda.cmi \
     lambda/debuginfo.cmi \
+    asmcomp/cmm.cmi \
     middle_end/backend_var.cmi \
     testsuite/tools/parsecmmaux.cmi
 testsuite/tools/parsecmmaux.cmx : \
     parsing/location.cmx \
     lambda/lambda.cmx \
     lambda/debuginfo.cmx \
+    asmcomp/cmm.cmx \
     middle_end/backend_var.cmx \
     testsuite/tools/parsecmmaux.cmi
 testsuite/tools/parsecmmaux.cmi : \
     parsing/location.cmi \
     lambda/debuginfo.cmi \
+    asmcomp/cmm.cmi \
     middle_end/backend_var.cmi
 otherlibs/dynlink/byte/dynlink.cmo : \
     otherlibs/dynlink/dynlink_types.cmi \
