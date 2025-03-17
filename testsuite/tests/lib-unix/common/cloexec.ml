@@ -16,7 +16,6 @@
  *)
  hasunix;
 
- libunix;
  {
    program = "${test_build_directory}/cloexec.byte";
    setup-ocamlc.byte-build-env;
@@ -24,7 +23,7 @@
    all_modules = "fdstatus_aux.c fdstatus_main.ml";
    ocamlc.byte;
    program = "${test_build_directory}/cloexec.byte";
-   all_modules = "cloexec.ml";
+   all_modules = "fdstatus_aux.c cloexec.ml";
    ocamlc.byte;
    check-ocamlc.byte-output;
    run;
@@ -36,7 +35,7 @@
    all_modules = "fdstatus_aux.c fdstatus_main.ml";
    ocamlopt.byte;
    program = "${test_build_directory}/cloexec.opt";
-   all_modules = "cloexec.ml";
+   all_modules = "fdstatus_aux.c cloexec.ml";
    ocamlopt.byte;
    check-ocamlopt.byte-output;
    run;
@@ -44,33 +43,13 @@
  }
 *)
 
-(* This is a terrible hack that plays on the internal representation
-   of file descriptors.  The result is a number (as a string)
-   that the fdstatus.exe auxiliary program can use to check whether
-   the fd is open. Moreover, since fdstatus.exe is an OCaml program,
-   we must take into account that the Windows OCaml runtime opens a few handles
-   for its own use, hence we do likewise to try to get handle numbers
-   Windows will not allocate to the OCaml runtime of fdstatus.exe *)
-
-let string_of_fd (fd: Unix.file_descr) : string =
-  match Sys.os_type with
-  | "Unix" | "Cygwin" ->  Int.to_string (Obj.magic fd : int)
-  | "Win32" ->
-      if Sys.word_size = 32 then
-        Int32.to_string (Obj.magic fd : int32)
-      else
-        Int64.to_string (Obj.magic fd : int64)
-  | _ -> assert false
+external fd_of_file_descr : Unix.file_descr -> int = "caml_fd_of_filedescr"
+let string_of_fd fd = Int.to_string (fd_of_file_descr fd)
 
 let status_checker = "fdstatus.exe"
 
 let _ =
   let f0 = Unix.(openfile "tmp.txt" [O_WRONLY; O_CREAT; O_TRUNC] 0o600) in
-  let untested1 = Unix.(openfile "tmp.txt" [O_RDONLY; O_CLOEXEC] 0) in
-  let untested2 = Unix.(openfile "tmp.txt" [O_RDONLY; O_CLOEXEC] 0) in
-  let untested3 = Unix.(openfile "tmp.txt" [O_RDONLY; O_CLOEXEC] 0) in
-  let untested4 = Unix.(openfile "tmp.txt" [O_RDONLY; O_CLOEXEC] 0) in
-  let untested5 = Unix.(openfile "tmp.txt" [O_RDONLY; O_CLOEXEC] 0) in
   let f1 = Unix.(openfile "tmp.txt" [O_RDONLY; O_KEEPEXEC] 0) in
   let f2 = Unix.(openfile "tmp.txt" [O_RDONLY; O_CLOEXEC] 0) in
   let d0 = Unix.dup f0 in
@@ -90,16 +69,11 @@ let _ =
                p0;p0';p1;p1';p2;p2';
                s0;s1;s2;
                x0;x0';x1;x1';x2;x2' |] in
-  let untested =
-    [untested1; untested2; untested3; untested4; untested5]
-  in
-  let pid =
-    Unix.create_process
-      (Filename.concat Filename.current_dir_name status_checker)
-      (Array.append [| status_checker |] (Array.map string_of_fd fds))
-      Unix.stdin Unix.stdout Unix.stderr in
-  ignore (Unix.waitpid [] pid);
-  let close fd = try Unix.close fd with Unix.Unix_error _ -> () in
-  Array.iter close fds;
-  List.iter close untested;
-  Sys.remove "tmp.txt"
+  let string_fds = (Array.map string_of_fd fds) in
+  (* NB On Windows, as documented, execv terminates immediately, which is
+        usually a problem. However, ocamltest runs tests in a process group and
+        the test step is not terminated until _all_ processes have completed, so
+        we can use Unix.execv here, even on Windows. *)
+  Unix.execv
+    (Filename.concat Filename.current_dir_name status_checker)
+    (Array.append [| status_checker |] string_fds)
