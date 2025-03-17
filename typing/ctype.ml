@@ -2632,9 +2632,9 @@ let nondep_instance env level id ty =
   if level = generic_level then duplicate_type ty else
   with_level ~level (fun () -> instance ty)
 
-(* Find the type paths nl1 in the module type mty2, and add them to the
+(* Find the type paths nl1 in the module type pack2, and add them to the
    list (nl2, tl2). raise Not_found if impossible *)
-let complete_type_list ?(allow_absent=false) env fl1 lv2 mty2 fl2 =
+let complete_type_list ?(allow_absent=false) env fl1 lv2 pack2 =
   (* This is morally WRONG: we're adding a (dummy) module without a scope in the
      environment. However no operation which cares about levels/scopes is going
      to happen while this module exists.
@@ -2646,7 +2646,7 @@ let complete_type_list ?(allow_absent=false) env fl1 lv2 mty2 fl2 =
      It'd be nice if we avoided creating such temporary dummy modules and broken
      environments though. *)
   let id2 = Ident.create_local "Pkg" in
-  let env' = Env.add_module id2 Mp_present mty2 env in
+  let env' = Env.add_module id2 Mp_present (Mty_ident pack2.pack_path) env in
   let rec complete fl1 fl2 =
     match fl1, fl2 with
       [], _ -> fl2
@@ -2674,18 +2674,16 @@ let complete_type_list ?(allow_absent=false) env fl1 lv2 mty2 fl2 =
         | exception Not_found when allow_absent->
             complete nl fl2
   in
-  match complete fl1 fl2 with
+  match complete fl1 pack2.pack_cstrs with
   | res -> res
   | exception Exit -> raise Not_found
 
 (* raise Not_found rather than Unify if the module types are incompatible *)
 let compare_package env unify_list lv1 pack1 lv2 pack2 =
-  let {pack_path = p1; pack_cstrs = fl1} = pack1 in
-  let {pack_path = p2; pack_cstrs = fl2} = pack2 in
-  let ntl2 = complete_type_list env fl1 lv2 (Mty_ident p2) fl2
-  and ntl1 = complete_type_list env fl2 lv1 (Mty_ident p1) fl1 in
+  let ntl2 = complete_type_list env pack1.pack_cstrs lv2 pack2
+  and ntl1 = complete_type_list env pack2.pack_cstrs lv1 pack1 in
   unify_list (List.map snd ntl1) (List.map snd ntl2);
-  if eq_package_path env p1 p2 then Ok ()
+  if eq_package_path env pack1.pack_path pack2.pack_path then Ok ()
   else Result.bind
       (!package_subtype env pack1 pack2)
       (fun () -> !package_subtype env pack2 pack1)
@@ -5078,20 +5076,17 @@ and subtype_labeled_list env trace labeled_tl1 labeled_tl2 cstrs =
     cstrs labeled_tl1 labeled_tl2
 
 and subtype_package env trace lvl1 pack1 lvl2 pack2 cstrs =
-  let {pack_path = p1; pack_cstrs = fl1} = pack1 in
-  let {pack_path = p2; pack_cstrs = fl2} = pack2 in
   try
-    let ntl1 =
-      complete_type_list env fl2 lvl1 (Mty_ident p1) fl1
+    let ntl1 = complete_type_list env pack2.pack_cstrs lvl1 pack1
     and ntl2 =
-      complete_type_list env fl1 lvl2 (Mty_ident p2) fl2
+      complete_type_list env pack1.pack_cstrs lvl2 pack2
         ~allow_absent:true in
     let cstrs' =
       List.map
         (fun (n2,t2) -> (trace, List.assoc n2 ntl1, t2, !univar_pairs))
         ntl2
     in
-    if eq_package_path env p1 p2 then cstrs' @ cstrs
+    if eq_package_path env pack1.pack_path pack2.pack_path then cstrs' @ cstrs
     else begin
       (* need to check module subtyping *)
       let snap = Btype.snapshot () in
