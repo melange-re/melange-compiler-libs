@@ -26,8 +26,16 @@
    all_modules = "fdstatus_aux.c cloexec.ml";
    ocamlc.byte;
    check-ocamlc.byte-output;
-   run;
-   check-program-output;
+   {
+     arguments = "execv";
+     run;
+     check-program-output;
+   }{
+     not-target-windows; (* Unix.create_process doesn't pass fds on Windows *)
+     arguments = "create_process";
+     run;
+     check-program-output;
+   }
  }{
    program = "${test_build_directory}/cloexec.opt";
    setup-ocamlopt.byte-build-env;
@@ -38,8 +46,16 @@
    all_modules = "fdstatus_aux.c cloexec.ml";
    ocamlopt.byte;
    check-ocamlopt.byte-output;
-   run;
-   check-program-output;
+   {
+     arguments = "execv";
+     run;
+     check-program-output;
+   }{
+     not-target-windows; (* Unix.create_process doesn't pass fds on Windows *)
+     arguments = "create_process";
+     run;
+     check-program-output;
+   }
  }
 *)
 
@@ -74,6 +90,17 @@ let _ =
         usually a problem. However, ocamltest runs tests in a process group and
         the test step is not terminated until _all_ processes have completed, so
         we can use Unix.execv here, even on Windows. *)
-  Unix.execv
-    (Filename.concat Filename.current_dir_name status_checker)
-    (Array.append [| status_checker |] string_fds)
+  if Sys.argv.(1) = "execv" then
+    Unix.execv
+      (Filename.concat Filename.current_dir_name status_checker)
+      (Array.append [| status_checker; Sys.argv.(1) |] string_fds)
+  else
+    let pid =
+      Unix.create_process
+        (Filename.concat Filename.current_dir_name status_checker)
+        (Array.append [| status_checker; Sys.argv.(1) |] string_fds)
+        Unix.stdin Unix.stdout Unix.stderr in
+    ignore (Unix.waitpid [] pid);
+    let close fd = try Unix.close fd with Unix.Unix_error _ -> () in
+    Array.iter close fds;
+    Sys.remove "tmp.txt"
