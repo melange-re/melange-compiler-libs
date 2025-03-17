@@ -82,16 +82,9 @@ let _ =
   let s0 = Unix.(socket PF_INET SOCK_STREAM 0) in
   let s1 = Unix.(socket ~cloexec:false PF_INET SOCK_STREAM 0) in
   let s2 = Unix.(socket ~cloexec:true PF_INET SOCK_STREAM 0) in
-  let (x0, x0') =
-    try Unix.(socketpair PF_UNIX SOCK_STREAM 0)
-    with Invalid_argument _ -> (p0, p0') in
-    (* socketpair not available under Win32; keep the same output *)
-  let (x1, x1') =
-    try Unix.(socketpair ~cloexec:false PF_UNIX SOCK_STREAM 0)
-    with Invalid_argument _ -> (p1, p1') in
-  let (x2, x2') =
-    try Unix.(socketpair ~cloexec:true PF_UNIX SOCK_STREAM 0)
-    with Invalid_argument _ -> (p2, p2') in
+  let (x0, x0') = Unix.(socketpair PF_UNIX SOCK_STREAM 0) in
+  let (x1, x1') = Unix.(socketpair ~cloexec:false PF_UNIX SOCK_STREAM 0) in
+  let (x2, x2') = Unix.(socketpair ~cloexec:true PF_UNIX SOCK_STREAM 0) in
 
   let fds = [| f0;f1;f2; d0;d1;d2;
                p0;p0';p1;p1';p2;p2';
