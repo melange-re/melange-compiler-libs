@@ -127,7 +127,15 @@ let not_msvc = make
     "not using MSVC / clang-cl"
     "using MSVC / clang-cl")
 
-(* not_windows _skips_ on Cygwin; not_target_windows _passes_ for Cygwin *)
+(* windows _passes_ on Cygwin; target_windows _skips_ for Cygwin *)
+
+let target_windows = make
+  ~name:"target-windows"
+  ~description:"Pass if the compiler does targets native Windows"
+  (Actions_helpers.pass_or_skip (Ocamltest_config.target_os_type = "Win32")
+    "targetting native Windows"
+    "not targetting native Windows")
+
 let not_target_windows = make
   ~name:"not-target-windows"
   ~description:"Pass if the compiler does not target native Windows"
@@ -389,6 +397,7 @@ let _ =
     windows;
     not_windows;
     not_msvc;
+    target_windows;
     not_target_windows;
     bsd;
     not_bsd;
