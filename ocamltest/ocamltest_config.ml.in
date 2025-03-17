@@ -33,6 +33,8 @@ let cflags = {@QS@|@common_cflags@|@QS@}
 
 let ccomptype = {@QS@|@ccomptype@|@QS@}
 
+let target_os_type = {@QS@|@target_os_type@|@QS@}
+
 let diff = {@QS@|@DIFF@|@QS@}
 let diff_flags = {@QS@|@DIFF_FLAGS@|@QS@}
 
