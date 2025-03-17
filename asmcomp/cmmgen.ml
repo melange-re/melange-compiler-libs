@@ -677,7 +677,7 @@ let rec transl env e =
       return_unit dbg
         (Clet_mut
            (id, typ_int, transl env low,
-            bind_nonvar "bound" (transl env high) (fun high ->
+            bind "bound" (transl env high) (fun high ->
               ccatch
                 (raise_num, [],
                  Cifthenelse

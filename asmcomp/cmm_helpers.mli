@@ -24,10 +24,6 @@ val bind :
 val bind_load :
   string -> expression -> (expression -> expression) -> expression
 
-(** Same as [bind], but does not treat variables as simple *)
-val bind_nonvar :
-  string -> expression -> (expression -> expression) -> expression
-
 (** Headers *)
 
 (** A null header with GC bits set to black *)
