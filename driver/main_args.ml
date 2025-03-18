@@ -152,6 +152,9 @@ let mk_no_g f =
 let mk_i f =
   "-i", Arg.Unit f, " Print inferred interface"
 
+let mk_i_variance f =
+  "-i-variance", Arg.Unit f, " Print inferred variances"
+
 let mk_I f =
   "-I", Arg.String f, "<dir>  Add <dir> to the list of include directories"
 
@@ -787,6 +790,7 @@ module type Common_options = sig
   val _absname : unit -> unit
   val _no_absname : unit -> unit
   val _alert : string -> unit
+  val _i_variance : unit -> unit
   val _I : string -> unit
   val _H : string -> unit
   val _labels : unit -> unit
@@ -862,6 +866,7 @@ module type Compiler_options = sig
   val _no_g : unit -> unit
   val _stop_after : string -> unit
   val _i : unit -> unit
+  val _i_variance : unit -> unit
   val _impl : string -> unit
   val _intf : string -> unit
   val _intf_suffix : string -> unit
@@ -1065,6 +1070,7 @@ struct
     mk_no_g F._no_g;
     mk_stop_after ~native:false F._stop_after;
     mk_i F._i;
+    mk_i_variance F._i_variance;
     mk_I F._I;
     mk_H F._H;
     mk_impl F._impl;
@@ -1168,6 +1174,7 @@ struct
     mk_absname F._absname;
     mk_no_absname F._no_absname;
     mk_alert F._alert;
+    mk_i_variance F._i_variance;
     mk_I F._I;
     mk_H F._H;
     mk_init F._init;
@@ -1269,6 +1276,7 @@ struct
     mk_stop_after ~native:true F._stop_after;
     mk_save_ir_after ~native:true F._save_ir_after;
     mk_i F._i;
+    mk_i_variance F._i_variance;
     mk_I F._I;
     mk_H F._H;
     mk_impl F._impl;
@@ -1412,6 +1420,7 @@ module Make_opttop_options (F : Opttop_options) = struct
     mk_no_absname F._no_absname;
     mk_alert F._alert;
     mk_compact F._compact;
+    mk_i_variance F._i_variance;
     mk_I F._I;
     mk_H F._H;
     mk_init F._init;
@@ -1521,6 +1530,7 @@ struct
     mk_absname F._absname;
     mk_no_absname F._no_absname;
     mk_alert F._alert;
+    mk_i_variance F._i_variance;
     mk_I F._I;
     mk_H F._H;
     mk_impl F._impl;
@@ -1621,6 +1631,7 @@ module Default = struct
     let _alert = Warnings.parse_alert_option
     let _alias_deps = clear transparent_modules
     let _app_funct = set applicative_functors
+    let _i_variance = set print_variance
     let _labels = clear classic
     let _no_absname = clear Clflags.absname
     let _no_alias_deps = set transparent_modules

@@ -506,6 +506,7 @@ let merge_constraint initial_env loc sg lid constr =
                      | Covariant -> true, false
                      | Contravariant -> false, true
                      | NoVariance -> false, false
+                     | Bivariant -> true, true
                    in
                    make_variance (not n) (not c) (i = Injective)
                 )
