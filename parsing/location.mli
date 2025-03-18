@@ -335,6 +335,13 @@ val error: ?loc:t -> ?sub:msg list -> ?footnote:delayed_msg -> string -> error
 val errorf: ?loc:t -> ?sub:msg list -> ?footnote:delayed_msg ->
   ('a, Format_doc.formatter, unit, error) format4 -> 'a
 
+val aligned_error_hint:
+  ?loc:t -> ?sub:msg list -> ?footnote:delayed_msg ->
+  ('a, Format_doc.formatter, unit, Format_doc.t option ->  error) format4 -> 'a
+(** [aligned_error_hint ?loc ?sub ?footnote fmt ... aligned_hint] produces an
+    error report where the potential [aligned_hint] message has been aligned
+    with the main error message before being added to the list of submessages.*)
+
 val error_of_printer: ?loc:t -> ?sub:msg list -> ?footnote:delayed_msg ->
   (Format_doc.formatter -> 'a -> unit) -> 'a -> error
 

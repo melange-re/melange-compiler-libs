@@ -3353,21 +3353,19 @@ let report_error ~loc _env = function
       let[@manual.ref "ss:valuerestriction"] manual_ref = [ 6; 1; 2 ] in
       Out_type.prepare_for_printing vars;
       Out_type.add_type_to_preparation item.val_type;
-      let sub =
-        [ Location.msg ~loc:item.val_loc
-            "The type of this value,@ %a,@ \
-             contains the non-generalizable type variable(s) %a."
-            (Style.as_inline_code Out_type.prepared_type_scheme)
-            item.val_type
-            (pp_print_list ~pp_sep:(fun f () -> fprintf f ",@ ")
-               @@ Style.as_inline_code Out_type.prepared_type_scheme) vars
-        ]
-      in
-      Location.errorf ~loc ~sub
+      Location.errorf ~loc
         "@[The type of this module,@ %a,@ \
          contains non-generalizable type variable(s).@ %a@]"
         modtype mty
         Misc.print_see_manual manual_ref
+        ~sub:[ Location.msg ~loc:item.val_loc
+                 "The type of this value,@ %a,@ \
+                  contains the non-generalizable type variable(s) %a."
+                 (Style.as_inline_code Out_type.prepared_type_scheme)
+                 item.val_type
+                 (pp_print_list ~pp_sep:(fun f () -> fprintf f ",@ ")
+                  @@ Style.as_inline_code Out_type.prepared_type_scheme) vars
+             ]
   | Implementation_is_required intf_name ->
       Location.errorf ~loc
         "@[The interface %a@ declares values, not just types.@ \
@@ -3414,9 +3412,13 @@ let report_error ~loc _env = function
         "The type of this packed module refers to %a, which is missing"
         (Style.as_inline_code path) p
   | Badly_formed_signature (context, err) ->
-      Location.errorf ~loc "@[In %s:@ %a@]"
-        context
-        Typedecl.report_error_doc err
+     let report = Typedecl.report_error ~loc err in
+     let txt =
+       Format_doc.doc_printf "In %s:@ %a"
+         context
+         Format_doc.pp_doc report.main.txt
+     in
+     { report with main = { report.main with txt} }
   | Cannot_hide_id Illegal_shadowing
       { shadowed_item_kind; shadowed_item_id; shadowed_item_loc;
         shadower_id; user_id; user_kind; user_loc } ->
