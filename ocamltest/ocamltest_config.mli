@@ -39,6 +39,9 @@ val cflags : string
 val ccomptype : string
 (** Type of C compiler (msvc, cc, etc.) *)
 
+val target_os_type : string
+(** The value of Sys.os_type for the target (cf. Config.target_os_type) *)
+
 val diff : string
 (** Path to the diff tool *)
 
