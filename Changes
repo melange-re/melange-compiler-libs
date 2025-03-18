@@ -290,6 +290,11 @@ Working version
 - #13764, #13779: add missing "-keywords" flag to ocamldep and ocamlprof
   (Florian Angeletti, report by Prashanth Mundkur, review by Gabriel Scherer)
 
+- #13877: ocamldoc, add a `-latex-escape-underscore` flag to control the
+  escaping of `_` underscore in latex references (in order to be able to match
+  odoc behaviour).
+  (Florian Angeletti, review by Gabriel Scherer)
+
 ### Manual and documentation:
 
 - #13694: Fix name for caml_hash_variant in the C interface.
