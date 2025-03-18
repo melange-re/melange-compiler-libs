@@ -82,8 +82,8 @@ integers
 \end{tabular}
 \subsubsection*{sss:stdlib-io}{input/output:}
 \begin{tabular}{lll}
-"In_channel" & p.~\stdpageref{In-underscorechannel} & input channels \\
-"Out_channel" & p.~\stdpageref{Out-underscorechannel} & output channels \\
+"In_channel" & p.~\stdpageref{In_channel} & input channels \\
+"Out_channel" & p.~\stdpageref{Out_channel} & output channels \\
 "Format" & p.~\stdpageref{Format} & pretty printing with automatic
 indentation and line breaking \\
 "Marshal" & p.~\stdpageref{Marshal} & marshaling of data structures \\
