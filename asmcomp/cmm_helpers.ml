@@ -32,11 +32,6 @@ let bind_load name arg fn =
   | Cop(Cload _, [Cvar _], _) -> fn arg
   | _ -> bind name arg fn
 
-let bind_nonvar name arg fn =
-  match arg with
-    Cconst_int _ | Cconst_natint _ | Cconst_symbol _ -> fn arg
-  | _ -> let id = V.create_local name in Clet(VP.create id, arg, fn (Cvar id))
-
 let caml_black = Nativeint.shift_left (Nativeint.of_int 3) 8
     (* cf. runtime/caml/gc.h *)
 
@@ -1800,7 +1795,8 @@ let cache_public_method meths tag cache dbg =
        (Clet(
         VP.create mi,
         Cop(Cor,
-            [Cop(Clsr, [Cop(Caddi, [Cvar li; Cvar hi], dbg); cconst_int 1],
+            [Cop(Clsr, [Cop(Caddi, [Cvar_mut li; Cvar_mut hi], dbg);
+                        cconst_int 1],
                dbg);
              cconst_int 1],
             dbg),
@@ -1817,7 +1813,7 @@ let cache_public_method meths tag cache dbg =
            dbg, Cassign(li, Cvar mi),
            dbg),
         Cifthenelse
-          (Cop(Ccmpi Cge, [Cvar li; Cvar hi], dbg),
+          (Cop(Ccmpi Cge, [Cvar_mut li; Cvar_mut hi], dbg),
            dbg, Cexit (raise_num, []),
            dbg, Ctuple [],
            dbg))))
@@ -1826,7 +1822,7 @@ let cache_public_method meths tag cache dbg =
      dbg),
   Clet (
     VP.create tagged,
-      Cop(Caddi, [lsl_const (Cvar li) log2_size_addr dbg;
+      Cop(Caddi, [lsl_const (Cvar_mut li) log2_size_addr dbg;
         cconst_int(1 - 3 * size_addr)], dbg),
     Csequence(Cop (Cstore (Word_int, Assignment), [cache; Cvar tagged], dbg),
               Cvar tagged)))))

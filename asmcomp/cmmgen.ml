@@ -39,6 +39,7 @@ type boxed_number =
 
 type env = {
   unboxed_ids : (V.t * boxed_number) V.tbl;
+  mutable_ids : V.Set.t;
   notify_catch : (Cmm.expression list -> unit) IntMap.t;
   environment_param : V.t option;
 }
@@ -61,6 +62,7 @@ type env = {
 let empty_env =
   {
     unboxed_ids = V.empty;
+    mutable_ids = V.Set.empty;
     notify_catch = IntMap.empty;
     environment_param = None;
   }
@@ -77,6 +79,14 @@ let is_unboxed_id id env =
 let add_unboxed_id id unboxed_id bn env =
   { env with
     unboxed_ids = V.add id (unboxed_id, bn) env.unboxed_ids;
+  }
+
+let is_mutable_id id env =
+  V.Set.mem id env.mutable_ids
+
+let add_mutable_id id env =
+  { env with
+    mutable_ids = V.Set.add id env.mutable_ids;
   }
 
 let add_notify_catch n f env =
@@ -354,8 +364,17 @@ let rec transl env e =
   match e with
     Uvar id ->
       begin match is_unboxed_id id env with
-      | None -> Cvar id
-      | Some (unboxed_id, bn) -> box_number bn (Cvar unboxed_id)
+      | None ->
+          if is_mutable_id id env
+          then Cvar_mut id
+          else Cvar id
+      | Some (unboxed_id, bn) ->
+          let var =
+            if is_mutable_id unboxed_id env
+            then Cvar_mut unboxed_id
+            else Cvar unboxed_id
+          in
+          box_number bn var
       end
   | Uconst sc ->
       transl_constant Debuginfo.none sc
@@ -654,24 +673,26 @@ let rec transl env e =
       let inc = match dir with Upto -> Caddi | Downto -> Csubi in
       let raise_num = next_raise_count () in
       let id_prev = VP.create (V.create_local "*id_prev*") in
+      let env = add_mutable_id (VP.var id) env in
       return_unit dbg
         (Clet_mut
            (id, typ_int, transl env low,
-            bind_nonvar "bound" (transl env high) (fun high ->
+            bind "bound" (transl env high) (fun high ->
               ccatch
                 (raise_num, [],
                  Cifthenelse
-                   (Cop(Ccmpi tst, [Cvar (VP.var id); high], dbg),
+                   (Cop(Ccmpi tst, [Cvar_mut (VP.var id); high], dbg),
                     dbg,
                     Cexit (raise_num, []),
                     dbg,
                     create_loop
                       (Csequence
                          (remove_unit(transl env body),
-                         Clet(id_prev, Cvar (VP.var id),
+                         Clet(id_prev, Cvar_mut (VP.var id),
                           Csequence
                             (Cassign(VP.var id,
-                               Cop(inc, [Cvar (VP.var id); Cconst_int (2, dbg)],
+                               Cop(inc, [Cvar_mut (VP.var id);
+                                         Cconst_int (2, dbg)],
                                  dbg)),
                              Cifthenelse
                                (Cop(Ccmpi Ceq, [Cvar (VP.var id_prev); high],
@@ -1238,19 +1259,27 @@ and transl_let env str kind id exp transl_body =
       (* N.B. [body] must still be traversed even if [exp] will never return:
          there may be constant closures inside that need lifting out. *)
       begin match str, kind with
-      | Immutable, _ -> Clet(id, cexp, transl_body env)
-      | Mutable, Pintval -> Clet_mut(id, typ_int, cexp, transl_body env)
-      | Mutable, _ -> Clet_mut(id, typ_val, cexp, transl_body env)
+      | Immutable, _ ->
+        Clet(id, cexp, transl_body env)
+      | Mutable, Pintval ->
+        Clet_mut(id, typ_int, cexp,
+                 transl_body (add_mutable_id (VP.var id) env))
+      | Mutable, _ ->
+        Clet_mut(id, typ_val, cexp,
+                 transl_body (add_mutable_id (VP.var id) env))
       end
   | Boxed (boxed_number, false) ->
       let unboxed_id = V.create_local (VP.name id) in
       let v = VP.create unboxed_id in
       let cexp = unbox_number dbg boxed_number cexp in
-      let body =
+      let body env =
         transl_body (add_unboxed_id (VP.var id) unboxed_id boxed_number env) in
       begin match str, boxed_number with
-      | Immutable, _ -> Clet (v, cexp, body)
-      | Mutable, bn -> Clet_mut (v, typ_of_boxed_number bn, cexp, body)
+      | Immutable, _ ->
+        Clet (v, cexp, body env)
+      | Mutable, bn ->
+        Clet_mut (v, typ_of_boxed_number bn, cexp,
+                  body (add_mutable_id unboxed_id env))
       end
 
 and make_catch ncatch body handler dbg = match body with

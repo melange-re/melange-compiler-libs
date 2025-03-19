@@ -154,7 +154,7 @@ let wrap_entry_exit expr =
       | Cconst_natint (_, _)
       | Cconst_float (_, _)
       | Cconst_symbol (_, _)
-      | Cvar _ | Ctuple _ | Creturn_addr ) as expr ->
+      | Cvar _ | Cvar_mut _ | Ctuple _ | Creturn_addr ) as expr ->
       let id = VP.create (V.create_local "res") in
       Clet (id, expr, Csequence (call_exit, Cvar (VP.var id)))
   in
@@ -285,7 +285,7 @@ let instrument body =
       Cswitch (aux e, cases, handlers, dbg_none)
     (* no instrumentation *)
     | ( Cconst_int _ | Cconst_natint _ | Cconst_float _ | Cconst_symbol _
-      | Cvar _ | Creturn_addr ) as c ->
+      | Cvar _ | Cvar_mut _ | Creturn_addr ) as c ->
       c
   in
   body |> aux |> wrap_entry_exit
