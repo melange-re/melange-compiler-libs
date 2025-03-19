@@ -47,6 +47,10 @@ type is_safe =
   | Safe
   | Unsafe
 
+type lazy_block_tag =
+  | Lazy_tag
+  | Forward_tag
+
 type primitive =
   | Pbytes_to_string
   | Pbytes_of_string
@@ -56,6 +60,7 @@ type primitive =
   | Psetglobal of Ident.t
   (* Operations on heap blocks *)
   | Pmakeblock of int * mutable_flag * block_shape
+  | Pmakelazyblock of lazy_block_tag
   | Pfield of int * immediate_or_pointer * mutable_flag
   | Pfield_computed
   | Psetfield of int * immediate_or_pointer * initialization_or_assignment
@@ -496,6 +501,8 @@ val max_arity : unit -> int
       maximal length of the [params] list of a [lfunction] record.
       This is unlimited ([max_int]) for bytecode, but limited
       (currently to 126) for native code. *)
+
+val tag_of_lazy_tag : lazy_block_tag -> int
 
 (***********************)
 (* For static failures *)
