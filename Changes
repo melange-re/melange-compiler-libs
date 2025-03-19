@@ -424,6 +424,9 @@ Working version
   content of a `Tpackage` node
   (Samuel Vivien, review by Florian Angeletti)
 
+- #13884 Correctly index modules in constructors and labels paths
+  (Ulysse Gérard, review by Florian Angeletti)
+
 ### Build system:
 
 - #13431: Simplify github action responsible for flagging PRs with
