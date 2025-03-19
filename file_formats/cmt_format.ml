@@ -153,7 +153,7 @@ let iter_on_occurrences
   let path_in_type typ name =
     match Types.get_desc typ with
     | Tconstr (type_path, _, _) ->
-      Some (Path.Pdot (type_path,  name))
+      Some (Path.Pextra_ty(type_path, Pcstr_ty name))
     | _ -> None
   in
   let add_constructor_description env lid =
@@ -379,7 +379,8 @@ let index_occurrences binary_annots =
        should make these successive reductions fast. *)
     let rec index_components namespace lid path  =
       let module_ = Shape.Sig_component_kind.Module in
-      match lid.Location.txt, path with
+      let scraped_path = Path.scrape_extra_ty path in
+      match lid.Location.txt, scraped_path with
       | Longident.Ldot (lid', _), Path.Pdot (path', _) ->
         reduce_and_store ~namespace lid path;
         index_components module_ lid' path'

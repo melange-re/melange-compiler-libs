@@ -5,19 +5,19 @@ Resolved: Index_constrs_records.38:
   lbl (File "index_constrs_records.ml", line 52, characters 24-27)
 Unresolved: CU Stdlib . "ignore"[value] :
   ignore (File "index_constrs_records.ml", line 52, characters 15-21)
-Approximated: Index_constrs_records.45:
+Resolved: Index_constrs_records.45:
   Mod (File "index_constrs_records.ml", line 52, characters 4-7)
 Resolved: Index_constrs_records.39:
   Mod.A (File "index_constrs_records.ml", line 52, characters 4-9)
 Resolved: Index_constrs_records.38:
   lbl (File "index_constrs_records.ml", line 51, characters 12-15)
-Approximated: Index_constrs_records.45:
+Resolved: Index_constrs_records.45:
   Mod (File "index_constrs_records.ml", line 51, characters 4-7)
 Resolved: Index_constrs_records.39:
   Mod.A (File "index_constrs_records.ml", line 51, characters 4-9)
 Resolved: Index_constrs_records.38:
   lbl (File "index_constrs_records.ml", line 50, characters 16-19)
-Approximated: Index_constrs_records.45:
+Resolved: Index_constrs_records.45:
   Mod (File "index_constrs_records.ml", line 50, characters 8-11)
 Resolved: Index_constrs_records.39:
   Mod.A (File "index_constrs_records.ml", line 50, characters 8-13)
@@ -71,7 +71,7 @@ Resolved: Index_constrs_records.19:
   M (File "index_constrs_records.ml", line 27, characters 5-6)
 Resolved: Index_constrs_records.3:
   l_c (File "index_constrs_records.ml", line 25, characters 14-17)
-Approximated: Index_constrs_records.19:
+Resolved: Index_constrs_records.19:
   M (File "index_constrs_records.ml", line 25, characters 8-9)
 Resolved: Index_constrs_records.4:
   M.A (File "index_constrs_records.ml", line 25, characters 8-11)
