@@ -701,17 +701,24 @@ type) corresponds to the "Some" constructor.
 
 \subsection{ss:c-int-ops}{Operations on integers}
 
+The header "<caml/config.h>" defines a C integer type "intnat" of signed 64-bit
+integers (32-bit integers on 32-bit architectures). This type is used to
+represent the integer encoded by a "value" corresponding to an unboxed integer
+without truncation.
+
 \begin{itemize}
-\item "Val_long("\var{l}")" returns the value encoding the "long int" \var{l}.
-\item "Long_val("\var{v}")" returns the "long int" encoded in value \var{v}.
+\item "Val_long("\var{n}")" returns the value encoding the "intnat" \var{n}.
+\item "Long_val("\var{v}")" returns the "intnat" encoded in value \var{v}.
 \item "Val_int("\var{i}")" returns the value encoding the "int" \var{i}.
-\item "Int_val("\var{v}")" returns the "int" encoded in value \var{v}.
+\item "Int_val("\var{v}")" returns the "int" encoded in value \var{v}. Note that
+this operation may result in a truncated value since "int" is 32-bit wide on
+64-bit architectures.
 \item "Val_bool("\var{x}")" returns the OCaml boolean representing the
 truth value of the C integer \var{x}.
 \item "Bool_val("\var{v}")" returns 0 if \var{v} is the OCaml boolean
 "false", 1 if \var{v} is "true".
 \item "Val_true", "Val_false" represent the OCaml booleans "true" and "false".
-\item "Val_emptylist", "Val_emptylist" represents the empty list.
+\item "Val_emptylist" represents the empty list.
 \item "Val_none" represents the OCaml value "None".
 \end{itemize}
 
