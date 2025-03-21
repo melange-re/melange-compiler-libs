@@ -184,7 +184,7 @@ Working version
   (Daniel Bünzli, review by Nicolás Ojeda Bär and David Allsopp)
 
 - #13729: Add Seq.filteri
-  (Tima Kinsart, review by Nicolás Ojeda Bär and Daniel Bünzli)
+  (T. Kinsart, review by Nicolás Ojeda Bär and Daniel Bünzli)
 
 - #13721: Add Result.retract
   (Daniel Bünzli, review by Gabriel Scherer, Nicolás Ojeda Bär and
@@ -2189,7 +2189,7 @@ OCaml 5.1.0 (14 September 2023)
   `Seq.find_mapi`, `Seq.find_index`, `Array.find_mapi`, `Array.find_index`,
   `Float.Array.find_opt`, `Float.Array.find_index`, `Float.Array.find_map`,
   `Float.Array.find_mapi`.
-  (Tima Kinsart, review by Daniel Bünzli and Nicolás Ojeda Bär)
+  (T. Kinsart, review by Daniel Bünzli and Nicolás Ojeda Bär)
 
 - #11410: Add Set.to_list, Map.to_list, Map.of_list,
   `Map.add_to_list: key -> 'a -> 'a list t -> 'a list t`.
