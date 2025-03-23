@@ -2830,8 +2830,8 @@ let split_extension_cases tag_lambda_list =
     | (cstr_tag, act) :: rem -> (
         let consts, nonconsts = split_rec rem in
         match cstr_tag with
-          Cstr_extension(path, true) when not !Config.bs_only -> ((path, act) :: consts, nonconsts)
-        | Cstr_extension(path, _) -> (consts, (path, act) :: nonconsts)
+          Cstr_extension{path; const=true} when not !Config.bs_only -> ((path, act) :: consts, nonconsts)
+        | Cstr_extension{path; _} -> (consts, (path, act) :: nonconsts)
         | _ -> assert false
       )
   in
@@ -3614,7 +3614,7 @@ let failure_handler ~scopes loc ~failer () =
     Lprim
       ( Praise Raise_regular,
         [ Lprim
-            ( Pmakeblock (0, Blk_extension, Immutable, None),
+            ( Pmakeblock (0, Blk_extension { exn = true }, Immutable, None),
               [ slot;
                 Lconst
                   (Const_block

@@ -260,7 +260,7 @@ and record_representation =
   | Record_float                        (* All fields are floats *)
   | Record_unboxed of bool    (* Unboxed single-field record, inlined or not *)
   | Record_inlined of {tag : int; name : string; num_nonconsts : int; attributes: Parsetree.attributes } (* Inlined record *)
-  | Record_extension of Path.t          (* Inlined record under extension *)
+  | Record_extension of {path: Path.t; exn: bool} (* Inlined record under extension *)
 
 and variant_representation =
     Variant_regular          (* Constant or boxed constructors *)
@@ -299,6 +299,7 @@ type extension_constructor =
     ext_loc: Location.t;
     ext_attributes: Parsetree.attributes;
     ext_uid: Uid.t;
+    ext_exn: bool;
   }
 
 and type_transparence =
@@ -418,16 +419,16 @@ and constructor_tag =
     Cstr_constant of int                (* Constant constructor (an int) *)
   | Cstr_block of int                   (* Regular constructor (a block) *)
   | Cstr_unboxed                        (* Constructor of an unboxed type *)
-  | Cstr_extension of Path.t * bool     (* Extension constructor
-                                           true if a constant false if a block*)
+  | Cstr_extension of { path: Path.t; const: bool; exn: bool }
+    (* Extension constructor true if a constant false if a block *)
 
 let equal_tag t1 t2 =
   match (t1, t2) with
   | Cstr_constant i1, Cstr_constant i2 -> i2 = i1
   | Cstr_block i1, Cstr_block i2 -> i2 = i1
   | Cstr_unboxed, Cstr_unboxed -> true
-  | Cstr_extension (path1, b1), Cstr_extension (path2, b2) ->
-      Path.same path1 path2 && b1 = b2
+  | Cstr_extension {path=path1; const=b1; exn=exn1}, Cstr_extension {path=path2; const=b2; exn=exn2} ->
+      Path.same path1 path2 && b1 = b2 && exn1 = exn2
   | (Cstr_constant _|Cstr_block _|Cstr_unboxed|Cstr_extension _), _ -> false
 
 let may_equal_constr c1 c2 =

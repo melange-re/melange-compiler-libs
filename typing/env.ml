@@ -734,7 +734,7 @@ let is_ext cda =
 
 let is_local_ext cda =
   match cda.cda_description with
-  | {cstr_tag = Cstr_extension(p, _)} -> begin
+  | {cstr_tag = Cstr_extension{path=p; _}} -> begin
       match p with
       | Pident _ -> true
       | Pdot _ | Papply _ | Pextra_ty _ -> false
@@ -2045,7 +2045,6 @@ and store_extension ~check ~rebind id addr ext shape env =
     Warnings.is_active (Warnings.Unused_extension ("", false, Unused))
   then begin
     let priv = ext.ext_private in
-    let is_exception = Path.same ext.ext_type_path Predef.path_exn in
     let name = cstr.cstr_name in
     let k = cstr.cstr_uid in
     if not (Types.Uid.Tbl.mem !used_constructors k) then begin
@@ -2059,7 +2058,7 @@ and store_extension ~check ~rebind id addr ext shape env =
                 if not (is_in_signature env) then
                   Location.prerr_warning loc
                     (Warnings.Unused_extension
-                       (name, is_exception, complaint)))
+                       (name, ext.ext_exn, complaint)))
              (constructor_usage_complaint ~rebind priv used))
     end;
   end);
