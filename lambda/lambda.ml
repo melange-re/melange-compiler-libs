@@ -39,7 +39,7 @@ type tag_info =
   | Blk_module of string list
   | Blk_module_export of Ident.t list
   | Blk_extension_slot
-  | Blk_extension
+  | Blk_extension of { exn: bool }
   | Blk_na of string
   | Blk_some
   | Blk_some_not_nested (* ['a option] where ['a] can not inhabit a non-like value *)
@@ -49,7 +49,7 @@ type tag_info =
       ; fields : string array
       ; attributes: Parsetree.attributes
       }
-  | Blk_record_ext of string array
+  | Blk_record_ext of { fields: string array; exn: bool }
   | Blk_lazy_general
   | Blk_class (* Ocaml style class*)
 
@@ -59,10 +59,9 @@ let blk_record = ref (fun fields ->
   Blk_record all_labels_info
   )
 
-let blk_record_ext =  ref (fun fields ->
+let blk_record_ext =  ref (fun ~is_exn fields ->
     let all_labels_info = fields |> Array.map (fun (x,_) -> x.Types.lbl_name) in
-    Blk_record_ext all_labels_info
-  )
+    Blk_record_ext { fields = all_labels_info; exn = is_exn })
 
 let blk_record_inlined = ref (fun fields name num_nonconst attributes ->
   let fields = fields |> Array.map (fun (x,_) -> x.Types.lbl_name) in

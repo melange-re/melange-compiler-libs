@@ -185,16 +185,17 @@ let extension_descr ~current_unit path_ext ext =
         Some type_ret -> type_ret
       | None -> newgenconstr ext.ext_type_path ext.ext_type_params
   in
+  let exn = ext.ext_exn in
   let existentials, cstr_args, cstr_inlined =
     constructor_args ~current_unit ext.ext_private ext.ext_args ext.ext_ret_type
-      Path.(Pextra_ty (path_ext, Pext_ty)) (Record_extension path_ext)
+      Path.(Pextra_ty (path_ext, Pext_ty)) (Record_extension {path=path_ext;exn})
   in
     { cstr_name = Path.last path_ext;
       cstr_res = ty_res;
       cstr_existentials = existentials;
       cstr_args;
       cstr_arity = List.length cstr_args;
-      cstr_tag = Cstr_extension(path_ext, cstr_args = []);
+      cstr_tag = Cstr_extension{path=path_ext; const=cstr_args = []; exn};
       cstr_consts = -1;
       cstr_nonconsts = -1;
       cstr_private = ext.ext_private;
