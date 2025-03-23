@@ -493,7 +493,8 @@ and record_representation =
   | Record_float                        (* All fields are floats *)
   | Record_unboxed of bool    (* Unboxed single-field record, inlined or not *)
   | Record_inlined of { tag : int ; name : string; num_nonconsts : int; attributes : Parsetree.attributes } (* Inlined record *)
-  | Record_extension of Path.t          (* Inlined record under extension *)
+  | Record_extension of {path: Path.t; exn: bool} (* Inlined record under extension *)
+                             (* The argument is the path of the extension *)
 
 and variant_representation =
     Variant_regular          (* Constant or boxed constructors *)
@@ -533,6 +534,7 @@ type extension_constructor =
     ext_loc: Location.t;
     ext_attributes: Parsetree.attributes;
     ext_uid: Uid.t;
+    ext_exn: bool;
   }
 
 and type_transparence =
@@ -652,8 +654,8 @@ and constructor_tag =
     Cstr_constant of int                (* Constant constructor (an int) *)
   | Cstr_block of int                   (* Regular constructor (a block) *)
   | Cstr_unboxed                        (* Constructor of an unboxed type *)
-  | Cstr_extension of Path.t * bool     (* Extension constructor
-                                           true if a constant false if a block*)
+  | Cstr_extension of { path: Path.t; const: bool; exn: bool }
+    (* Extension constructor true if a constant false if a block *)
 
 (* Constructors are the same *)
 val equal_tag :  constructor_tag -> constructor_tag -> bool
