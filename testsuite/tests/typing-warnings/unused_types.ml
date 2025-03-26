@@ -689,3 +689,9 @@ Warning 34 [unused-type-declaration]: unused type alias "'unused2".
 val f : int -> int -> int -> int -> 'used2 -> int * int * int * int * 'used2 =
   <fun>
 |}]
+
+type 'a t = [> `A] as 'a
+
+[%%expect{|
+type 'a t = 'a constraint 'a = [> `A ]
+|}]

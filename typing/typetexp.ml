@@ -335,16 +335,18 @@ end = struct
                 Unify err when is_in_scope name ->
                   raise (Error(loc, env, Type_mismatch err))
               | _ -> Btype.backtrack snap; false
-          then try
-            r := (loc, v, lookup_global_type_variable name) :: !r
-          with Not_found ->
-            if extensibility = Fixed && Btype.is_Tvar ty then
-              raise(Error(loc, env,
-                          Unbound_type_variable (Pprintast.tyvar_of_name name,
-                                                 get_in_scope_names ())));
-            let v2 = new_global_var () in
-            r := (loc, v, v2) :: !r;
-            add ~unused name v2)
+          then match lookup_global_type_variable name with
+            | global_var ->
+              r := (loc, v, global_var) :: !r;
+              unused := false
+            | exception Not_found ->
+              if extensibility = Fixed && Btype.is_Tvar ty then
+                raise(Error(loc, env,
+                            Unbound_type_variable (Pprintast.tyvar_of_name name,
+                                                  get_in_scope_names ())));
+              let v2 = new_global_var () in
+              r := (loc, v, v2) :: !r;
+              add ~unused name v2)
       !used_variables;
     used_variables := TyVarMap.empty;
     fun () ->
