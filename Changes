@@ -352,9 +352,9 @@ Working version
   change locations of error messages when `S` is ill-typed in `(module S)`
   (Samuel Vivien, review by Florian Angeletti and Gabriel Scherer)
 
-- #13814: Add an `unused-type-declaration` when using a `t as 'a` with no other
-  occurences of `'a`
-  (Samuel Vivien, review by Florian Angeletti)
+- #13814, 13898: Add an `unused-type-declaration` when using a `t as 'a` with
+  no other occurences of `'a`
+  (Samuel Vivien, review by Florian Angeletti, Kate Deplaix)
 
 - #13817: align spellchecking hints with the possibly misspelled identifier/
               Error: Unbound type constructor "aray"
