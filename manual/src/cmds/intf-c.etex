@@ -781,7 +781,7 @@ of a value \var{v} of any boxed type (record or concrete data type).
 \item "caml_field_unboxable("\var{v}")" calls either
 "caml_field_unboxed" or "caml_field_boxed" according to the default
 representation of unboxable types in the current version of OCaml.
-\item "Some_val("\var{v}")" returns the argument "\var{x}" of a value \var{v} of
+\item "Some_val("\var{v}")" returns the argument \var{x} of a value \var{v} of
 the form "Some("\var{x}")".
 \end{itemize}
 The expressions "Field("\var{v}", "\var{n}")",
@@ -1535,19 +1535,19 @@ re-raising the exception (if any) or continuing the computation.
 "caml_result" values can be manipulated using the following functions
 and macros:
 \begin{itemize}
-\item "value caml_get_value_or_raise(caml_result \var{res})"
+\item "value caml_get_value_or_raise(caml_result "\var{res}")"
   (in "fail.h") returns the value contained in \var{res} or reraises
   the exception it contains. In particular,
   "(void)caml_get_value_or_raise(res)" can be used to ignore an OCaml
   result of type "unit", yet propagate exceptions to the caller.
 
-\item "Result_value(value \var{v})" (in "mlvalues.h") is the result
+\item "Result_value(value "\var{v}")" (in "mlvalues.h") is the result
   that represents returning the value \var{v}.
 
-\item "Result_exception(value \var{exn})" (in "mlvalues.h") is the
+\item "Result_exception(value "\var{exn}")" (in "mlvalues.h") is the
   result that represents raising the exception \var{exn}.
 
-\item "int caml_result_is_exception(caml_result \var{res})"
+\item "int caml_result_is_exception(caml_result "\var{res}")"
   (in "mlvalues.h") is true if \var{res} represents an exception.
 
 \item The macro "CAMLlocalresult(foo)" (in "memory.h") is the
