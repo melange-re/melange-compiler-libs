@@ -421,6 +421,10 @@ Working version
   parser is modified too to accept `+-` and `-+` as `type_variance`.
   (Takafumi Saikawa and Jacques Garrigue, review by Florian Angeletti)
 
+- #13828: Apply BUILD_PATH_PREFIX_MAP to Sys.argv.(0) before storing it in .cmt
+  and .cmti files.
+  (David Allsopp, review by Daniel Bünzli and Gabriel Scherer)
+
 - #13848: Add all paths components to the cmt files indexes
   (Ulysse Gérard, review by Florian Angeletti)
 
