@@ -90,6 +90,8 @@ jobs:
           ./configure --prefix="$HOME/cross" --target=x86_64-w64-mingw32 \
               TARGET_LIBDIR="$TESTDIR" || res=$?
           if ! [ "$res" = 0 ]; then cat config.log; exit "$res"; fi
+          # The OOM-killer may be triggered if the number of parallel
+          # jobs isn't limited.
           make crossopt -j$(nproc)
           make installcross
           ln -sr "$HOME/cross/bin/flexlink.opt.exe" "$HOME/.local/bin/flexlink"
