@@ -25,6 +25,20 @@ MAKE_WARN="$MAKE --warn-undefined-variables"
 
 export PATH=$PREFIX/bin:$PATH
 
+call-configure () {
+  local failed
+  ./configure "$@" || failed=$?
+  if ((failed)); then
+    # Output seems to be a little unpredictable in GitHub Actions: ensure that
+    # the fold is definitely on a new line
+    echo
+    echo "::group::config.log content ($(wc -l config.log) lines)"
+    cat config.log
+    echo '::endgroup::'
+    exit $failed
+  fi
+}
+
 Configure () {
   mkdir -p $PREFIX
   cat<<EOF
@@ -37,16 +51,15 @@ request can be merged.
 ------------------------------------------------------------------------
 EOF
 
-  configure_flags="\
-    --prefix=$PREFIX \
-    --enable-flambda-invariants \
-    --enable-ocamltest \
-    --disable-dependency-generation \
-    $CONFIG_ARG"
-
-  local failed
-  ./configure $configure_flags || failed=$?
-  if ((failed)) ; then cat config.log ; exit $failed ; fi
+  # $CONFIG_ARG will be intentionally word-split - there is no way to pass
+  # arguments requiring spaces from the workflows.
+  # $CONFIG_ARG also appears last to allow settings specified here to be
+  # overridden by the workflows.
+  call-configure --prefix="$PREFIX" \
+                 --enable-flambda-invariants \
+                 --enable-ocamltest \
+                 --disable-dependency-generation \
+                 $CONFIG_ARG
 }
 
 Build () {
@@ -55,7 +68,7 @@ Build () {
   if [ "$(uname)" = 'Darwin' ]; then
     script -q build.log $MAKE_WARN || failed=$?
     if ((failed)); then
-      script -q build.log $MAKE_WARN make -j1 V=1
+      script -q build.log $MAKE_WARN -j1 V=1
       exit $failed
     fi
   else
@@ -146,9 +159,7 @@ This test checks the global structure of the reference manual
 --------------------------------------------------------------------------
 EOF
   # we need some of the configuration data provided by configure
-  local failed
-  ./configure || failed=$?
-  if ((failed)) ; then cat config.log ; exit $failed ; fi
+  call-configure
   $MAKE check-stdlib check-case-collision -C manual/tests
 
 }
@@ -177,13 +188,10 @@ BasicCompiler () {
   local failed
   trap ReportBuildStatus ERR
 
-  local failed
-  ./configure --disable-dependency-generation \
-              --disable-debug-runtime \
-              --disable-instrumented-runtime \
-              --enable-ocamltest \
-      || failed=$?
-  if ((failed)) ; then cat config.log ; exit $failed ; fi
+  call-configure --disable-dependency-generation \
+                 --disable-debug-runtime \
+                 --disable-instrumented-runtime \
+                 --enable-ocamltest \
 
   # Need a runtime
   make -j coldstart || failed=$?
