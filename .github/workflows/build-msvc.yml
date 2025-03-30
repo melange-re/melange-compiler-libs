@@ -127,7 +127,7 @@ jobs:
       - name: Run the test suite
         run: |
           eval $(tools/msvs-promote-path)
-          make -j tests
+          make tests
 
       - name: Install the compiler
         run: make install
