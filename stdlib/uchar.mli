@@ -106,8 +106,9 @@ val hash : t -> int
 (** An unseeded hash function with the same output value as {!Hashtbl.hash}.
     This function allows this module to be passed as an argument to the functor
     {!Hashtbl.Make}.
-
-    @since 5.3 *)
+    @before 5.3 The hashing algorithm was different.
+    Use [Hashtbl.rebuild] for stored tables which used this hashing
+    function *)
 
 (** {1:utf UTF codecs tools}
 
