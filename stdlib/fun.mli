@@ -223,7 +223,10 @@ Or even more concisely
 From the {{!hflip}[spellcheck] example}, [compose] and [flip] could be used to
 condense the function definition so it becomes
 {[
-  # Fun.compose (String.spellcheck ~max_dist:(Fun.const 2)) (Fun.flip List.iter);;
+  # Fun.compose
+      (String.spellcheck ~max_dist:(Fun.const 2))
+      (Fun.flip List.iter)
+    ;;
   - : string list -> string -> string list = <fun>
 ]}
 As can be seen here, this heavily impacts readability and the ability to reason
