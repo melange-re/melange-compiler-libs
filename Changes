@@ -310,6 +310,9 @@ Working version
 - #13732: Document that custom finalizers must not access the OCaml heap, etc.
   (Josh Berdine, review by Stephen Dolan and Guillaume Munch-Maccagnoni)
 
+- #12452: Add examples to Stdlib.Fun documentation.
+  (Hazem ElMasry, review by Florian Angeletti and Gabriel Scherer)
+
 ### Compiler user-interface and warnings:
 
 - #13428: support dump=[source | parsetree | lambda | ... | cmm | ...]
