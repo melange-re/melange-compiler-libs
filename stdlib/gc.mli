@@ -624,8 +624,9 @@ external ramp_up : (unit -> 'a) -> 'a * suspended_collection_work
     unused -- then they should call {!ramp_down} below to have the GC
     "resume" this collection work.
 
-    If [f ()] raises an exception, the ramp-up phase terminates and
-    the exception is re-raised.
+    If [f ()] raises an exception, the ramp-up phase terminates, the
+    collection work that was suspended is resumed, and the exception
+    is re-raised.
 
     If [f ()] performs an effect, the effect is not handled and an
     [Effect.Unhandled] exception is thrown instead.
