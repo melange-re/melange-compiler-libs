@@ -17,8 +17,11 @@ component is referenced).
 
 The "ocaml.alert" or "alert" attribute serves two purposes: (i) to
 mark component with an alert to be triggered when the component is
-referenced, and (ii) to control which alert names are enabled.  In the
-first form, the attribute takes an identifier possibly
+referenced, and (ii) to control which alerts are enabled.
+
+\subsection{ss:alert_marking}{Marking a component}
+
+When marking a component, the attribute takes an identifier possibly
 followed by a message. Here is an example of a value declaration marked
 with an alert:
 
@@ -33,7 +36,7 @@ Here "unix" is the identifier for the alert.  If this alert category
 is enabled, any reference to "U.fork" will produce a message at
 compile time, which can be turned or not into a fatal error.
 
-And here is another example as a floating attribute on top
+And here is an example as a floating attribute on top
 of an ``.mli'' file (i.e. before any other non-attribute item)
 or on top of an ``.ml'' file without a corresponding interface file,
 so that any reference to that unit will trigger the alert:
@@ -42,6 +45,8 @@ so that any reference to that unit will trigger the alert:
 [@@@alert unsafe "This module is unsafe!"]
 \end{verbatim}
 
+
+\subsection{ss:control}{Controlling which alerts are enabled}
 
 Controlling which alerts are enabled and whether they are turned into
 fatal errors is done either through the compiler's command-line option
@@ -76,6 +81,8 @@ let x =
       ...
   end
 \end{verbatim}
+
+\subsection{ss:alert_deprecated}{Shorthand syntax for deprecation}
 
 Before OCaml 4.08, there was support for a single kind of deprecation
 alert.  It is now known as the "deprecated" alert, but legacy
