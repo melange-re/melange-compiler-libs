@@ -25,12 +25,12 @@ When marking a component, the attribute takes an identifier possibly
 followed by a message. Here is an example of a value declaration marked
 with an alert:
 
-\begin{verbatim}
+\begin{caml_example*}{signature}
 module U: sig
   val fork: unit -> bool
     [@@alert unix "This function is only available under Unix."]
 end
-\end{verbatim}
+\end{caml_example*}
 
 Here "unix" is the identifier for the alert.  If this alert category
 is enabled, any reference to "U.fork" will produce a message at
@@ -41,9 +41,9 @@ of an ``.mli'' file (i.e. before any other non-attribute item)
 or on top of an ``.ml'' file without a corresponding interface file,
 so that any reference to that unit will trigger the alert:
 
-\begin{verbatim}
+\begin{caml_example*}{verbatim}
 [@@@alert unsafe "This module is unsafe!"]
-\end{verbatim}
+\end{caml_example*}
 
 
 \subsection{ss:control}{Controlling which alerts are enabled}
@@ -90,14 +90,14 @@ attributes to trigger it and the legacy ways to control it as warning
 3 are still supported. For instance, passing "-w +3" on the
 command-line is equivalent to "-alert +deprecated", and:
 
-\begin{verbatim}
+\begin{caml_example*}{signature}
 val x: int
   [@@ocaml.deprecated "Please do something else"]
-\end{verbatim}
+\end{caml_example*}
 
 is equivalent to:
 
-\begin{verbatim}
+\begin{caml_example*}{signature}
 val x: int
   [@@ocaml.alert deprecated "Please do something else"]
-\end{verbatim}
+\end{caml_example*}
