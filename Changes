@@ -313,6 +313,10 @@ Working version
 - #13732: Document that custom finalizers must not access the OCaml heap, etc.
   (Josh Berdine, review by Stephen Dolan and Guillaume Munch-Maccagnoni)
 
+- #13924: Document how to put [@deprecated] on let bindings, constructors, etc
+  in the manual
+  (Valentin Gatien-Baron, review by Florian Angeletti)
+
 ### Compiler user-interface and warnings:
 
 - #13428: support dump=[source | parsetree | lambda | ... | cmm | ...]
