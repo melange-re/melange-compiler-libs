@@ -654,7 +654,7 @@ CAMLprim value caml_array_concat(value al)
       caml_stat_free(arrays);
       caml_raise_out_of_memory();
     }
-    lengths = caml_stat_alloc_noexc(n * sizeof(value));
+    lengths = caml_stat_alloc_noexc(n * sizeof(intnat));
     if (lengths == NULL) {
       caml_stat_free(offsets);
       caml_stat_free(arrays);
