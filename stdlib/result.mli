@@ -39,10 +39,22 @@ val get_ok : ('a, 'e) result -> 'a
 
     @raise Invalid_argument if [r] is [Error _]. *)
 
+val get_ok' : ('a, string) result -> 'a
+(** [get_ok'] is like {!get_ok} but in case of error uses the
+    error message for raising [Invalid_argument].
+
+    @since 5.4 *)
+
 val get_error : ('a, 'e) result -> 'e
 (** [get_error r] is [e] if [r] is [Error e] and raise otherwise.
 
     @raise Invalid_argument if [r] is [Ok _]. *)
+
+val error_to_failure : ('a, string) result -> 'a
+(** [error_to_failure r] is [v] if [r] is [Ok v] and raises [Failure e]
+    if [r] is [Error e].
+
+    @since 5.4 *)
 
 val bind : ('a, 'e) result -> ('a -> ('b, 'e) result) -> ('b, 'e) result
 (** [bind r f] is [f v] if [r] is [Ok v] and [r] if [r] is [Error _]. *)

@@ -17,9 +17,20 @@ let test_value () =
 
 let test_get_ok_error () =
   assert (Result.get_ok (Ok 3) = 3);
+  assert (Result.get_ok' (Ok 3) = 3);
   assert_raise_invalid_argument Result.get_ok (Error "ha!");
+  (match Result.get_ok' (Error "ha!") with
+   exception Invalid_argument "ha!" [@warning "-52"] -> ();
+   | _ -> assert false);
   assert (Result.get_error (Error "ha!") = "ha!");
   assert_raise_invalid_argument Result.get_error (Ok 2);
+  ()
+
+let test_error_to_failure () =
+  assert (Result.error_to_failure (Ok 3) = 3);
+  (match Result.error_to_failure (Error "ha") with
+   exception Failure "ha" [@warning "-52"] -> ();
+   | _ -> assert false);
   ()
 
 let test_bind () =
@@ -143,6 +154,7 @@ let tests () =
   test_ok_error ();
   test_value ();
   test_get_ok_error ();
+  test_error_to_failure ();
   test_bind ();
   test_join ();
   test_maps ();
