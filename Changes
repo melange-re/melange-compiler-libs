@@ -150,6 +150,13 @@ Working version
 
 ### Standard library:
 
+- #13720: Add Result.{get_ok',error_to_failure}
+ (Daniel Bünzli, review by wikku, Gabriel Scherer, Nicolás Ojeda Bär,
+  Vincent Laviron and hirrolot)
+
+- #13696: Add Result.product and Result.Syntax.
+  (Daniel Bünzli, review by Gabriel Scherer, Nicolás Ojeda Bär)
+
 - #13885: Add Dynarray.{exists2, for_all2}.
   (T. Kinsart, review by Daniel Bünzli, Gabriel Scherer, and Nicolás Ojeda Bär)
 
@@ -313,6 +320,10 @@ Working version
 - #12452: Add examples to Stdlib.Fun documentation.
   (Hazem ElMasry, review by Florian Angeletti and Gabriel Scherer)
 
+- #13924: Document how to put [@deprecated] on let bindings, constructors, etc
+  in the manual
+  (Valentin Gatien-Baron, review by Florian Angeletti)
+
 ### Compiler user-interface and warnings:
 
 - #13428: support dump=[source | parsetree | lambda | ... | cmm | ...]
@@ -375,6 +386,10 @@ Working version
 
 - #13314: Comment the code of Translclass
   (Vincent Laviron and Nathanaëlle Courant, review by Olivier Nicole)
+
+- #13362: reimplement Floatarray.concat in C (`caml_floatarray_concat`),
+  matching the implementation of Array.concat.
+  (Gabriel Scherer, review by Nicolás Ojeda Bär)
 
 - #13624: Added location to exception definitions and type extensions
   (Samuel Vivien, review by Gabriel Scherer)
