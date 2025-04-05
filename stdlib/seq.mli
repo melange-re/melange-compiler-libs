@@ -362,6 +362,11 @@ val cons : 'a -> 'a t -> 'a t
 
     @since 4.11 *)
 
+val singleton: 'a -> 'a t
+(** [singleton x] returns the one-element sequence containing only [x].
+
+    @since 5.4 *)
+
 val init : int -> (int -> 'a) -> 'a t
 (** [init n f] is the sequence [f 0; f 1; ...; f (n-1)].
 

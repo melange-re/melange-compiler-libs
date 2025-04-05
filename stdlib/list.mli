@@ -68,6 +68,11 @@ val cons : 'a -> 'a list -> 'a list
     @since 4.03 (4.05 in ListLabels)
  *)
 
+val singleton: 'a -> 'a list
+(** [singleton x] returns the one-element list [[x]].
+
+    @since 5.4 *)
+
 val hd : 'a list -> 'a
 (** Return the first element of the given list.
    @raise Failure if the list is empty.

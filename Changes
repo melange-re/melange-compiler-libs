@@ -246,6 +246,9 @@ Working version
 - #13859: Fix Weak.get_copy not darkening custom blocks
   (Josh Berdine, review by Stephen Dolan)
 
+- #13932: Add List.singleton and Seq.singleton
+  (David Allsopp, tariffs applied by Nicolás Ojeda Bär and Gabriel Scherer)
+
 ### Other libraries:
 
 * #13376: Allow Dynlink.loadfile_private to load bytecode libraries with
