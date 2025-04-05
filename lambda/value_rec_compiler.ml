@@ -699,6 +699,20 @@ let update_prim =
   (* Note: [alloc] could be false, but it probably doesn't matter *)
   Primitive.simple ~name:"caml_update_dummy" ~arity:2 ~alloc:true
 
+let compile_alloc size =
+  let alloc_prim, size =
+    match size with
+    | Regular_block size -> alloc_prim, size
+    | Float_record size -> alloc_float_record_prim, size
+  in
+  Lprim (Pccall alloc_prim,
+         [Lconst (Lambda.const_int size)],
+         no_loc)
+
+let compile_update dummy newval =
+  Lprim (Pccall update_prim, [dummy; newval],
+         no_loc)
+
 (** Compilation function *)
 
 let compile_letrec input_bindings body =
@@ -752,11 +766,8 @@ let compile_letrec input_bindings body =
   in
   let body_with_patches =
     List.fold_left (fun body (id, _size, lam) ->
-        let update =
-          Lprim (Pccall update_prim, [Lvar id; lam], no_loc)
-        in
-        Lsequence (update, body))
-      body (all_bindings_rev.static)
+        Lsequence (compile_update (Lvar id) lam, body)
+    ) body (all_bindings_rev.static)
   in
   let body_with_functions =
     match all_bindings_rev.functions with
@@ -776,16 +787,7 @@ let compile_letrec input_bindings body =
   in
   let body_with_pre_allocations =
     List.fold_left (fun body (id, size, _lam) ->
-        let alloc_prim, size =
-          match size with
-          | Regular_block size -> alloc_prim, size
-          | Float_record size -> alloc_float_record_prim, size
-        in
-        let alloc =
-          Lprim (Pccall alloc_prim,
-                 [Lconst (Lambda.const_int size)],
-                 no_loc)
-        in
+        let alloc = compile_alloc size in
         Llet(Strict, Pgenval, id, alloc, body))
       body_with_dynamic_values all_bindings_rev.static
   in
