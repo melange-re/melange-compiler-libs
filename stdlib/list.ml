@@ -26,6 +26,8 @@ let length l = length_aux 0 l
 
 let cons a l = a::l
 
+let singleton a = [a]
+
 let hd = function
     [] -> failwith "hd"
   | a::_ -> a
