@@ -49,6 +49,7 @@ open Lambda
 type block_size =
   | Regular_block of int
   | Float_record of int
+  | Lazy_block of int
 
 type size =
   | Unreachable
@@ -220,7 +221,7 @@ let compute_static_size lam =
            to check the tag here. *)
         Block (Regular_block (List.length args))
     | Pmakelazyblock _ ->
-        Block (Regular_block 1)
+        Block (Lazy_block 1)
     | Pmakearray (kind, _) ->
         let size = List.length args in
         begin match kind with
@@ -699,18 +700,30 @@ let update_prim =
   (* Note: [alloc] could be false, but it probably doesn't matter *)
   Primitive.simple ~name:"caml_update_dummy" ~arity:2 ~alloc:true
 
+let update_lazy_prim =
+  Primitive.simple ~name:"caml_update_dummy_lazy" ~arity:2 ~alloc:true
+
 let compile_alloc size =
-  let alloc_prim, size =
+  let prim, size =
     match size with
-    | Regular_block size -> alloc_prim, size
-    | Float_record size -> alloc_float_record_prim, size
+    | Regular_block size | Lazy_block size ->
+      alloc_prim, size
+    | Float_record size ->
+      alloc_float_record_prim, size
   in
-  Lprim (Pccall alloc_prim,
+  Lprim (Pccall prim,
          [Lconst (Lambda.const_int size)],
          no_loc)
 
-let compile_update dummy newval =
-  Lprim (Pccall update_prim, [dummy; newval],
+let compile_update size dummy newval =
+  let prim =
+    match size with
+    | Regular_block _ | Float_record _ ->
+      update_prim
+    | Lazy_block _ ->
+      update_lazy_prim
+  in
+  Lprim (Pccall prim, [dummy; newval],
          no_loc)
 
 (** Compilation function *)
@@ -765,8 +778,8 @@ let compile_letrec input_bindings body =
       empty_bindings input_bindings
   in
   let body_with_patches =
-    List.fold_left (fun body (id, _size, lam) ->
-        Lsequence (compile_update (Lvar id) lam, body)
+    List.fold_left (fun body (id, size, lam) ->
+        Lsequence (compile_update size (Lvar id) lam, body)
     ) body (all_bindings_rev.static)
   in
   let body_with_functions =

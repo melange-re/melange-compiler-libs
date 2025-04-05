@@ -355,3 +355,24 @@ CAMLprim value caml_update_dummy(value dummy, value newval)
   }
   return Val_unit;
 }
+
+CAMLprim value caml_update_dummy_lazy(value dummy, value newval)
+{
+  // Note: [obj_tag] works on immediates as well
+  int tag = obj_tag (newval);
+  switch (tag) {
+  case Lazy_tag:
+  case Forcing_tag:
+  case Forward_tag:
+    caml_update_dummy(dummy, newval);
+    break;
+  // If the tag of [newval] is not a lazy tag,
+  // it comes from a Forward block that was shortcut.
+  default:
+    CAMLassert (Wosize_val(dummy) == 1);
+    caml_modify(&Field(dummy, 0), newval);
+    Unsafe_store_tag_val(dummy, Forward_tag);
+    break;
+  }
+  return Val_unit;
+}
