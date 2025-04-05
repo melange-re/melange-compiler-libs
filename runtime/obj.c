@@ -300,3 +300,75 @@ struct queue_chunk {
   struct queue_chunk *next;
   value entries[ENTRIES_PER_QUEUE_CHUNK];
 };
+
+
+/* For compiling let rec over values */
+
+/* [size] is a [value] representing number of words (fields) */
+CAMLprim value caml_alloc_dummy(value size)
+{
+  mlsize_t wosize = Long_val(size);
+  return caml_alloc (wosize, 0);
+}
+
+/* [size] is a [value] representing number of floats. */
+CAMLprim value caml_alloc_dummy_float (value size)
+{
+  mlsize_t wosize = Long_val(size) * Double_wosize;
+  return caml_alloc (wosize, 0);
+}
+
+CAMLprim value caml_update_dummy(value dummy, value newval)
+{
+  mlsize_t size;
+  tag_t tag;
+
+  tag = Tag_val (newval);
+
+  if (Wosize_val(dummy) == 0) {
+      /* Size-0 blocks are statically-allocated atoms. We cannot
+         mutate them, but there is no need:
+         - All atoms used in the runtime to represent OCaml values
+           have tag 0 --- including empty flat float arrays, or other
+           types that use a non-0 tag for non-atom blocks.
+         - The dummy was already created with tag 0.
+         So doing nothing suffices. */
+      CAMLassert(Wosize_val(newval) == 0);
+      CAMLassert(Tag_val(dummy) == Tag_val(newval));
+  } else if (tag == Double_array_tag){
+    CAMLassert (Wosize_val(newval) == Wosize_val(dummy));
+    CAMLassert (Tag_val(dummy) != Infix_tag);
+    Unsafe_store_tag_val(dummy, Double_array_tag);
+    size = Wosize_val (newval) / Double_wosize;
+    for (mlsize_t i = 0; i < size; i++) {
+      Store_double_flat_field (dummy, i, Double_flat_field (newval, i));
+    }
+  } else if (tag == Infix_tag) {
+    value clos = newval - Infix_offset_hd(Hd_val(newval));
+    CAMLassert (Tag_val(clos) == Closure_tag);
+    CAMLassert (Tag_val(dummy) == Infix_tag);
+    CAMLassert (Infix_offset_val(dummy) == Infix_offset_val(newval));
+    dummy = dummy - Infix_offset_val(dummy);
+    size = Wosize_val(clos);
+    CAMLassert (size == Wosize_val(dummy));
+    /* It is safe to use [caml_modify] to copy code pointers
+       from [clos] to [dummy], because the value being overwritten is
+       an integer, and the new "value" is a pointer outside the minor
+       heap. */
+    for (mlsize_t i = 0; i < size; i++) {
+      caml_modify (&Field(dummy, i), Field(clos, i));
+    }
+  } else {
+    CAMLassert (tag < No_scan_tag);
+    CAMLassert (Tag_val(dummy) != Infix_tag);
+    Unsafe_store_tag_val(dummy, tag);
+    size = Wosize_val(newval);
+    CAMLassert (size == Wosize_val(dummy));
+    /* See comment above why this is safe even if [tag == Closure_tag]
+       and some of the "values" being copied are actually code pointers. */
+    for (mlsize_t i = 0; i < size; i++){
+      caml_modify (&Field(dummy, i), Field(newval, i));
+    }
+  }
+  return Val_unit;
+}
