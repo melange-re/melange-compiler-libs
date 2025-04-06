@@ -2142,9 +2142,11 @@ let get_pat_args_lazy p rem =
 
 let prim_obj_tag = Primitive.simple ~name:"caml_obj_tag" ~arity:1 ~alloc:false
 
-let code_force_lazy_block = lazy (transl_mod_field "CamlinternalLazy" "force_lazy_block")
+let code_force_lazy_block =
+  lazy (transl_prim "CamlinternalLazy" "force_lazy_block")
 
-let code_force_lazy = lazy (transl_mod_field "CamlinternalLazy" "force_gen")
+let code_force_lazy =
+  lazy (transl_prim "CamlinternalLazy" "force_gen")
 
 (* inline_lazy_force inlines the beginning of the code of Lazy.force. When
    the value argument is tagged as:
