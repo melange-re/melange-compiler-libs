@@ -120,7 +120,8 @@ typedef enum {
     EV_COMPACT_EVACUATE,
     EV_COMPACT_FORWARD,
     EV_COMPACT_RELEASE,
-    EV_EMPTY_MINOR
+    EV_EMPTY_MINOR,
+    EV_MINOR_EPHE_CLEAN,
 } ev_runtime_phase;
 
 typedef enum {

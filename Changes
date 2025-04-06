@@ -88,6 +88,9 @@ Working version
   (Stephen Dolan and David Allsopp, report by Thomas Leonard, review by Tim
    McGilchrist and Fabrice Buoro)
 
+- #13643: Allow values reachable from ephemeron keys to be collected by minor GC
+  (Stephen Dolan, review by ??)
+
 - #13701: optimize `caml_continuation_use` based on #12735
   (Hugo Heuzard, review by KC Sivaramakrishnan)
 
