@@ -2142,25 +2142,9 @@ let get_pat_args_lazy p rem =
 
 let prim_obj_tag = Primitive.simple ~name:"caml_obj_tag" ~arity:1 ~alloc:false
 
-let get_mod_field modname field =
-  lazy
-    (let mod_ident = Ident.create_persistent modname in
-     let env =
-       Env.add_persistent_structure mod_ident Env.initial
-     in
-     match Env.open_pers_signature modname env with
-     | Error `Not_found ->
-         fatal_errorf "Module %s unavailable." modname
-     | Ok env -> (
-         match Env.find_value_by_name (Longident.Lident field) env with
-         | exception Not_found ->
-             fatal_errorf "Primitive %s.%s not found." modname field
-         | path, _ -> transl_value_path Loc_unknown env path
-       ))
+let code_force_lazy_block = transl_mod_field "CamlinternalLazy" "force_lazy_block"
 
-let code_force_lazy_block = get_mod_field "CamlinternalLazy" "force_lazy_block"
-
-let code_force_lazy = get_mod_field "CamlinternalLazy" "force_gen"
+let code_force_lazy = transl_mod_field "CamlinternalLazy" "force_gen"
 
 (* inline_lazy_force inlines the beginning of the code of Lazy.force. When
    the value argument is tagged as:

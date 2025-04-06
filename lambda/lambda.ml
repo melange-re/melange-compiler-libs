@@ -739,6 +739,22 @@ let transl_prim mod_name name =
   | exception Not_found ->
       fatal_error ("Primitive " ^ name ^ " not found.")
 
+let transl_mod_field modname field =
+  lazy
+    (let mod_ident = Ident.create_persistent modname in
+     let env =
+       Env.add_persistent_structure mod_ident Env.initial
+     in
+     match Env.open_pers_signature modname env with
+     | Error `Not_found ->
+         fatal_errorf "Module %s unavailable." modname
+     | Ok env -> (
+         match Env.find_value_by_name (Longident.Lident field) env with
+         | exception Not_found ->
+             fatal_errorf "Primitive %s.%s not found." modname field
+         | path, _ -> transl_value_path Loc_unknown env path
+       ))
+
 (* Compile a sequence of expressions *)
 
 let rec make_sequence fn = function

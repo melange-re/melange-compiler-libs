@@ -432,6 +432,9 @@ val transl_prim: string -> string -> lambda
     ]}
 *)
 
+val transl_mod_field: string -> string -> lambda Lazy.t
+(** Similar to {!transl_prim}, to be removed by refactoring. *)
+
 val is_evaluated : lambda -> bool
 (** [is_evaluated lam] returns [true] if [lam] is either a constant, a variable
     or a function abstract. *)
