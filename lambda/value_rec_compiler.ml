@@ -703,6 +703,17 @@ let update_prim =
 let update_lazy_prim =
   Primitive.simple ~name:"caml_update_dummy_lazy" ~arity:2 ~alloc:true
 
+let compile_indirect newval =
+  let indirect = Lambda.transl_prim "CamlinternalLazy" "indirect" in
+  Lapply {
+    ap_func = indirect;
+    ap_args = [newval];
+    ap_loc = no_loc;
+    ap_tailcall = Default_tailcall;
+    ap_inlined = Default_inline;
+    ap_specialised = Default_specialise;
+  }
+
 let compile_alloc size =
   let prim, size =
     match size with
@@ -716,12 +727,37 @@ let compile_alloc size =
          no_loc)
 
 let compile_update size dummy newval =
-  let prim =
+  let prim, newval =
     match size with
     | Regular_block _ | Float_record _ ->
-      update_prim
+      update_prim, newval
     | Lazy_block _ ->
-      update_lazy_prim
+      (* Consider the following example from Vincent Laviron:
+         {[let rec v =
+             let l = lazy (expensive computation) in
+             let () = maybe_force_in_another_domain l in
+             l
+         ]}
+
+         The naive/simple compilation scheme would do
+         a [caml_update_dummy_lazy(v, l)], and the dummy-update code
+         could run concurrently with another domain forcing [l].
+
+         To avoid this issue, lazy blocks get updated via
+         [caml_update_dummy_lazy(dummy, CamlinternalLazy.indirect newval)],
+         where [CamlinternalLazy.indirect] returns a fresh/local thunk
+         that is not getting forced concurrently (whereas [newval]
+         might be).
+      *)
+      update_lazy_prim,
+      begin match newval with
+        | Lprim(Pmakelazyblock _, _, _) ->
+          (* No need to wrap the thunk if was just constructed.
+             This removes indirections on terms defined as lazy thunks
+             at the toplevel: [let rec x = lazy ...] *)
+          newval
+        | _ -> compile_indirect newval
+      end
   in
   Lprim (Pccall prim, [dummy; newval],
          no_loc)
