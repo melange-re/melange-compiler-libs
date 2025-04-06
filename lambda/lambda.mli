@@ -432,7 +432,7 @@ val transl_prim: string -> string -> lambda
     ]}
 *)
 
-val transl_mod_field: string -> string -> lambda Lazy.t
+val transl_mod_field: string -> string -> lambda
 (** Similar to {!transl_prim}, to be removed by refactoring. *)
 
 val is_evaluated : lambda -> bool
