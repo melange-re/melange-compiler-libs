@@ -46,6 +46,10 @@ OCaml 4.14 maintenance version
   #5115 in #11788)
   (David Allsopp, review by Nicolás Ojeda Bär)
 
+- #13847: On Windows, maintain a number of threads waiting on the master lock to
+  avoid unnecessary context switches
+  (Dmitry Bely, review by Antonin Décimo)
+
 OCaml 4.14.2 (14 March 2024)
 ----------------------------
 
