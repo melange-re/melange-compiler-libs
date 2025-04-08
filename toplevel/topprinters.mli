@@ -21,3 +21,19 @@ val type_arrow : Types.type_expr -> Types.type_expr -> Types.type_expr
 
 val printer_type_new : printer_type
 val printer_type_old : printer_type
+
+type kind =
+  | Old of Types.type_expr
+  (* 'a -> unit *)
+  | Simple of Types.type_expr
+  (* Format.formatter -> 'a -> unit *)
+  | Generic of { ty_path: Path.t; arity: int; }
+  (* (formatter -> 'a1 -> unit) ->
+     (formatter -> 'a2 -> unit) ->
+     ... ->
+     (formatter -> 'an -> unit) ->
+     formatter -> ('a1, 'a2, ..., 'an) t -> unit
+  *)
+
+val match_printer_type :
+  Env.t -> Types.type_expr -> kind option

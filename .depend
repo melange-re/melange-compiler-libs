@@ -7552,6 +7552,7 @@ toplevel/topprinters.cmo : \
     typing/path.cmi \
     typing/ident.cmi \
     typing/ctype.cmi \
+    typing/btype.cmi \
     parsing/asttypes.cmi \
     toplevel/topprinters.cmi
 toplevel/topprinters.cmx : \
@@ -7560,10 +7561,13 @@ toplevel/topprinters.cmx : \
     typing/path.cmx \
     typing/ident.cmx \
     typing/ctype.cmx \
+    typing/btype.cmx \
     parsing/asttypes.cmx \
     toplevel/topprinters.cmi
 toplevel/topprinters.cmi : \
-    typing/types.cmi
+    typing/types.cmi \
+    typing/path.cmi \
+    typing/env.cmi
 toplevel/topstart.cmo : \
     toplevel/topmain.cmi \
     toplevel/topstart.cmi
