@@ -727,17 +727,18 @@ let transl_extension_path loc env path =
 let transl_class_path loc env path =
   transl_path Env.find_class_address loc env path
 
-let transl_prim mod_name name =
-  let pers = Ident.create_persistent mod_name in
-  let env = Env.add_persistent_structure pers Env.empty in
-  let lid =
-    Longident.Ldot (Location.mknoloc (Longident.Lident mod_name),
-                    Location.mknoloc name)
-  in
-  match Env.find_value_by_name lid env with
-  | path, _ -> transl_value_path Loc_unknown env path
-  | exception Not_found ->
-      fatal_error ("Primitive " ^ name ^ " not found.")
+let transl_prim modname field =
+  let mod_ident = Ident.create_persistent modname in
+  let env = Env.add_persistent_structure mod_ident Env.initial in
+  match Env.open_pers_signature modname env with
+  | Error `Not_found ->
+      fatal_errorf "Module %s unavailable." modname
+  | Ok env -> (
+      match Env.find_value_by_name (Longident.Lident field) env with
+      | exception Not_found ->
+          fatal_errorf "Primitive %s.%s not found." modname field
+      | path, _ -> transl_value_path Loc_unknown env path
+    )
 
 (* Compile a sequence of expressions *)
 
