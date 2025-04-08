@@ -15,13 +15,6 @@
 
 (* Infrastructure to support user-defined printers in toplevels and debugger *)
 
-type printer_type = Types.type_expr -> Types.type_expr
-
-val type_arrow : Types.type_expr -> Types.type_expr -> Types.type_expr
-
-val printer_type_new : printer_type
-val printer_type_old : printer_type
-
 type kind =
   | Old of Types.type_expr
   (* 'a -> unit *)

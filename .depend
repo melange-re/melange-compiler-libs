@@ -8542,7 +8542,6 @@ debugger/int64ops.cmx : \
 debugger/int64ops.cmi :
 debugger/loadprinter.cmo : \
     parsing/unit_info.cmi \
-    typing/types.cmi \
     toplevel/topprinters.cmi \
     bytecomp/symtable.cmi \
     debugger/printval.cmi \
@@ -8556,12 +8555,10 @@ debugger/loadprinter.cmo : \
     typing/env.cmi \
     otherlibs/dynlink/dynlink.cmi \
     debugger/debugcom.cmi \
-    typing/ctype.cmi \
     file_formats/cmo_format.cmi \
     debugger/loadprinter.cmi
 debugger/loadprinter.cmx : \
     parsing/unit_info.cmx \
-    typing/types.cmx \
     toplevel/topprinters.cmx \
     bytecomp/symtable.cmx \
     debugger/printval.cmx \
@@ -8575,10 +8572,10 @@ debugger/loadprinter.cmx : \
     typing/env.cmx \
     otherlibs/dynlink/dynlink.cmx \
     debugger/debugcom.cmx \
-    typing/ctype.cmx \
     file_formats/cmo_format.cmi \
     debugger/loadprinter.cmi
 debugger/loadprinter.cmi : \
+    toplevel/topprinters.cmi \
     parsing/longident.cmi \
     otherlibs/dynlink/dynlink.cmi
 debugger/main.cmo : \
