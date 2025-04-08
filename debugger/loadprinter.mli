@@ -18,7 +18,7 @@
 open Format
 
 val loadfile : formatter -> string -> unit
-val install_printer : formatter -> Longident.t -> unit
+val install_printer : Longident.t -> unit
 val remove_printer : Longident.t -> unit
 
 (* Error report *)

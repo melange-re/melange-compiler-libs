@@ -114,7 +114,7 @@ let find_printer_type lid =
   | exception Not_found ->
       raise(Error(Unbound_identifier lid))
 
-let install_printer ppf lid =
+let install_printer lid =
   let (ty_arg, path, is_old_style) = find_printer_type lid in
   let v =
     try
@@ -122,12 +122,20 @@ let install_printer ppf lid =
     with Symtable.Error(Symtable.Undefined_global global) ->
       let s = Symtable.Global.name global in
       raise(Error(Unavailable_module(s, lid))) in
-  let print_function =
+  let print_with_fallback ppf f remote_val =
+    try
+      f (Debugcom.Remote_value.obj remote_val)
+    with
+      Debugcom.Marshalling_error ->
+        fprintf ppf "<cannot fetch remote object>" in
     if is_old_style then
-      (fun _formatter repr -> Obj.obj v (Obj.obj repr))
+      let print_function ppf remote_val =
+        print_with_fallback ppf (Obj.obj v) remote_val in
+      Printval.install_printer path ty_arg print_function
     else
-      (fun formatter repr -> Obj.obj v formatter (Obj.obj repr)) in
-  Printval.install_printer path ty_arg ppf print_function
+      let print_function ppf remote_val =
+        print_with_fallback ppf (Obj.obj v ppf) remote_val in
+      Printval.install_printer path ty_arg print_function
 
 let remove_printer lid =
   let (_ty_arg, path, _is_old_style) = find_printer_type lid in

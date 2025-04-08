@@ -8555,6 +8555,7 @@ debugger/loadprinter.cmo : \
     utils/format_doc.cmi \
     typing/env.cmi \
     otherlibs/dynlink/dynlink.cmi \
+    debugger/debugcom.cmi \
     typing/ctype.cmi \
     file_formats/cmo_format.cmi \
     debugger/loadprinter.cmi
@@ -8573,6 +8574,7 @@ debugger/loadprinter.cmx : \
     utils/format_doc.cmx \
     typing/env.cmx \
     otherlibs/dynlink/dynlink.cmx \
+    debugger/debugcom.cmx \
     typing/ctype.cmx \
     file_formats/cmo_format.cmi \
     debugger/loadprinter.cmi
