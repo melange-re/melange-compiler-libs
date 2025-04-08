@@ -553,6 +553,9 @@ Working version
 - #13942: Fix assertion on empty array case
   (Olivier Nicole, review by Gabriel Scherer)
 
+- #13928, #13944: Fix handling of excessively nested unboxed types
+  (Vincent Laviron, review by Gabriel Scherer)
+
 OCaml 5.3.0 (8 January 2025)
 ----------------------------
 
