@@ -64,7 +64,7 @@ CAMLprim value caml_floatarray_get(value array, value index)
   double d;
   value res;
 
-  CAMLassert (Tag_val(array) == Double_array_tag);
+  CAMLassert (Wosize_val(array) == 0 || Tag_val(array) == Double_array_tag);
   if (idx < 0 || idx >= Wosize_val(array) / Double_wosize)
     caml_array_bound_error();
   d = Double_flat_field(array, idx);
@@ -99,7 +99,7 @@ CAMLprim value caml_floatarray_set(value array, value index, value newval)
 {
   intnat idx = Long_val(index);
   double d = Double_val (newval);
-  CAMLassert (Tag_val(array) == Double_array_tag);
+  CAMLassert (Wosize_val(array) == 0 || Tag_val(array) == Double_array_tag);
   if (idx < 0 || idx >= Wosize_val(array) / Double_wosize)
     caml_array_bound_error();
   Store_double_flat_field(array, idx, d);
@@ -125,7 +125,7 @@ CAMLprim value caml_floatarray_unsafe_get(value array, value index)
   double d;
   value res;
 
-  CAMLassert (Tag_val(array) == Double_array_tag);
+  CAMLassert (Wosize_val(array) == 0 || Tag_val(array) == Double_array_tag);
   d = Double_flat_field(array, idx);
   Alloc_small(res, Double_wosize, Double_tag, Alloc_small_enter_GC);
   Store_double_val(res, d);
@@ -161,6 +161,7 @@ CAMLprim value caml_floatarray_unsafe_set(value array, value index,value newval)
 {
   intnat idx = Long_val(index);
   double d = Double_val (newval);
+  CAMLassert (Wosize_val(array) == 0 || Tag_val(array) == Double_array_tag);
   Store_double_flat_field(array, idx, d);
   return Val_unit;
 }
