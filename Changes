@@ -1227,8 +1227,16 @@ OCaml 5.3.0 (8 January 2025)
   identifier `\#mod`.
   (Florian Angeletti, report by Chris Casinghino, review by Gabriel Scherer)
 
-* #13830: removed abstraction of whole module types when trying to avoid a
-  single type, failing instead.
+* #13830: fail rather than silently create abstract module types when avoiding
+  (i.e. hiding) signature items, as in:
+  ```ocaml
+    module N = struct
+      open (struct type t = A | B end)
+      module type T = sig type u = t * int end
+    end
+  ```
+  Before, it was succeeding with `module N : sig module type T end`, now it
+  fails. Similarly for anonymous functor calls (of the form `F(struct ... end))
   (Clement Blaudeau, review by Gabriel Scherer)
 
 OCaml 5.2.0 (13 May 2024)
