@@ -318,6 +318,15 @@ CAMLprim value caml_alloc_dummy_float (value size)
   return caml_alloc (wosize, 0);
 }
 
+/* This is a specialized primitive despite being expressible in terms
+   of [caml_alloc_dummy], because lambda/Value_rec_compiler recognizes
+   calls to this function specifically -- the distinction lets us
+   reconstruct type information that is useful for compilation. */
+CAMLprim value caml_alloc_dummy_lazy (value unit)
+{
+  return caml_alloc(1, 0);
+}
+
 CAMLprim value caml_update_dummy(value dummy, value newval)
 {
   mlsize_t size;

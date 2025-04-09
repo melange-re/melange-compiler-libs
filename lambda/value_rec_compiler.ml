@@ -49,7 +49,7 @@ open Lambda
 type block_size =
   | Regular_block of int
   | Float_record of int
-  | Lazy_block of int
+  | Lazy_block
 
 type size =
   | Unreachable
@@ -221,7 +221,7 @@ let compute_static_size lam =
            to check the tag here. *)
         Block (Regular_block (List.length args))
     | Pmakelazyblock _ ->
-        Block (Lazy_block 1)
+        Block Lazy_block
     | Pmakearray (kind, _) ->
         let size = List.length args in
         begin match kind with
@@ -696,6 +696,9 @@ let alloc_prim =
 let alloc_float_record_prim =
   Primitive.simple ~name:"caml_alloc_dummy_float" ~arity:1 ~alloc:true
 
+let alloc_lazy_prim =
+  Primitive.simple ~name:"caml_alloc_dummy_lazy" ~arity:1 ~alloc:true
+
 let update_prim =
   (* Note: [alloc] could be false, but it probably doesn't matter *)
   Primitive.simple ~name:"caml_update_dummy" ~arity:2 ~alloc:true
@@ -715,23 +718,27 @@ let compile_indirect newval =
   }
 
 let compile_alloc size =
-  let prim, size =
-    match size with
-    | Regular_block size | Lazy_block size ->
-      alloc_prim, size
-    | Float_record size ->
-      alloc_float_record_prim, size
+  let alloc prim size =
+    Lprim (Pccall prim,
+           [Lconst (Lambda.const_int size)],
+           no_loc)
   in
-  Lprim (Pccall prim,
-         [Lconst (Lambda.const_int size)],
-         no_loc)
+  match size with
+  | Regular_block size ->
+      alloc alloc_prim size
+  | Float_record size ->
+      alloc alloc_float_record_prim size
+  | Lazy_block ->
+      Lprim(Pccall alloc_lazy_prim,
+            [Lambda.lambda_unit],
+            no_loc)
 
 let compile_update size dummy newval =
   let prim, newval =
     match size with
     | Regular_block _ | Float_record _ ->
       update_prim, newval
-    | Lazy_block _ ->
+    | Lazy_block ->
       (* Consider the following example from Vincent Laviron:
          {[let rec v =
              let l = lazy (expensive computation) in
