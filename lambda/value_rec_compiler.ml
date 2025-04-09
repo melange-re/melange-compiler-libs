@@ -49,6 +49,7 @@ open Lambda
 type block_size =
   | Regular_block of int
   | Float_record of int
+  | Lazy_block
 
 type size =
   | Unreachable
@@ -220,7 +221,7 @@ let compute_static_size lam =
            to check the tag here. *)
         Block (Regular_block (List.length args))
     | Pmakelazyblock _ ->
-        Block (Regular_block 1)
+        Block Lazy_block
     | Pmakearray (kind, _) ->
         let size = List.length args in
         begin match kind with
@@ -695,9 +696,78 @@ let alloc_prim =
 let alloc_float_record_prim =
   Primitive.simple ~name:"caml_alloc_dummy_float" ~arity:1 ~alloc:true
 
+let alloc_lazy_prim =
+  Primitive.simple ~name:"caml_alloc_dummy_lazy" ~arity:1 ~alloc:true
+
 let update_prim =
   (* Note: [alloc] could be false, but it probably doesn't matter *)
   Primitive.simple ~name:"caml_update_dummy" ~arity:2 ~alloc:true
+
+let update_lazy_prim =
+  Primitive.simple ~name:"caml_update_dummy_lazy" ~arity:2 ~alloc:true
+
+let compile_indirect newval =
+  let indirect = Lambda.transl_prim "CamlinternalLazy" "indirect" in
+  Lapply {
+    ap_func = indirect;
+    ap_args = [newval];
+    ap_loc = no_loc;
+    ap_tailcall = Default_tailcall;
+    ap_inlined = Default_inline;
+    ap_specialised = Default_specialise;
+  }
+
+let compile_alloc size =
+  let alloc prim size =
+    Lprim (Pccall prim,
+           [Lconst (Lambda.const_int size)],
+           no_loc)
+  in
+  match size with
+  | Regular_block size ->
+      alloc alloc_prim size
+  | Float_record size ->
+      alloc alloc_float_record_prim size
+  | Lazy_block ->
+      Lprim(Pccall alloc_lazy_prim,
+            [Lambda.lambda_unit],
+            no_loc)
+
+let compile_update size dummy newval =
+  let prim, newval =
+    match size with
+    | Regular_block _ | Float_record _ ->
+      update_prim, newval
+    | Lazy_block ->
+      (* Consider the following example from Vincent Laviron:
+         {[let rec v =
+             let l = lazy (expensive computation) in
+             let () = maybe_force_in_another_domain l in
+             l
+         ]}
+
+         The naive/simple compilation scheme would do
+         a [caml_update_dummy_lazy(v, l)], and the dummy-update code
+         could run concurrently with another domain forcing [l].
+
+         To avoid this issue, lazy blocks get updated via
+         [caml_update_dummy_lazy(dummy, CamlinternalLazy.indirect newval)],
+         where [CamlinternalLazy.indirect] returns a fresh/local thunk
+         that is not getting forced concurrently (whereas [newval]
+         might be).
+      *)
+      update_lazy_prim,
+      begin match newval with
+        | Lprim(Pmakelazyblock _, _, _) ->
+          (* No need to wrap the thunk if was just constructed.
+             This removes indirections on terms defined as lazy thunks
+             at the toplevel: [let rec x = lazy ...] *)
+          newval
+        | _ -> compile_indirect newval
+      end
+  in
+  Lprim (Pccall prim, [dummy; newval],
+         no_loc)
 
 (** Compilation function *)
 
@@ -751,12 +821,9 @@ let compile_letrec input_bindings body =
       empty_bindings input_bindings
   in
   let body_with_patches =
-    List.fold_left (fun body (id, _size, lam) ->
-        let update =
-          Lprim (Pccall update_prim, [Lvar id; lam], no_loc)
-        in
-        Lsequence (update, body))
-      body (all_bindings_rev.static)
+    List.fold_left (fun body (id, size, lam) ->
+        Lsequence (compile_update size (Lvar id) lam, body)
+    ) body (all_bindings_rev.static)
   in
   let body_with_functions =
     match all_bindings_rev.functions with
@@ -776,16 +843,7 @@ let compile_letrec input_bindings body =
   in
   let body_with_pre_allocations =
     List.fold_left (fun body (id, size, _lam) ->
-        let alloc_prim, size =
-          match size with
-          | Regular_block size -> alloc_prim, size
-          | Float_record size -> alloc_float_record_prim, size
-        in
-        let alloc =
-          Lprim (Pccall alloc_prim,
-                 [Lconst (Lambda.const_int size)],
-                 no_loc)
-        in
+        let alloc = compile_alloc size in
         Llet(Strict, Pgenval, id, alloc, body))
       body_with_dynamic_values all_bindings_rev.static
   in
