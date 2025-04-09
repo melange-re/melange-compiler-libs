@@ -184,22 +184,6 @@ let _ = add_directive "mod_use" (Directive_string (with_error_fmt dir_mod_use))
 
 (* Install, remove a printer *)
 
-let find_printer lid =
-  match Env.find_value_by_name lid !toplevel_env with
-  | exception Not_found ->
-    let report ppf =
-      fprintf ppf "Unbound value %a.@."
-        Printtyp.longident lid
-    in Error report
-  | (path, desc) ->
-    match Topprinters.match_printer_type !toplevel_env desc.val_type with
-    | None ->
-      let report ppf =
-        fprintf ppf "%a has the wrong type for a printing function.@."
-          Printtyp.longident lid
-      in Error report
-    | Some kind -> Ok (path, kind)
-
 let install_printer_by_kind path kind =
   let v = eval_value_path !toplevel_env path in
   match kind with
@@ -222,27 +206,23 @@ let install_printer_by_kind path kind =
 let remove_installed_printer path =
   match remove_printer path with
   | () -> Ok ()
-  | exception Not_found ->
-    let report ppf =
-      fprintf ppf "The printer named %a is not installed.@."
-        Printtyp.path path
-    in Error report
+  | exception Not_found -> Error (`No_active_printer path)
 
 let dir_install_printer ppf lid =
-  match find_printer lid with
-  | Error report ->
-    report ppf
+  match Topprinters.find_printer !toplevel_env lid with
+  | Error error ->
+    Topprinters.report_error ppf error
   | Ok (path, kind) ->
     install_printer_by_kind path kind
 
 let dir_remove_printer ppf lid =
-  match find_printer lid with
-  | Error report ->
-    report ppf
+  match Topprinters.find_printer !toplevel_env lid with
+  | Error error ->
+    Topprinters.report_error ppf error
   | Ok (path, _kind) ->
     match remove_installed_printer path with
     | Ok () -> ()
-    | Error report -> report ppf
+    | Error error -> Topprinters.report_error ppf error
 
 let _ = add_directive "install_printer"
     (Directive_ident (with_error_fmt dir_install_printer))

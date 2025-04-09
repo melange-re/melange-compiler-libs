@@ -35,5 +35,12 @@ type kind =
      formatter -> ('a1, 'a2, ..., 'an) t -> unit
   *)
 
-val match_printer_type :
-  Env.t -> Types.type_expr -> kind option
+type error = [
+  | `Unbound_identifier of Longident.t
+  | `Wrong_type of Longident.t
+  | `No_active_printer of Path.t
+]
+
+val find_printer : Env.t -> Longident.t -> (Path.t * kind, error) result
+
+val report_error : Format.formatter -> error -> unit

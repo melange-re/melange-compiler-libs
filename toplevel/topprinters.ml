@@ -49,6 +49,12 @@ type kind =
      formatter -> ('a1, 'a2, ..., 'an) t -> unit
   *)
 
+type error = [
+  | `Unbound_identifier of Longident.t
+  | `Wrong_type of Longident.t
+  | `No_active_printer of Path.t
+]
+
 let match_simple_printer_type env ty ~is_old_style =
   let make_printer_type =
     if is_old_style
@@ -131,3 +137,23 @@ let match_printer_type env ty =
   match match_simple_printer_type env ty ~is_old_style:true with
   | Some _ as res -> res
   | None -> match_generic_printer_type env ty
+
+
+let report_error ppf = function
+  | `Unbound_identifier lid ->
+      Format.fprintf ppf "Unbound value %a.@."
+        Printtyp.longident lid
+  | `Wrong_type lid ->
+      Format.fprintf ppf "%a has the wrong type for a printing function.@."
+        Printtyp.longident lid
+  | `No_active_printer path ->
+      Format.fprintf ppf "The printer named %a is not installed.@."
+        Printtyp.path path
+
+let find_printer env lid =
+  match Env.find_value_by_name lid env with
+  | exception Not_found -> Error (`Unbound_identifier lid)
+  | (path, desc) ->
+    match match_printer_type env desc.val_type with
+    | None -> Error (`Wrong_type lid)
+    | Some kind -> Ok (path, kind)
