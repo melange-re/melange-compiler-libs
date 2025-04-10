@@ -157,40 +157,48 @@ Caml_inline intnat st_current_thread_id(void)
 
 /* The master lock.  */
 
-typedef CRITICAL_SECTION st_masterlock;
+typedef struct {
+  CRITICAL_SECTION crit;
+  volatile LONG waiters;         /* number of threads waiting on master lock */
+} st_masterlock;
 
 static void st_masterlock_init(st_masterlock * m)
 {
   TRACE("st_masterlock_init");
-  InitializeCriticalSection(m);
-  EnterCriticalSection(m);
+  InitializeCriticalSection(&m->crit);
+  EnterCriticalSection(&m->crit);
+  m->waiters = 0;
 }
 
 Caml_inline void st_masterlock_acquire(st_masterlock * m)
 {
   TRACE("st_masterlock_acquire");
-  EnterCriticalSection(m);
+  InterlockedIncrement(&m->waiters);
+  EnterCriticalSection(&m->crit);
+  InterlockedDecrement(&m->waiters);
   TRACE("st_masterlock_acquire (done)");
 }
 
 Caml_inline void st_masterlock_release(st_masterlock * m)
 {
-  LeaveCriticalSection(m);
+  LeaveCriticalSection(&m->crit);
   TRACE("st_masterlock_released");
 }
 
 Caml_inline int st_masterlock_waiters(st_masterlock * m)
 {
-  return 1;                     /* info not maintained */
+  return m->waiters;
 }
 
 /* Scheduling hints */
 
 Caml_inline void st_thread_yield(st_masterlock * m)
 {
-  LeaveCriticalSection(m);
+  LeaveCriticalSection(&m->crit);
   Sleep(0);
-  EnterCriticalSection(m);
+  InterlockedIncrement(&m->waiters);
+  EnterCriticalSection(&m->crit);
+  InterlockedDecrement(&m->waiters);
 }
 
 /* Mutexes */
