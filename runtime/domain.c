@@ -637,6 +637,11 @@ static void domain_create(uintnat initial_minor_heap_wsize,
 
   caml_plat_lock_blocking(&d->domain_lock);
 
+  /* This is the first thing we do after acquiring the domain lock,
+     so that [caml_domain_alone()] returns accurate result even
+     during domain initialization. */
+  atomic_fetch_add(&caml_num_domains_running, 1);
+
   /* Set domain_self if we have successfully allocated the
    * caml_domain_state. Otherwise domain_self will be NULL and it's up
    * to the caller to deal with that. */
@@ -779,6 +784,7 @@ alloc_minor_tables_failure:
 init_memprof_failure:
   domain_self = NULL;
 
+  atomic_fetch_add(&caml_num_domains_running, -1);
 
 domain_init_complete:
   caml_gc_log("domain init complete");
@@ -1301,23 +1307,12 @@ static void* domain_thread_func(void* v)
       [caml_domain_alone()] does not return [true] while its mutator
       or domain-termination cleanup logic are still in progress.
 
-   2. When a domain starts, its parent domain blocks until it observes
-      the [Dom_started] state for the new domain, and that only
-      happens after the new domain has incremented
-      [caml_num_domains_running]. This provides the expected
-      [caml_domain_alone] guarantees for both the parent and the child
-      domains:
-
-      - The parent domain cannot observe [caml_domain_alone()] after
-        returning from [caml_domain_spawn] and before its child
-        terminates.
-
-      - The child domain could observe [caml_domain_alone ()] during
-        startup -- up to the point where it increments
-        [caml_num_domain_running]. That is correct as the parent
-        domain is blocked until after this point. The parent domain
-        polls for STW interrupts while blocking on the child, but
-        there are no other domains around to send interrupts.
+   2. When a domain starts, it increments [caml_num_domains_running]
+      immediately after taking the domain lock, and its parent domain
+      blocks waiting for the child set the [Dom_started] flag, which
+      happens after this increment. Neither the parent nor the child
+      can wrongly observe [caml_domain_alone()] while the other may be
+      running code with its domain lock held.
 */
 
 
