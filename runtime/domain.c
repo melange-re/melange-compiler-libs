@@ -720,7 +720,6 @@ static void domain_create(uintnat initial_minor_heap_wsize,
   s->unique_id = fresh_domain_unique_id();
   domain_state->unique_id = s->unique_id;
   s->running = 1;
-  atomic_fetch_add(&caml_num_domains_running, 1);
 
   domain_state->c_stack = NULL;
   domain_state->exn_handler = NULL;
@@ -1289,6 +1288,38 @@ static void* domain_thread_func(void* v)
 #endif
   return 0;
 }
+
+/* Note: [caml_domain_spawn] and [caml_domain_alone()].
+
+   The use of [caml_domain_alone()] to implement sequential fast-path
+   requires that no other domain is operating in parallel. This is
+   indeed the case when [caml_domain_alone()] is observed while
+   holding the domain lock:
+
+   1. When a domain exits, it is careful to decrement
+      [caml_num_domains_running] as the very last step, so that
+      [caml_domain_alone()] does not return [true] while its mutator
+      or domain-termination cleanup logic are still in progress.
+
+   2. When a domain starts, its parent domain blocks until it observes
+      the [Dom_started] state for the new domain, and that only
+      happens after the new domain has incremented
+      [caml_num_domains_running]. This provides the expected
+      [caml_domain_alone] guarantees for both the parent and the child
+      domains:
+
+      - The parent domain cannot observe [caml_domain_alone()] after
+        returning from [caml_domain_spawn] and before its child
+        terminates.
+
+      - The child domain could observe [caml_domain_alone ()] during
+        startup -- up to the point where it increments
+        [caml_num_domain_running]. That is correct as the parent
+        domain is blocked until after this point. The parent domain
+        polls for STW interrupts while blocking on the child, but
+        there are no other domains around to send interrupts.
+*/
+
 
 CAMLprim value caml_domain_spawn(value callback, value term_sync)
 {

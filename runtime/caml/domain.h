@@ -92,6 +92,20 @@ CAMLextern uintnat caml_minor_heap_max_wsz;
 
 CAMLextern atomic_uintnat caml_num_domains_running;
 
+/* When [caml_domain_alone()] is true, there is a single domain
+   running. In particular, if the test passes while holding the domain
+   lock, then we know that no other domain is running concurrently,
+   and we can use fast paths with fewer synchronization operations.
+
+      // if you hold the domain lock:
+      if (caml_domain_alone()) {
+        // sequential fast path
+        ...
+      } else {
+        // slower concurrent version
+        ...
+      }
+*/
 Caml_inline intnat caml_domain_alone(void)
 {
   return atomic_load_acquire(&caml_num_domains_running) == 1;
