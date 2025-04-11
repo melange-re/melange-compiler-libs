@@ -462,6 +462,9 @@ Working version
 - #13884 Correctly index modules in constructors and labels paths
   (Ulysse Gérard, review by Florian Angeletti)
 
+- #13952: check and document the correctness of `caml_domain_alone ()`.
+  (Gabriel Scherer, review by KC Sivaramakrishnan, report by Olivier Nicole)
+
 ### Build system:
 
 - #13431: Simplify github action responsible for flagging PRs with

@@ -637,6 +637,11 @@ static void domain_create(uintnat initial_minor_heap_wsize,
 
   caml_plat_lock_blocking(&d->domain_lock);
 
+  /* This is the first thing we do after acquiring the domain lock,
+     so that [caml_domain_alone()] returns accurate result even
+     during domain initialization. */
+  atomic_fetch_add(&caml_num_domains_running, 1);
+
   /* Set domain_self if we have successfully allocated the
    * caml_domain_state. Otherwise domain_self will be NULL and it's up
    * to the caller to deal with that. */
@@ -720,7 +725,6 @@ static void domain_create(uintnat initial_minor_heap_wsize,
   s->unique_id = fresh_domain_unique_id();
   domain_state->unique_id = s->unique_id;
   s->running = 1;
-  atomic_fetch_add(&caml_num_domains_running, 1);
 
   domain_state->c_stack = NULL;
   domain_state->exn_handler = NULL;
@@ -780,6 +784,7 @@ alloc_minor_tables_failure:
 init_memprof_failure:
   domain_self = NULL;
 
+  atomic_fetch_add(&caml_num_domains_running, -1);
 
 domain_init_complete:
   caml_gc_log("domain init complete");
@@ -1289,6 +1294,27 @@ static void* domain_thread_func(void* v)
 #endif
   return 0;
 }
+
+/* Note: [caml_domain_spawn] and [caml_domain_alone()].
+
+   The use of [caml_domain_alone()] to implement sequential fast-path
+   requires that no other domain is operating in parallel. This is
+   indeed the case when [caml_domain_alone()] is observed while
+   holding the domain lock:
+
+   1. When a domain exits, it is careful to decrement
+      [caml_num_domains_running] as the very last step, so that
+      [caml_domain_alone()] does not return [true] while its mutator
+      or domain-termination cleanup logic are still in progress.
+
+   2. When a domain starts, it increments [caml_num_domains_running]
+      immediately after taking the domain lock, and its parent domain
+      blocks waiting for the child set the [Dom_started] flag, which
+      happens after this increment. Neither the parent nor the child
+      can wrongly observe [caml_domain_alone()] while the other may be
+      running code with its domain lock held.
+*/
+
 
 CAMLprim value caml_domain_spawn(value callback, value term_sync)
 {
