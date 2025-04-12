@@ -7548,22 +7548,33 @@ toplevel/toploop.cmi : \
 toplevel/topmain.cmi :
 toplevel/topprinters.cmo : \
     typing/types.cmi \
+    typing/printtyp.cmi \
     typing/predef.cmi \
     typing/path.cmi \
+    parsing/longident.cmi \
     typing/ident.cmi \
+    typing/env.cmi \
     typing/ctype.cmi \
+    typing/btype.cmi \
     parsing/asttypes.cmi \
     toplevel/topprinters.cmi
 toplevel/topprinters.cmx : \
     typing/types.cmx \
+    typing/printtyp.cmx \
     typing/predef.cmx \
     typing/path.cmx \
+    parsing/longident.cmx \
     typing/ident.cmx \
+    typing/env.cmx \
     typing/ctype.cmx \
+    typing/btype.cmx \
     parsing/asttypes.cmx \
     toplevel/topprinters.cmi
 toplevel/topprinters.cmi : \
-    typing/types.cmi
+    typing/types.cmi \
+    typing/path.cmi \
+    parsing/longident.cmi \
+    typing/env.cmi
 toplevel/topstart.cmo : \
     toplevel/topmain.cmi \
     toplevel/topstart.cmi
@@ -8531,7 +8542,6 @@ debugger/int64ops.cmx : \
 debugger/int64ops.cmi :
 debugger/loadprinter.cmo : \
     parsing/unit_info.cmi \
-    typing/types.cmi \
     toplevel/topprinters.cmi \
     bytecomp/symtable.cmi \
     debugger/printval.cmi \
@@ -8544,12 +8554,11 @@ debugger/loadprinter.cmo : \
     utils/format_doc.cmi \
     typing/env.cmi \
     otherlibs/dynlink/dynlink.cmi \
-    typing/ctype.cmi \
+    debugger/debugcom.cmi \
     file_formats/cmo_format.cmi \
     debugger/loadprinter.cmi
 debugger/loadprinter.cmx : \
     parsing/unit_info.cmx \
-    typing/types.cmx \
     toplevel/topprinters.cmx \
     bytecomp/symtable.cmx \
     debugger/printval.cmx \
@@ -8562,10 +8571,11 @@ debugger/loadprinter.cmx : \
     utils/format_doc.cmx \
     typing/env.cmx \
     otherlibs/dynlink/dynlink.cmx \
-    typing/ctype.cmx \
+    debugger/debugcom.cmx \
     file_formats/cmo_format.cmi \
     debugger/loadprinter.cmi
 debugger/loadprinter.cmi : \
+    toplevel/topprinters.cmi \
     parsing/longident.cmi \
     otherlibs/dynlink/dynlink.cmi
 debugger/main.cmo : \
