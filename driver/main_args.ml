@@ -1037,10 +1037,6 @@ module type Ocamldoc_options = sig
   val _vmthread : unit -> unit
 end
 
-module type Ocamltest_options = sig
-  val _color : string -> unit
-end
-
 module type Arg_list = sig
     val list : (string * Arg.spec * string) list
 end;;
@@ -1577,13 +1573,6 @@ struct
     mk_vnum F._vnum;
     mk_w F._w;
     mk__ F.anonymous;
-  ]
-end;;
-
-module Make_ocamltest_options (F : Ocamltest_options) =
-struct
-  let list = [
-    mk_color F._color;
   ]
 end;;
 

@@ -267,10 +267,6 @@ module type Ocamldoc_options = sig
   val _vmthread : unit -> unit
 end
 
-module type Ocamltest_options = sig
-  val _color : string -> unit
-end
-
 module type Arg_list = sig
     val list : (string * Arg.spec * string) list
 end
@@ -280,7 +276,6 @@ module Make_bytetop_options : Bytetop_options -> Arg_list
 module Make_optcomp_options : Optcomp_options -> Arg_list
 module Make_opttop_options : Opttop_options -> Arg_list
 module Make_ocamldoc_options : Ocamldoc_options -> Arg_list
-module Make_ocamltest_options : Ocamltest_options -> Arg_list
 
 (** [options_with_command_line_syntax options r] returns [options2] that behaves
     like [options], but additionally pushes command line argument on [r] (quoted

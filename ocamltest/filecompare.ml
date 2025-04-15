@@ -227,7 +227,9 @@ let check_file ?(tool = default_comparison_tool) files =
     else Unexpected_output
   end
 
-(* Best-effort hack to enable colored diff output *)
+(* The configure script tests if the diffing tool supports the [--color=auto]
+   flag (a no-op), and if so, passes it to [Ocamltest_config.diff_flags]. Find
+   this flag, and replace its value with the color preference of the user. *)
 let colordiff =
   List.map @@ fun flag ->
   let prefix = "--color=" in

@@ -69,11 +69,7 @@ let compact = ref false
 let add_to_list r x =
   r := !r @ [x]
 
-module Options = Main_args.Make_ocamltest_options(struct
-    let _color = Misc.set_or_ignore Clflags.color_reader.parse Clflags.color
-end)
-
-let commandline_options = Options.list @
+let commandline_options =
 [
   ("-e", Arg.Set log_to_stderr, " Log to stderr instead of a file.");
   ("-promote", Arg.Set promote,
@@ -102,6 +98,20 @@ let commandline_options = Options.list @
    " If translating, preserve line numbers in the output.");
   ("-keep-chars", Arg.Unit (fun () -> style := Translate.Chars),
    " If translating, preserve char offsets in the output.");
+  ("-color",
+   Arg.Symbol (["auto"; "always"; "never"],
+     (Misc.set_or_ignore Clflags.color_reader.parse Clflags.color)),
+   Printf.sprintf
+     "  Enable or disable colors in compiler messages\n\
+     \    The following settings are supported:\n\
+     \      auto    use heuristics to enable colors only if supported\n\
+     \      always  enable colors\n\
+     \      never   disable colors\n\
+     \    The default setting is 'auto', and the current heuristic\n\
+     \    checks that the TERM environment variable exists and is\n\
+     \    not empty or \"dumb\", and that isatty(stderr) holds.\n\
+     \  If the option is not specified, these setting can alternatively\n\
+     \  be set through the OCAML_COLOR environment variable.");
 ]
 
 let files_to_test = ref []
