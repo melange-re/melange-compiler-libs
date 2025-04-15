@@ -803,6 +803,7 @@ module Color = struct
 
   let default_setting = Auto
   let enabled = ref true
+  let is_enabled () = !enabled
 
 end
 

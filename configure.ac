@@ -2634,7 +2634,7 @@ AS_IF([$build_ocamltest],
   DIFF_FLAGS=""
   flags=""
   AS_CASE([$DIFF],
-    [diff], [flags="--strip-trailing-cr -u"],
+    [diff], [flags="--strip-trailing-cr -u --color=auto"],
     [none],
       [AC_MSG_ERROR([ocamltest requires a diff tool])])
   for flag in ${flags}; do

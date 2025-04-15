@@ -69,7 +69,11 @@ let compact = ref false
 let add_to_list r x =
   r := !r @ [x]
 
-let commandline_options =
+module Options = Main_args.Make_ocamltest_options(struct
+    let _color = Misc.set_or_ignore Clflags.color_reader.parse Clflags.color
+end)
+
+let commandline_options = Options.list @
 [
   ("-e", Arg.Set log_to_stderr, " Log to stderr instead of a file.");
   ("-promote", Arg.Set promote,
@@ -105,7 +109,10 @@ let files_to_test = ref []
 let usage = "Usage: ocamltest [options] <files...>"
 
 let () =
-  Arg.parse (Arg.align commandline_options) (add_to_list files_to_test) usage
+  Arg.parse (Arg.align commandline_options) (add_to_list files_to_test) usage;
+  Compmisc.read_clflags_from_env ();
+  Misc.Style.setup !Clflags.color;
+  ()
 
 let log_to_stderr = !log_to_stderr
 let files_to_test = !files_to_test

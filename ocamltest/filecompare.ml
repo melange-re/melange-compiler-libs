@@ -227,10 +227,20 @@ let check_file ?(tool = default_comparison_tool) files =
     else Unexpected_output
   end
 
+(* Best-effort hack to enable colored diff output *)
+let colordiff =
+  List.map @@ fun flag ->
+  let prefix = "--color=" in
+  if String.starts_with ~prefix flag then
+    let color = if Misc.Color.is_enabled () then "always" else "never" in
+    prefix ^ color
+  else
+    flag
+
 let diff files =
   let temporary_file = Filename.temp_file "ocamltest" "diff" in
   let diff = Ocamltest_config.diff in
-  let diff_flags = String.words Ocamltest_config.diff_flags in
+  let diff_flags = colordiff (String.words Ocamltest_config.diff_flags) in
   let diff_files = [files.reference_filename; files.output_filename] in
   let diff_commandline =
     Filename.quote_command diff ~stdout:temporary_file

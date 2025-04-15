@@ -23256,7 +23256,7 @@ test -n "$DIFF" || DIFF="none"
   flags=""
   case $DIFF in #(
   diff) :
-    flags="--strip-trailing-cr -u" ;; #(
+    flags="--strip-trailing-cr -u --color=auto" ;; #(
   none) :
     as_fn_error $? "ocamltest requires a diff tool" "$LINENO" 5 ;; #(
   *) :
