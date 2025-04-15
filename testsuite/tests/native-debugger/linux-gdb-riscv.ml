@@ -13,8 +13,7 @@
    ocamlopt.byte;
    debugger_script = "${test_source_directory}/gdb-script";
    gdb;
-   script = "sh ${test_source_directory}/sanitize.sh ${test_source_directory} \
-   ${test_build_directory} ${ocamltest_response} linux-gdb-riscv";
+   script = "sh ${test_source_directory}/sanitize.sh linux-gdb-riscv";
    script;
    check-program-output;
  *)
