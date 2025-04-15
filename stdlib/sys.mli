@@ -246,7 +246,7 @@ type signal_behavior =
      (usually: abort the program)
    - [Signal_ignore]: ignore the signal
    - [Signal_handle f]: call function [f], giving it the signal
-   number as argument. *)
+   number as an argument. *)
 
 external signal :
   signal -> signal_behavior -> signal_behavior = "caml_install_signal_handler"
@@ -368,21 +368,28 @@ val sigwinch : signal
 val signal_to_string : signal -> string
 (** [signal_to_string] formats an OCaml [signal] as a C POSIX
     {{:http://pubs.opengroup.org/onlinepubs/9799919799/basedefs/signal.h.html}
-    constant} or ["SIG(%d)"] for an unrecognised signal number.
+    constant} or ["SIG(%d)"] for platform-dependent signal numbers.
+
+    @raise Invalid_argument for unrecognised negative numbers.
     @since 5.4 *)
 
 val signal_of_int : int -> signal
 (** [signal_of_int n] converts a platform-dependent signal number [n] to
     an OCaml signal number.
-    This is [n] itself if OCaml does not have a platform-independent signal
-    number for [n].
+
+    For positive [n] this is [n] itself if OCaml does not have a
+    platform-independent signal number for [n].
+
+    @raise Invalid_argument if [n] is negative.
     @since 5.4 *)
 
 val signal_to_int : signal -> int
 (** [signal_to_int n] converts an OCaml signal number [n] to
     a platform-dependent signal number.
-    This is [n] itself if OCaml does not have a platform-dependent signal
-    number for [n].
+
+    For positive [n] this is [n] itself.
+
+    @raise Invalid_argument for unrecognised negative numbers.
     @since 5.4 *)
 
 exception Break

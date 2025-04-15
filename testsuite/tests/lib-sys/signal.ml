@@ -62,7 +62,7 @@ let () =
                  (sigwinch, "SIGWINCH");
                  (sigusr1, "SIGUSR1");
                  (sigusr2, "SIGUSR2");
-                 (-33, "SIG(-33)");] in
+                 (33, "SIG(33)");] in
   List.iter (fun (s,str) -> assert (String.equal (Sys.signal_to_string s) str)) signals;
 
   r := false;
