@@ -113,6 +113,14 @@ Working version
   (Stephen Dolan, review by Nick Barnes and Josh Berdine, benchmarking by
    Nicolás Ojeda Bär)
 
+- #13300, #13861: introduce `Gc.ramp_up` to explicitly mark ramp-up
+  phases of memory consumption and avoid GC overwork. Ramp-up behaviors
+  are worse with OCaml 5 than with OCaml 4 due to higher sensitivity
+  to excessive pacing computations. Indicating ramp-up explicitly eliminates
+  the main known slowdown of OCaml 5 (relative to OCaml 4) for Coq/Rocq.
+  (Gabriel Scherer, review by Damien Doligez and Guillaume Munch-Maccagnoni,
+   report by Emilio Jesús Gallego Arias and Olivier Nicole)
+
 ### Code generation and optimizations:
 
 * #13050: Use '$' instead of '.' to separate module names in symbol names.

@@ -806,6 +806,10 @@ typedef void * backtrace_slot;
 #define IO_BUFFER_SIZE 65536
 #endif
 
+/* GC policy settings */
+typedef intnat caml_gc_policy;
+#define CAML_GC_RAMP_UP             0x0001
+
 #ifdef __cplusplus
 }
 #endif

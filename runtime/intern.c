@@ -438,8 +438,8 @@ static value intern_alloc_obj(struct caml_intern_state* s, caml_domain_state* d,
       intern_cleanup (s);
       caml_raise_out_of_memory();
     }
-    d->allocated_words += Whsize_wosize(wosize);
-    d->allocated_words_direct += Whsize_wosize(wosize);
+    caml_update_major_allocated_words(
+      d, Whsize_wosize(wosize), 1 /* direct */);
     Hd_hp(p) = Make_header (wosize, tag, caml_global_heap_state.MARKED);
     caml_memprof_sample_block(Val_hp(p), wosize,
                               Whsize_wosize(wosize),

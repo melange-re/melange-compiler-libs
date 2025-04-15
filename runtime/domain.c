@@ -736,6 +736,9 @@ static void domain_create(uintnat initial_minor_heap_wsize,
 
   domain_state->allocated_words = 0;
   domain_state->allocated_words_direct = 0;
+  domain_state->allocated_words_suspended = 0;
+  domain_state->allocated_words_resumed = 0;
+  domain_state->current_ramp_up_allocated_words_diff = 0;
   domain_state->swept_words = 0;
 
   domain_state->local_roots = NULL;
