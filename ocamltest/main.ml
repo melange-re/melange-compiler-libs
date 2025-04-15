@@ -93,7 +93,7 @@ type summary = Result.status = Pass | Skip | Fail
 (* The sequential join passes if both tests pass.
 
    This implies that a linear sequence of actions, a path along the
-   test tree, is considered succesful if all actions passed. *)
+   test tree, is considered successful if all actions passed. *)
 let join_sequential r1 r2 =
   match r1, r2 with
   | Fail, _ | _, Fail -> Fail
@@ -103,7 +103,7 @@ let join_sequential r1 r2 =
 (* The parallel join passes if either test passes.
 
    This implies that a test formed of several parallel branches is
-   considered succesful if at least one of the branches is succesful.
+   considered successful if at least one of the branches is successful.
 *)
 let join_parallel r1 r2 =
   match r1, r2 with

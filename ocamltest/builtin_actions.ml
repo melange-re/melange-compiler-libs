@@ -56,7 +56,7 @@ let cd = make
       try
         Sys.chdir cwd; (Result.pass, env)
       with _ ->
-        let reason = "Could not chidir to \"" ^ cwd ^ "\"" in
+        let reason = "Could not chdir to \"" ^ cwd ^ "\"" in
         let result = Result.fail_with_reason reason in
         (result, env)
     end)
@@ -140,15 +140,15 @@ let target_windows = make
   ~name:"target-windows"
   ~description:"Pass if the compiler does targets native Windows"
   (Actions_helpers.pass_or_skip (Ocamltest_config.target_os_type = "Win32")
-    "targetting native Windows"
-    "not targetting native Windows")
+    "targeting native Windows"
+    "not targeting native Windows")
 
 let not_target_windows = make
   ~name:"not-target-windows"
   ~description:"Pass if the compiler does not target native Windows"
   (Actions_helpers.pass_or_skip (Ocamltest_config.target_os_type <> "Win32")
-    "not targetting native Windows"
-    "targetting native Windows")
+    "not targeting native Windows"
+    "targeting native Windows")
 
 let is_bsd_system s =
   match s with
