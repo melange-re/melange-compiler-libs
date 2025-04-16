@@ -43,6 +43,25 @@
 
 open Lambda
 
+(** Allocation and backpatching primitives *)
+
+let alloc_prim =
+  Primitive.simple ~name:"caml_alloc_dummy" ~arity:1 ~alloc:true
+
+let alloc_float_record_prim =
+  Primitive.simple ~name:"caml_alloc_dummy_float" ~arity:1 ~alloc:true
+
+let alloc_lazy_prim =
+  Primitive.simple ~name:"caml_alloc_dummy_lazy" ~arity:1 ~alloc:true
+
+let update_prim =
+  (* Note: [alloc] could be false, but it probably doesn't matter *)
+  Primitive.simple ~name:"caml_update_dummy" ~arity:2 ~alloc:true
+
+let update_lazy_prim =
+  Primitive.simple ~name:"caml_update_dummy_lazy" ~arity:2 ~alloc:true
+
+
 (** {1. Sizing} *)
 
 (* Simple blocks *)
@@ -688,23 +707,7 @@ let empty_bindings =
     dynamic = [];
   }
 
-(** Allocation and backpatching primitives *)
-
-let alloc_prim =
-  Primitive.simple ~name:"caml_alloc_dummy" ~arity:1 ~alloc:true
-
-let alloc_float_record_prim =
-  Primitive.simple ~name:"caml_alloc_dummy_float" ~arity:1 ~alloc:true
-
-let alloc_lazy_prim =
-  Primitive.simple ~name:"caml_alloc_dummy_lazy" ~arity:1 ~alloc:true
-
-let update_prim =
-  (* Note: [alloc] could be false, but it probably doesn't matter *)
-  Primitive.simple ~name:"caml_update_dummy" ~arity:2 ~alloc:true
-
-let update_lazy_prim =
-  Primitive.simple ~name:"caml_update_dummy_lazy" ~arity:2 ~alloc:true
+(** Allocation and backpatching code *)
 
 let compile_indirect newval =
   let indirect = Lambda.transl_prim "CamlinternalLazy" "indirect" in
