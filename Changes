@@ -467,6 +467,11 @@ Working version
   content of a `Tpackage` node
   (Samuel Vivien, review by Florian Angeletti)
 
+- #13866: Modified occurence check that prevents recursive types for it to see
+  the checked type as a graph rather than a tree
+  (Samuel Vivien, report by Didier Remy, review by Florian Angeletti
+   and Jacques Garrigue)
+
 - #13884 Correctly index modules in constructors and labels paths
   (Ulysse Gérard, review by Florian Angeletti)
 
