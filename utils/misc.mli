@@ -510,7 +510,7 @@ module Color: sig
   type setting = Auto | Always | Never
 
   val default_setting : setting
-
+  val is_enabled : unit -> bool
 end
 
 

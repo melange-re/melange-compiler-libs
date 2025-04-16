@@ -126,6 +126,7 @@ AC_SUBST([SAK_BUILD])
 AC_SUBST([SAK])
 AC_SUBST([encode_C_literal])
 AC_SUBST([DIFF_FLAGS])
+AC_SUBST([diff_supports_color])
 AC_SUBST([CSC])
 AC_SUBST([CSCFLAGS])
 # Note: This is present for the flexdll bootstrap where it exposed as the old
@@ -2637,6 +2638,10 @@ AS_IF([$build_ocamltest],
     [diff], [flags="--strip-trailing-cr -u"],
     [none],
       [AC_MSG_ERROR([ocamltest requires a diff tool])])
+  AC_MSG_CHECKING([whether $DIFF supports --color={auto,always,never}])
+  AS_IF([$DIFF --color=auto $0 $0 > /dev/null 2>&1],
+    [diff_supports_color=true; AC_MSG_RESULT([yes])],
+    [diff_supports_color=false; AC_MSG_RESULT([no])])
   for flag in ${flags}; do
     AC_MSG_CHECKING([whether $DIFF supports $flag]);
     AS_IF([$DIFF $DIFF_FLAGS $flag $0 $0 > /dev/null 2>&1],
