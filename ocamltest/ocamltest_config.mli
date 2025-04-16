@@ -48,6 +48,9 @@ val diff : string
 val diff_flags : string
 (** Flags to pass to the diff tool *)
 
+val diff_supports_color : bool
+(** Whether {!diff} supports the [--color={auto,always,never}] flag *)
+
 val shared_libraries : bool
 (** [true] if shared libraries are supported, [false] otherwise *)
 

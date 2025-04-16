@@ -928,6 +928,7 @@ libext
 ac_tool_prefix
 CSCFLAGS
 CSC
+diff_supports_color
 DIFF_FLAGS
 encode_C_literal
 SAK
@@ -3410,6 +3411,7 @@ CMXS_MAGIC_NUMBER=Caml1999D035
 CMT_MAGIC_NUMBER=Caml1999T035
 
 LINEAR_MAGIC_NUMBER=Caml1999L035
+
 
 
 
@@ -23256,12 +23258,22 @@ test -n "$DIFF" || DIFF="none"
   flags=""
   case $DIFF in #(
   diff) :
-    flags="--strip-trailing-cr -u --color=auto" ;; #(
+    flags="--strip-trailing-cr -u" ;; #(
   none) :
     as_fn_error $? "ocamltest requires a diff tool" "$LINENO" 5 ;; #(
   *) :
      ;;
 esac
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether $DIFF supports --color={auto,always,never}" >&5
+printf %s "checking whether $DIFF supports --color={auto,always,never}... " >&6; }
+  if $DIFF --color=auto $0 $0 > /dev/null 2>&1
+then :
+  diff_supports_color=true; { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+else $as_nop
+  diff_supports_color=false; { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
   for flag in ${flags}; do
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether $DIFF supports $flag" >&5
 printf %s "checking whether $DIFF supports $flag... " >&6; };
