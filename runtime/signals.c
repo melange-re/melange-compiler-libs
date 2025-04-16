@@ -499,12 +499,18 @@ CAMLexport value caml_process_pending_actions_exn(void)
 #ifndef SIGXFSZ
 #define SIGXFSZ -1
 #endif
+#ifndef SIGIO
+#define SIGIO -1
+#endif
+#ifndef SIGWINCH
+#define SIGWINCH -1
+#endif
 
 static const int posix_signals[] = {
   SIGABRT, SIGALRM, SIGFPE, SIGHUP, SIGILL, SIGINT, SIGKILL, SIGPIPE,
   SIGQUIT, SIGSEGV, SIGTERM, SIGUSR1, SIGUSR2, SIGCHLD, SIGCONT,
   SIGSTOP, SIGTSTP, SIGTTIN, SIGTTOU, SIGVTALRM, SIGPROF, SIGBUS,
-  SIGPOLL, SIGSYS, SIGTRAP, SIGURG, SIGXCPU, SIGXFSZ
+  SIGPOLL, SIGSYS, SIGTRAP, SIGURG, SIGXCPU, SIGXFSZ, SIGIO, SIGWINCH
 };
 
 CAMLexport int caml_convert_signal_number(int signo)
@@ -515,11 +521,21 @@ CAMLexport int caml_convert_signal_number(int signo)
     return signo;
 }
 
+CAMLprim value caml_sys_convert_signal_number(value signo)
+{
+  return Val_int(caml_convert_signal_number(Int_val(signo)));
+}
+
 CAMLexport int caml_rev_convert_signal_number(int signo)
 {
   for (int i = 0; i < (int)(sizeof(posix_signals) / sizeof(int)); i++)
     if (signo == posix_signals[i]) return -i - 1;
   return signo;
+}
+
+CAMLprim value caml_sys_rev_convert_signal_number(value signo)
+{
+  return Val_int(caml_rev_convert_signal_number(Int_val(signo)));
 }
 
 void * caml_init_signal_stack(void)

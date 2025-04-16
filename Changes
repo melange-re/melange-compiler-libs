@@ -263,6 +263,13 @@ Working version
 - #13932: Add List.singleton and Seq.singleton
   (David Allsopp, tariffs applied by Nicolás Ojeda Bär and Gabriel Scherer)
 
+* #13843: Add signal definitions for SIGIO and SIGWINCH. Introduces a
+  type alias for signal int, signal_to_string to convert OCaml signal numbers
+  to their POSIX equivalent names, and signal_of_int/signal_to_int for
+  converting between OCaml and platform signal numbers. (Reported in #13825)
+  (Tim McGilchrist, review by David Allsopp, Nicolás Ojeda Bär, Daniel Bünzli
+   Jan Midtgaard and Miod Vallat)
+
 ### Other libraries:
 
 * #13376: Allow Dynlink.loadfile_private to load bytecode libraries with
