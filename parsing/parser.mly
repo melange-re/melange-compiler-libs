@@ -50,8 +50,8 @@ let ghost_loc (startpos, endpos) = {
 }
 
 let mktyp ~loc ?attrs d = Typ.mk ~loc:(make_loc loc) ?attrs d
-let mkpat ~loc d = Pat.mk ~loc:(make_loc loc) d
-let mkexp ~loc d = Exp.mk ~loc:(make_loc loc) d
+let mkpat ~loc ?attrs d = Pat.mk ~loc:(make_loc loc) ?attrs d
+let mkexp ~loc ?attrs d = Exp.mk ~loc:(make_loc loc) ?attrs d
 let mkmty ~loc ?attrs d = Mty.mk ~loc:(make_loc loc) ?attrs d
 let mksig ~loc d = Sig.mk ~loc:(make_loc loc) d
 let mkmod ~loc ?attrs d = Mod.mk ~loc:(make_loc loc) ?attrs d
@@ -127,9 +127,9 @@ let mkpatvar ~loc name =
   Every grammar rule that generates an element with a location must
   make at most one non-ghost element, the topmost one.
 *)
-let ghexp ~loc d = Exp.mk ~loc:(ghost_loc loc) d
-let ghpat ~loc d = Pat.mk ~loc:(ghost_loc loc) d
-let ghtyp ~loc d = Typ.mk ~loc:(ghost_loc loc) d
+let ghexp ~loc ?attrs d = Exp.mk ~loc:(ghost_loc loc) ?attrs d
+let ghpat ~loc ?attrs d = Pat.mk ~loc:(ghost_loc loc) ?attrs d
+let ghtyp ~loc ?attrs d = Typ.mk ~loc:(ghost_loc loc) ?attrs d
 let ghloc ~loc d = { txt = d; loc = ghost_loc loc }
 let ghstr ~loc d = Str.mk ~loc:(ghost_loc loc) d
 let ghsig ~loc d = Sig.mk ~loc:(ghost_loc loc) d
@@ -436,41 +436,28 @@ let wrap_type_annotation ~loc newtypes core_type body =
   let exp = mk_newtypes newtypes exp in
   (exp, ghtyp(Ptyp_poly(newtypes, Typ.varify_constructors newtypes core_type)))
 
-let wrap_exp_attrs ~loc body (ext, attrs) =
+let pexp_extension ~id e = Pexp_extension (id, PStr [mkstrexp e []])
+
+let mkexp_attrs ~loc desc (ext, attrs) =
   (* todo: keep exact location for the entire attribute *)
-  let body = {body with pexp_attributes = attrs @ body.pexp_attributes} in
   match ext with
-  | None -> body
-  | Some id -> mkexp ~loc (Pexp_extension (id, PStr [mkstrexp body []]))
+  | None -> mkexp ~loc ~attrs desc
+  | Some id ->
+     mkexp ~loc (pexp_extension ~id (ghexp ~loc ~attrs desc))
 
-let mkexp_attrs ~loc d ext_attrs =
-  wrap_exp_attrs ~loc (if Option.is_some (fst ext_attrs)
-                       then ghexp ~loc d
-                       else mkexp ~loc d) ext_attrs
-
-let wrap_typ_attrs ~loc typ (ext, attrs) =
+let mktyp_attrs ~loc desc (ext, attrs) =
   (* todo: keep exact location for the entire attribute *)
-  let typ = {typ with ptyp_attributes = attrs @ typ.ptyp_attributes} in
   match ext with
-  | None -> typ
-  | Some id -> mktyp ~loc (Ptyp_extension (id, PTyp typ))
+  | None -> mktyp ~loc ~attrs desc
+  | Some id ->
+     mktyp ~loc (Ptyp_extension (id, PTyp (ghtyp ~loc ~attrs desc)))
 
-let mktyp_attrs ~loc d ext_attrs =
-  wrap_typ_attrs ~loc (if Option.is_some (fst ext_attrs)
-                       then ghtyp ~loc d
-                       else mktyp ~loc d) ext_attrs
-
-let wrap_pat_attrs ~loc pat (ext, attrs) =
+let mkpat_attrs ~loc desc (ext, attrs) =
   (* todo: keep exact location for the entire attribute *)
-  let pat = {pat with ppat_attributes = attrs @ pat.ppat_attributes} in
   match ext with
-  | None -> pat
-  | Some id -> mkpat ~loc (Ppat_extension (id, PPat (pat, None)))
-
-let mkpat_attrs ~loc d ext_attrs =
-  wrap_pat_attrs ~loc (if Option.is_some (fst ext_attrs)
-                       then ghpat ~loc d
-                       else mkpat ~loc d) ext_attrs
+  | None -> mkpat ~loc ~attrs desc
+  | Some id ->
+     mkpat ~loc (Ppat_extension (id, PPat (ghpat ~loc ~attrs desc, None)))
 
 let wrap_class_attrs ~loc:_ body attrs =
   {body with pcl_attributes = attrs @ body.pcl_attributes}
@@ -479,25 +466,15 @@ let wrap_mod_attrs ~loc:_ attrs body =
 let wrap_mty_attrs ~loc:_ attrs body =
   {body with pmty_attributes = attrs @ body.pmty_attributes}
 
-let wrap_str_ext ~loc body ext =
-  match ext with
-  | None -> body
-  | Some id -> mkstr ~loc (Pstr_extension ((id, PStr [body]), []))
-
 let wrap_mkstr_ext ~loc (item, ext) =
-  wrap_str_ext ~loc (if Option.is_some ext
-                     then ghstr ~loc item
-                     else mkstr ~loc item) ext
-
-let wrap_sig_ext ~loc body ext =
   match ext with
-  | None -> body
-  | Some id -> mksig ~loc (Psig_extension ((id, PSig [body]), []))
+  | None -> mkstr ~loc item
+  | Some id -> mkstr ~loc (Pstr_extension ((id, PStr [ghstr ~loc item]), []))
 
 let wrap_mksig_ext ~loc (item, ext) =
-  wrap_sig_ext ~loc (if Option.is_some ext
-                     then ghsig ~loc item
-                     else mksig ~loc item) ext
+  match ext with
+  | None -> mksig ~loc item
+  | Some id -> mksig ~loc (Psig_extension ((id, PSig [ghsig ~loc item]), []))
 
 let mk_quotedext ~loc (id, idloc, str, strloc, delim) =
   let exp_id = mkloc id idloc in
@@ -2350,9 +2327,7 @@ fun_seq_expr:
     { Pexp_sequence($1, $3) })
     { $1 }
   | fun_expr SEMI PERCENT attr_id seq_expr
-    { let seq = ghexp ~loc:$sloc (Pexp_sequence ($1, $5)) in
-      let payload = PStr [mkstrexp seq []] in
-      mkexp ~loc:$sloc (Pexp_extension ($4, payload)) }
+    { mkexp_attrs ~loc:$sloc (Pexp_sequence ($1, $5)) (Some $4, []) }
 ;
 seq_expr:
   | or_function(fun_seq_expr) { $1 }
@@ -2574,11 +2549,9 @@ simple_expr:
 *)
 %inline metaocaml_expr:
   | METAOCAML_ESCAPE e = simple_expr
-    { wrap_exp_attrs ~loc:$sloc e
-       (Some (mknoloc "metaocaml.escape"), []) }
+    { mkexp ~loc:$sloc (pexp_extension ~id:(mknoloc "metaocaml.escape") e) }
   | METAOCAML_BRACKET_OPEN e = seq_expr METAOCAML_BRACKET_CLOSE
-    { wrap_exp_attrs ~loc:$sloc e
-       (Some  (mknoloc "metaocaml.bracket"),[]) }
+    { mkexp ~loc:$sloc (pexp_extension ~id:(mknoloc "metaocaml.bracket") e) }
 ;
 
 %inline simple_expr_:
