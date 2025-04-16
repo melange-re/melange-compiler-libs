@@ -126,6 +126,39 @@ let join_sizes size1 size2 =
   | Unreachable, size | size, Unreachable -> size
   | _, _ -> dynamic_size ()
 
+(* We need to recognize the Pmakeblock that we transformed into
+   primitive calls, to support size compilation in nested recursive
+   definitions. Consider this example from Vincent Laviron:
+   {[let f a =
+       let rec x =
+         let rec y = Some a in y
+       in x
+   ]}
+
+   [let rec y = Some a in y] gets compiled to
+   {[let y = caml_alloc_dummy 1 in
+     caml_update_dummy(y, ...);
+     y]}
+   and we need to recognize from this definition that this
+   value has known size [1].
+*)
+let find_size_of_alloc_prim prim args =
+  let same_as other_prim =
+    let open Primitive in
+    String.equal prim.prim_name other_prim.prim_name
+  in
+  let int_arg = match args with
+    | [Lconst (Const_base (Const_int n))] -> Some n
+    | _ ->  None
+  in
+  if same_as alloc_prim then
+    Option.map (fun n -> Regular_block n) int_arg
+  else if same_as alloc_float_record_prim then
+    Option.map (fun n -> Float_record n) int_arg
+  else if same_as alloc_lazy_prim then
+    Some Lazy_block
+  else None
+
 let compute_static_size lam =
   let rec compute_expression_size env lam =
     match lam with
@@ -266,6 +299,12 @@ let compute_static_size lam =
            so we should never end up here; but these are constants anyway. *)
         Constant
 
+    | Pccall prim ->
+        begin match find_size_of_alloc_prim prim args with
+        | Some size -> Block size
+        | None -> dynamic_size ()
+        end
+
     | Pbytes_to_string
     | Pbytes_of_string
     | Pgetglobal _
@@ -277,7 +316,6 @@ let compute_static_size lam =
     | Pperform
     | Presume
     | Preperform
-    | Pccall _
     | Psequand | Psequor | Pnot
     | Pnegint | Paddint | Psubint | Pmulint
     | Pdivint _ | Pmodint _
@@ -726,6 +764,8 @@ let compile_alloc size =
            [Lconst (Lambda.const_int size)],
            no_loc)
   in
+  (* if you add new allocation primitives below,
+     you should update {!find_size_of_alloc_prim} as well. *)
   match size with
   | Regular_block size ->
       alloc alloc_prim size
