@@ -571,6 +571,10 @@ Working version
   (Guillaume Bury and Vincent Laviron, review by Stefan Muenzel
    and Gabriel Scherer)
 
+- #13931: fix bugs in nested recursive value definitions.
+  (Gabriel Scherer, review by Vincent Laviron,
+   report by Vincent Laviron)
+
 - #13875, #13878: Add dedicated constructor for mutable variable access in
   Cmm to prevent bugs linked to incorrect handling of coeffects.
   (Vincent Laviron, review by Gabriel Scherer)
