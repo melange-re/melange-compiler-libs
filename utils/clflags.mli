@@ -129,7 +129,7 @@ val make_package : bool ref
 val for_package : string option ref
 val error_size : int ref
 val float_const_prop : bool ref
-val transparent_modules : bool ref
+val no_alias_deps : bool ref
 val unique_ids : bool ref
 val canonical_ids : bool ref
 val locations : bool ref

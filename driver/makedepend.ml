@@ -518,14 +518,14 @@ let process_mli_map =
                          String.Map.empty Pparse.Signature
 
 let parse_map fname =
-  let old_transp = !Clflags.transparent_modules in
-  Clflags.transparent_modules := true;
+  let old_transp = !Clflags.no_alias_deps in
+  Clflags.no_alias_deps := true;
   let (deps, m) =
     process_file fname ~def:(String.Set.empty, String.Map.empty)
       ~ml_file:process_ml_map
       ~mli_file:process_mli_map
   in
-  Clflags.transparent_modules := old_transp;
+  Clflags.no_alias_deps := old_transp;
   let modname = Unit_info.lax_modname_from_source fname in
   if String.Map.is_empty m then
     report_err (Failure (fname ^ " : empty map file or parse error"));
@@ -578,7 +578,7 @@ let run_main argv =
         " Generate dependencies on all files";
       "-allow-approx", Arg.Set allow_approximation,
         " Fallback to a lexer-based approximation on unparsable files";
-      "-as-map", Arg.Set Clflags.transparent_modules,
+      "-as-map", Arg.Set Clflags.no_alias_deps,
         " Omit delayed dependencies for module aliases (-no-alias-deps -w -49)";
         (* "compiler uses -no-alias-deps, and no module is coerced"; *)
       "-debug-map", Arg.Set debug,

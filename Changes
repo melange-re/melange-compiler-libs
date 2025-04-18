@@ -1087,6 +1087,10 @@ OCaml 5.3.0 (8 January 2025)
   by not allocating a list when the list is not necessary.
   (Richard Eisenberg, review by Jacques Garrigue)
 
+* #?: Renamed the `-no-alias-deps` flag internal representation to
+  `no_alias_deps` instead of `transparent_modules`.
+  (Clement Blaudeau, review by ?)
+
 ### Build system:
 
 - #12909: Reorganise how MKEXE_VIA_CC is built to make it correct for MSVC by
