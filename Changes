@@ -492,6 +492,9 @@ Working version
 - #13952: check and document the correctness of `caml_domain_alone ()`.
   (Gabriel Scherer, review by KC Sivaramakrishnan, report by Olivier Nicole)
 
+- #13971 Keep generalized structure from patterns when typing `let`
+  (Leo White, review by Samuel Vivien and Florian Angeletti)
+
 ### Build system:
 
 - #13431: Simplify github action responsible for flagging PRs with
