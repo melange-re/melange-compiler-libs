@@ -740,6 +740,9 @@ let mk_dlinear f =
 let mk_dinterval f =
   "-dinterval", Arg.Unit f, " (undocumented)"
 
+let mk_dparsetree_loc_ghost_invariants f =
+  "-dparsetree-loc-ghost-invariants", Arg.Unit f, " (undocumented)"
+
 let mk_dstartup f =
   "-dstartup", Arg.Unit f, " (undocumented)"
 
@@ -841,6 +844,7 @@ module type Core_options = sig
 
   val _dsource : unit -> unit
   val _dparsetree : unit -> unit
+  val _dparsetree_loc_ghost_invariants : unit -> unit
   val _dtypedtree : unit -> unit
   val _dshape : unit -> unit
   val _dmatchcomp : unit -> unit
@@ -1151,6 +1155,7 @@ struct
     mk_dlocations F._dlocations;
     mk_dsource F._dsource;
     mk_dparsetree F._dparsetree;
+    mk_dparsetree_loc_ghost_invariants F._dparsetree_loc_ghost_invariants;
     mk_dtypedtree F._dtypedtree;
     mk_dshape F._dshape;
     mk_dmatchcomp F._dmatchcomp;
@@ -1230,6 +1235,7 @@ struct
     mk_dlocations F._dlocations;
     mk_dsource F._dsource;
     mk_dparsetree F._dparsetree;
+    mk_dparsetree_loc_ghost_invariants F._dparsetree_loc_ghost_invariants;
     mk_dtypedtree F._dtypedtree;
     mk_dshape F._dshape;
     mk_dmatchcomp F._dmatchcomp;
@@ -1374,6 +1380,7 @@ struct
     mk_dlocations F._dlocations;
     mk_dsource F._dsource;
     mk_dparsetree F._dparsetree;
+    mk_dparsetree_loc_ghost_invariants F._dparsetree_loc_ghost_invariants;
     mk_dtypedtree F._dtypedtree;
     mk_dshape F._dshape;
     mk_dmatchcomp F._dmatchcomp;
@@ -1494,6 +1501,7 @@ module Make_opttop_options (F : Opttop_options) = struct
 
     mk_dsource F._dsource;
     mk_dparsetree F._dparsetree;
+    mk_dparsetree_loc_ghost_invariants F._dparsetree_loc_ghost_invariants;
     mk_dtypedtree F._dtypedtree;
     mk_dshape F._dshape;
     mk_dmatchcomp F._dmatchcomp;
@@ -1667,6 +1675,7 @@ module Default = struct
     let _color = Misc.set_or_ignore color_reader.parse color
     let _dlambda = set dump_lambda
     let _dparsetree = set dump_parsetree
+    let _dparsetree_loc_ghost_invariants = set parsetree_ghost_loc_invariant
     let _drawlambda = set dump_rawlambda
     let _dsource = set dump_source
     let _dtypedtree = set dump_typedtree

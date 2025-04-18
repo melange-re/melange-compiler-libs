@@ -151,6 +151,9 @@ let clambda_checks = ref false          (* -clambda-checks *)
 let cmm_invariants =
   ref Config.with_cmm_invariants        (* -dcmm-invariants *)
 
+let parsetree_ghost_loc_invariant = ref false
+  (* -dparsetree-ghost-loc-invariant *)
+
 let flambda_invariant_checks =
   ref Config.with_flambda_invariants    (* -flambda-(no-)invariants *)
 

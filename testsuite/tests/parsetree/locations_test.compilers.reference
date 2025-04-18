@@ -1187,7 +1187,7 @@ Ptop_def
               class_type (//toplevel//[4,33+2]..[4,33+12])
                 Pcty_signature
                 class_signature
-                  core_type (//toplevel//[4,33+8]..[4,33+8])
+                  core_type (//toplevel//[4,33+8]..[4,33+8]) ghost
                     Ptyp_any
                   []
       ]

@@ -70,6 +70,7 @@ module type Core_options = sig
   val _dlocations : unit -> unit
   val _dsource : unit -> unit
   val _dparsetree : unit -> unit
+  val _dparsetree_loc_ghost_invariants : unit -> unit
   val _dtypedtree : unit -> unit
   val _dshape : unit -> unit
   val _dmatchcomp : unit -> unit
