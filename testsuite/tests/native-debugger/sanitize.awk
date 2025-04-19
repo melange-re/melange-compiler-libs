@@ -37,6 +37,11 @@
     gsub(/.c:[0-9]+:[0-9]+/, ".c:XX")
     gsub(/.c:[0-9]+/, ".c:XX")
 
+    # Replace libpath. Different distributions have different naming
+    # schemes.
+    gsub(/Using host libthread_db library "\/(.*)\/libthread_db\.so\.1"\./,
+         "Using host libthread_db library \"/XXXX/libthread_db.so.1\".")
+
     # Replace line number when setting breakpoints in GDB.
     gsub(/line [0-9]+/, "line XXX")
 
@@ -47,6 +52,9 @@
     gsub("This version of LLDB has no plugin for the language \"assembler\". Inspection of frame variables will be limited.", "")
     # Replace printed match results
     gsub("1 match found in /(.*):$", "1 match found in \"XXXX\":")
+
+    # Remove trailing blanks
+    gsub(/[ \t]+$/, "")
 
     if ($0 != "")
       print $0

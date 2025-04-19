@@ -1,3 +1,4 @@
+settings set target.disable-aslr false
 settings set stop-disassembly-display never
 command script import ./lldb_test.py
 create caml_start_program
