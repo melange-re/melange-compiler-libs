@@ -310,9 +310,10 @@ Working version
   functionality broken by #13272.
   (Nick Barnes, review by Tim McGilchrist Gabriel Scherer)
 
-- #13199, #13485: Support running native debuggers in ocamltest.
-  (Tim McGilchrist and Sebastien Hinderer, review by Sebastien Hinderer,
-   Gabriel Scherer and Antonin Décimo)
+- #13199, #13485, #13665, #13762, #13965: Support running native debuggers in
+  ocamltest.
+  (Tim McGilchrist, Sebastien Hinderer, David Allsopp, Antonin Décimo, review by
+  Sebastien Hinderer, Gabriel Scherer, Antonin Décimo, and Tim McGilchrist)
 
 - #13764, #13779: add missing "-keywords" flag to ocamldep and ocamlprof
   (Florian Angeletti, report by Prashanth Mundkur, review by Gabriel Scherer)
