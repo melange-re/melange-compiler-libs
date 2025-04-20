@@ -523,7 +523,7 @@ Working version
 
 - #13977: Pass `-fPIC` when compiling C files using `ocamlopt`. This was a
   regression in OCaml 5.3.
-  (Nicolás Ojeda Bär, review by Daniel Bünzli)
+  (Nicolás Ojeda Bär, review by Daniel Bünzli and Gabriel Scherer)
 
 - #13957: Allow 'effect' as attribute id.
   (Pieter Goetschalckx, review by Nicolás Ojeda Bär and Florian Angeletti)
