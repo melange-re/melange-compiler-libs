@@ -23481,12 +23481,11 @@ oc_bytecode_cflags="$oc_cflags"
 oc_bytecode_cppflags="$oc_cppflags"
 
 oc_native_cflags="$oc_cflags $oc_native_cflags"
-native_cflags="$common_cflags $native_cflags"
 oc_native_cppflags="$oc_cppflags $oc_native_cppflags"
 
-bytecode_cflags="$common_cflags $sharedlib_cflags\
+bytecode_cflags="$common_cflags $sharedlib_cflags $bytecode_cflags\
  $PTHREAD_CFLAGS $COMPILER_BYTECODE_CFLAGS"
-native_cflags="$native_cflags $sharedlib_cflags\
+native_cflags="$common_cflags $sharedlib_cflags $native_cflags\
  $PTHREAD_CFLAGS $COMPILER_NATIVE_CFLAGS"
 
 bytecode_cppflags="$common_cppflags $COMPILER_BYTECODE_CPPFLAGS"
