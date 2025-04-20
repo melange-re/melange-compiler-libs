@@ -521,6 +521,9 @@ Working version
 
 ### Bug fixes:
 
+- #13977: Pass `-fPIC` when compiling C files using `ocamlopt`.
+  (Nicolás Ojeda Bär)
+
 - #13957: Allow 'effect' as attribute id.
   (Pieter Goetschalckx, review by Nicolás Ojeda Bär and Florian Angeletti)
 
