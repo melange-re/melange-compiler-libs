@@ -880,7 +880,7 @@ let add_persistent_structure id env =
          affect the environment at all. We should only observe the
          existence of a cmi when accessing components of the module.
          (See #9991). *)
-      if material || not !Clflags.transparent_modules then
+      if material || not !Clflags.no_alias_deps then
         IdTbl.add id Mod_persistent env.modules
       else
         env.modules
@@ -1332,7 +1332,7 @@ let required_globals = s_ref []
 let reset_required_globals () = required_globals := []
 let get_required_globals () = !required_globals
 let add_required_global id =
-  if Ident.global id && not !Clflags.transparent_modules
+  if Ident.global id && not !Clflags.no_alias_deps
   && not (List.exists (Ident.same id) !required_globals)
   then required_globals := id :: !required_globals
 
@@ -1356,7 +1356,7 @@ and expand_module_path lax env path =
   try match find_module_lazy ~alias:true path env with
     {mdl_type=MtyL_alias path1} ->
       let path' = normalize_module_path lax env path1 in
-      if lax || !Clflags.transparent_modules then path' else
+      if lax || !Clflags.no_alias_deps then path' else
       let id = Path.head path in
       if Ident.global id && not (Ident.same id (Path.head path'))
       then add_required_global id;
@@ -3079,7 +3079,7 @@ let lookup_all_dot_constructors ~errors ~use ~loc usage l s env =
 let lookup_module_path ~errors ~use ~loc ~load lid env : Path.t =
   match lid with
   | Lident s ->
-      if !Clflags.transparent_modules && not load then
+      if !Clflags.no_alias_deps && not load then
         fst (lookup_ident_module Don't_load ~errors ~use ~loc s env)
       else
         fst (lookup_ident_module Load ~errors ~use ~loc s env)
