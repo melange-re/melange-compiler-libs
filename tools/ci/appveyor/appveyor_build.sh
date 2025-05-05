@@ -129,7 +129,9 @@ case "$1" in
     elif [[ $PORT = 'mingw32' ]] ; then
       export PATH="$PATH:/usr/i686-w64-mingw32/sys-root/mingw/bin"
     fi
-    run "test $PORT" $MAKE -C "$FULL_BUILD_PREFIX-$PORT" tests
+    if $run_testsuite; then
+      run "test $PORT" $MAKE -C "$FULL_BUILD_PREFIX-$PORT" tests
+    fi
     run "install $PORT" $MAKE -C "$FULL_BUILD_PREFIX-$PORT" install
     if [[ $PORT = 'msvc64' ]] ; then
       run "$MAKE check_all_arches" \
