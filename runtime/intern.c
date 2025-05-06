@@ -772,7 +772,7 @@ value caml_input_val(struct channel *chan)
   char header[32];
   struct marshal_header h;
   char * block;
-  value res;
+  value res; /* must NOT be registered as a GC root */
 
   if (! caml_channel_binary_mode(chan))
     caml_failwith("input_value: not a binary channel");
@@ -825,7 +825,7 @@ CAMLprim value caml_input_value(value vchan)
 CAMLexport value caml_input_val_from_bytes(value str, intnat ofs)
 {
   CAMLparam1 (str);
-  CAMLlocal1 (obj);
+  value obj; /* must NOT be registered as a GC root */
   struct marshal_header h;
 
   /* Initialize global state */
@@ -848,7 +848,7 @@ CAMLprim value caml_input_value_from_bytes(value str, value ofs)
 
 static value input_val_from_block(struct marshal_header * h)
 {
-  value obj;
+  value obj; /* must NOT be registered as a GC root */
   /* Allocate result */
   intern_alloc(h->whsize, h->num_objects);
   /* Fill it in */
