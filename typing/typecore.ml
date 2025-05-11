@@ -3267,7 +3267,7 @@ let rec type_approx env sexp =
   | Pexp_match (_, {pc_rhs=e}::_) -> type_approx env e
   | Pexp_try (e, _) -> type_approx env e
   | Pexp_tuple l ->
-    let labeled_tys = List.map (fun (label, _) -> label, newvar ()) l in
+    let labeled_tys = List.map (fun (label, l) -> label, type_approx env l) l in
     newty (Ttuple labeled_tys)
   | Pexp_ifthenelse (_,e,_) -> type_approx env e
   | Pexp_sequence (_,e) -> type_approx env e
