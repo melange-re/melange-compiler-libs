@@ -513,10 +513,13 @@ OCaml 5.4.0
 - #13884 Correctly index modules in constructors and labels paths
   (Ulysse Gérard, review by Florian Angeletti)
 
+- #13946: refactor the #install_printer code in the debugger and toplevel
+  (Pierre Boutillier, review by Gabriel Scherer and Florian Angeletti)
+
 - #13952: check and document the correctness of `caml_domain_alone ()`.
   (Gabriel Scherer, review by KC Sivaramakrishnan, report by Olivier Nicole)
 
-- #13971 Keep generalized structure from patterns when typing `let`
+- #13971: Keep generalized structure from patterns when typing `let`
   (Leo White, review by Samuel Vivien and Florian Angeletti)
 
 ### Build system:
