@@ -37,9 +37,12 @@ let unsafe_empty_array = ref true
 let flambda = false
 let with_flambda_invariants = false
 let with_cmm_invariants = false
+let with_codegen_invariants = false
 let windows_unicode = 0 != 0
 
 let flat_float_array = true
+let align_double = true
+let align_int64 = true
 
 let function_sections = false
 let afl_instrument = false
@@ -49,9 +52,12 @@ let native_compiler = true
 let architecture = {|arm64|}
 let model = {|default|}
 let system = {|macosx|}
+let target_os_type =
+  "The boot compiler should not be using Config.target_os_type"
 
 let asm = {|as|}
 let asm_cfi_supported = true
+let asm_size_type_directives = false
 let with_frame_pointers = false
 let reserved_header_bits = 0
 
@@ -101,7 +107,7 @@ let max_young_wosize = 256
 let stack_threshold = 32 (* see runtime/caml/config.h *)
 let stack_safety_margin = 6
 let default_executable_name =
-  match Sys.os_type with
+  match target_os_type with
     "Unix" -> "a.out"
   | "Win32" | "Cygwin" -> "camlprog.exe"
   | _ -> "camlprog"
@@ -135,7 +141,9 @@ let bytecomp_c_compiler =
 let native_c_compiler =
   c_compiler ^ " " ^ ocamlopt_cflags ^ " " ^ ocamlopt_cppflags
 let native_c_libraries = {|   -lpthread|}
+let compression_c_libraries = ""
 let native_ldflags = {||}
+let with_nonexecstack_note = false
 let native_pack_linker = {|ld -r -o |}
 let default_rpath = {||}
 let mksharedlibrpath = {||}
@@ -193,6 +201,7 @@ let configuration_variables () =
   p "native_c_compiler" native_c_compiler;
   p "bytecomp_c_libraries" bytecomp_c_libraries;
   p "native_c_libraries" native_c_libraries;
+  p "compression_c_libraries" compression_c_libraries;
   p "native_ldflags" native_ldflags;
   p "native_pack_linker" native_pack_linker;
   p_bool "native_compiler" native_compiler;
@@ -203,7 +212,9 @@ let configuration_variables () =
   p "system" system;
   p "asm" asm;
   p_bool "asm_cfi_supported" asm_cfi_supported;
+  p_bool "asm_size_type_directives" asm_size_type_directives;
   p_bool "with_frame_pointers" with_frame_pointers;
+  p_bool "with_nonexecstack_note" with_nonexecstack_note;
   p "ext_exe" ext_exe;
   p "ext_obj" ext_obj;
   p "ext_asm" ext_asm;
@@ -218,6 +229,8 @@ let configuration_variables () =
   p_bool "safe_string" safe_string;
   p_bool "default_safe_string" default_safe_string;
   p_bool "flat_float_array" flat_float_array;
+  p_bool "align_double" align_double;
+  p_bool "align_int64" align_int64;
   p_bool "function_sections" function_sections;
   p_bool "afl_instrument" afl_instrument;
   p_bool "tsan" tsan;
@@ -225,6 +238,7 @@ let configuration_variables () =
   p_bool "supports_shared_libraries" supports_shared_libraries;
   p_bool "native_dynlink" native_dynlink;
   p_bool "naked_pointers" naked_pointers;
+  p_bool "with_codegen_invariants" with_codegen_invariants;
 
   p "exec_magic_number" exec_magic_number;
   p "cmi_magic_number" cmi_magic_number;

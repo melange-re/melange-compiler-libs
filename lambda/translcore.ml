@@ -20,6 +20,7 @@ open Misc
 open Asttypes
 open Primitive
 open Types
+open Data_types
 open Typedtree
 open Typeopt
 open Lambda
@@ -32,7 +33,7 @@ type error =
 exception Error of Location.t * error
 
 let wrap_single_field_record = ref (fun _ _ lam -> lam)
-let use_dup_for_constant_arrays_bigger_than = 4
+let use_dup_for_constant_mutable_arrays_bigger_than = 4
 
 (* Forward declaration -- to be filled in by Translmod.transl_module *)
 let transl_module =
@@ -162,7 +163,7 @@ let fuse_method_arity parent_params parent_body =
 let rec iter_exn_names f pat =
   match pat.pat_desc with
   | Tpat_var (id, _, _) -> f id
-  | Tpat_alias (p, id, _, _) ->
+  | Tpat_alias (p, id, _, _, _) ->
       f id;
       iter_exn_names f p
   | _ -> ()
@@ -176,6 +177,10 @@ let transl_ident loc env ty path desc =
   | Val_reg | Val_self _ ->
       transl_value_path loc env path
   |  _ -> fatal_error "Translcore.transl_exp: bad Texp_ident"
+
+let is_omitted = function
+  | Arg _ -> false
+  | Omitted () -> true
 
 let rec transl_exp ~scopes e =
   transl_exp1 ~scopes ~in_new_scope:false e
@@ -216,10 +221,10 @@ and transl_exp0 ~in_new_scope ~scopes e =
   | Texp_apply({ exp_desc = Texp_ident(path, _, {val_kind = Val_prim p});
                 exp_type = prim_type } as funct, oargs)
     when List.length oargs >= p.prim_arity
-    && List.for_all (fun (_, arg) -> arg <> None) oargs ->
+    && List.for_all (fun (_, arg) -> not (is_omitted arg)) oargs ->
       let argl, extra_args = cut p.prim_arity oargs in
       let arg_exps =
-         List.map (function _, Some x -> x | _ -> assert false) argl
+         List.map (function _, Arg x -> x | _, Omitted () -> assert false) argl
       in
       let args = transl_list ~scopes arg_exps in
       let prim_exp = if extra_args = [] then Some e else None in
@@ -278,7 +283,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
   | Texp_try(body, exn_pat_expr_list, eff_pat_expr_list) ->
       transl_handler ~scopes e body None exn_pat_expr_list eff_pat_expr_list
   | Texp_tuple el ->
-      let ll, shape = transl_list_with_shape ~scopes el in
+      let ll, shape = transl_list_with_shape ~scopes (List.map snd el) in
       let tag_info = Lambda.Blk_tuple in
       begin try
         Lconst(Const_block(0, tag_info, List.map extract_constant ll))
@@ -361,7 +366,16 @@ and transl_exp0 ~in_new_scope ~scopes e =
   | Texp_record {fields; representation; extended_expression} ->
       transl_record ~scopes e.exp_loc e.exp_env
         fields representation extended_expression
-  | Texp_field(arg, _, lbl) ->
+  | Texp_atomic_loc (arg, _, lbl) ->
+      let shape = Some [Typeopt.value_kind arg.exp_env arg.exp_type; Pintval] in
+      let (arg, lbl) = transl_atomic_loc ~scopes arg lbl in
+      let loc = of_location ~scopes e.exp_loc in
+      Lprim (Pmakeblock (0, Blk_array, Immutable, shape), [arg; lbl], loc)
+  | Texp_field (arg, _, ({ lbl_atomic = Atomic; _ } as lbl)) ->
+      let arg, lbl = transl_atomic_loc ~scopes arg lbl in
+      let loc = of_location ~scopes e.exp_loc in
+      Lprim (Patomic_load, [arg; lbl], loc)
+  | Texp_field (arg, _, lbl) ->
       let targ = transl_exp ~scopes arg in
       begin match lbl.lbl_repres with
           Record_regular ->
@@ -374,6 +388,31 @@ and transl_exp0 ~in_new_scope ~scopes e =
         | Record_extension _ ->
           Lprim (Pfield (lbl.lbl_pos + 1, maybe_pointer e, lbl.lbl_mut, !Lambda.fld_record_extension lbl), [targ], of_location ~scopes e.exp_loc)
       end
+  | Texp_setfield (arg, _, ({ lbl_atomic = Atomic; _ } as lbl), newval) ->
+      let prim =
+        Primitive.simple
+          ~name:"caml_atomic_exchange_field" ~arity:3 ~alloc:false
+      in
+      (* let tag_info =
+        match lbl.lbl_repres with
+        | Record_regular -> !Lambda.fld_record_set lbl
+        | Record_inlined _ -> !Lambda.fld_record_inline_set lbl
+        | Record_float ->
+            fatal_error
+              "Translcore.transl_atomic_loc: atomic field in float record"
+        | Record_unboxed _ ->
+            fatal_error
+              "Translcore.transl_atomic_loc: atomic field in unboxed record"
+        | Record_extension _ -> !Lambda.fld_record_extension_set lbl
+      in *)
+      let arg, lbl = transl_atomic_loc ~scopes arg lbl in
+      let newval = transl_exp ~scopes newval in
+      let loc = of_location ~scopes e.exp_loc in
+      Lprim (
+        Pignore,
+        [Lprim (Pccall prim, [arg; lbl; newval], loc)],
+        loc
+      )
   | Texp_setfield(arg, _, lbl, newval) ->
       let access =
         match lbl.lbl_repres with
@@ -388,43 +427,48 @@ and transl_exp0 ~in_new_scope ~scopes e =
       in
       Lprim(access, [transl_exp ~scopes arg; transl_exp ~scopes newval],
             of_location ~scopes e.exp_loc)
-  | Texp_array expr_list ->
+  | Texp_array (amut, expr_list) ->
       let kind = array_kind e in
       let ll = transl_list ~scopes expr_list in
+      let loc = of_location ~scopes e.exp_loc in
       if !Config.bs_only then
-         Lprim(Pmakearray (kind, Mutable), ll, of_location ~scopes e.exp_loc)
+         Lprim(Pmakearray (kind, amut), ll, loc)
       else
+      let makearray mutability =
+        Lprim (Pmakearray (kind, mutability), ll, loc)
+      in
+      let duparray_to_mutable array =
+        Lprim (Pduparray (kind, Mutable), [array], loc)
+      in
+      let imm_array = makearray Immutable in
       begin try
         (* For native code the decision as to which compilation strategy to
            use is made later.  This enables the Flambda passes to lift certain
            kinds of array definitions to symbols. *)
         (* Deactivate constant optimization if array is small enough *)
-        if List.length ll <= use_dup_for_constant_arrays_bigger_than
+        if amut = Asttypes.Mutable &&
+           List.length ll <= use_dup_for_constant_mutable_arrays_bigger_than
         then begin
           raise Not_constant
         end;
         begin match List.map extract_constant ll with
-        | exception Not_constant when kind = Pfloatarray ->
-            (* We cannot currently lift [Pintarray] arrays safely in Flambda
-               because [caml_modify] might be called upon them (e.g. from
-               code operating on polymorphic arrays, or functions such as
-               [caml_array_blit].
-               To avoid having different Lambda code for
-               bytecode/Closure vs.  Flambda, we always generate
-               [Pduparray] here, and deal with it in [Bytegen] (or in
-               the case of Closure, in [Cmmgen], which already has to
-               handle [Pduparray Pmakearray Pfloatarray] in the case
-               where the array turned out to be inconstant).
+        | exception Not_constant
+          when kind = Pfloatarray && amut = Asttypes.Mutable ->
+            (* We cannot currently lift mutable [Pintarray] arrays safely in
+               Flambda because [caml_modify] might be called upon them
+               (e.g. from code operating on polymorphic arrays, or functions
+               such as [caml_array_blit].
+               To avoid having different Lambda code for bytecode/Closure
+               vs. Flambda, we always generate [Pduparray] for mutable arrays
+               here, and deal with it in [Bytegen] (or in the case of Closure,
+               in [Cmmgen], which already has to handle [Pduparray Pmakearray
+               Pfloatarray] in the case where the array turned out to be
+               inconstant).
                When not [Pfloatarray], the exception propagates to the handler
                below. *)
-            let imm_array =
-              Lprim (Pmakearray (kind, Immutable), ll,
-                     of_location ~scopes e.exp_loc)
-            in
-            Lprim (Pduparray (kind, Mutable), [imm_array],
-                   of_location ~scopes e.exp_loc)
+            duparray_to_mutable imm_array
         | cl ->
-            let imm_array =
+            let const =
               match kind with
               | Paddrarray | Pintarray ->
                   Lconst(Const_block(0, Lambda.Blk_array, cl)) (* ATTENTION: ? [|1;2;3;4|]*)
@@ -433,12 +477,12 @@ and transl_exp0 ~in_new_scope ~scopes e =
               | Pgenarray ->
                   raise Not_constant    (* can this really happen? *)
             in
-            Lprim (Pduparray (kind, Mutable), [imm_array],
-                   of_location ~scopes e.exp_loc)
+            match amut with
+            | Mutable   -> duparray_to_mutable const
+            | Immutable -> const
         end
       with Not_constant ->
-        Lprim(Pmakearray (kind, Mutable), ll,
-              of_location ~scopes e.exp_loc)
+        makearray amut
       end
   | Texp_ifthenelse(cond, ifso, Some ifnot) ->
       Lifthenelse(transl_exp ~scopes cond,
@@ -554,30 +598,19 @@ and transl_exp0 ~in_new_scope ~scopes e =
          optimize the translation just as Lazy.lazy_from_val would
          do *)
       if !Config.bs_only then
-        Lprim(Pmakeblock(Config.lazy_tag, Blk_lazy_general, Mutable, None), [transl_exp ~scopes e], of_location ~scopes e.exp_loc)
+        Lprim(Pmakelazyblock Lazy_tag,
+              [transl_exp ~scopes e],
+              of_location ~scopes e.exp_loc)
       else
       begin match Typeopt.classify_lazy_argument e with
       | `Constant_or_function ->
         (* A constant expr (of type <> float if [Config.flat_float_array] is
            true) gets compiled as itself. *)
          transl_exp ~scopes e
-      | `Float_that_cannot_be_shortcut ->
-          (* We don't need to wrap with Popaque: this forward
-             block will never be shortcutted since it points to a float
-             and Config.flat_float_array is true. *)
-          Lprim(Pmakeblock(Obj.forward_tag, Lambda.default_tag_info, Immutable, None),
-                [transl_exp ~scopes e], of_location ~scopes e.exp_loc)
+      | `Float_that_cannot_be_shortcut
       | `Identifier `Forward_value ->
-         (* CR-someday mshinwell: Consider adding a new primitive
-            that expresses the construction of forward_tag blocks.
-            We need to use [Popaque] here to prevent unsound
-            optimisation in Flambda, but the concept of a mutable
-            block doesn't really match what is going on here.  This
-            value may subsequently turn into an immediate... *)
-         Lprim (Popaque,
-                [Lprim(Pmakeblock(Obj.forward_tag, Lambda.default_tag_info, Immutable, None),
-                       [transl_exp ~scopes e],
-                       of_location ~scopes e.exp_loc)],
+         Lprim (Pmakelazyblock Forward_tag,
+                [transl_exp ~scopes e],
                 of_location ~scopes e.exp_loc)
       | `Identifier `Other ->
          transl_exp ~scopes e
@@ -593,7 +626,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
                             ~attr:function_attribute_disallowing_arity_fusion
                             ~loc:(of_location ~scopes e.exp_loc)
                             ~body:(transl_exp ~scopes e) in
-          Lprim(Pmakeblock(Config.lazy_tag, Lambda.default_tag_info, Mutable, None), [fn],
+          Lprim(Pmakelazyblock Lazy_tag, [fn],
                 of_location ~scopes e.exp_loc)
       end
   | Texp_object (cs, meths) ->
@@ -729,7 +762,7 @@ and transl_apply ~scopes
        non-optional parameter that follows it have been received.
   *)
   let rec build_apply lam args = function
-      (None, optional) :: l ->
+      (Omitted (), optional) :: l ->
         (* Out-of-order partial application; we will need to build a closure *)
         let defs = ref [] in
         let protect name lam =
@@ -759,7 +792,9 @@ and transl_apply ~scopes
         (* Evaluate the remaining arguments;
            if we already passed here this is a no-op. *)
         let l =
-          List.map (fun (arg, opt) -> Option.map (protect "arg") arg, opt) l
+          List.map
+            (fun (arg, opt) -> Typedtree.map_apply_arg (protect "arg") arg, opt)
+            l
         in
         let id_arg = Ident.create_local "param" in
         (* Process remaining arguments and build closure *)
@@ -779,13 +814,14 @@ and transl_apply ~scopes
         List.fold_right
           (fun (id, lam) body -> Llet(Strict, Pgenval, id, lam, body))
           !defs body
-    | (Some arg, optional) :: l ->
+    | (Arg arg, optional) :: l ->
         build_apply lam ((arg, optional) :: args) l
     | [] ->
         lapply lam (List.rev_map fst args)
   in
-  (build_apply lam [] (List.map (fun (l, x) ->
-                                   Option.map (transl_exp ~scopes) x,
+  let transl_arg arg = Typedtree.map_apply_arg (transl_exp ~scopes) arg in
+  (build_apply lam [] (List.map (fun (l, arg) ->
+                                   transl_arg arg,
                                    Btype.is_optional l)
                                 sargs)
      : Lambda.lambda)
@@ -1012,7 +1048,7 @@ and transl_let ~scopes ?(in_structure=false) rec_flag pat_expr_list =
         List.map
           (fun {vb_pat=pat} -> match pat.pat_desc with
               Tpat_var (id,_,_) -> id
-            | Tpat_alias ({pat_desc=Tpat_any}, id,_,_) -> id
+            | Tpat_alias ({pat_desc=Tpat_any}, id,_,_,_) -> id
             | _ -> assert false)
         pat_expr_list in
       let transl_case {vb_expr=expr; vb_attributes; vb_rec_kind = rkind;
@@ -1144,6 +1180,23 @@ and transl_record ~scopes loc env fields repres opt_init_expr =
     end
   end
 
+and transl_atomic_loc ~scopes arg lbl =
+  let arg = transl_exp ~scopes arg in
+  let offset =
+    match lbl.lbl_repres with
+    | Record_regular -> 0
+    | Record_inlined _ -> 0
+    | Record_float ->
+        fatal_error
+          "Translcore.transl_atomic_loc: atomic field in float record"
+    | Record_unboxed _ ->
+        fatal_error
+          "Translcore.transl_atomic_loc: atomic field in unboxed record"
+    | Record_extension _ -> 1
+  in
+  let lbl = Lconst (Const_base (Const_int (lbl.lbl_pos + offset), default_pointer_info)) in
+  (arg, lbl)
+
 and transl_match ~scopes e arg pat_expr_list partial =
   let rewrite_case (val_cases, exn_cases, static_handlers as acc)
         ({ c_lhs; c_guard; c_rhs } as case) =
@@ -1223,8 +1276,9 @@ and transl_match ~scopes e arg pat_expr_list partial =
     | {exp_desc = Texp_tuple argl}, [] ->
       assert (static_handlers = []);
       Matching.for_multiple_match ~scopes e.exp_loc
-        (transl_list ~scopes argl) val_cases partial
+        (transl_list ~scopes (List.map snd argl)) val_cases partial
     | {exp_desc = Texp_tuple argl}, _ :: _ ->
+        let argl = List.map snd argl in
         let val_ids =
           List.map
             (fun arg ->

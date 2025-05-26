@@ -879,7 +879,7 @@ let rec choice ctx t =
     | Prunstack | Pperform | Presume | Preperform | Pdls_get
 
     (* we don't handle atomic primitives *)
-    | Patomic_exchange | Patomic_cas | Patomic_fetch_add | Patomic_load _
+    | Patomic_load
 
     (* we don't handle array indices as destinations yet *)
     | (Pmakearray _ | Pduparray _)
@@ -895,6 +895,13 @@ let rec choice ctx t =
     | Paddbint _ | Psubbint _ | Pmulbint _ | Pdivbint _ | Pmodbint _
     | Pandbint _ | Porbint _ | Pxorbint _ | Plslbint _ | Plsrbint _ | Pasrbint _
     | Pbintcomp _
+
+    (* Lazy blocks should never contain a recursive call directly:
+       either it's a closure (Lazy_tag), or a variable (Forward_tag).
+       The case 'let foo = recursive_call in lazy foo' could be translated to
+       use tmc in the cases where 'foo' might be of type lazy or float, but
+       given the fragility of such a transformation we choose not to. *)
+    | Pmakelazyblock _
 
     (* more common cases... *)
     | Pbigarrayref _ | Pbigarrayset _

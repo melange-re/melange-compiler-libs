@@ -17,9 +17,10 @@
    determining their representation. *)
 
 open Types
+open Data_types
 
 val constructor_has_optional_shape:
-  Types.constructor_description -> bool
+  Data_types.constructor_description -> bool
 
 val extension_descr:
   current_unit:(Unit_info.t option) -> Path.t -> extension_constructor ->

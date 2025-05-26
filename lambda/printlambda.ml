@@ -178,7 +178,6 @@ let print_taginfo ppf = function
   | Blk_na s -> fprintf ppf "%s"  s
   | Blk_some -> fprintf ppf "some"
   | Blk_some_not_nested -> fprintf ppf "some_not_nested"
-  | Blk_lazy_general -> fprintf ppf "lazy_general"
   | Blk_class -> fprintf ppf "class"
   | Blk_module_export _ -> fprintf ppf "module/exports"
   | Blk_record_inlined {fields = ss }
@@ -190,10 +189,14 @@ let primitive ppf = function
   | Pignore -> fprintf ppf "ignore"
   | Pgetglobal id -> fprintf ppf "global %a" Ident.print id
   | Psetglobal id -> fprintf ppf "setglobal %a" Ident.print id
-  | Pmakeblock(tag, taginfo, Immutable, _) ->
-      fprintf ppf "makeblock %i%a" tag print_taginfo taginfo
-  | Pmakeblock(tag, taginfo, Mutable, _) ->
-      fprintf ppf "makemutable %i%a" tag print_taginfo taginfo
+  | Pmakeblock(tag, taginfo, Immutable, shape) ->
+      fprintf ppf "makeblock %i%a%a" tag print_taginfo taginfo block_shape shape
+  | Pmakeblock(tag, taginfo, Mutable, shape) ->
+      fprintf ppf "makemutable %i%a%a" tag print_taginfo taginfo block_shape shape
+  | Pmakelazyblock Lazy_tag ->
+      fprintf ppf "makelazyblock"
+  | Pmakelazyblock Forward_tag ->
+      fprintf ppf "makeforwardblock"
   | Pfield (n, ptr, mut, fld) ->
       let instr =
         match ptr, mut with
@@ -388,13 +391,7 @@ let primitive ppf = function
   | Pbswap16 -> fprintf ppf "bswap16"
   | Pbbswap(bi) -> print_boxed_integer "bswap" ppf bi
   | Pint_as_pointer -> fprintf ppf "int_as_pointer"
-  | Patomic_load {immediate_or_pointer} ->
-      (match immediate_or_pointer with
-        | Immediate -> fprintf ppf "atomic_load_imm"
-        | Pointer -> fprintf ppf "atomic_load_ptr")
-  | Patomic_exchange -> fprintf ppf "atomic_exchange"
-  | Patomic_cas -> fprintf ppf "atomic_cas"
-  | Patomic_fetch_add -> fprintf ppf "atomic_fetch_add"
+  | Patomic_load -> fprintf ppf "atomic_load"
   | Popaque -> fprintf ppf "opaque"
   | Pdls_get -> fprintf ppf "dls_get"
   | Ppoll -> fprintf ppf "poll"
@@ -406,6 +403,7 @@ let name_of_primitive = function
   | Pgetglobal _ -> "Pgetglobal"
   | Psetglobal _ -> "Psetglobal"
   | Pmakeblock _ -> "Pmakeblock"
+  | Pmakelazyblock _ -> "Pmakelazyblock"
   | Pfield _ -> "Pfield"
   | Pfield_computed -> "Pfield_computed"
   | Psetfield _ -> "Psetfield"
@@ -500,13 +498,7 @@ let name_of_primitive = function
   | Pbswap16 -> "Pbswap16"
   | Pbbswap _ -> "Pbbswap"
   | Pint_as_pointer -> "Pint_as_pointer"
-  | Patomic_load {immediate_or_pointer} ->
-      (match immediate_or_pointer with
-        | Immediate -> "atomic_load_imm"
-        | Pointer -> "atomic_load_ptr")
-  | Patomic_exchange -> "Patomic_exchange"
-  | Patomic_cas -> "Patomic_cas"
-  | Patomic_fetch_add -> "Patomic_fetch_add"
+  | Patomic_load -> "Patomic_load"
   | Popaque -> "Popaque"
   | Prunstack -> "Prunstack"
   | Presume -> "Presume"

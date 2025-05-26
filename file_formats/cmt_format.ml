@@ -153,21 +153,21 @@ let iter_on_occurrences
   let path_in_type typ name =
     match Types.get_desc typ with
     | Tconstr (type_path, _, _) ->
-      Some (Path.Pdot (type_path,  name))
+      Some (Path.Pextra_ty(type_path, Pcstr_ty name))
     | _ -> None
   in
   let add_constructor_description env lid =
     function
-    | { Types.cstr_tag = Cstr_extension {path; _}; _ } ->
+    | { Data_types.cstr_tag = Cstr_extension {path; _}; _ } ->
         f ~namespace:Extension_constructor env path lid
-    | { Types.cstr_uid = Predef name; _} ->
+    | { Data_types.cstr_uid = Predef name; _} ->
         let id = List.assoc name Predef.builtin_idents in
         f ~namespace:Constructor env (Pident id) lid
-    | { Types.cstr_res; cstr_name; _ } ->
+    | { Data_types.cstr_res; cstr_name; _ } ->
         let path = path_in_type cstr_res cstr_name in
         Option.iter (fun path -> f ~namespace:Constructor env path lid) path
   in
-  let add_label env lid { Types.lbl_name; lbl_res; _ } =
+  let add_label env lid { Data_types.lbl_name; lbl_res; _ } =
     let path = path_in_type lbl_res lbl_name in
     Option.iter (fun path -> f ~namespace:Label env path lid) path
   in
@@ -186,7 +186,8 @@ let iter_on_occurrences
       | Texp_construct (lid, constr_desc, _) ->
           add_constructor_description exp_env lid constr_desc
       | Texp_field (_, lid, label_desc)
-      | Texp_setfield (_, lid, label_desc, _) ->
+      | Texp_setfield (_, lid, label_desc, _)
+      | Texp_atomic_loc (_, lid, label_desc) ->
           add_label exp_env lid label_desc
       | Texp_new (path, lid, _) ->
           f ~namespace:Class exp_env path lid
@@ -235,8 +236,8 @@ let iter_on_occurrences
       (match ctyp_desc with
       | Ttyp_constr (path, lid, _ctyps) ->
           f ~namespace:Type ctyp_env path lid
-      | Ttyp_package {pack_path; pack_txt} ->
-          f ~namespace:Module_type ctyp_env pack_path pack_txt
+      | Ttyp_package {tpt_path; tpt_txt} ->
+          f ~namespace:Module_type ctyp_env tpt_path tpt_txt
       | Ttyp_class (path, lid, _typs) ->
           (* Deprecated syntax to extend a polymorphic variant *)
           f ~namespace:Type ctyp_env path lid
@@ -367,13 +368,31 @@ let index_occurrences binary_annots =
   in
   let f ~namespace env path lid =
     let not_ghost { Location.loc = { loc_ghost; _ }; _ } = not loc_ghost in
-    if not_ghost lid then
+    let reduce_and_store ~namespace lid path = if not_ghost lid then
       match Env.shape_of_path ~namespace env path with
       | exception Not_found -> ()
       | { uid = Some (Predef _); _ } -> ()
       | path_shape ->
         let result = Shape_reduce.local_reduce_for_uid env path_shape in
         index := (lid, result) :: !index
+    in
+    (* Shape reduction can be expensive, but the persistent memoization tables
+       should make these successive reductions fast. *)
+    let rec index_components namespace lid path  =
+      let module_ = Shape.Sig_component_kind.Module in
+      let scraped_path = Path.scrape_extra_ty path in
+      match lid.Location.txt, scraped_path with
+      | Longident.Ldot (lid', _), Path.Pdot (path', _) ->
+        reduce_and_store ~namespace lid path;
+        index_components module_ lid' path'
+      | Longident.Lapply (lid', lid''), Path.Papply (path', path'') ->
+        index_components module_ lid'' path'';
+        index_components module_ lid' path'
+      | Longident.Lident _, _ ->
+        reduce_and_store ~namespace lid path;
+      | _, _ -> ()
+    in
+    index_components namespace lid path
   in
   iter_on_annots (iter_on_occurrences ~f) binary_annots;
   !index
@@ -460,12 +479,16 @@ let save_cmt target binary_annots initial_env cmi shape =
          let cmt_annots = clear_env binary_annots in
          let cmt_uid_to_decl = index_declarations cmt_annots in
          let source_digest = Option.map Digest.file sourcefile in
+         let cmt_args =
+           let cmt_args = Array.copy Sys.argv in
+           cmt_args.(0) <- Location.rewrite_absolute_path Sys.argv.(0);
+           cmt_args in
          let cmt = {
            cmt_modname = Unit_info.Artifact.modname target;
            cmt_annots;
            cmt_declaration_dependencies = !uids_deps;
            cmt_comments = Lexer.comments ();
-           cmt_args = Sys.argv;
+           cmt_args;
            cmt_sourcefile = sourcefile;
            cmt_builddir = Location.rewrite_absolute_path (Sys.getcwd ());
            cmt_loadpath = Load_path.get_paths ();
