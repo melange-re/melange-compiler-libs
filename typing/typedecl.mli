@@ -106,8 +106,8 @@ type error =
   | Boxed_and_unboxed
   | Nonrec_gadt
   | Invalid_private_row_declaration of type_expr
+  | Atomic_field_must_be_mutable of string
 
 exception Error of Location.t * error
 
-val report_error: error Format_doc.format_printer
-val report_error_doc: error Format_doc.printer
+val report_error: loc:Location.t -> error -> Location.report

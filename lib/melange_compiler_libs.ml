@@ -11,6 +11,7 @@ module Cmi_format = Cmi_format
 module Cmt_format = Cmt_format
 module Config = Config
 module Ctype = Ctype
+module Data_types = Data_types
 module Datarepr = Datarepr
 module Env = Env
 module Envaux = Envaux

@@ -50,21 +50,20 @@ type tag_info =
       ; attributes: Parsetree.attributes
       }
   | Blk_record_ext of { fields: string array; exn: bool }
-  | Blk_lazy_general
   | Blk_class (* Ocaml style class*)
 
 let default_tag_info : tag_info = Blk_na ""
 let blk_record = ref (fun fields ->
-  let all_labels_info = fields |> Array.map (fun (x,_) -> x.Types.lbl_name) in
+  let all_labels_info = fields |> Array.map (fun (x,_) -> x.Data_types.lbl_name) in
   Blk_record all_labels_info
   )
 
 let blk_record_ext =  ref (fun ~is_exn fields ->
-    let all_labels_info = fields |> Array.map (fun (x,_) -> x.Types.lbl_name) in
+    let all_labels_info = fields |> Array.map (fun (x,_) -> x.Data_types.lbl_name) in
     Blk_record_ext { fields = all_labels_info; exn = is_exn })
 
 let blk_record_inlined = ref (fun fields name num_nonconst attributes ->
-  let fields = fields |> Array.map (fun (x,_) -> x.Types.lbl_name) in
+  let fields = fields |> Array.map (fun (x,_) -> x.Data_types.lbl_name) in
   Blk_record_inlined {fields; name; num_nonconst; attributes }
 )
 
@@ -84,13 +83,13 @@ type field_dbg_info =
   | Fld_cons
   | Fld_array
 
-let fld_record = ref (fun (lbl : Types.label_description) ->
+let fld_record = ref (fun (lbl : Data_types.label_description) ->
   Fld_record {name = lbl.lbl_name; mutable_flag = Mutable})
 
-let fld_record_inline = ref (fun (lbl : Types.label_description) ->
+let fld_record_inline = ref (fun (lbl : Data_types.label_description) ->
   Fld_record_inline {name = lbl.lbl_name})
 
-let fld_record_extension = ref (fun (lbl : Types.label_description) ->
+let fld_record_extension = ref (fun (lbl : Data_types.label_description) ->
   Fld_record_extension {name = lbl.lbl_name})
 
 let ref_field_info : field_dbg_info =
@@ -105,11 +104,11 @@ type set_field_dbg_info =
     | Fld_record_extension_set of string
 
 let ref_field_set_info : set_field_dbg_info = Fld_record_set "contents"
-let fld_record_set = ref ( fun (lbl : Types.label_description) ->
+let fld_record_set = ref ( fun (lbl : Data_types.label_description) ->
   Fld_record_set lbl.lbl_name  )
-let fld_record_inline_set = ref ( fun (lbl : Types.label_description) ->
+let fld_record_inline_set = ref ( fun (lbl : Data_types.label_description) ->
   Fld_record_inline_set lbl.lbl_name  )
-let fld_record_extension_set = ref ( fun (lbl : Types.label_description) ->
+let fld_record_extension_set = ref ( fun (lbl : Data_types.label_description) ->
   Fld_record_extension_set lbl.lbl_name  )
 
 type immediate_or_pointer =
@@ -125,6 +124,14 @@ type is_safe =
   | Safe
   | Unsafe
 
+type lazy_block_tag =
+  | Lazy_tag
+  | Forward_tag
+
+let tag_of_lazy_tag = function
+  | Lazy_tag -> Config.lazy_tag
+  | Forward_tag -> Obj.forward_tag
+
 type primitive =
   | Pbytes_to_string
   | Pbytes_of_string
@@ -134,6 +141,7 @@ type primitive =
   | Psetglobal of Ident.t
   (* Operations on heap blocks *)
   | Pmakeblock of int * tag_info * mutable_flag * block_shape
+  | Pmakelazyblock of lazy_block_tag
   | Pfield of int * immediate_or_pointer * mutable_flag * field_dbg_info
   | Pfield_computed
   | Psetfield of int * immediate_or_pointer * initialization_or_assignment * set_field_dbg_info
@@ -229,10 +237,7 @@ type primitive =
   (* Integer to external pointer *)
   | Pint_as_pointer
   (* Atomic operations *)
-  | Patomic_load of {immediate_or_pointer : immediate_or_pointer}
-  | Patomic_exchange
-  | Patomic_cas
-  | Patomic_fetch_add
+  | Patomic_load
   (* Inhibition of optimisation *)
   | Popaque
   (* Fetching domain-local state *)
@@ -878,14 +883,18 @@ let transl_extension_path loc env path =
 let transl_class_path loc env path =
   transl_path Env.find_class_address loc env path
 
-let transl_prim mod_name name =
-  let pers = Ident.create_persistent mod_name in
-  let env = Env.add_persistent_structure pers Env.empty in
-  let lid = Longident.Ldot (Longident.Lident mod_name, name) in
-  match Env.find_value_by_name lid env with
-  | path, _ -> transl_value_path Loc_unknown env path
-  | exception Not_found ->
-      fatal_error ("Primitive " ^ name ^ " not found.")
+let transl_prim modname field =
+  let mod_ident = Ident.create_persistent modname in
+  let env = Env.add_persistent_structure mod_ident Env.initial in
+  match Env.open_pers_signature modname env with
+  | Error `Not_found ->
+      fatal_errorf "Module %s unavailable." modname
+  | Ok env -> (
+      match Env.find_value_by_name (Longident.Lident field) env with
+      | exception Not_found ->
+          fatal_errorf "Primitive %s.%s not found." modname field
+      | path, _ -> transl_value_path Loc_unknown env path
+    )
 
 (* Compile a sequence of expressions *)
 
