@@ -34,7 +34,7 @@ jobs:
 # We then upload the compiler tree as a build artifact to enable re-use in
 # subsequent jobs.
   build:
-    runs-on: 'ubuntu-latest'
+    runs-on: ubuntu-latest
     outputs:
       manual_changed: ${{ steps.manual.outputs.manual_changed }}
     steps:
