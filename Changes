@@ -251,6 +251,12 @@ OCaml 5.4.0
 
 ### Code generation and optimizations:
 
+- #13262, #14074: fix performance issue on Apple Silicon macOS by emitting
+  `stlr` instead of `dmb ishld; str`.
+  (KC Sivaramakrishnan, report by François Pottier, analysis by Frédéric Bour,
+  Xavier Leroy, Miod Vallat, Gabriel Scherer and Stephen Dolan, review by Miod
+  Vallat, Vincent Laviron and Xavier Leroy)
+
 * #13050: Use '$' instead of '.' to separate module names in symbol names.
   This changes mangling of OCaml identifiers from
   `camlModule.name_NNN` to `camlModule$name_NNN`. Additionally it
