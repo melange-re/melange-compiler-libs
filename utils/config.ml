@@ -78,18 +78,18 @@ let ar_supports_response_files = true
 
 let tsan = false
 
-let exec_magic_number = {magic|Caml1999X035|magic}
+let exec_magic_number = {magic|Caml1999X036|magic}
     (* exec_magic_number is duplicated in runtime/caml/exec.h *)
-and cmi_magic_number = {magic|Caml1999I035|magic}
-and cmo_magic_number = {magic|Caml1999O035|magic}
-and cma_magic_number = {magic|Caml1999A035|magic}
-and cmx_magic_number = {magic|Caml1999y035|magic}
-and cmxa_magic_number = {magic|Caml1999z035|magic}
-and ast_impl_magic_number = {magic|Caml1999M035|magic}
-and ast_intf_magic_number = {magic|Caml1999N035|magic}
-and cmxs_magic_number = {magic|Caml1999D035|magic}
-and cmt_magic_number = {magic|Caml1999T035|magic}
-and linear_magic_number = {magic|Caml1999L035|magic}
+and cmi_magic_number = {magic|Caml1999I036|magic}
+and cmo_magic_number = {magic|Caml1999O036|magic}
+and cma_magic_number = {magic|Caml1999A036|magic}
+and cmx_magic_number = {magic|Caml1999y036|magic}
+and cmxa_magic_number = {magic|Caml1999z036|magic}
+and ast_impl_magic_number = {magic|Caml1999M036|magic}
+and ast_intf_magic_number = {magic|Caml1999N036|magic}
+and cmxs_magic_number = {magic|Caml1999D036|magic}
+and cmt_magic_number = {magic|Caml1999T036|magic}
+and linear_magic_number = {magic|Caml1999L036|magic}
 
 let safe_string = true
 let default_safe_string = true
