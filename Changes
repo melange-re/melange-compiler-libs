@@ -675,6 +675,10 @@ OCaml 5.4.0
 - #14070: also point to label mismatches in error messages for labelled tuples
   (Florian Angeletti, review by Gabriel Scherer)
 
+- #14105: Fix a loop in Pprintast that could result in a hang when printing
+  constructor `(::)` in isolation.
+  (Ulysse Gérard, review by Nicolás Ojeda Bär and Florian Angeletti)
+
 OCaml 5.3.0 (8 January 2025)
 ----------------------------
 
