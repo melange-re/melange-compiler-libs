@@ -679,6 +679,9 @@ OCaml 5.4.0
   constructor `(::)` in isolation.
   (Ulysse Gérard, review by Nicolás Ojeda Bär and Florian Angeletti)
 
+- #14108: toplevel, fix a typo in directive type mismatch
+  (Florian Angeletti, review by Gabriel Scherer)
+
 OCaml 5.3.0 (8 January 2025)
 ----------------------------
 
