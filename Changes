@@ -249,6 +249,9 @@ OCaml 5.4.0
   (Gabriel Scherer, review by Damien Doligez and Guillaume Munch-Maccagnoni,
    report by Emilio Jesús Gallego Arias and Olivier Nicole)
 
+- #14057: Don't update memprof too early at the end of a minor GC.
+  (Nick Barnes, review by Damien Doligez).
+
 ### Code generation and optimizations:
 
 - #13262, #14074: fix performance issue on Apple Silicon macOS by emitting
