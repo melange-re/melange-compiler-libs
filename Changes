@@ -703,6 +703,11 @@ OCaml 5.4.0
 - #14108: toplevel, fix a typo in directive type mismatch
   (Florian Angeletti, review by Gabriel Scherer)
 
+- #13586, #14093: Fix closing an out_channel during flush
+  (Stephen Dolan, report by Jan Midtgaard, investigation by Nick Roberts,
+   review by Antonin Décimo and Miod Vallat)
+
+
 OCaml 5.3.0 (8 January 2025)
 ----------------------------
 
