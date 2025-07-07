@@ -360,16 +360,15 @@ G(name):
         SWITCH_C_TO_OCAML
 .endm
 
-/* Invoke __tsan_func_entry(return address in the caller) */
+/* Invoke caml_tsan_func_entry_asm (return address in the caller) */
 .macro TSAN_ENTER_FUNCTION
         mov     x0, x30        /* arg1: return address in caller */
-        TSAN_C_CALL G(__tsan_func_entry)
+        TSAN_C_CALL G(caml_tsan_func_entry_asm)
 .endm
 
-/* Invoke __tsan_func_exit(0) */
+/* Invoke caml_tsan_func_exit_asm */
 .macro TSAN_EXIT_FUNCTION
-        mov     x0, xzr
-        TSAN_C_CALL G(__tsan_func_exit)
+        TSAN_C_CALL G(caml_tsan_func_exit_asm)
 .endm
 
 /* This is similar to SAVE_ALL_REGS, but only saving the caller-saved
@@ -673,7 +672,7 @@ FUNCTION(caml_start_program)
        OCaml stack, and we are still on a C stack at this point. */
         mov     x0, x30        /* arg1: return address in caller */
         TSAN_SETUP_C_CALL
-        bl      G(__tsan_func_entry)
+        bl      G(caml_tsan_func_entry_asm)
         TSAN_CLEANUP_AFTER_C_CALL
         ldr     x0, [sp], 16
         CFI_ADJUST(-16)
@@ -775,9 +774,8 @@ L(return_result):
        OCaml stack, and we are back to a C stack at this point. */
         str     x0, [sp, -16]!
         CFI_ADJUST(16)
-        mov     x0, xzr
         TSAN_SETUP_C_CALL
-        bl      G(__tsan_func_exit)
+        bl      G(caml_tsan_func_exit_asm)
         TSAN_CLEANUP_AFTER_C_CALL
         ldr     x0, [sp], 16
         CFI_ADJUST(-16)
@@ -923,7 +921,7 @@ FUNCTION(caml_callback_asm)
         stp     x2, x30, [sp, -16]!
         CFI_ADJUST(16)
         mov     x0, x30 /* return address */
-        bl      G(__tsan_func_entry)
+        bl      G(caml_tsan_func_entry_asm)
         ldp     x2, x30, [sp], 16
         CFI_ADJUST(-16)
         ldp     x0, x1, [sp], 16
@@ -948,7 +946,7 @@ FUNCTION(caml_callback2_asm)
         stp     x2, x30, [sp, -16]!
         CFI_ADJUST(16)
         mov     x0, x30 /* return address */
-        bl      G(__tsan_func_entry)
+        bl      G(caml_tsan_func_entry_asm)
         ldp     x2, x30, [sp], 16
         CFI_ADJUST(-16)
         ldp     x0, x1, [sp], 16
@@ -974,7 +972,7 @@ FUNCTION(caml_callback3_asm)
         stp     x2, x30, [sp, -16]!
         CFI_ADJUST(16)
         mov     x0, x30 /* return address */
-        bl      G(__tsan_func_entry)
+        bl      G(caml_tsan_func_entry_asm)
         ldp     x2, x30, [sp], 16
         CFI_ADJUST(-16)
         ldp     x0, x1, [sp], 16

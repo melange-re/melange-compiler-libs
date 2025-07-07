@@ -6,6 +6,13 @@ OCaml 5.4.1
 - #14010: Fix miscompilation / liveness errors for string operations
   (Mark Shinwell, Xavier Clerc, review by Xavier Leroy and Gabriel Scherer)
 
+- #14065: Fix function signature mismatch of `__tsan_func_exit` with GCC 15.
+  Check in the configure step if the TSan provided internal builtins are the
+  same as what we expect, introduce `caml_tsan_*` wrappers for the `__tsan_*`
+  functions we use.
+  (Hari Hara Naveen S, report by Hari Hara Naveen S,
+  review by Gabriel Scherer, Antonin Décimo, Olivier Nicole)
+
 - #14417: Fix issue with nested packs on macOS.
   (Vincent Laviron, report by Kate Deplaix, review by Gabriel Scherer)
 
