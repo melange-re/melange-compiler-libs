@@ -715,6 +715,10 @@ OCaml 5.4.0
   (Stephen Dolan, report by Jan Midtgaard, investigation by Nick Roberts,
    review by Antonin Décimo and Miod Vallat)
 
+- #14101, #14139: define atomic helper types inside `caml/misc.h` to improve
+  header compatibility with C++
+  (Florian Angeletti, report by Kate Deplaix, review by Gabriel Scherer)
+
 - #14135: Fix a rare internal typechecker error when combining recursive
   modules, polymorphic fields or methods, and constrained type parameters.
   (Florian Angeletti, review by Gabriel Scherer)
