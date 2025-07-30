@@ -150,7 +150,7 @@ Caml_inline int stack_cache_bucket (mlsize_t wosize) {
     ++bucket;
     size_bucket_wsz += size_bucket_wsz;
   }
-
+  CAMLassert(wosize>=size_bucket_wsz/2);
   return -1;
 }
 
@@ -458,6 +458,7 @@ int caml_try_realloc_stack(asize_t required_space)
   stack_used = Stack_high(old_stack) - (value*)old_stack->sp;
   wsize = Stack_high(old_stack) - Stack_base(old_stack);
   uintnat max_stack_wsize = caml_max_stack_wsize;
+  wsize = wsize & (~1); // zero alignment bit
   do {
     if (wsize >= max_stack_wsize) return 0;
     wsize *= 2;

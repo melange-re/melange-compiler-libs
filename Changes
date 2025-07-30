@@ -723,6 +723,9 @@ OCaml 5.4.0
   modules, polymorphic fields or methods, and constrained type parameters.
   (Florian Angeletti, review by Gabriel Scherer)
 
+- #14169: runtime, fix cache miss within the stack fragments cache
+  (Florian Angeletti, review by Gabriel Scherer)
+
 OCaml 5.3.0 (8 January 2025)
 ----------------------------
 
