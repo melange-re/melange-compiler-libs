@@ -732,6 +732,9 @@ OCaml 5.4.0
 - #14200, #14202 : bad variance check with private aliases
   (Jacques Garrigue, report and review by Stephen Dolan)
 
+- #14061, #14209: fix a memory-ordering bug in Weak.set that could
+  result in uninitialized memory seen by Weak.get on another domain.
+  (Damien Doligez, review by Gabriel Scherer)
 
 OCaml 5.3.0 (8 January 2025)
 ----------------------------
