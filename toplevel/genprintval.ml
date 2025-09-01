@@ -207,6 +207,8 @@ module Make(O : OBJ)(EVP : EVALPATH with type valu = O.t) = struct
        a module that has been opened. *)
 
     let tree_of_qualified lookup_all get_path env ty_path name =
+      (*First, we rewrite double underscore [__] into [.] whenever possible *)
+      let ty_path = Out_type.rewrite_double_underscore_paths env ty_path in
       (* If [ty_path] is [M.N.t] and [name] is [Foo], we want to find
          a short name for [M.N.Foo] in the current typing environment.
          Our strategy is to try [Foo], [N.Foo] and [M.N.Foo] in

@@ -351,8 +351,8 @@ OCaml 5.4.0
   output.
   (Romain Beauxis, review by David Allsopp)
 
-- #12642, #13536: in the toplevel, print shorter paths for constructors
-  and labels when only some modules along their path are open.
+- #12642, #13536, #14184, #14192: in the toplevel, print shorter paths for
+  constructors and labels when only some modules along their path are open.
   (Gabriel Scherer, review by Florian Angeletti)
 
 - #13199, #13485, #13665, #13762, #13965: Support running native debuggers in
