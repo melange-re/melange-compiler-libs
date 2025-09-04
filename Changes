@@ -309,9 +309,8 @@ OCaml 5.4.0
   default environment (where `TEMP` is set), there is no discernible change.
   (Antonin Décimo, review by Nicolás Ojeda Bär and David Allsopp)
 
-- #13504, #13625: Add `Thread.set_current_thread_name`.
+- #13504, #13625, #14223: Add `Thread.set_current_thread_name`.
   (Romain Beauxis, review by Gabriel Scherer and Antonin Décimo)
-
 
 * #13376: Allow Dynlink.loadfile_private to load bytecode libraries with
   internal dependencies
