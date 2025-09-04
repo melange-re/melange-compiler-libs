@@ -736,6 +736,11 @@ OCaml 5.4.0
   result in uninitialized memory seen by Weak.get on another domain.
   (Damien Doligez, review by Gabriel Scherer)
 
+- #14214, #14221: fix a confused error message for module inclusions,
+  functor error messages were missing some type equalities potentially leading
+  to nonsensical "type t is not compatible with type t" submessage
+  (Florian Angeletti, report by Basile Clément, review by Gabriel Scherer)
+
 OCaml 5.3.0 (8 January 2025)
 ----------------------------
 
