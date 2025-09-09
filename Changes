@@ -471,7 +471,7 @@ OCaml 5.4.0
 - #13748: Add a .editorconfig file for basic editor auto-configuration.
   (Antonin Décimo, review by Gabriel Scherer and David Allsopp)
 
-- #13302: Store locations of longidents components
+- #13302, #14236: Store locations of longidents components
   (Ulysse Gérard and Jules Aguillon, review by Jules Aguillon
    and Florian Angeletti)
 
