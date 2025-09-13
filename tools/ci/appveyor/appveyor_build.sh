@@ -129,6 +129,13 @@ case "$1" in
     elif [[ $PORT = 'mingw32' ]] ; then
       export PATH="$PATH:/usr/i686-w64-mingw32/sys-root/mingw/bin"
     fi
+    run_testsuite=true
+    if [[ -n $APPVEYOR_PULL_REQUEST_NUMBER ]]; then
+      API_URL="https://api.github.com/repos/$APPVEYOR_REPO_NAME/issues/$APPVEYOR_PULL_REQUEST_NUMBER"
+      if curl --silent "$API_URL/labels" | grep -q 'CI: Skip testsuite'; then
+        run_testsuite=false
+      fi
+    fi
     if $run_testsuite; then
       run "test $PORT" $MAKE -C "$FULL_BUILD_PREFIX-$PORT" tests
     fi
