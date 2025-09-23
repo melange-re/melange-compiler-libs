@@ -16,6 +16,10 @@ OCaml 5.4.1
 - #14417: Fix issue with nested packs on macOS.
   (Vincent Laviron, report by Kate Deplaix, review by Gabriel Scherer)
 
+- #14213: Fix shadow-stack-related crashes with TSan
+  (Olivier Nicole, report by Nathan Taylor, review by Gabriel Scherer and
+   Stefan Muenzel)
+
 - #14255: Fix TSan bug with C calls that take many arguments
   (Olivier Nicole and Miod Vallat, report by Nathan Taylor, review by Gabriel
    Scherer)
