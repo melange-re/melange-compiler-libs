@@ -7,7 +7,7 @@ WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
     #2 camlUnhandled$entry <implemspecific> (<implemspecific>)
     #3 caml_program <implemspecific> (<implemspecific>)
 
-  Previous read of size 8 at <implemspecific> by thread T1 (mutexes: write M<implemspecific>):
+  Previous read of size 8 at <implemspecific> by thread T2 (mutexes: write M<implemspecific>):
     #0 camlUnhandled$other_domain_<implemspecific> <implemspecific> (<implemspecific>)
     #1 camlStdlib__Domain$body_<implemspecific> <implemspecific> (<implemspecific>)
 
@@ -29,7 +29,7 @@ WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
     #2 caml_init_domains <implemspecific> (<implemspecific>)
     #3 caml_init_gc <implemspecific> (<implemspecific>)
 
-  Thread T1 (tid=<implemspecific>, running) created by main thread at:
+  Thread T2 (tid=<implemspecific>, running) created by main thread at:
     #0 pthread_create <implemspecific> (<implemspecific>)
     #1 caml_domain_spawn <implemspecific> (<implemspecific>)
     #2 caml_c_call <implemspecific> (<implemspecific>)
@@ -58,7 +58,7 @@ WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
     #9 camlUnhandled$entry <implemspecific> (<implemspecific>)
     #10 caml_program <implemspecific> (<implemspecific>)
 
-  Previous read of size 8 at <implemspecific> by thread T1 (mutexes: write M<implemspecific>):
+  Previous read of size 8 at <implemspecific> by thread T2 (mutexes: write M<implemspecific>):
     #0 camlUnhandled$other_domain_<implemspecific> <implemspecific> (<implemspecific>)
     #1 camlStdlib__Domain$body_<implemspecific> <implemspecific> (<implemspecific>)
 
@@ -80,7 +80,7 @@ WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
     #2 caml_init_domains <implemspecific> (<implemspecific>)
     #3 caml_init_gc <implemspecific> (<implemspecific>)
 
-  Thread T1 (tid=<implemspecific>, running) created by main thread at:
+  Thread T2 (tid=<implemspecific>, running) created by main thread at:
     #0 pthread_create <implemspecific> (<implemspecific>)
     #1 caml_domain_spawn <implemspecific> (<implemspecific>)
     #2 caml_c_call <implemspecific> (<implemspecific>)

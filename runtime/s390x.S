@@ -368,12 +368,26 @@ caml_system__code_begin:
         lg      ALLOC_PTR, Caml_state(young_ptr);      \
         lg      TRAP_PTR, Caml_state(exn_handler)
 
+#define TSAN_PUSH_RETURN_REGS    \
+        lay     %r15, -16(%r15); \
+        CFI_ADJUST(16);          \
+        stg     %r2, 0(%r15);    \
+        std     %f0, 8(%r15)
+
+#define TSAN_POP_RETURN_REGS     \
+        ld      %f0, 8(%r15);    \
+        lg      %r2, 0(%r15);    \
+        la      %r15, 16(%r15);  \
+        CFI_ADJUST(-16)
+
 #else /* } { */
 
 #define TSAN_ENTER_FUNCTION
 #define TSAN_EXIT_FUNCTION
 #define TSAN_SAVE_CALLER_REGS
 #define TSAN_RESTORE_CALLER_REGS
+#define TSAN_PUSH_RETURN_REGS
+#define TSAN_POP_RETURN_REGS
 
 #endif /* } */
 
@@ -507,21 +521,9 @@ LBL(caml_c_call):
         lg      TRAP_PTR, Caml_state(exn_handler)
     /* Load ocaml stack and restore global variables */
         SWITCH_C_TO_OCAML
-#if defined(WITH_THREAD_SANITIZER)
-    /* Save return value registers. Since the called function could be
-       anything, it may have returned its result (if any) either in %r2
-       or %f0. */
-        lay     %r15, -16(%r15)
-        CFI_ADJUST(16)
-        stg     %r2, 0(%r15)
-        std     %f0, 8(%r15)
+        TSAN_PUSH_RETURN_REGS /* Save return value. */
         TSAN_EXIT_FUNCTION
-    /* Restore return value registers */
-        ld      %f0, 8(%r15)
-        lg      %r2, 0(%r15)
-        la      %r15, 16(%r15)
-        CFI_ADJUST(-16)
-#endif
+        TSAN_POP_RETURN_REGS
     /* Return to OCaml caller */
         LEAVE_FUNCTION
         RET_FROM_C_CALL
@@ -537,6 +539,13 @@ CFI_STARTPROC
         C arguments         : %r2, %r3, %r4, %r5, %r6
         C function          : ADDITIONAL_ARG
         C stack args        : begin=%r9 end=%r8 */
+#if defined(WITH_THREAD_SANITIZER)
+    /* We can't use TSAN_{SAVE,RESTORE}_CALLER_REGS here as we need to
+       also preserve %r6-%r9. */
+        SAVE_ALL_REGS
+        TSAN_ENTER_FUNCTION
+        RESTORE_ALL_REGS
+#endif
     /* Switch from OCaml to C */
         SWITCH_OCAML_TO_C
     /* Make the exception handler alloc ptr available to the C code */
@@ -572,6 +581,9 @@ LBL(106):
         lg      TRAP_PTR, Caml_state(exn_handler)
     /* Switch from C to OCaml */
         SWITCH_C_TO_OCAML
+        TSAN_PUSH_RETURN_REGS /* Save return value. */
+        TSAN_EXIT_FUNCTION
+        TSAN_POP_RETURN_REGS
     /* Return */
         LEAVE_FUNCTION
         RET_FROM_C_CALL
