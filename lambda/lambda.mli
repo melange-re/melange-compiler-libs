@@ -426,8 +426,11 @@ type function_attribute = {
 type scoped_location = Debuginfo.Scoped_location.t
 
 type as_modifier =
-  | String of string
   | Int of int
+  | String of string
+  | Bool of bool
+  | Null
+  | Undefined
 
 type cstr_name =
   { name: string
