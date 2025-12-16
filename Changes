@@ -678,6 +678,10 @@ OCaml 5.5.0
   circumstances due to bad error checking when calling `mmap()`.
   (Mark Elvers, review by Nicolás Ojeda Bär)
 
+- private: robustify intern.c
+  (Xavier Leroy and Nicolás Ojeda Bär, review by Olivier Nicole, Mindy Preston,
+  Edwin Török, and Gabriel Scherer)
+
 OCaml 5.4.0 (9 October 2025)
 ----------------------------
 
