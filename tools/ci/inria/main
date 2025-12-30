@@ -250,27 +250,34 @@ if $flambda; then
 --disable-naked-pointers"
 fi
 
-eval ./configure "$CCOMP" $build $host --prefix='$instdir' $confoptions
+main_build() {
+  eval ./configure "$CCOMP" $build $host --prefix='$instdir' $confoptions
 
-if $bootstrap; then
-  $make $jobs --warn-undefined-variables core
-  $make $jobs --warn-undefined-variables coreboot
-  if $make_native; then
-    $make $jobs --warn-undefined-variables opt.opt
+  if $bootstrap; then
+    $make $jobs --warn-undefined-variables core
+    $make $jobs --warn-undefined-variables coreboot
+    if $make_native; then
+      $make $jobs --warn-undefined-variables opt.opt
+    else
+      $make $jobs --warn-undefined-variables all
+    fi
   else
-    $make $jobs --warn-undefined-variables all
+    $make $jobs --warn-undefined-variables
   fi
-else
-  $make $jobs --warn-undefined-variables
-fi
 
+  if $make_native && $check_make_alldepend; then
+    $make --warn-undefined-variables alldepend
+  fi
 
-if $make_native && $check_make_alldepend; then
-  $make --warn-undefined-variables alldepend
-fi
+  $make --warn-undefined-variables install
+  rm -rf "$instdir"
+}
 
-$make --warn-undefined-variables install
-rm -rf "$instdir"
+# PATH, but without any homebrew additions (tests vanilla macOS in the build,
+# while still allowing full utilities later in the testsuite)
+CLEAN_PATH=$(echo "$PATH" | tr ':' '\n' | grep -vF '/homebrew/' | paste -sd: -)
+
+PATH="$CLEAN_PATH" main_build
 
 cd testsuite
 if test -n "$jobs" && test -x /usr/bin/parallel
