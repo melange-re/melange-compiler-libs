@@ -259,6 +259,15 @@ CAMLnoreturn_end;
 #define Caml_has_builtin(x) 0
 #endif
 
+/* Branch prediction */
+#if __has_builtin(__builtin_expect) || defined(__GNUC__)
+#define CAMLlikely(e)   __builtin_expect(!!(e), 1)
+#define CAMLunlikely(e) __builtin_expect(!!(e), 0)
+#else
+#define CAMLlikely(e) (e)
+#define CAMLunlikely(e) (e)
+#endif
+
 /* Integer arithmetic with overflow detection.
    The functions return 0 if no overflow, 1 if overflow.
    The result of the operation is always stored at [*res].
