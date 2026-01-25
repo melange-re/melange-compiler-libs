@@ -17,10 +17,6 @@
 
 /* Win32-specific stuff */
 
-/* FILE_INFO_BY_HANDLE_CLASS, FILE_NAME_INFO, and INIT_ONCE are only
-   available from Windows Vista onwards */
-#define _WIN32_WINNT 0x0600 /* _WIN32_WINNT_VISTA */
-
 #define WIN32_LEAN_AND_MEAN
 #define _CRT_RAND_S
 #include <windows.h>

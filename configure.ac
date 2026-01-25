@@ -1169,6 +1169,11 @@ AS_CASE([$target],
   [*-w64-mingw32*|*-pc-windows], [],
   [common_cppflags="$common_cppflags -D_FILE_OFFSET_BITS=64"])
 
+# Require Windows 8 / Server 2012 or later
+AS_CASE([$target],
+  [*-w64-mingw32*|*-pc-windows],
+    [internal_cppflags="$internal_cppflags -D_WIN32_WINNT=0x602"])
+
 # Adjust according to target
 
 # On Windows we do not take $enable_shared because it does not seem

@@ -15,8 +15,6 @@
 
 /* Run programs with redirections and timeouts under Windows */
 
-/* GetTickCount64() requires Windows Vista or Server 2008 */
-#define _WIN32_WINNT 0x0600
 
 #include <stdio.h>
 #include <stdlib.h>
