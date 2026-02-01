@@ -577,6 +577,9 @@ OCaml 5.5.0
 
 ### Bug fixes:
 
+- #14010: Fix miscompilation / liveness errors for string operations
+  (Mark Shinwell, Xavier Clerc, review by Xavier Leroy and Gabriel Scherer)
+
 - #14036: Fix nontermination of cycle printing in recursive modules with
   `-short-paths`. Add error message for types considered abstract while
   checking recursive modules.
