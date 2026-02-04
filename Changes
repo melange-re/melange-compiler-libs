@@ -378,6 +378,10 @@ OCaml 5.5.0
   fail to load.
   (toastal)
 
+- #14048: document modular explicits
+  (Gabriel Scherer, review by Samuel Vivien, Ali Caglayan,
+   Didier Remy and François Pottier)
+
 - #14077: Add missing `item-attribute` rule for `let-binding`s in documentation
   for attributes.
   (Shon Feder)
