@@ -815,7 +815,7 @@ and transl_struct_item ~scopes loc fields rootpath item next =
                   rebind_idents (pos + 1) (id :: newfields) ids
                 in
                 Llet(Alias, Pgenval, id,
-                     Lprim(Pfield (pos, Pointer, Mutable, fld_na),
+                     Lprim(Pfield (pos, Pointer, Mutable, Fld_module { name = Ident.name id }),
                         [Lvar mid], of_location ~scopes od.open_loc), body)
           in
           let body = rebind_idents 0 fields ids in
@@ -1277,7 +1277,7 @@ let transl_store_structure ~scopes glob map prims aliases str =
               | [] -> transl_store
                         ~scopes rootpath (add_idents true ids subst) cont rem
               | id :: idl ->
-                  Llet(Alias, Pgenval, id, Lprim(Pfield (pos, Pointer, Mutable, fld_na), [Lvar mid],
+                  Llet(Alias, Pgenval, id, Lprim(Pfield (pos, Pointer, Mutable, Fld_module { name = Ident.name id }), [Lvar mid],
                                                  of_location ~scopes loc),
                        Lsequence(store_ident (of_location ~scopes loc) id,
                                  store_idents (pos + 1) idl))
@@ -1323,7 +1323,7 @@ let transl_store_structure ~scopes glob map prims aliases str =
                         [] -> transl_store ~scopes rootpath
                                 (add_idents true ids subst) cont rem
                       | id :: idl ->
-                          Llet(Alias, Pgenval, id, Lprim(Pfield (pos, Pointer, Mutable, fld_na), [Lvar mid],
+                          Llet(Alias, Pgenval, id, Lprim(Pfield (pos, Pointer, Mutable, Fld_module { name = Ident.name id }), [Lvar mid],
                                                          loc),
                                Lsequence(store_ident loc id,
                                          store_idents (pos + 1) idl))
@@ -1594,7 +1594,7 @@ let transl_toplevel_item ~scopes item =
           lambda_unit
       | id :: ids ->
           Lsequence(toploop_setvalue id
-                      (Lprim(Pfield (pos, Pointer, Mutable, fld_na), [Lvar mid], Loc_unknown)),
+                      (Lprim(Pfield (pos, Pointer, Mutable, Fld_module { name = Ident.name id }), [Lvar mid], Loc_unknown)),
                     set_idents (pos + 1) ids) in
       Llet(Strict, Pgenval, mid,
            transl_module ~scopes Tcoerce_none None modl, set_idents 0 ids)
@@ -1617,7 +1617,7 @@ let transl_toplevel_item ~scopes item =
                 lambda_unit
             | id :: ids ->
                 Lsequence(toploop_setvalue id
-                            (Lprim(Pfield (pos, Pointer, Mutable, fld_na), [Lvar mid], Loc_unknown)),
+                            (Lprim(Pfield (pos, Pointer, Mutable, Fld_module { name = Ident.name id }), [Lvar mid], Loc_unknown)),
                           set_idents (pos + 1) ids)
           in
           Llet(pure, Pgenval, mid,

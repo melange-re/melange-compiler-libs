@@ -654,7 +654,7 @@ and transl_type_aux env ~row_context ~aliased ~policy styp =
                 Tconstr(p, tl, _) -> Some(p, tl)
               | _                 -> None
             in
-            name := if Hashtbl.length hfields = 0 then nm else None;
+            name := if Hashtbl.length hfields <> 0 then None else nm;
             let fl = match get_desc (expand_head env cty.ctyp_type), nm with
               Tvariant row, _ when Btype.static_row row ->
                 row_fields row

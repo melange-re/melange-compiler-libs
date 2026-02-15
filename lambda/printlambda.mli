@@ -30,4 +30,3 @@ val record_rep : formatter -> Types.record_representation -> unit
 val print_bigarray :
   string -> bool -> Lambda.bigarray_kind -> formatter ->
   Lambda.bigarray_layout -> unit
-  val str_of_field_info:Lambda.field_dbg_info -> string 
