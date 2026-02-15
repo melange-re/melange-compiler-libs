@@ -26,6 +26,7 @@ type compile_time_constant =
   | Ostype_win32
   | Ostype_cygwin
   | Backend_type
+  | Standard_library_default
 
 type tag_info =
   | Blk_constructor of
@@ -345,7 +346,12 @@ val equal_boxed_integer : boxed_integer -> boxed_integer -> bool
 val default_pointer_info : pointer_info
 
 type structured_constant =
-    Const_base of constant * pointer_info
+    Const_int of int * pointer_info
+  | Const_char of char
+  | Const_float of string
+  | Const_int32 of int32
+  | Const_int64 of int64
+  | Const_nativeint of nativeint
   | Const_block of int * tag_info * structured_constant list
   | Const_float_array of string list
   | Const_immstring of string
@@ -546,6 +552,8 @@ val const_int : ?ptr_info:pointer_info -> int -> structured_constant
 val lambda_unit: lambda
 val lambda_assert_false: lambda
 val lambda_module_alias : lambda
+
+val lambda_of_const : Asttypes.constant -> lambda
 
 (** [dummy_constant] produces a plecholder value with a recognizable
     bit pattern (currently 0xBBBB in its tagged form) *)

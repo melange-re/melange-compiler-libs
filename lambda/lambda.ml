@@ -25,6 +25,7 @@ type compile_time_constant =
   | Ostype_win32
   | Ostype_cygwin
   | Backend_type
+  | Standard_library_default
 
 type tag_info =
   | Blk_constructor of
@@ -316,7 +317,12 @@ type pointer_info =
 let default_pointer_info = Pt_na
 
 type structured_constant =
-    Const_base of constant * pointer_info
+    Const_int of int * pointer_info
+  | Const_char of char
+  | Const_float of string
+  | Const_int32 of int32
+  | Const_int64 of int64
+  | Const_nativeint of nativeint
   | Const_block of int * tag_info * structured_constant list
   | Const_float_array of string list
   | Const_immstring of string
@@ -498,7 +504,7 @@ type program =
     required_globals : Ident.Set.t;
     code : lambda }
 
-let const_int ?(ptr_info=default_pointer_info) n = Const_base (Const_int n, ptr_info)
+let const_int ?(ptr_info=default_pointer_info) n = Const_int (n, ptr_info)
 
 (* This is actually a dummy value
    not necessary "()", it can be used as a place holder for module
@@ -520,6 +526,16 @@ let lambda_module_alias = Lconst (const_int ~ptr_info:Pt_module_alias 0)
 let dummy_constant = Lconst (const_int (0xBBBB / 2))
 
 let dummy_constant = Lconst (const_int (0xBBBB / 2))
+
+let lambda_of_const (c : Asttypes.constant) =
+  match c with
+  | Const_int n -> Lconst (Const_int (n, default_pointer_info))
+  | Const_char c -> Lconst (Const_char c)
+  | Const_float f -> Lconst (Const_float f)
+  | Const_int32 n -> Lconst (Const_int32 n)
+  | Const_int64 n -> Lconst (Const_int64 n)
+  | Const_nativeint n -> Lconst (Const_nativeint n)
+  | Const_string (s, _, _) -> Lconst (Const_immstring s)
 
 let max_arity () =
   if !Clflags.native_code then 126 else max_int
@@ -582,9 +598,6 @@ let make_key e =
         try Ident.find_same id env
         with Not_found -> e
       end
-    | Lconst  (Const_base (Const_string _, _)) ->
-        (* Mutable constants are not shared *)
-        raise Not_simple
     | Lconst _ -> e
     | Lapply ap ->
         Lapply {ap with ap_func = tr_rec env ap.ap_func;

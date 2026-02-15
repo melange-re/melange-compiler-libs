@@ -59,6 +59,9 @@ val report_error_doc: error Format_doc.printer
 val transl_module :
       (scopes:scopes -> module_coercion -> Path.t option ->
        module_expr -> lambda) ref
+val transl_struct_item :
+      (scopes:scopes -> Lambda.scoped_location -> Ident.t list -> Path.t option ->
+       structure_item -> (Ident.t list -> lambda) -> lambda) ref
 val transl_object :
       (scopes:scopes -> Ident.t -> string list ->
        class_expr -> lambda) ref

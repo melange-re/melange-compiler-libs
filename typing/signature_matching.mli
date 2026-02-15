@@ -2,9 +2,9 @@
 (*                                                                        *)
 (*                                 OCaml                                  *)
 (*                                                                        *)
-(*             Xavier Leroy, projet Cristal, INRIA Rocquencourt           *)
+(*                Malo Monin, projet Cambium, Inria Paris                 *)
 (*                                                                        *)
-(*   Copyright 1996 Institut National de Recherche en Informatique et     *)
+(*   Copyright 2024 Institut National de Recherche en Informatique et     *)
 (*     en Automatique.                                                    *)
 (*                                                                        *)
 (*   All rights reserved.  This file is distributed under the terms of    *)
@@ -13,21 +13,21 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open Lambda
+module Suggestion : sig
+  type alteration =
+    | Missing_item
+    | Possible_match of Ident.t Location.loc
 
-open Format
+  type 'a t = {
+    subject : Types.signature_item;
+    alteration : 'a;
+  }
 
-val integer_comparison: formatter -> integer_comparison -> unit
-val float_comparison: formatter -> float_comparison -> unit
-val structured_constant: formatter -> structured_constant -> unit
-val lambda: formatter -> lambda -> unit
-val program: formatter -> program -> unit
-val primitive: formatter -> primitive -> unit
-val name_of_primitive : primitive -> string
-val value_kind : formatter -> value_kind -> unit
-val block_shape : formatter -> value_kind list option -> unit
-val record_rep : formatter -> Types.record_representation -> unit
-val print_bigarray :
-  string -> bool -> Lambda.bigarray_kind -> formatter ->
-  Lambda.bigarray_layout -> unit
-  val str_of_field_info:Lambda.field_dbg_info -> string 
+  type report = {
+      alterations: alteration t list;
+      incompatibles: Includemod.Error.sigitem_symptom t list
+    }
+end
+
+val suggest :
+  Includemod.Error.signature_symptom -> Suggestion.report

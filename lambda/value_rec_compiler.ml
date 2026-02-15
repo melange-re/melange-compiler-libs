@@ -148,7 +148,7 @@ let find_size_of_alloc_prim prim args =
     String.equal prim.prim_name other_prim.prim_name
   in
   let int_arg = match args with
-    | [Lconst (Const_base (Const_int n, _))] -> Some n
+    | [Lconst (Const_int (n, _))] -> Some n
     | _ ->  None
   in
   if same_as alloc_prim then

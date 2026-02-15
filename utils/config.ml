@@ -22,6 +22,28 @@ let version = Sys.ocaml_version ^ "+Melange"
 
 let standard_library_default = "/usr/local/lib/ocaml"
 
+(* is_official_release and release_number are automatically updated autoconf
+   from values in ../build-aux/ocaml_version.m4 - do not edit these lines
+   directly. *)
+let is_official_release = false
+let release_number = 21
+
+external standard_library_default : unit -> string = "%standard_library_default"
+
+let standard_library_default_raw = standard_library_default ()
+
+external stdlib_dirs : string -> string * string option
+   = "caml_sys_get_stdlib_dirs"
+
+let standard_library_default, relative_root_dir =
+  stdlib_dirs standard_library_default_raw
+
+let standard_library_relative =
+  if relative_root_dir = None then
+    None
+  else
+    Some standard_library_default_raw
+
 let standard_library =
   try
     Sys.getenv "OCAMLLIB"
@@ -78,22 +100,53 @@ let ar_supports_response_files = true
 
 let tsan = false
 
-let exec_magic_number = {magic|Caml1999X036|magic}
+let exec_magic_number = {magic|Caml1999X037|magic}
+
+let bindir = {|/usr/local/bin|}
+let target_bindir = bindir
+
+let bindir = Option.value ~default:bindir relative_root_dir
+let target_bindir =
+  if target_bindir = Filename.current_dir_name then
+    Filename.dirname Sys.executable_name
+  else
+    target_bindir
+
     (* exec_magic_number is duplicated in runtime/caml/exec.h *)
-and cmi_magic_number = {magic|Caml1999I036|magic}
-and cmo_magic_number = {magic|Caml1999O036|magic}
-and cma_magic_number = {magic|Caml1999A036|magic}
-and cmx_magic_number = {magic|Caml1999y036|magic}
-and cmxa_magic_number = {magic|Caml1999z036|magic}
-and ast_impl_magic_number = {magic|Caml1999M036|magic}
-and ast_intf_magic_number = {magic|Caml1999N036|magic}
-and cmxs_magic_number = {magic|Caml1999D036|magic}
-and cmt_magic_number = {magic|Caml1999T036|magic}
-and linear_magic_number = {magic|Caml1999L036|magic}
+and cmi_magic_number = {magic|Caml1999I037|magic}
+and cmo_magic_number = {magic|Caml1999O037|magic}
+and cma_magic_number = {magic|Caml1999A037|magic}
+and cmx_magic_number = {magic|Caml1999y037|magic}
+and cmxa_magic_number = {magic|Caml1999z037|magic}
+and ast_impl_magic_number = {magic|Caml1999M037|magic}
+and ast_intf_magic_number = {magic|Caml1999N037|magic}
+and cmxs_magic_number = {magic|Caml1999D037|magic}
+and cmt_magic_number = {magic|Caml1999T037|magic}
+and linear_magic_number = {magic|Caml1999L037|magic}
 
 let safe_string = true
 let default_safe_string = true
 let naked_pointers = false
+
+let bytecode_runtime_id = ""
+let native_runtime_id = ""
+
+type launch_method = Executable | Shebang of string option
+type search_method = Disable | Fallback | Enable
+
+let launch_method = "exe"
+let launch_method =
+  match launch_method with
+  | "exe" -> Executable
+  | "sh" -> Shebang None
+  | _ -> Shebang (Some launch_method)
+
+let search_method = "enable"
+let search_method =
+  match search_method with
+  | "enable" -> Enable
+  | "fallback" -> Fallback
+  | _ -> Disable
 
 let interface_suffix = ref ".mli"
 
@@ -106,12 +159,16 @@ let lazy_tag = 246
 let max_young_wosize = 256
 let stack_threshold = 32 (* see runtime/caml/config.h *)
 let stack_safety_margin = 6
+let target_unix = (target_os_type = "Unix")
+let target_win32 = (target_os_type = "Win32")
+let target_cygwin = (target_os_type = "Cygwin")
 let default_executable_name =
-  match target_os_type with
-    "Unix" -> "a.out"
-  | "Win32" | "Cygwin" -> "camlprog.exe"
-  | _ -> "camlprog"
-
+  if target_unix then
+    "a.out"
+  else if target_win32 || target_cygwin then
+    "camlprog.exe"
+  else
+    "camlprog"
 
 let ccomp_type = {|cc|}
 let c_compiler = {|clang|}
@@ -183,9 +240,13 @@ let configuration_variables () =
   let p x v = (x, String v) in
   let p_int x v = (x, Int v) in
   let p_bool x v = (x, Bool v) in
+  let standard_library_relative =
+    Option.value ~default:"" standard_library_relative
+  in
 [
   p "version" version;
   p "standard_library_default" standard_library_default;
+  p "standard_library_relative" standard_library_relative;
   p "standard_library" standard_library;
   p "ccomp_type" ccomp_type;
   p "c_compiler" c_compiler;
@@ -225,6 +286,8 @@ let configuration_variables () =
   p_bool "systhread_supported" systhread_supported;
   p "host" host;
   p "target" target;
+  p "bytecode_runtime_id" bytecode_runtime_id;
+  p "native_runtime_id" native_runtime_id;
   p_bool "flambda" flambda;
   p_bool "safe_string" safe_string;
   p_bool "default_safe_string" default_safe_string;
