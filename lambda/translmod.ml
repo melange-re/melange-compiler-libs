@@ -326,8 +326,7 @@ let init_shape id modl =
         let info = Unsafe {reason=Unsafe_typext; loc; path=new_path} in
         raise (Initialization_failure info)
     | Sig_module(id, Mp_present, md, _, _) :: rem ->
-        (* (add_name (init_shape_mod id md.md_loc env md.md_type) id) :: *)
-        init_shape_mod (Pdot(path, Ident.name id)) md.md_loc env md.md_type ::
+        add_name (init_shape_mod (Pdot(path, Ident.name id)) md.md_loc env md.md_type) id ::
         init_shape_struct path (Env.add_module_declaration ~check:false
                              id Mp_present md env) rem
     | Sig_module(id, Mp_absent, md, _, _) :: rem ->
@@ -739,7 +738,7 @@ and transl_struct_item ~scopes loc fields rootpath item next =
           mb.mb_attributes
       in
       (* Translate remainder second *)
-      let body = next (cons_opt id fields) in
+      let body = next (if !Typemod.should_hide mb then fields else cons_opt id fields) in
       begin match id with
       | None ->
           Lsequence (Lprim(Pignore, [module_body],
@@ -749,7 +748,6 @@ and transl_struct_item ~scopes loc fields rootpath item next =
       end
   | Tstr_module ({mb_presence=Mp_absent;mb_id = None}) ->
       next fields
-      (* transl_structure ~scopes loc fields cc rootpath final_env rem *)
   | Tstr_module ({mb_presence=Mp_absent; mb_id = Some id} as mb) ->
       if !Config.bs_only then begin
         let module_body = apply_coercion loc Alias Tcoerce_none lambda_module_alias in
@@ -791,7 +789,7 @@ and transl_struct_item ~scopes loc fields rootpath item next =
               rebind_idents (pos + 1) (id :: newfields) ids
             in
             Llet(Alias, Pgenval, id,
-                 Lprim(Pfield (pos, Pointer, Mutable, fld_na),
+                 Lprim(Pfield (pos, Pointer, Mutable, Fld_module { name = (Ident.name id) }),
                        [Lvar mid], of_location ~scopes incl.incl_loc), body)
       in
       let body = rebind_idents 0 fields ids in
@@ -817,7 +815,7 @@ and transl_struct_item ~scopes loc fields rootpath item next =
                   rebind_idents (pos + 1) (id :: newfields) ids
                 in
                 Llet(Alias, Pgenval, id,
-                     Lprim(Pfield (pos, Pointer, Mutable, Fld_module { name = (Ident.name id) }),
+                     Lprim(Pfield (pos, Pointer, Mutable, fld_na),
                         [Lvar mid], of_location ~scopes od.open_loc), body)
           in
           let body = rebind_idents 0 fields ids in
