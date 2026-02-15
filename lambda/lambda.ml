@@ -325,7 +325,7 @@ type structured_constant =
   | Const_nativeint of nativeint
   | Const_block of int * tag_info * structured_constant list
   | Const_float_array of string list
-  | Const_immstring of string
+  | Const_immstring of string * string option
 
 type tailcall_attribute =
   | Tailcall_expectation of bool
@@ -535,7 +535,7 @@ let lambda_of_const (c : Asttypes.constant) =
   | Const_int32 n -> Lconst (Const_int32 n)
   | Const_int64 n -> Lconst (Const_int64 n)
   | Const_nativeint n -> Lconst (Const_nativeint n)
-  | Const_string (s, _, _) -> Lconst (Const_immstring s)
+  | Const_string (s, _, delim) -> Lconst (Const_immstring (s, delim))
 
 let max_arity () =
   if !Clflags.native_code then 126 else max_int

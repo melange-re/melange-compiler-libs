@@ -70,7 +70,7 @@ let transl_extension_constructor ~scopes env path ext =
   match ext.ext_kind with
     Text_decl _ ->
       let tag_info = Blk_extension_slot in
-      let ext_name = Lconst (Const_immstring name) in
+      let ext_name = Lconst (Const_immstring (name, None)) in
       Lprim (Pmakeblock (Obj.object_tag, tag_info, Immutable, None),
         (if !Config.bs_only then [ ext_name ]
          else [ ext_name;
@@ -126,7 +126,7 @@ let assert_failed loc ~scopes exp =
     (Lprim(Pmakeblock(0, Blk_extension { exn = true }, Immutable, None),
           [slot;
            Lconst(Const_block(0, Blk_tuple,
-              [Const_immstring fname;
+              [Const_immstring (fname, None);
                Const_int (line, default_pointer_info);
                Const_int (char, default_pointer_info)]))], loc))], loc)
 

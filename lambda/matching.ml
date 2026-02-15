@@ -2492,7 +2492,7 @@ let make_string_test_sequence loc arg sw d =
           Lifthenelse
             ( Lprim
                 ( prim_string_notequal,
-                  [ arg; Lconst (Const_immstring str) ],
+                  [ arg; Lconst (Const_immstring (str, None)) ],
                   loc ),
               k,
               lam ))
@@ -2525,7 +2525,8 @@ let rec do_make_string_test_tree loc arg sw delta d =
   else
     let lt, (s, act), gt = split len sw in
     bind_sw
-      (Lprim (prim_string_compare, [ arg; Lconst (Const_immstring s) ], loc))
+      (Lprim
+         (prim_string_compare, [ arg; Lconst (Const_immstring (s, None)) ], loc))
       (fun r ->
         tree_way_test loc r
           (do_make_string_test_tree loc arg lt delta d)
@@ -4117,7 +4118,7 @@ let failure_handler ~scopes loc ~failer () =
                   (Const_block
                      ( 0,
                        Blk_tuple,
-                       [ Const_immstring fname;
+                       [ Const_immstring (fname, None);
                          Const_int (line, default_pointer_info);
                          Const_int (char, default_pointer_info)
                        ] ))

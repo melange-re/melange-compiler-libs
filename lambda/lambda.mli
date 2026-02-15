@@ -354,7 +354,7 @@ type structured_constant =
   | Const_nativeint of nativeint
   | Const_block of int * tag_info * structured_constant list
   | Const_float_array of string list
-  | Const_immstring of string
+  | Const_immstring of string * string option
 
 type tailcall_attribute =
   | Tailcall_expectation of bool

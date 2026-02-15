@@ -246,7 +246,7 @@ let mod_prim name args loc =
 let undefined_location loc =
   let (fname, line, char) = Location.get_pos_info loc.Location.loc_start in
   Lconst(Const_block(0, Blk_tuple,
-                     [Const_immstring fname;
+                     [Const_immstring (fname, None);
                       const_int line;
                       const_int char]))
 
@@ -263,7 +263,7 @@ let init_shape id modl =
         (0
         , Blk_tuple
         , [ x
-          ; Const_immstring (!mangle_ident id)
+          ; Const_immstring (!mangle_ident id, None)
           ])
     else x in
   let rec init_shape_mod path loc env mty =
@@ -1502,7 +1502,7 @@ let toploop_getvalue id =
     ap_func=Lprim(Pfield (toploop_getvalue_pos, Pointer, Mutable, fld_na),
                   [Lprim(Pgetglobal toploop_ident, [], Loc_unknown)],
                   Loc_unknown);
-    ap_args=[Lconst(Const_immstring (toplevel_name id))];
+    ap_args=[Lconst(Const_immstring (toplevel_name id, None))];
     ap_tailcall=Default_tailcall;
     ap_inlined=Default_inline;
     ap_specialised=Default_specialise;
@@ -1515,7 +1515,7 @@ let toploop_setvalue id lam =
                   [Lprim(Pgetglobal toploop_ident, [], Loc_unknown)],
                   Loc_unknown);
     ap_args=
-      [Lconst(Const_immstring (toplevel_name id));
+      [Lconst(Const_immstring (toplevel_name id, None));
        lam];
     ap_tailcall=Default_tailcall;
     ap_inlined=Default_inline;

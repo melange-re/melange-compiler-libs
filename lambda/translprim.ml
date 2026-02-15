@@ -683,25 +683,25 @@ let lambda_of_loc kind sloc =
   match kind with
   | Loc_POS ->
     Lconst (Const_block (0, Blk_tuple, [
-          Const_immstring file;
+          Const_immstring (file, None);
           Const_int (lnum, default_pointer_info);
           Const_int (cnum, default_pointer_info);
           Const_int (enum, default_pointer_info);
         ]))
-  | Loc_FILE -> Lconst (Const_immstring file)
+  | Loc_FILE -> Lconst (Const_immstring (file, None))
   | Loc_MODULE ->
     let filename = Filename.basename file in
     let name = Env.get_current_unit_name () in
     let module_name = if name = "" then "//"^filename^"//" else name in
-    Lconst (Const_immstring module_name)
+    Lconst (Const_immstring (module_name, None))
   | Loc_LOC ->
     let loc = Printf.sprintf "File %S, line %d, characters %d-%d"
         file lnum cnum enum in
-    Lconst (Const_immstring loc)
+    Lconst (Const_immstring (loc, None))
   | Loc_LINE -> Lconst (Const_int (lnum, default_pointer_info))
   | Loc_FUNCTION ->
     let scope_name = Debuginfo.Scoped_location.string_of_scoped_location sloc in
-    Lconst (Const_immstring scope_name)
+    Lconst (Const_immstring (scope_name, None))
 
 let atomic_arity op (kind : atomic_kind) =
   let arity_of_op =
