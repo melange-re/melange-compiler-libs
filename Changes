@@ -1,5 +1,5 @@
-OCaml 5.4.1
------------
+OCaml 5.4.1 (17 February 2026)
+------------------------------
 
 ### Bug fixes:
 
@@ -23,6 +23,10 @@ OCaml 5.4.1
 - #14255: Fix TSan bug with C calls that take many arguments
   (Olivier Nicole and Miod Vallat, report by Nathan Taylor, review by Gabriel
    Scherer)
+
+- private: robustify intern.c
+  (Xavier Leroy and Nicolás Ojeda Bär, review by Olivier Nicole, Mindy Preston,
+  and Edwin Török)
 
 OCaml 5.4.0 (9 October 2025)
 ----------------------------
