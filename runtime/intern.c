@@ -152,7 +152,8 @@ void caml_free_intern_state (void)
   }
 }
 
-CAMLnoret static void intern_cleanup_failwith(struct caml_intern_state* s, const char * msg);
+CAMLnoret static void intern_cleanup_failwith(struct caml_intern_state* s,
+                                              const char * msg);
 static char * intern_resolve_code_pointer(unsigned char digest[16],
                                           asize_t offset);
 
@@ -743,7 +744,7 @@ static void intern_rec(struct caml_intern_state* s,
         continue;  /* with next iteration of main loop, skipping *dest = v */
       case OLD_CODE_CUSTOM:
         intern_cleanup_failwith2(s, fun_name, "custom blocks serialized with "
-                                 "OCaml 4.08.0 (or prior) are no longer supported");
+                             "OCaml 4.08.0 (or prior) are no longer supported");
         break;
       case CODE_CUSTOM_LEN:
       case CODE_CUSTOM_FIXED: {
@@ -752,7 +753,8 @@ static void intern_rec(struct caml_intern_state* s,
         const unsigned char * name_end =
           memchr(name, 0, s->intern_src_end - s->intern_src);
         if (name_end == NULL) {
-          intern_cleanup_failwith2(s, fun_name, "unterminated custom block identifier");
+          intern_cleanup_failwith2(s, fun_name,
+                                   "unterminated custom block identifier");
         }
         ops = caml_find_custom_operations(name);
         if (ops == NULL) {
@@ -939,7 +941,8 @@ static void intern_decompress_input(struct caml_intern_state * s,
     s->intern_src = blk;
     s->intern_src_end = s->intern_src + h->uncompressed_data_len;
   } else {
-    intern_cleanup_failwith2(s, fun_name, "compressed object, cannot decompress");
+    intern_cleanup_failwith2(s, fun_name,
+                             "compressed object, cannot decompress");
   }
 }
 
