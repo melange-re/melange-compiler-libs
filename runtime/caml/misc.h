@@ -260,7 +260,7 @@ CAMLnoreturn_end;
 #endif
 
 /* Branch prediction */
-#if __has_builtin(__builtin_expect) || defined(__GNUC__)
+#if Caml_has_builtin(__builtin_expect) || defined(__GNUC__)
 #define CAMLlikely(e)   __builtin_expect(!!(e), 1)
 #define CAMLunlikely(e) __builtin_expect(!!(e), 0)
 #else
