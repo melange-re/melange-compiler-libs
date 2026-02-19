@@ -993,7 +993,7 @@ AS_IF([test x"$enable_shared" != "xno"],
            [mksharedlib="$CC -shared \$(LDFLAGS)"])
        AS_CASE([$host],
            [[*-*-openbsd7.[3-9]|*-*-openbsd[89].*]],
-           [mkdll_flags="${mkdll_flags} -Wl,--no-execute-only"])
+           [mksharedlib="${mksharedlib} -Wl,--no-execute-only"])
       oc_ldflags="$oc_ldflags -Wl,-E"
       rpath="-Wl,-rpath,"
       mksharedlibrpath="-Wl,-rpath,"

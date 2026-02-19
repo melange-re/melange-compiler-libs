@@ -1,3 +1,16 @@
+OCaml 4.14 maintenance version
+------------------------------
+
+### Build system:
+
+- #12372, #14572: Pass option -no-execute-only to the linker for OpenBSD >= 7.3
+  so that code sections remain readable, as needed for closure marshaling.
+  Originally backported in 4.14.2, but the flag was accidentally not passed when
+  linking the .so versions of the OCaml runtime libraries or when linking .cmxs
+  files.
+  (Xavier Leroy and Anil Madhavapeddy, review by Anil Madhavapeddy and
+  Sébastien Hinderer)
+
 OCaml 4.14.3 (17 February 2026)
 ------------------------------
 
