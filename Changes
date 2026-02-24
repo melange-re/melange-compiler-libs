@@ -205,6 +205,12 @@ OCaml 5.5.0
   (Kate Deplaix, review by Daniel Bünzli, Gabriel Scherer,
    Nicolás Ojeda Bär, Florian Angeletti and Josh Berdine)
 
+- #14043, #14393: Lazy.Mutexed: simple mutex-protected lazy thunks,
+  that may block the entire domain/thread on initialization races.
+  (Gabriel Scherer, suggestion by Kate Deplaix and Pierre Chambart,
+  review by KC Sivaramakrishnan, Florian Angeletti, Kate Deplaix
+  and Daniel Bünzli)
+
 - #14086: Add Domain.count.
   (Nicolás Ojeda Bär, review by David Allsopp, Gabriel Scherer, Daniel Bünzli
   and KC Sivaramakrishnan)
