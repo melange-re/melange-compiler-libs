@@ -1,3 +1,9 @@
+### Bug fixes:
+
+- #14574, #14577, #14589: Fix wrong assembly code generated for ARM64
+  with frame pointer support.
+  (Xavier Leroy, review by Vincent Laviron, report by Richard Jones)
+
 OCaml 5.4.1 (17 February 2026)
 ------------------------------
 
