@@ -66,9 +66,14 @@ val it : (unit, int) result = Ok ()
 let it =
   let thunk = ref (LazyM.from_val 0) in
   thunk := LazyM.from_fun (fun () -> LazyM.force !thunk + 1);
-  LazyM.force !thunk
+  (* We expect to get a Sys_error exception due to recursive forcing.
+     Hide its payload which contains a non-portable error message
+     (#14590). *)
+  match LazyM.force !thunk with
+  | exception Sys_error _ -> Ok "failed as expected"
+  | _ -> Error ()
 [%%expect{|
-Exception: Sys_error "Mutex.lock: Resource deadlock avoided".
+val it : (string, unit) result = Ok "failed as expected"
 |}]
 
 (* Concurrency test *)
