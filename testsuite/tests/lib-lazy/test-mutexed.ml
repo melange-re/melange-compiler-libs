@@ -1,4 +1,5 @@
 (* TEST
+ shared-libraries;
  hassysthreads;
  flags = "-I ${ocamlsrcdir}/otherlibs/unix -I ${ocamlsrcdir}/otherlibs/systhreads";
  include systhreads;
