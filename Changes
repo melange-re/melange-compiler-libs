@@ -1278,6 +1278,10 @@ OCaml 5.4.0 (9 October 2025)
 
 ### Bug fixes:
 
+- #14574, #14577, #14589: Fix wrong assembly code generated for ARM64
+  with frame pointer support.
+  (Xavier Leroy, review by Vincent Laviron, report by Richard Jones)
+
 - #13819: Fix field initialisation bug in runtime events subsystem.
   (Nick Barnes, review by Gabriel Scherer).
 
