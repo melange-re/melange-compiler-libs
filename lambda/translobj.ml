@@ -43,12 +43,12 @@ let method_cache = ref lambda_unit
 let method_count = ref 0
 let method_table = ref []
 
-let meth_tag s = Lconst(Const_base(Const_int(Btype.hash_variant s), default_pointer_info))
+let meth_tag s = Lconst(Const_int(Btype.hash_variant s, default_pointer_info))
 
 let next_cache tag =
   let n = !method_count in
   incr method_count;
-  (tag, [!method_cache; Lconst(Const_base(Const_int n, default_pointer_info))])
+  (tag, [!method_cache; Lconst(Const_int (n, default_pointer_info))])
 
 let rec is_path = function
     Lvar _ | Lprim (Pgetglobal _, [], _) | Lconst _ -> true
@@ -81,7 +81,7 @@ let reset_labels () =
 
 (* Insert labels *)
 
-let int n = Lconst (Const_base (Const_int n, default_pointer_info))
+let int n = Lconst (Const_int (n, default_pointer_info))
 
 let prim_makearray =
   Primitive.simple ~name:"caml_array_make" ~arity:2 ~alloc:true
@@ -89,10 +89,17 @@ let prim_makearray =
 (* Also use it for required globals *)
 let transl_label_init_general f =
   let expr = f () in
-  let expr =
+  (* We go through a Map first to ensure that the bindings are placed
+     in an order that doesn't depend on the hash table iteration order *)
+  let all_consts =
     Hashtbl.fold
-      (fun c id expr -> Llet(Alias, Pgenval, id, Lconst c, expr))
-      consts expr
+      (fun c id all_consts -> Ident.Map.add id c all_consts)
+      consts Ident.Map.empty
+  in
+  let expr =
+    Ident.Map.fold
+      (fun id c expr -> Llet(Alias, Pgenval, id, Lconst c, expr))
+      all_consts expr
   in
   (*let expr =
     List.fold_right

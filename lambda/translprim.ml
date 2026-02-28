@@ -96,6 +96,7 @@ type atomic_op =
 type prim =
   | Primitive of Lambda.primitive * int
   | External of Primitive.description
+  | Sys_argv
   | Comparison of comparison * comparison_kind
   | Raise of Lambda.raise_kind
   | Raise_with_backtrace
@@ -682,25 +683,25 @@ let lambda_of_loc kind sloc =
   match kind with
   | Loc_POS ->
     Lconst (Const_block (0, Blk_tuple, [
-          Const_immstring file;
-          Const_base (Const_int lnum, default_pointer_info);
-          Const_base (Const_int cnum, default_pointer_info);
-          Const_base (Const_int enum, default_pointer_info);
+          Const_immstring (file, None);
+          Const_int (lnum, default_pointer_info);
+          Const_int (cnum, default_pointer_info);
+          Const_int (enum, default_pointer_info);
         ]))
-  | Loc_FILE -> Lconst (Const_immstring file)
+  | Loc_FILE -> Lconst (Const_immstring (file, None))
   | Loc_MODULE ->
     let filename = Filename.basename file in
     let name = Env.get_current_unit_name () in
     let module_name = if name = "" then "//"^filename^"//" else name in
-    Lconst (Const_immstring module_name)
+    Lconst (Const_immstring (module_name, None))
   | Loc_LOC ->
     let loc = Printf.sprintf "File %S, line %d, characters %d-%d"
         file lnum cnum enum in
-    Lconst (Const_immstring loc)
-  | Loc_LINE -> Lconst (Const_base (Const_int lnum, default_pointer_info))
+    Lconst (Const_immstring (loc, None))
+  | Loc_LINE -> Lconst (Const_int (lnum, default_pointer_info))
   | Loc_FUNCTION ->
     let scope_name = Debuginfo.Scoped_location.string_of_scoped_location sloc in
-    Lconst (Const_immstring scope_name)
+    Lconst (Const_immstring (scope_name, None))
 
 let atomic_arity op (kind : atomic_kind) =
   let arity_of_op =
@@ -791,8 +792,8 @@ let lambda_of_prim prim_name prim loc args arg_exps =
   match prim, args with
   | Primitive (prim, arity), args when arity = List.length args ->
       Lprim(prim, args, loc)
-  | External prim, args when prim = prim_sys_argv ->
-      Lprim(Pccall prim, Lconst (const_int 0) :: args, loc)
+  | Sys_argv, [] ->
+      Lprim(Pccall prim_sys_argv, [Lconst (const_int 0)], loc)
   | External prim, args ->
       Lprim(Pccall prim, args, loc)
   | Comparison(comp, knd), ([_;_] as args) ->
@@ -865,7 +866,7 @@ let lambda_of_prim prim_name prim loc args arg_exps =
   | Atomic (op, kind), args ->
       lambda_of_atomic prim_name loc op kind args
   | (Raise _ | Raise_with_backtrace
-    | Lazy_force | Loc _ | Primitive _ | Comparison _
+    | Lazy_force | Loc _ | Primitive _ | Sys_argv | Comparison _
     | Send | Send_self | Send_cache | Frame_pointers | Identity
     | Apply | Revapply
     ), _ ->
@@ -877,6 +878,7 @@ let check_primitive_arity loc p =
     match prim with
     | Primitive (_,arity) -> arity = p.prim_arity
     | External _ -> true
+    | Sys_argv -> p.prim_arity = 0
     | Comparison _ -> p.prim_arity = 2
     | Raise _ -> p.prim_arity = 1
     | Raise_with_backtrace -> p.prim_arity = 2
@@ -959,9 +961,12 @@ let lambda_primitive_needs_event_after = function
 (* Determine if a primitive should be surrounded by an "after" debug event *)
 let primitive_needs_event_after = function
   | Primitive (prim,_) -> lambda_primitive_needs_event_after prim
-  | External _ -> true
   | Comparison(comp, knd) ->
       lambda_primitive_needs_event_after (comparison_primitive comp knd)
+  (* C calls that may allocate or raise need an event.
+     We conservatively add an event to all C calls. *)
+  | External _ | Sys_argv -> true
+  (* Primitives that may call an arbitrary OCaml function need an event *)
   | Lazy_force | Send | Send_self | Send_cache
   | Apply | Revapply -> true
   | Raise _ | Raise_with_backtrace

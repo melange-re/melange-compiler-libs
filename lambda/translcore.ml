@@ -41,6 +41,11 @@ let transl_module =
       scopes:scopes -> module_coercion -> Path.t option ->
       module_expr -> lambda)
 
+let transl_struct_item =
+  ref ((fun ~scopes:_ _loc _fields _rootpath _stri _next -> assert false) :
+       scopes:scopes -> Lambda.scoped_location -> Ident.t list -> Path.t option ->
+       structure_item -> (Ident.t list -> lambda) -> lambda)
+
 let transl_object =
   ref (fun ~scopes:_ _id _s _cl -> assert false :
        scopes:scopes -> Ident.t -> string list -> class_expr -> lambda)
@@ -65,7 +70,7 @@ let transl_extension_constructor ~scopes env path ext =
   match ext.ext_kind with
     Text_decl _ ->
       let tag_info = Blk_extension_slot in
-      let ext_name = Lconst (Const_base (Const_string (name, ext.ext_loc, None), default_pointer_info)) in
+      let ext_name = Lconst (Const_immstring (name, None)) in
       Lprim (Pmakeblock (Obj.object_tag, tag_info, Immutable, None),
         (if !Config.bs_only then [ ext_name ]
          else [ ext_name;
@@ -83,7 +88,7 @@ let extract_constant = function
   | _ -> raise_notrace Not_constant
 
 let extract_float = function
-    Const_base(Const_float f, _) -> f
+    Const_float f -> f
   | _ -> fatal_error "Translcore.extract_float"
 
 (* Insertion of debugging events *)
@@ -121,9 +126,9 @@ let assert_failed loc ~scopes exp =
     (Lprim(Pmakeblock(0, Blk_extension { exn = true }, Immutable, None),
           [slot;
            Lconst(Const_block(0, Blk_tuple,
-              [Const_base(Const_string (fname, exp.exp_loc, None), default_pointer_info);
-               Const_base(Const_int line, default_pointer_info);
-               Const_base(Const_int char, default_pointer_info)]))], loc))], loc)
+              [Const_immstring (fname, None);
+               Const_int (line, default_pointer_info);
+               Const_int (char, default_pointer_info)]))], loc))], loc)
 
 (* In cases where we're careful to preserve syntactic arity, we disable
    the arity fusion attempted by simplif.ml *)
@@ -208,7 +213,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
       transl_ident (of_location ~scopes e.exp_loc)
         e.exp_env e.exp_type path desc
   | Texp_constant cst ->
-      Lconst(Const_base (cst, default_pointer_info))
+      Lambda.lambda_of_const cst
   | Texp_let(rec_flag, pat_expr_list, body) ->
       transl_let ~scopes rec_flag pat_expr_list
         (event_before ~scopes body (transl_exp ~scopes body))
@@ -563,24 +568,6 @@ and transl_exp0 ~in_new_scope ~scopes e =
                             (Lvar cpy) (Lvar id) expr, rem))
              modifs
              (Lvar cpy))
-  | Texp_letmodule(None, loc, Mp_present, modl, body) ->
-      let lam = !transl_module ~scopes Tcoerce_none None modl in
-      Lsequence(Lprim(Pignore, [lam], of_location ~scopes loc.loc),
-                transl_exp ~scopes body)
-  | Texp_letmodule(Some id, _loc, Mp_present, modl, body) ->
-      let defining_expr =
-        if !Config.bs_only then !transl_module ~scopes Tcoerce_none None modl
-        else
-        let mod_scopes = enter_module_definition ~scopes id in
-        !transl_module ~scopes:mod_scopes Tcoerce_none None modl
-      in
-      Llet(Strict, Pgenval, id, defining_expr, transl_exp ~scopes body)
-  | Texp_letmodule(_, _, Mp_absent, _, body) ->
-      transl_exp ~scopes body
-  | Texp_letexception(cd, body) ->
-      Llet(Strict, Pgenval,
-           cd.ext_id, transl_extension_constructor ~scopes e.exp_env None cd,
-           transl_exp ~scopes body)
   | Texp_pack modl ->
       !transl_module ~scopes Tcoerce_none None modl
   | Texp_assert ({exp_desc=Texp_construct(_, {cstr_name="false"}, _)}, loc) ->
@@ -644,28 +631,8 @@ and transl_exp0 ~in_new_scope ~scopes e =
         (transl_letop ~scopes e.exp_loc e.exp_env let_ ands param body partial)
   | Texp_unreachable ->
       raise (Error (e.exp_loc, Unreachable_reached))
-  | Texp_open (od, e) ->
-      let pure = pure_module od.open_expr in
-      (* this optimization shouldn't be needed because Simplif would
-          actually remove the [Llet] when it's not used.
-          But since [scan_used_globals] runs before Simplif, we need to
-          do it. *)
-      begin match od.open_bound_items with
-      | [] when pure = Alias -> transl_exp ~scopes e
-      | _ ->
-          let oid = Ident.create_local "open" in
-          let body, _ =
-            List.fold_left (fun (body, pos) id ->
-              Llet(Alias, Pgenval, id,
-                   Lprim(Pfield (pos, Pointer, Mutable, Fld_module { name = Ident.name id }), [Lvar oid],
-                         of_location ~scopes od.open_loc), body),
-              pos + 1
-            ) (transl_exp ~scopes e, 0)
-              (bound_value_identifiers od.open_bound_items)
-          in
-          Llet(pure, Pgenval, oid,
-               !transl_module ~scopes Tcoerce_none None od.open_expr, body)
-      end
+  | Texp_struct_item (si, e) ->
+      !transl_struct_item ~scopes (of_location ~scopes e.exp_loc) [] None si (fun _ -> transl_exp ~scopes e)
 
 and pure_module m =
   match m.mod_desc with
@@ -1048,7 +1015,6 @@ and transl_let ~scopes ?(in_structure=false) rec_flag pat_expr_list =
         List.map
           (fun {vb_pat=pat} -> match pat.pat_desc with
               Tpat_var (id,_,_) -> id
-            | Tpat_alias ({pat_desc=Tpat_any}, id,_,_,_) -> id
             | _ -> assert false)
         pat_expr_list in
       let transl_case {vb_expr=expr; vb_attributes; vb_rec_kind = rkind;
@@ -1184,7 +1150,7 @@ and transl_atomic_loc ~scopes arg lbl =
   let arg = transl_exp ~scopes arg in
   let offset =
     match lbl.lbl_repres with
-    | Record_regular -> 0
+    | Record_regular
     | Record_inlined _ -> 0
     | Record_float ->
         fatal_error
@@ -1194,7 +1160,7 @@ and transl_atomic_loc ~scopes arg lbl =
           "Translcore.transl_atomic_loc: atomic field in unboxed record"
     | Record_extension _ -> 1
   in
-  let lbl = Lconst (Const_base (Const_int (lbl.lbl_pos + offset), default_pointer_info)) in
+  let lbl = Lconst (Const_int ((lbl.lbl_pos + offset), default_pointer_info)) in
   (arg, lbl)
 
 and transl_match ~scopes e arg pat_expr_list partial =
@@ -1357,7 +1323,7 @@ and transl_handler ~scopes e body val_caselist exn_caselist eff_caselist =
        (lfunction ~kind:Curried ~params:[param, Pgenval] ~return:Pgenval
                   ~attr:default_function_attribute ~loc:Loc_unknown
                   ~body,
-        Lconst(Const_base(Const_int 0, default_pointer_info)))
+        Lconst(Const_int (0, default_pointer_info)))
   in
   let alloc_stack =
     Lprim(prim_alloc_stack, [val_fun; exn_fun; eff_fun], Loc_unknown)

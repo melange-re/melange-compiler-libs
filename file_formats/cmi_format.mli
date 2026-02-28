@@ -28,7 +28,7 @@ type cmi_infos = {
 }
 
 (* write the magic + the cmi information *)
-val output_cmi : string -> out_channel -> cmi_infos -> Digest.t
+val output_cmi : string -> out_channel -> cmi_infos -> Digest.BLAKE128.t
 
 val create_cmi : ?check_exists:unit -> string -> cmi_infos -> Digest.t
 

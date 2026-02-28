@@ -140,7 +140,7 @@ end = struct
           Pt_constructor_access { cstr_name = name }
         | _ -> assert false
       in
-      Lconst (Const_base ((Const_int placeholder_pos), pointer_info))
+      Lconst (Const_int (placeholder_pos, pointer_info))
     in
     let block_var = Ident.create_local "block" in
     Llet (Strict, Pgenval, block_var, k_with_placeholder,

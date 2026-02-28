@@ -61,7 +61,11 @@ type unsafe_component =
   | Unsafe_typext
 
 type unsafe_info =
-  | Unsafe of { reason:unsafe_component; loc:Location.t; subid:Ident.t }
+  | Unsafe of {
+      reason:unsafe_component;
+      loc:Location.t;
+      path:Path.t
+    }
   | Unnamed
 
 type error =

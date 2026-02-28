@@ -2211,7 +2211,7 @@ let inline_lazy_force_cond arg loc =
   let varg = Lvar idarg in
   let tag = Ident.create_local "tag" in
   let test_tag t =
-    Lprim(Pintcomp Ceq, [Lvar tag; Lconst(Const_base(Const_int t, default_pointer_info))], loc)
+    Lprim(Pintcomp Ceq, [Lvar tag; Lconst(Const_int (t, default_pointer_info))], loc)
   in
   Llet
     ( Strict,
@@ -2276,7 +2276,7 @@ let inline_lazy_force arg loc =
       { ap_tailcall = Default_tailcall;
         ap_loc = loc;
         ap_func = Lazy.force code_force_lazy;
-        ap_args = [ Lconst (Const_base (Const_int 0, default_pointer_info)); arg ];
+        ap_args = [ Lconst (Const_int (0, default_pointer_info)); arg ];
         ap_inlined = Never_inline;
         ap_specialised = Default_specialise
       }
@@ -2425,7 +2425,7 @@ let get_expr_args_array ~scopes kind head { arg; mut } rem =
       let arg =
         Lprim
           (Parrayrefu kind,
-           [ arg; Lconst (Const_base (Const_int pos, default_pointer_info)) ], loc)
+           [ arg; Lconst (Const_int (pos, default_pointer_info)) ], loc)
       in
       {
         arg;
@@ -2492,7 +2492,7 @@ let make_string_test_sequence loc arg sw d =
           Lifthenelse
             ( Lprim
                 ( prim_string_notequal,
-                  [ arg; Lconst (Const_immstring str) ],
+                  [ arg; Lconst (Const_immstring (str, None)) ],
                   loc ),
               k,
               lam ))
@@ -2508,7 +2508,7 @@ let rec split k xs =
         let xs, y0, ys = split (k - 2) xs in
         (x0 :: xs, y0, ys)
 
-let zero_lam = Lconst (Const_base (Const_int 0, default_pointer_info))
+let zero_lam = Lconst (Const_int (0, default_pointer_info))
 
 let tree_way_test loc arg lt eq gt =
   Lifthenelse
@@ -2525,7 +2525,8 @@ let rec do_make_string_test_tree loc arg sw delta d =
   else
     let lt, (s, act), gt = split len sw in
     bind_sw
-      (Lprim (prim_string_compare, [ arg; Lconst (Const_immstring s) ], loc))
+      (Lprim
+         (prim_string_compare, [ arg; Lconst (Const_immstring (s, None)) ], loc))
       (fun r ->
         tree_way_test loc r
           (do_make_string_test_tree loc arg lt delta d)
@@ -2607,7 +2608,7 @@ let rec do_tests_fail loc fail tst arg = function
   | [] -> fail
   | (c, act) :: rem ->
       Lifthenelse
-        ( Lprim (tst, [ arg; Lconst (Const_base (c, default_pointer_info)) ], loc),
+        ( Lprim (tst, [ arg; lambda_of_const c ], loc),
           do_tests_fail loc fail tst arg rem,
           act )
 
@@ -2616,7 +2617,7 @@ let rec do_tests_nofail loc tst arg = function
   | [ (_, act) ] -> act
   | (c, act) :: rem ->
       Lifthenelse
-        ( Lprim (tst, [ arg; Lconst (Const_base (c, default_pointer_info)) ], loc),
+        ( Lprim (tst, [ arg; lambda_of_const c ], loc),
           do_tests_nofail loc tst arg rem,
           act )
 
@@ -2637,7 +2638,7 @@ let make_test_sequence loc fail tst lt_tst arg const_lambda_list =
       rev_split_at (List.length const_lambda_list / 2) const_lambda_list
     in
     Lifthenelse
-      ( Lprim (lt_tst, [ arg; Lconst (Const_base (fst (List.hd list2), default_pointer_info)) ], loc),
+      ( Lprim (lt_tst, [ arg; lambda_of_const (fst (List.hd list2)) ], loc),
         make_test_sequence list1,
         make_test_sequence list2 )
   in
@@ -2680,7 +2681,7 @@ module SArg = struct
     in
     bind Alias newvar arg (body newarg)
 
-  let make_const i = Lconst (Const_base (Const_int i, default_pointer_info))
+  let make_const i = Lconst (Const_int (i, default_pointer_info))
 
   let make_isout h arg = Lprim (Pisout, [ h; arg ], Loc_unknown)
 
@@ -2689,7 +2690,7 @@ module SArg = struct
   let make_is_nonzero arg =
     if !Clflags.native_code then
       Lprim (Pintcomp Cne,
-             [arg; Lconst (Const_base (Const_int 0, default_pointer_info))],
+             [arg; Lconst (Const_int (0, default_pointer_info))],
              Loc_unknown)
     else
       arg
@@ -2792,7 +2793,7 @@ let reintroduce_fail sw =
             i_max := i;
             c_max := c
           ) else if c = !c_max then (
-           (* Pick the miminal [i] which has maximal [c], and not just
+           (* Pick the minimal [i] which has maximal [c], and not just
               the first [i], as the Hashtbl iteration order is not
               deterministic: see #14088. *)
             i_max := min i !i_max;
@@ -3138,12 +3139,12 @@ let combine_constant names loc arg cst partial ctx def
     (const_lambda_list, total, _pats) =
   let fail, local_jumps = mk_failaction_neg partial ctx def in
   let lambda1 =
-    match cst with
+    match (cst : Asttypes.constant) with
     | Const_int _ ->
         let int_lambda_list =
           List.map
             (function
-              | Const_int n, l -> (n, l)
+              | Asttypes.Const_int n, l -> (n, l)
               | _ -> assert false)
             const_lambda_list
         in
@@ -3152,7 +3153,7 @@ let combine_constant names loc arg cst partial ctx def
         let int_lambda_list =
           List.map
             (function
-              | Const_char c, l -> (Char.code c, l)
+              | Asttypes.Const_char c, l -> (Char.code c, l)
               | _ -> assert false)
             const_lambda_list
         in
@@ -4117,9 +4118,9 @@ let failure_handler ~scopes loc ~failer () =
                   (Const_block
                      ( 0,
                        Blk_tuple,
-                       [ Const_base (Const_string (fname, loc, None), default_pointer_info);
-                         Const_base (Const_int line, default_pointer_info);
-                         Const_base (Const_int char, default_pointer_info)
+                       [ Const_immstring (fname, None);
+                         Const_int (line, default_pointer_info);
+                         Const_int (char, default_pointer_info)
                        ] ))
               ],
               sloc )
@@ -4347,14 +4348,8 @@ let for_let ~scopes loc param pat body =
       (* This eliminates a useless variable (and stack slot in bytecode)
          for "let _ = ...". See #6865. *)
       Lsequence (param, body)
-  | Tpat_var (id, _, _) | Tpat_alias ({ pat_desc = Tpat_any }, id, _, _, _) ->
-      (* Fast path, and keep track of simple bindings to unboxable numbers.
-
-         Note: the (Tpat_alias (Tpat_any, id)) case needs to be
-         supported as well because the type-checker emits a typedtree
-         of this shape in presence of type constraints -- see the
-         non-polymorphic Ppat_constraint case in type_pat_aux.
-      *)
+  | Tpat_var (id, _, _) ->
+      (* Fast path, and keep track of simple bindings to unboxable numbers. *)
       let k = Typeopt.value_kind pat.pat_env pat.pat_type in
       Llet (Strict, k, id, param, body)
   | _ ->

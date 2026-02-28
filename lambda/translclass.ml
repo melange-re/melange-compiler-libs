@@ -236,12 +236,14 @@ let lsequence l1 l2 =
 
 let lfield ~fld_info v i = Lprim(Pfield (i, Pointer, Mutable, fld_info), [Lvar v], Loc_unknown)
 
-let transl_label l = share (Const_immstring l)
+let transl_label l = share (Const_immstring (l, None))
 
 let transl_meth_list lst =
   if lst = [] then Lconst (const_int 0) else
   share (Const_block
-            (0, Lambda.Blk_array, List.map (fun lab -> Const_immstring lab) lst))
+            ( 0,
+              Lambda.Blk_array,
+              List.map (fun lab -> Const_immstring (lab, None)) lst ))
 
 let set_inst_var ~scopes obj id expr =
   Lprim(Psetfield_computed (Typeopt.maybe_pointer expr, Assignment),
