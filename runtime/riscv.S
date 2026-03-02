@@ -245,9 +245,6 @@ FUNCTION(caml_raise_exn)
         j       1b
 END_FUNCTION(caml_raise_exn)
 
-        .globl  caml_reraise_exn
-        .type   caml_reraise_exn, @function
-
 /* Raise an exception from C */
 
 FUNCTION(caml_raise_exception)
