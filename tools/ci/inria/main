@@ -319,7 +319,11 @@ main_build() {
   case $confoptions in
     *--disable-unix-lib*) ;;         # test-in-prefix needs Unix lib
     *)
-      $make -f Makefile.test -C testsuite/in_prefix test-in-prefix
+      if ! $make -f Makefile.test -C testsuite/in_prefix test-in-prefix; then
+        # Ensure the worker is cleaned up
+        rm -rf "$instdir"
+        exit 1
+      fi
       ;;
   esac
   rm -rf "$instdir"
