@@ -1203,12 +1203,7 @@ let solve_Ppat_constraint tps loc env sty expected_ty =
   tps.tps_pattern_force <- force :: tps.tps_pattern_force;
   let ty, expected_ty' = instance ty, ty in
   unify_pat_types loc env ty (instance expected_ty);
-  let expected_ty' =
-    match get_desc expected_ty' with
-    | Tpoly (expected_ty', tl) ->
-        instance_poly ~keep_names:true tl expected_ty'
-    | _ -> expected_ty'
-  in
+  let expected_ty' = Ctype.maybe_instance_poly expected_ty' in
   (cty, ty, expected_ty')
 
 let solve_Ppat_variant loc env tag no_arg expected_ty =

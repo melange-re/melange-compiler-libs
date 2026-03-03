@@ -697,6 +697,11 @@ OCaml 5.5.0
   Replace @PLT calls with GOT-indirect calls in the s390x code emitter.
   (Zane Hambly, review by David Allsopp and Xavier Leroy)
 
+- #14603, #14604: avoid Ctype.apply failures when mixing
+  polymorphic types and unboxed constructors.
+  (Gabriel Scherer and Stefan Muenzel, report by Brandon Stride,
+   review by Florian Angeletti)
+
 OCaml 5.4.0 (9 October 2025)
 ----------------------------
 

@@ -22,11 +22,7 @@ open Typedtree
 open Lambda
 
 let scrape_ty env ty =
-  let ty =
-    match get_desc ty with
-    | Tpoly(ty, _) -> ty
-    | _ -> ty
-  in
+  let ty = Ctype.maybe_instance_poly ty in
   match get_desc ty with
   | Tconstr _ ->
       let ty = Ctype.expand_head_opt env ty in
@@ -36,6 +32,7 @@ let scrape_ty env ty =
           | {type_kind = ( Type_variant (_, Variant_unboxed)
           | Type_record (_, Record_unboxed _) ); _} ->
             Typedecl_unboxed.get_unboxed_type_representation env ty
+            |> Option.map Ctype.maybe_instance_poly
           | _ -> Some ty
           | exception Not_found -> None
           end
@@ -46,14 +43,6 @@ let scrape_ty env ty =
 
 let scrape env ty =
   Option.map get_desc (scrape_ty env ty)
-
-let scrape_poly env ty =
-  let ty = scrape_ty env ty in
-  Option.map (fun ty ->
-      match get_desc ty with
-      | Tpoly (ty, _) -> get_desc ty
-      | d -> d)
-    ty
 
 let is_function_type env ty =
   match scrape env ty with
@@ -127,7 +116,7 @@ let classify env ty : classification =
       assert false
 
 let array_type_kind env ty =
-  match scrape_poly env ty with
+  match scrape env ty with
   | Some (Tconstr(p, [elt_ty], _))
     when Path.same p Predef.path_array || Path.same p Predef.path_iarray ->
       begin match classify env elt_ty with

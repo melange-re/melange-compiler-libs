@@ -1706,6 +1706,12 @@ let instance_poly ?(keep_names=false) univars sch =
     snd (instance_poly' copy_scope ~keep_names ~fixed:false univars sch)
   )
 
+let maybe_instance_poly ty =
+  match get_desc ty with
+  | Tpoly (ty', tyvars) ->
+    instance_poly ~keep_names:true tyvars ty'
+  | _ -> ty
+
 (** [instance_funct_opt] returns [None] if id_in never appeared in [sch] *)
 let instance_funct_opt ~id_in ~p_out ~fixed sch =
   let visited = TypeHash.create 17 in
