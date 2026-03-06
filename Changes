@@ -482,6 +482,9 @@ OCaml 5.5.0
   ```
   (Malo Monin, Florian Angeletti, review by Gabriel Scherer)
 
+- #14512: Improve check for warning 16 (unerasable-optional-argument)
+  (Alistair O'Brien, review by Florian Angeletti, Gabriel Scherer)
+
 ### Internal/compiler-libs changes:
 
 - #13839, #14008: Reimplement `let open`, `let module` and `let exception` in
