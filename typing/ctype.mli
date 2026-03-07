@@ -238,6 +238,12 @@ val instance_poly_fixed:
         (* Take an instance of a type scheme containing free univars for
            checking that an expression matches this scheme. *)
 
+val maybe_instance_poly: type_expr -> type_expr
+  (* If the type is a [Tpoly], we take an instance (replace
+     the corresponding [Tunivar] by [Tvar]) using
+     [instance_poly ~keep_names:true]; otherwise the
+     input type is returned unchanged. *)
+
 val instance_funct_opt:
         id_in:Ident.t -> p_out:Path.t -> fixed:bool ->
         type_expr -> type_expr option
@@ -360,6 +366,26 @@ val is_really_poly : Env.t -> type_expr -> bool
 val filter_method: Env.t -> string -> type_expr -> type_expr
         (* A special case of unification (with {m : 'a; 'b}).  Raises
            [Filter_method_failed] instead of [Unify]. *)
+
+(** [arrow_labels env ty] expands [ty] as an array type in [env] and
+    returns its argument labels.
+
+    [is_ret_tvar] is [true] if the final return type is a type variable,
+    indicating that the list of labels isn't necessarily exhaustive. *)
+val arrow_labels : Env.t -> type_expr -> arg_label list * is_ret_tvar:bool
+
+(** [arrow_spine env ty] expands [ty] as a arrow type in [env] and returns
+    its arrow spine.
+
+    If [ty] is [l1:ty1 -> ... -> ln:tyn -> rty], it returns
+    [([(l1, ty1); ...; (ln, tyn)], `Return rty)].
+
+    If [ty] is a {e cyclic} arrow type, it returns [([...], `Cycle)]. *)
+val arrow_spine
+  :  Env.t
+  -> type_expr
+  -> (arg_label * type_expr) list * [ `Return of type_expr | `Cycle ]
+
 val occur_in: Env.t -> type_expr -> type_expr -> bool
 val deep_occur: type_expr -> type_expr -> bool
 val deep_occur_list: type_expr -> type_expr list -> bool
