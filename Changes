@@ -22,7 +22,7 @@ OCaml 4.14 maintenance version
 
 - #14607: Fix linking with libasmrun_shared.so on Risc-V (undefined symbol
   declared riscv.o)
-  (David Allsopp, review by ???)
+  (David Allsopp, review by Nicolás Ojeda Bär)
 
 OCaml 4.14.3 (17 February 2026)
 ------------------------------
