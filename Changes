@@ -705,6 +705,11 @@ OCaml 5.5.0
   (Gabriel Scherer and Stefan Muenzel, report by Brandon Stride,
    review by Florian Angeletti)
 
+- #14635: Fix a bug in `caml_floatarray_gather` that would cause
+  the result of `Float.Array.sub`, `Float.Array.append`, `Float.Array.concat`
+  (when empty) not to be equal to `[||]`.
+  (Marc Lasson, review by Gabriel Scherer)
+
 OCaml 5.4.0 (9 October 2025)
 ----------------------------
 
