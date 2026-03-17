@@ -291,6 +291,10 @@ OCaml 5.5.0
   (Jacques Garrigue and Takafumi Saikawa, reported by Olivier Nicole,
    review by Gabriel Scherer)
 
+- #14434, #14652: Protect check_counter_example_pat against polymorphic types,
+  restoring type soundness.
+  (Stephen Dolan and Jacques Garrigue, report and review by Alistair O'Brien)
+
 ### Other libraries:
 
 - #13700, #14454: Use POSIX thread-safe getgrnam_r, getgrgid_r, getpwnam_r,
