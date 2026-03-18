@@ -727,7 +727,8 @@ let rec comp_expr stack_info env exp sz cont =
   | Lprim(Preperform, args, _) ->
       let nargs = List.length args - 1 in
       assert (nargs = 2);
-      check_stack stack_info (sz + 3);
+      (* Reperformterm resets the stack before pushing 3 words *)
+      check_stack stack_info 3;
       if is_tailcall cont then
         comp_args stack_info env args sz
           (Kreperformterm(sz + nargs) :: discard_dead_code cont)
