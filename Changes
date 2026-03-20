@@ -1,13 +1,6 @@
 OCaml 4.14 maintenance version
 ------------------------------
 
-### Bug fixes:
-
-- #14599, #14606: on ARM64 platforms, ocamlopt was under-estimating
-  the sizes of some instructions.  This could lead to overflows in
-  relative branch offsets, reported as errors by the assembler.
-  (Xavier Leroy, review by Vincent Laviron, report by Raphaël Proust)
-
 ### Build system:
 
 - #12372, #14572: Pass option -no-execute-only to the linker for OpenBSD >= 7.3
@@ -23,6 +16,18 @@ OCaml 4.14 maintenance version
 - #14607: Fix linking with libasmrun_shared.so on Risc-V (undefined symbol
   declared riscv.o)
   (David Allsopp, review by Nicolás Ojeda Bär)
+
+- #14599, #14606: on ARM64 platforms, ocamlopt was under-estimating
+  the sizes of some instructions.  This could lead to overflows in
+  relative branch offsets, reported as errors by the assembler.
+  (Xavier Leroy, review by Vincent Laviron, report by Raphaël Proust)
+
+- #14661: Build dllthreads.so with pthreads flags (removed in #13018). For
+  normal programs there's no semantic difference, because ocamlrun and
+  ocamlc.opt are always linked with pthreads, but it was a regression to require
+  programs wishing to dlopen dllthreads.so to have already linked with pthreads
+  themselves.
+  (David Allsopp, review by ???)
 
 OCaml 4.14.3 (17 February 2026)
 ------------------------------
