@@ -145,7 +145,7 @@ git tag -m "release $VERSION" $TAGVERSION
 #   4.07.0+rc2 => 4.07.0+dev10-2018-06-26
 # Revert ocaml-variants.opam to its "trunk" version.
 tools/autogen
-git commit -m "increment version number after tagging $VERSION" build-aux/ocaml_version.m4 VERSION configure ocaml-variants.opam
+git commit -m "increment version number after tagging $VERSION" -a
 git push
 git push --tags
 ```
