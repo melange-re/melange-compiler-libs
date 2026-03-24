@@ -281,8 +281,7 @@ AC_SUBST([target_libdir_is_relative])
 AC_SUBST([srcdir_abs])
 AC_SUBST([srcdir_abs_real])
 AC_SUBST([build_map_flags])
-AC_SUBST([zinc_runtime_id_lo])
-AC_SUBST([zinc_runtime_id_hi])
+AC_SUBST([zinc_runtime_id])
 AC_SUBST([bytecode_runtime_id])
 AC_SUBST([native_runtime_id])
 AC_SUBST([suffixing])
@@ -3129,8 +3128,7 @@ AS_CASE([$target,$windows_unicode],
 quintet3_zinc=BASE32([$quintet3_zinc])
 quintet3=BASE32([$quintet3])
 
-zinc_runtime_id_lo="QUINTET0[]QUINTET1_ZINC"
-zinc_runtime_id_hi="${quintet2_zinc}${quintet3_zinc}"
+zinc_runtime_id="QUINTET0[]QUINTET1_ZINC${quintet2_zinc}${quintet3_zinc}"
 bytecode_runtime_id="QUINTET0${quintet1}${quintet2_byte}${quintet3}"
 native_runtime_id="QUINTET0${quintet1}${quintet2_native}${quintet3}"
 

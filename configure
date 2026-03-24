@@ -806,8 +806,7 @@ runtime_search
 suffixing
 native_runtime_id
 bytecode_runtime_id
-zinc_runtime_id_hi
-zinc_runtime_id_lo
+zinc_runtime_id
 build_map_flags
 srcdir_abs_real
 srcdir_abs
@@ -3571,7 +3570,6 @@ LINEAR_MAGIC_NUMBER=Caml1999L037
 
 
  # TODO: rename this variable
-
 
 
 
@@ -24426,8 +24424,7 @@ esac
 quintet3_zinc="$(echo '0123456789abcdefghijklmnopqrstuv' | cut -c $(expr \( $quintet3_zinc \) + 1))"
 quintet3="$(echo '0123456789abcdefghijklmnopqrstuv' | cut -c $(expr \( $quintet3 \) + 1))"
 
-zinc_runtime_id_lo="b1"
-zinc_runtime_id_hi="${quintet2_zinc}${quintet3_zinc}"
+zinc_runtime_id="b1${quintet2_zinc}${quintet3_zinc}"
 bytecode_runtime_id="b${quintet1}${quintet2_byte}${quintet3}"
 native_runtime_id="b${quintet1}${quintet2_native}${quintet3}"
 
