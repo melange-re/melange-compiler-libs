@@ -161,6 +161,22 @@ val labelled' : (module M : Typ with type t = int) -> y:M.t -> M.t = <fun>
 val apply_labelled_success : (module Typ with type t = int) -> int = <fun>
 |}]
 
+(* Labels hidden in a module argument should be known and allowed to be omitted *)
+module type Lbls = sig type t= x:int -> y:int -> int type e = E end
+module L = struct type t = x:int -> y:int -> int type e = E end
+let f (g : (module L:Lbls) -> L.t) (module L:Lbls) = g (module L) 0 1
+[%%expect {|
+module type Lbls = sig type t = x:int -> y:int -> int type e = E end
+module L : sig type t = x:int -> y:int -> int type e = E end
+Line 3, characters 53-54:
+3 | let f (g : (module L:Lbls) -> L.t) (module L:Lbls) = g (module L) 0 1
+                                                         ^
+Warning 6 [labels-omitted]: labels "x", "y" were omitted in the application of
+  this function.
+
+val f : ((module L : Lbls) -> L.t) -> (module Lbls) -> int = <fun>
+|}]
+
 (* Check that the optionnal argument is removed correctly when applying a
 module argument. *)
 let apply_opt (f : ?opt:int -> (module M : Typ) -> M.t) = f (module Int)

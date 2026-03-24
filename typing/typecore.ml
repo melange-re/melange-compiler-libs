@@ -2829,6 +2829,9 @@ let rec list_labels_aux env visited ls ty_fun =
   else match get_desc ty with
     | Tarrow (l, _, ty_res, _) ->
         list_labels_aux env (TypeSet.add ty visited) (l::ls) ty_res
+    | Tfunctor (l,id,pack,ty_res) ->
+        let env, ty_res = open_tfunctor ~loc:Location.none env id pack ty_res in
+        list_labels_aux env (TypeSet.add ty visited) (l::ls) ty_res
     | _ ->
         List.rev ls, is_Tvar ty
 
