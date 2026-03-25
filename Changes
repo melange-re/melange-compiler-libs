@@ -715,6 +715,10 @@ OCaml 5.5.0
   (when empty) not to be equal to `[||]`.
   (Marc Lasson, review by Gabriel Scherer)
 
+- #14626, #14675: take in account module-dependent functions when
+  determining if an optional argument is non-erasable.
+  (Alistair O'Brien and Florian Angeletti, review by Gabriel Scherer)
+
 OCaml 5.4.0 (9 October 2025)
 ----------------------------
 
