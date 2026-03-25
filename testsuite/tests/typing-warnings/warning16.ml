@@ -66,11 +66,6 @@ let baz y =
   ignore (y : unit);
   foo
 [%%expect{|
-Line 2, characters 11-12:
-2 |   let foo ?x = y in
-               ^
-Warning 16 [unerasable-optional-argument]: this optional argument cannot be erased.
-
 val baz : unit -> ?x:'a -> unit = <fun>
 |}]
 
@@ -95,11 +90,6 @@ val baz : ?x:'a -> (?x:'a -> 'b as 'b) = <fun>
 
 let rec baz (type a) ?x = baz
 [%%expect{|
-Line 1, characters 22-23:
-1 | let rec baz (type a) ?x = baz
-                          ^
-Warning 16 [unerasable-optional-argument]: this optional argument cannot be erased.
-
 val baz : ?x:'b -> 'a as 'a = <fun>
 |}]
 

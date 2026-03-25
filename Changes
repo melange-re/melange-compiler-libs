@@ -490,9 +490,6 @@ OCaml 5.5.0
   ```
   (Malo Monin, Florian Angeletti, review by Gabriel Scherer)
 
-- #14512: Improve check for warning 16 (unerasable-optional-argument)
-  (Alistair O'Brien, review by Florian Angeletti, Gabriel Scherer)
-
 ### Internal/compiler-libs changes:
 
 - #13839, #14008: Reimplement `let open`, `let module` and `let exception` in
@@ -712,9 +709,6 @@ OCaml 5.5.0
   polymorphic types and unboxed constructors.
   (Gabriel Scherer and Stefan Muenzel, report by Brandon Stride,
    review by Florian Angeletti)
-
-- #14626: Handle module-dependent functions in warning 16 (Reported in #14622).
-  (Alistair O'Brien, review by Gabriel Scherer, report by Kate Deplaix)
 
 - #14635: Fix a bug in `caml_floatarray_gather` that would cause
   the result of `Float.Array.sub`, `Float.Array.append`, `Float.Array.concat`
