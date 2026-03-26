@@ -731,6 +731,9 @@ OCaml 5.5.0
   the alias twice.
   (Weixie Cui, review by Florian Angeletti)
 
+- #14667: enable application related warnings for module-dependent functions
+  (Florian Angeletti, review by Gabriel Scherer)
+
 OCaml 5.4.0 (9 October 2025)
 ----------------------------
 

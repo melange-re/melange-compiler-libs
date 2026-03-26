@@ -3747,7 +3747,7 @@ let check_partial_application ~statement exp =
   let doit () =
     let ty = get_desc (expand_head exp.exp_env exp.exp_type) in
     match ty with
-    | Tarrow _ ->
+    | Tarrow _ | Tfunctor _  ->
         let rec check {exp_desc; exp_loc; exp_extra; _} =
           if List.exists (function
               | (Texp_constraint _, _, _) -> true
@@ -4063,6 +4063,30 @@ type type_function_result_param =
 { param : function_param;
   has_poly : bool;
 }
+
+(** lower the level of function arguments to the level of the application *)
+let lower_args outer_level env ty_fun =
+  let lower env ty =
+    try Ctype.unify_var env (newvar2 outer_level) ty
+    with Unify _ -> assert false
+  in
+  let rec lower_args env seen ty_fun =
+    let ty = expand_head env ty_fun in
+    if TypeSet.mem ty seen then () else
+      match get_desc ty with
+        Tarrow (_l, ty_arg, ty_fun, _com) ->
+          lower env ty_arg;
+          lower_args env (TypeSet.add ty seen) ty_fun
+      | Tfunctor (_,id,package,ty_fun) ->
+          List.iter (fun (_,ty) -> lower env ty) package.pack_constraints;
+          let env, ty_fun =
+            open_tfunctor ~loc:Location.none env id package ty_fun
+          in
+          lower_args env (TypeSet.add ty seen) ty_fun
+      | _ -> ()
+  in
+  let ty = instance ty_fun in
+  wrap_trace_gadt_instances env (lower_args env TypeSet.empty) ty
 
 (* Generalize expressions *)
 let may_lower_contravariant env exp =
@@ -4399,16 +4423,6 @@ and type_expect_
   | Pexp_apply(sfunct, sargs) ->
       assert (sargs <> []);
       let outer_level = get_current_level () in
-      let rec lower_args seen ty_fun =
-        let ty = expand_head env ty_fun in
-        if TypeSet.mem ty seen then () else
-          match get_desc ty with
-            Tarrow (_l, ty_arg, ty_fun, _com) ->
-              (try Ctype.unify_var env (newvar2 outer_level) ty_arg
-               with Unify _ -> assert false);
-              lower_args (TypeSet.add ty seen) ty_fun
-          | _ -> ()
-      in
       (* one more level for warning on non-returning functions *)
       with_local_level_generalize begin fun () ->
       let type_sfunct sfunct =
@@ -4416,8 +4430,7 @@ and type_expect_
           with_local_level_generalize_structure_if_principal
             (fun () -> type_exp env sfunct)
         in
-        let ty = instance funct.exp_type in
-        wrap_trace_gadt_instances env (lower_args TypeSet.empty) ty;
+        lower_args outer_level env funct.exp_type;
         funct
       in
       let funct, sargs =
@@ -7493,7 +7506,7 @@ let report_literal_type_constraint const = function
 let report_partial_application = function
   | Some tr -> begin
       match get_desc tr.Errortrace.got.Errortrace.expanded with
-      | Tarrow _ ->
+      | Tarrow _ | Tfunctor _ ->
           [ Location.msg
               "@[@{<hint>Hint@}:@ This function application is partial,@ \
                maybe@ some@ arguments@ are missing.@]" ]
@@ -7699,7 +7712,7 @@ let report_error ~loc env = function
       funct; func_ty; res_ty; previous_arg_loc; extra_arg_loc
     } ->
       begin match get_desc func_ty with
-        Tarrow _ ->
+        Tarrow _ | Tfunctor _ ->
           let returns_unit = match get_desc res_ty with
             | Tconstr (p, _, _) -> Path.same p Predef.path_unit
             | _ -> false
