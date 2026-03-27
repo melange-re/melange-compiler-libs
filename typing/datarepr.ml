@@ -165,23 +165,33 @@ let constructor_descrs ~current_unit ty_path decl cstrs rep =
         (cd_id, cstr) :: descr_rem in
   let result = describe_constructors 0 0 cstrs in
   match result with
-  | (
-    [ (a_id, ({cstr_args = []} as a_descr) )  ;
-      (b_id, ({ cstr_args = [_]} as b_descr))
-    ] |
-    [ (a_id, ({cstr_args = [_]} as a_descr) )  ;
-      (b_id, ({ cstr_args = []} as b_descr))
+  | [ (none_id, ({cstr_args = []} as none_descr) )  ;
+      (some_id, ({ cstr_args = [_]} as some_descr))
     ]
-   ) when (Ident.name a_id = "Some" && Ident.name b_id = "None") ||
-         (Ident.name a_id = "None" && Ident.name b_id = "Some")
+     when Ident.name none_id = "None" && Ident.name some_id = "Some" ->
+      [
+        (none_id, {none_descr with
+                   cstr_attributes =
+                     optional_shape :: none_descr.cstr_attributes});
+        (some_id, {some_descr with
+                   cstr_attributes =
+                     optional_shape :: some_descr.cstr_attributes
+                  })
+      ]
+
+  | (
+    [ (some_id, ({cstr_args = [_]} as some_descr) )  ;
+      (none_id, ({ cstr_args = []} as none_descr))
+    ]
+   ) when (Ident.name some_id = "Some" && Ident.name none_id = "None")
     ->
       [
-        (a_id, {a_descr with
+        (some_id, {some_descr with
                    cstr_attributes =
-                     optional_shape :: a_descr.cstr_attributes});
-        (b_id, {b_descr with
+                     optional_shape :: some_descr.cstr_attributes});
+        (none_id, {none_descr with
                    cstr_attributes =
-                     optional_shape :: b_descr.cstr_attributes
+                     optional_shape :: none_descr.cstr_attributes
                   })
       ]
   | _ -> result
