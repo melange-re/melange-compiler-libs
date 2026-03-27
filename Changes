@@ -369,6 +369,9 @@ OCaml 5.5.0
 
 ### Manual and documentation:
 
+- #14684: Improve ocamlopt's manual page
+  (Samuel Hym, review by Florian Angeletti)
+
 - #14397: Improve documentation of type-directed disambiguation of array
   literals (Alicia Michael, review by Olivier Nicole and Florian Angeletti)
 
