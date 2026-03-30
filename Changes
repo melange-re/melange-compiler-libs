@@ -719,6 +719,10 @@ OCaml 5.5.0
   determining if an optional argument is non-erasable.
   (Alistair O'Brien and Florian Angeletti, review by Gabriel Scherer)
 
+- #14557, #12150, #14696: ensure that the self type of class cannot escape
+  through type constraints.
+  (Leo White, review by Florian Angeletti)
+
 OCaml 5.4.0 (9 October 2025)
 ----------------------------
 
