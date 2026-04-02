@@ -775,6 +775,11 @@ OCaml 5.5.0
   (Gabriel Scherer, review by Olivier Nicole and Damien Doligez,
    report by Jan Midtgaard)
 
+- #14702: Fix hidden directory files leaking into the visible load path table.
+  When a hidden directory contained a file whose basename was already present,
+  the file could be incorrectly added to the visible table.
+  (Hugo Heuzard, review by Florian Angeletti)
+
 - #14719, #14721: compute arity correctly for module-dependent function
   (Florian Angeletti, report by Jeremy Yallop, review by Stefan Muenzel)
 
