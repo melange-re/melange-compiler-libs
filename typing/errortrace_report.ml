@@ -644,7 +644,7 @@ let type_path_expansion ppf = function
 let trees_of_type_path_expansion (tp,tp') =
   let path_tree = namespaced_tree_of_path Type in
   if Path.same tp tp' then Same(path_tree tp) else
-    Diff(path_tree tp, path_tree tp)
+    Diff(path_tree tp, path_tree tp')
 
 let type_path_list ppf l =
   Fmt.pp_print_list ~pp_sep:(fun ppf () -> Fmt.pp_print_break ppf 2 0)

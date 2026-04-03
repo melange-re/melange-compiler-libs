@@ -2821,6 +2821,29 @@ let is_prim ~name funct =
       prim_name = name
   | _ -> false
 
+(* List labels in a function type, and whether return type is a variable *)
+let rec list_labels_aux env visited ls ty_fun =
+  let ty = expand_head env ty_fun in
+  if TypeSet.mem ty visited then
+    List.rev ls, false
+  else match get_desc ty with
+    | Tarrow (l, _, ty_res, _) ->
+        list_labels_aux env (TypeSet.add ty visited) (l::ls) ty_res
+    | Tfunctor (l,id,pack,ty_res) ->
+        let env, ty_res = open_tfunctor ~loc:Location.none env id pack ty_res in
+        list_labels_aux env (TypeSet.add ty visited) (l::ls) ty_res
+    | _ ->
+        List.rev ls, is_Tvar ty
+
+let list_labels env ty =
+  let snap = Btype.snapshot () in
+  let result =
+    wrap_trace_gadt_instances env (list_labels_aux env TypeSet.empty []) ty
+  in
+  Btype.backtrack snap;
+  result
+
+
 (* Collecting arguments for function applications. *)
 
 type untyped_apply_arg =
@@ -3037,8 +3060,8 @@ let collect_unknown_apply_args env funct ty_fun0 rev_args sargs =
     || !Clflags.classic && arg = Nolabel && not (is_optional param)
   in
   let has_label l ty_fun =
-    let ls, ~is_ret_tvar = arrow_labels env ty_fun in
-    is_ret_tvar || List.mem l ls
+    let ls, tvar = list_labels env ty_fun in
+    tvar || List.mem l ls
   in
   let rec loop ty_fun rev_args sargs =
     match sargs with
@@ -3726,7 +3749,7 @@ let check_partial_application ~statement exp =
   let doit () =
     let ty = get_desc (expand_head exp.exp_env exp.exp_type) in
     match ty with
-    | Tarrow _ ->
+    | Tarrow _ | Tfunctor _  ->
         let rec check {exp_desc; exp_loc; exp_extra; _} =
           if List.exists (function
               | (Texp_constraint _, _, _) -> true
@@ -4050,6 +4073,30 @@ type type_function_result_param =
 { param : function_param;
   has_poly : bool;
 }
+
+(** lower the level of function arguments to the level of the application *)
+let lower_args outer_level env ty_fun =
+  let lower env ty =
+    try Ctype.unify_var env (newvar2 outer_level) ty
+    with Unify _ -> assert false
+  in
+  let rec lower_args env seen ty_fun =
+    let ty = expand_head env ty_fun in
+    if TypeSet.mem ty seen then () else
+      match get_desc ty with
+        Tarrow (_l, ty_arg, ty_fun, _com) ->
+          lower env ty_arg;
+          lower_args env (TypeSet.add ty seen) ty_fun
+      | Tfunctor (_,id,package,ty_fun) ->
+          List.iter (fun (_,ty) -> lower env ty) package.pack_constraints;
+          let env, ty_fun =
+            open_tfunctor ~loc:Location.none env id package ty_fun
+          in
+          lower_args env (TypeSet.add ty seen) ty_fun
+      | _ -> ()
+  in
+  let ty = instance ty_fun in
+  wrap_trace_gadt_instances env (lower_args env TypeSet.empty) ty
 
 (* Generalize expressions *)
 let may_lower_contravariant env exp =
@@ -4386,16 +4433,6 @@ and type_expect_
   | Pexp_apply(sfunct, sargs) ->
       assert (sargs <> []);
       let outer_level = get_current_level () in
-      let rec lower_args seen ty_fun =
-        let ty = expand_head env ty_fun in
-        if TypeSet.mem ty seen then () else
-          match get_desc ty with
-            Tarrow (_l, ty_arg, ty_fun, _com) ->
-              (try Ctype.unify_var env (newvar2 outer_level) ty_arg
-               with Unify _ -> assert false);
-              lower_args (TypeSet.add ty seen) ty_fun
-          | _ -> ()
-      in
       (* one more level for warning on non-returning functions *)
       with_local_level_generalize begin fun () ->
       let type_sfunct sfunct =
@@ -4403,8 +4440,7 @@ and type_expect_
           with_local_level_generalize_structure_if_principal
             (fun () -> type_exp env sfunct)
         in
-        let ty = instance funct.exp_type in
-        wrap_trace_gadt_instances env (lower_args TypeSet.empty) ty;
+        lower_args outer_level env funct.exp_type;
         funct
       in
       let funct, sargs =
@@ -5664,51 +5700,17 @@ and type_function
          type for each parameter that's added. Now that functions are n-ary,
          there might be an opportunity to improve this.
       *)
-      let only_labels_function_ret_tvar ty =
-        (* [arrow_spine] does expansion and is potentially expensive;
-           only call this when necessary. *)
-        let label_tys, ret_ty_or_cycle = arrow_spine env ty in
-        let is_spine_only_labels =
-          List.for_all (fun (label, _arg_ty) -> label <> Nolabel) label_tys
-        in
-        if is_spine_only_labels
-        then (
-          match ret_ty_or_cycle with
-          | Ret_cycle -> Some `Not_tvar
-          | Ret_type ty ->
-              if is_Tvar ty
-              then Some (`Tvar ty)
-              else Some `Not_tvar )
-        else None
+      let not_nolabel_function ty =
+        (* [list_labels] does expansion and is potentially expensive; only
+           call this when necessary. *)
+        let ls, tvar = list_labels env ty in
+        List.for_all (( <> ) Nolabel) ls && not tvar
       in
-      (* An optional argument [?x] is only erasable if the function's return
-         type eventually becomes an unlabelled arrow type ['a -> 'b].
-
-         If the return type [ty_ret] is not yet fully known, the check must be
-         delayed to avoid reporting false negatives. For instance, with
-         -rectypes in 5.4.0:
-         {[
-         # let rec f (type a) ?x = f;;
-         val f : ?x:'b -> 'a as 'a = <fun>
-         ]}
-      *)
-      let raise_unerasable_optional_argument () =
+      if is_optional arg_label && not_nolabel_function ty_ret
+      then
         Location.prerr_warning
           pat.pat_loc
-          Warnings.Unerasable_optional_argument
-      in
-      if is_optional arg_label
-      then (
-        match only_labels_function_ret_tvar ty_ret with
-        | Some (`Tvar ret_tvar) ->
-          (* We don't necessarily know [ty] is a function with only labelled
-             args since unification may change this. So we add
-             a delayed check. *)
-          add_delayed_check (fun () ->
-              if Option.is_some (only_labels_function_ret_tvar ret_tvar)
-              then raise_unerasable_optional_argument ())
-        | Some `Not_tvar -> raise_unerasable_optional_argument ()
-        | None -> ());
+          Warnings.Unerasable_optional_argument;
       let fp_kind, fp_param =
         match default_arg with
         | None ->
@@ -6232,8 +6234,8 @@ and type_label_exp create env loc ty_expected
 and type_argument ?explanation ?recarg env sarg ty_expected' ty_expected =
   (* ty_expected' may be generic *)
   let no_labels ty =
-    let ls, ~is_ret_tvar = arrow_labels env ty in
-    not is_ret_tvar && List.for_all ((=) Nolabel) ls
+    let ls, tvar = list_labels env ty in
+    not tvar && List.for_all ((=) Nolabel) ls
   in
   let may_coerce =
     if not (is_inferred sarg) then None else
@@ -6437,8 +6439,8 @@ and type_application env app_loc funct sargs =
       let ignore_labels =
         !Clflags.classic ||
         begin
-          let ls, ~is_ret_tvar = arrow_labels env ty in
-          not is_ret_tvar &&
+          let ls, tvar = list_labels env ty in
+          not tvar &&
           let labels = List.filter (fun l -> not (is_optional l)) ls in
           List.length labels = List.length sargs &&
           List.for_all (fun (l,_) -> l = Nolabel) sargs &&
@@ -7520,7 +7522,7 @@ let report_literal_type_constraint const = function
 let report_partial_application = function
   | Some tr -> begin
       match get_desc tr.Errortrace.got.Errortrace.expanded with
-      | Tarrow _ ->
+      | Tarrow _ | Tfunctor _ ->
           [ Location.msg
               "@[@{<hint>Hint@}:@ This function application is partial,@ \
                maybe@ some@ arguments@ are missing.@]" ]
@@ -7726,7 +7728,7 @@ let report_error ~loc env = function
       funct; func_ty; res_ty; previous_arg_loc; extra_arg_loc
     } ->
       begin match get_desc func_ty with
-        Tarrow _ ->
+        Tarrow _ | Tfunctor _ ->
           let returns_unit = match get_desc res_ty with
             | Tconstr (p, _, _) -> Path.same p Predef.path_unit
             | _ -> false
