@@ -528,6 +528,17 @@ void caml_orphan_ephemerons (caml_domain_state* domain_state)
       ephe_info->must_sweep_ephe == 0)
     return;
 
+  /* Mark all ephemerons on live list.
+     (ephe_mark() may move unmarked ephemerons to the live list if
+      their data is none or immediate.) */
+  for (value v = ephe_info->live; v != 0; v = Ephe_link(v)) {
+    if (is_unmarked(v)) {
+      /* This can only happen when the data is trivial. */
+      CAMLassert(Ephe_data(v) == caml_ephe_none || Is_long(Ephe_data(v)));
+      caml_darken(domain_state, v, 0);
+    }
+  }
+
   /* Force all ephemerons and their data on todo list to be alive */
   if (ephe_info->todo) {
     while (ephe_info->todo) {
