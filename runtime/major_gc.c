@@ -528,43 +528,14 @@ void caml_orphan_ephemerons (caml_domain_state* domain_state)
       ephe_info->must_sweep_ephe == 0)
     return;
 
-  /* Mark all ephemerons on live list.
-     (ephe_mark() may move unmarked ephemerons to the live list if
-      their data is none or immediate.)
-
-     See Note [invariants on orphaned ephmerons]. */
-  for (value v = ephe_info->live; v != 0; v = Ephe_link(v)) {
-    if (is_unmarked(v)) {
-      /* This can only happen when the data is trivial. */
-      CAMLassert(Ephe_data(v) == caml_ephe_none || Is_long(Ephe_data(v)));
-      caml_darken(domain_state, v, 0);
-    }
-  }
-
-  if (caml_gc_phase == Phase_sweep_and_mark_main) {
-    /* Force all ephemerons and their data on todo list to be alive */
-    if (ephe_info->todo) {
-      while (ephe_info->todo) {
-        ephe_mark (100000, 0, EPHE_MARK_FORCE_ALIVE);
-      }
-      ephe_todo_list_emptied ();
-    }
-    /* No need to sweep ephemerons: they will be adopted before
-       the cycle completes. */
-  } else {
-    /* Ensure that ephemerons are swept, in case they stay orphaned
-       until the next GC cycle. */
-    if (ephe_info->must_sweep_ephe) {
-      ephe_info->must_sweep_ephe = 0;
-      (void)caml_atomic_counter_decr(&num_domains_to_ephe_sweep);
-      ephe_info->todo = ephe_info->live;
-      ephe_info->live = (value)NULL;
-    }
+  /* Force all ephemerons and their data on todo list to be alive */
+  if (ephe_info->todo) {
     while (ephe_info->todo) {
-      ephe_sweep(domain_state, 100000);
+      ephe_mark (100000, 0, EPHE_MARK_FORCE_ALIVE);
     }
+    ephe_todo_list_emptied ();
   }
-  CAMLassert(ephe_info->todo == 0);
+  CAMLassert (ephe_info->todo == 0);
 
   if (ephe_info->live) {
     value live_tail = ephe_list_tail(ephe_info->live);
@@ -1662,11 +1633,9 @@ void caml_mark_roots_stw (int participant_count,
 
     latest_sweep_allocs = diffmod (work_counter, work_counter_at_sweep_start);
 
-    /* Note [invariants on orphaned ephmerons]:
-       Here we adopt orphaned work from domains that were spawned and
-       terminated in the previous cycle. There must be no orphaned
-       work remaining when this phase change takes place because
-       orphaned work contains roots.
+    /* Adopt orphaned work from domains that were spawned and terminated in the
+       previous cycle. There must be no orphaned work remaining when this phase
+       change takes place because orphaned work contains roots.
 
        [adopt_orphaned_work] also verifies that the ephemerons to be adopted
        all have status [UNMARKED] in this cycle.
@@ -2222,7 +2191,7 @@ mark_again:
 
         while (domain_state->ephe_info->todo != 0 &&
                (budget = get_major_slice_work(mode)) > 0) {
-          intnat left = ephe_sweep(domain_state, budget);
+          intnat left = ephe_sweep (domain_state, budget);
           intnat work_done = budget - left;
           commit_major_slice_work(work_done);
         }
