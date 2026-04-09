@@ -528,6 +528,18 @@ void caml_orphan_ephemerons (caml_domain_state* domain_state)
       ephe_info->must_sweep_ephe == 0)
     return;
 
+  /* Mark all ephemerons on live list.
+     (ephe_mark() may move unmarked ephemerons to the live list if
+      their data is none or immediate.)
+     See Note [invariants on orphaned ephemerons]. */
+  for (value v = ephe_info->live; v != 0; v = Ephe_link(v)) {
+    if (is_unmarked(v)) {
+      /* This can only happen when the data is trivial. */
+      CAMLassert(Ephe_data(v) == caml_ephe_none || Is_long(Ephe_data(v)));
+      caml_darken(domain_state, v, 0);
+    }
+  }
+
   /* Force all ephemerons and their data on todo list to be alive */
   if (ephe_info->todo) {
     while (ephe_info->todo) {
@@ -1633,9 +1645,12 @@ void caml_mark_roots_stw (int participant_count,
 
     latest_sweep_allocs = diffmod (work_counter, work_counter_at_sweep_start);
 
-    /* Adopt orphaned work from domains that were spawned and terminated in the
-       previous cycle. There must be no orphaned work remaining when this phase
-       change takes place because orphaned work contains roots.
+    /* Note [invariants on orphaned ephemerons].
+
+       Here we adopt orphaned work from domains that were spawned and
+       terminated in the previous cycle. There must be no orphaned
+       work remaining when this phase change takes place because
+       orphaned work contains roots.
 
        [adopt_orphaned_work] also verifies that the ephemerons to be adopted
        all have status [UNMARKED] in this cycle.
