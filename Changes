@@ -734,8 +734,9 @@ OCaml 5.5.0
   the alias twice.
   (Weixie Cui, review by Florian Angeletti)
 
-- #....: runtime, fix orphaning of ephemerons
-  (Gabriel Scherer, review by ??, report by Jan Midtgaard)
+- #14349, #14718: runtime, fix orphaning of ephemerons
+  (Gabriel Scherer, review by Olivier Nicole and Damien Doligez,
+   report by Jan Midtgaard)
 
 OCaml 5.4.0 (9 October 2025)
 ----------------------------
