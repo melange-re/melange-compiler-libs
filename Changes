@@ -730,6 +730,9 @@ OCaml 5.5.0
   (Vincent Laviron, report by Thibaut Mattio,
    review by Nicolás Ojeda Bär, Stephen Dolan and Olivier Nicole)
 
+- #14655, #14691: check for size overflow in caml_ba_reshape
+  (Stephen Dolan, review by Xavier Leroy)
+
 - #14667: enable application related warnings for module-dependent functions
   (Florian Angeletti, review by Gabriel Scherer)
 
