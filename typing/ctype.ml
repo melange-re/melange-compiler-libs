@@ -3941,23 +3941,36 @@ let function_type l ~param_hole level =
   let t' = newty2 ~level (Tarrow (l, t1, t2, commu_ok)) in
   t', t1, t2
 
+let arrow_unification_error ~in_apply env t t' trace =
+  let diff =
+    if in_apply then
+      Diff { got = t; expected = t' }
+    else
+      Diff { got = t'; expected = t }
+  in
+  Error (Unification_error (expand_to_unification_error env (diff :: trace)))
+
+let arrow_unify_var ~param_hole l t =
+  let t', ty_param, ty_ret =
+    function_type l ~param_hole (get_level t)
+  in
+  link_type t t';
+  { ty_param; ty_ret }
+
 let filter_arrow env ~in_apply t l ~param_hole =
   match expand_head_trace env t with
+  | exception Unify_trace trace ->
+      let t', _, _ = function_type l ~param_hole (get_level t) in
+      arrow_unification_error ~in_apply env t t' trace
   | t ->
-    begin
-      match get_desc t with
-      | Tvar _ ->
-          let t', ty_param, ty_ret =
-            function_type l ~param_hole (get_level t)
-          in
-          link_type t t';
-          Ok { ty_param; ty_ret }
-      | Tarrow(l', ty_param, ty_ret, _) ->
-          if l = l' || !Clflags.classic && l = Nolabel && not (is_optional l')
-          then Ok { ty_param; ty_ret }
-          else Error (Label_mismatch
-                          { got = l; expected = l'; expected_type = t })
-      | Tfunctor (l', id_us, pack, ty_ret) ->
+    match get_desc t with
+    | Tvar _ -> Ok (arrow_unify_var ~param_hole l t)
+    | Tarrow(l', ty_param, ty_ret, _) ->
+        if l = l' || !Clflags.classic && l = Nolabel && not (is_optional l')
+        then Ok { ty_param; ty_ret }
+        else Error (Label_mismatch
+                      { got = l; expected = l'; expected_type = t })
+    | Tfunctor (l', id_us, pack, ty_ret) ->
         if not (l = l'
                 || !Clflags.classic && l = Nolabel && not (is_optional l'))
         then Error (Label_mismatch
@@ -3968,60 +3981,50 @@ let filter_arrow env ~in_apply t l ~param_hole =
             instance_funct_nondep_inplace env { id_us; pack; ty = ty_ret } mty
           with
           | exception Unify_trace trace ->
-            let t' =
-              newty (Tarrow (l, newmono_package pack, newvar (), commu_ok))
-            in
-            let diff =
-              if in_apply then
-                Diff { got = t; expected = t' }
-              else
-                Diff { got = t'; expected = t }
-            in
-            Error (Unification_error
-                    (expand_to_unification_error env (diff :: trace)))
+              let pack = newmono_package pack in
+              let t' = newty (Tarrow (l, pack, newvar (), commu_ok)) in
+              arrow_unification_error ~in_apply env t t' trace
           | () ->
-            let ty_param = newmono_package ~level:(get_level t) pack in
-            let t' = newty2 ~level:(get_level t)
-                        (Tarrow (l, ty_param, ty_ret, commu_ok))
-            in
-            link_type t t';
-            Ok { ty_param; ty_ret }
-          end
-      | _ ->
-          Error Not_a_function
-    end
-  | exception Unify_trace trace ->
-      let t', _, _ = function_type l ~param_hole (get_level t) in
-      let diff =
-        if in_apply then
-          Diff { got = t; expected = t' }
-        else
-          Diff { got = t'; expected = t }
-      in
-      Error (Unification_error
-              (expand_to_unification_error
-                  env
-                  (diff :: trace)))
+              let ty_param = newmono_package ~level:(get_level t) pack in
+              let t' = newty2 ~level:(get_level t)
+                  (Tarrow (l, ty_param, ty_ret, commu_ok))
+              in
+              link_type t t';
+              Ok { ty_param; ty_ret }
+        end
+    | _ -> Error Not_a_function
 
 let filter_functor env t l =
   match expand_head_trace env t with
-  | t ->
-    begin
-      match get_desc t with
-      | Tfunctor (l', id, pack, ct) ->
-        if compatible_labels ~in_pattern_mode:false l l'
-        then Ok (Some (id, pack, ct))
-        else Error (Label_mismatch
-                      { got = l; expected = l'; expected_type = t })
-      | Tvar _ -> Ok None
-      | _ -> Error Not_a_function
-    end
   | exception Unify_trace trace ->
       let t', _, _ = function_type l ~param_hole:false (get_level t) in
-      Error (Unification_error
-              (expand_to_unification_error
-                  env
-                  (Diff { got = t'; expected = t } :: trace)))
+      arrow_unification_error ~in_apply:true env t t' trace
+  | t ->
+      match get_desc t with
+      | Tfunctor (l', id, pack, ct) ->
+          if compatible_labels ~in_pattern_mode:false l l'
+          then Ok (Some (id, pack, ct))
+          else Error (Label_mismatch
+                        { got = l; expected = l'; expected_type = t })
+      | Tvar _ -> Ok None
+      | _ -> Error Not_a_function
+
+let filter_arity env t l =
+  let param_hole = false in
+  match expand_head_trace env t with
+  | exception Unify_trace trace ->
+      let t', _, _ = function_type l ~param_hole (get_level t) in
+      arrow_unification_error ~in_apply:false env t t' trace
+  | t ->
+      match get_desc t with
+      | Tvar _ ->
+          let ft = arrow_unify_var ~param_hole l t in
+          Ok (env, ft.ty_ret)
+      | Tarrow(_, _, ty_ret, _) -> Ok (env, ty_ret)
+      | Tfunctor (_, id, pack, ct) ->
+          let env, ret = open_tfunctor ~loc:Location.none env id pack ct in
+          Ok (env, ret)
+      | _ -> Error Not_a_function
 
 let is_really_poly env ty =
   let snap = Btype.snapshot () in
