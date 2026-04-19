@@ -4098,6 +4098,75 @@ let lower_args outer_level env ty_fun =
   let ty = instance ty_fun in
   wrap_trace_gadt_instances env (lower_args env TypeSet.empty) ty
 
+
+let enforce_syntactic_arity ~loc env exp_type result_params body =
+  (* Require that the n-ary function is known to have at least n arrows
+     in the type. This prevents GADT equations introduced by the parameters
+     from hiding arrows from the resulting type.
+
+     Performance hack: Only do this check when any of [params] contains a
+     GADT, as this is the only opportunity for arrows to be hidden from the
+     resulting type.
+  *)
+  (* Assert that [ty] is a function, and return its return type. *)
+  let filter_ty_ret_exn arg_label (env,ty) =
+    match filter_arity env ty arg_label with
+    | Ok (env,ty_ret) -> env, ty_ret
+    | Error error ->
+        let trace =
+          match error with
+          | Unification_error trace -> trace
+          | Not_a_function ->
+              let tarrow =
+                (newty
+                   (Tarrow
+                      (arg_label,
+                       newmono (newvar ()),
+                       newvar (),
+                       commu_ok)));
+              in
+              (* We go to some trouble to try to generate a unification
+                 error to help the error printing code's heuristic to
+                 identify the type equation at fault.
+              *)
+              (try
+                 unify env tarrow ty;
+                 fatal_error "unification unexpectedly succeeded"
+               with Unify trace -> trace)
+          | Label_mismatch _ ->
+              fatal_error
+                "Label_mismatch not expected as this point; this should\
+                 have been caught when the function was typechecked."
+        in
+        let syntactic_arity =
+          List.length result_params +
+          (match body with
+           | Tfunction_body _ -> 0
+           | Tfunction_cases _ -> 1)
+        in
+        let err =
+          Function_arity_type_clash
+            { syntactic_arity;
+              type_constraint = exp_type;
+              trace;
+            }
+        in
+        raise (Error (loc, env, err))
+  in
+  let env_ret_ty =
+    List.fold_left (fun env_ret_ty {param; _ } ->
+        filter_ty_ret_exn param.fp_arg_label env_ret_ty
+      )
+      (env, exp_type)
+      result_params
+  in
+  match body with
+  | Tfunction_body _ -> ()
+  | Tfunction_cases _ ->
+      ignore
+        (filter_ty_ret_exn Nolabel env_ret_ty : Env.t * type_expr)
+
+
 (* Generalize expressions *)
 let may_lower_contravariant env exp =
   if maybe_expansive exp then lower_contravariant env exp.exp_type
@@ -4347,76 +4416,10 @@ and type_expect_
         type_function env params body_constraint body ty_expected ~in_function
           ~first:true
       in
-      (* Require that the n-ary function is known to have at least n arrows
-         in the type. This prevents GADT equations introduced by the parameters
-         from hiding arrows from the resulting type.
-
-         Performance hack: Only do this check when any of [params] contains a
-         GADT, as this is the only opportunity for arrows to be hidden from the
-         resulting type.
-      *)
       begin match contains_gadt with
       | No_gadt -> ()
       | Contains_gadt ->
-          (* Assert that [ty] is a function, and return its return type. *)
-          let filter_ty_ret_exn ty arg_label ~param_hole =
-            match
-              filter_arrow env ~in_apply:false ty arg_label ~param_hole
-            with
-            | Ok { ty_ret; _ } -> ty_ret
-            | Error error ->
-                let trace =
-                  match error with
-                  | Unification_error trace -> trace
-                  | Not_a_function ->
-                      let tarrow =
-                        (newty
-                          (Tarrow
-                            (arg_label,
-                             newmono (newvar ()),
-                             newvar (),
-                             commu_ok)));
-                      in
-                      (* We go to some trouble to try to generate a unification
-                        error to help the error printing code's heuristic to
-                        identify the type equation at fault.
-                      *)
-                      (try
-                        unify env tarrow ty;
-                        fatal_error "unification unexpectedly succeeded"
-                      with Unify trace -> trace)
-                  | Label_mismatch _ ->
-                      fatal_error
-                        "Label_mismatch not expected as this point; this should\
-                        have been caught when the function was typechecked."
-                in
-                let syntactic_arity =
-                  List.length result_params +
-                    (match body with
-                      | Tfunction_body _ -> 0
-                      | Tfunction_cases _ -> 1)
-                in
-                let err =
-                  Function_arity_type_clash
-                    { syntactic_arity;
-                      type_constraint = exp_type;
-                      trace;
-                    }
-                in
-                raise (Error (loc, env, err))
-          in
-          let ret_ty =
-            List.fold_left (fun ret_ty { param; has_poly } ->
-                filter_ty_ret_exn ret_ty param.fp_arg_label ~param_hole:has_poly
-              )
-              exp_type
-              result_params
-          in
-          match body with
-          | Tfunction_body _ -> ()
-          | Tfunction_cases _ ->
-              ignore
-                (filter_ty_ret_exn ret_ty Nolabel ~param_hole:false : type_expr)
+          enforce_syntactic_arity ~loc env exp_type result_params body
       end;
       let params =
         List.map (fun { param; has_poly = _ } -> param) result_params
