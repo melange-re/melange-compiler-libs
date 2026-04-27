@@ -8,7 +8,7 @@ OCaml 5.5.0
 * #13681, #13682, #13683, #13684, #13275 :
   Introduce a new type `(module M : S) -> t[M]` that corresponds to
   module-dependent functions (also called: modular explicits).
-    let mapM (module M : Monad) (f : 'a -> 'b M.t) : 'a list -> 'b list M.t = ...
+    val mapM: (module M : Monad) (f : 'a -> 'b M.t) : 'a list -> 'b list M.t
   (Samuel Vivien review by Leo White, Gabriel Scherer, Florian Angeletti,
     Jacques Garrigue and Stephen Dolan)
 
