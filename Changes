@@ -416,9 +416,11 @@ OCaml 5.5.0
 
 ### Other libraries:
 
-- #13700, #14454: Use POSIX thread-safe getgrnam_r, getgrgid_r, getpwnam_r,
-  getpwuid_r, gmtime_r, localtime_r, getlogin_r, and fix mktime error checking.
-  (Antonin Décimo, review by David Allsopp, Stefan Muenzel, and Miod Vallat)
+- #13700, #14454, #14715: Use POSIX thread-safe getgrnam_r, getgrgid_r,
+  getpwnam_r, getpwuid_r, gmtime_r, localtime_r, getlogin_r, and fix mktime
+  error checking.
+  (Antonin Décimo, review by Florian Angeletti, David Allsopp, Stefan Muenzel,
+   Gabriel Scherer, and Miod Vallat)
 
 - #14406: Better handling of address length for unix sockets, improving Haiku
   compatibility.
