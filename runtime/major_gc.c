@@ -343,6 +343,40 @@ static void record_ephe_marking_done (uintnat ephe_cycle)
   caml_plat_unlock(&ephe_lock);
 }
 
+Caml_inline value ephe_list_tail(value e)
+{
+  value last = 0;
+  while (e != 0) {
+    CAMLassert (Tag_val(e) == Abstract_tag);
+    last = e;
+    e = Ephe_link(e);
+  }
+  return last;
+}
+
+/* Prepare to mark ephemerons by moving the ephemerons on the live
+   list to the todo list. This is needed since the live list may
+   contain ephemerons with unmarked keys, which need to be
+   cleaned. This code is executed exactly once per major cycle per
+   domain, using the [ephe_info->must_sweep_ephe] state as
+   a reminder. */
+static void prepare_for_ephe_sweeping(caml_domain_state *domain_state)
+{
+  value e = ephe_list_tail (domain_state->ephe_info->todo);
+  if (e == (value)NULL) {
+    domain_state->ephe_info->todo = domain_state->ephe_info->live;
+  } else {
+    CAMLassert(Ephe_link(e) == (value)NULL);
+    Ephe_link(e) = domain_state->ephe_info->live;
+  }
+  domain_state->ephe_info->live = (value)NULL;
+  /* If the todo list is empty, then the domain has no ephemeron
+     sweeping work to do. */
+  if (domain_state->ephe_info->todo == (value)NULL) {
+      (void)caml_atomic_counter_decr(&num_domains_to_ephe_sweep);
+  }
+}
+
 #define EPHE_MARK_DEFAULT 0
 #define EPHE_MARK_FORCE_ALIVE 1
 
@@ -491,17 +525,6 @@ static struct {
 
 static caml_plat_mutex orphaned_lock = CAML_PLAT_MUTEX_INITIALIZER;
 
-Caml_inline value ephe_list_tail(value e)
-{
-  value last = 0;
-  while (e != 0) {
-    CAMLassert (Tag_val(e) == Abstract_tag);
-    last = e;
-    e = Ephe_link(e);
-  }
-  return last;
-}
-
 #ifdef DEBUG
 static void orph_ephe_list_verify_status (int status)
 {
@@ -531,6 +554,7 @@ void caml_orphan_ephemerons (caml_domain_state* domain_state)
   /* Mark all ephemerons on live list.
      (ephe_mark() may move unmarked ephemerons to the live list if
       their data is none or immediate.)
+
      See Note [invariants on orphaned ephemerons]. */
   for (value v = ephe_info->live; v != 0; v = Ephe_link(v)) {
     if (is_unmarked(v)) {
@@ -540,14 +564,34 @@ void caml_orphan_ephemerons (caml_domain_state* domain_state)
     }
   }
 
-  /* Force all ephemerons and their data on todo list to be alive */
-  if (ephe_info->todo) {
-    while (ephe_info->todo) {
-      ephe_mark (100000, 0, EPHE_MARK_FORCE_ALIVE);
+  if (caml_gc_phase == Phase_sweep_and_mark_main
+      || caml_gc_phase == Phase_mark_final)
+  {
+    /* Force all ephemerons and their data on todo list to be alive */
+    if (ephe_info->todo) {
+      while (ephe_info->todo) {
+        ephe_mark (100000, 0, EPHE_MARK_FORCE_ALIVE);
+      }
+      ephe_todo_list_emptied ();
     }
-    ephe_todo_list_emptied ();
+    /* No need to sweep ephemerons: they will be adopted before
+       the cycle completes. */
+  } else {
+    /* Ensure that the ephemerons of this domain are swept/cleaned, in
+       case they stay orphaned until the next GC cycle. This mirrors
+       the logic in [major_collection_slice] for [Phase_sweep_ephe]. */
+    if (ephe_info->must_sweep_ephe) {
+      ephe_info->must_sweep_ephe = 0;
+      prepare_for_ephe_sweeping(domain_state);
+    }
+    if (ephe_info->todo) {
+      while (ephe_info->todo) {
+        ephe_sweep(domain_state, 100000);
+      }
+      (void)caml_atomic_counter_decr(&num_domains_to_ephe_sweep);
+    }
   }
-  CAMLassert (ephe_info->todo == 0);
+  CAMLassert(ephe_info->todo == 0);
 
   if (ephe_info->live) {
     value live_tail = ephe_list_tail(ephe_info->live);
@@ -560,10 +604,6 @@ void caml_orphan_ephemerons (caml_domain_state* domain_state)
     caml_plat_unlock(&orphaned_lock);
   }
 
-  if (ephe_info->must_sweep_ephe) {
-    ephe_info->must_sweep_ephe = 0;
-    (void)caml_atomic_counter_decr(&num_domains_to_ephe_sweep);
-  }
   CAMLassert (ephe_info->must_sweep_ephe == 0);
   CAMLassert (ephe_info->live == 0);
   CAMLassert (ephe_info->todo == 0);
@@ -1645,8 +1685,7 @@ void caml_mark_roots_stw (int participant_count,
 
     latest_sweep_allocs = diffmod (work_counter, work_counter_at_sweep_start);
 
-    /* Note [invariants on orphaned ephemerons].
-
+    /* Note [invariants on orphaned ephmerons]:
        Here we adopt orphaned work from domains that were spawned and
        terminated in the previous cycle. There must be no orphaned
        work remaining when this phase change takes place because
@@ -2177,26 +2216,8 @@ mark_again:
       /* Ephemeron Sweeping */
 
       if (domain_state->ephe_info->must_sweep_ephe) {
-        /* Move the ephemerons on the live list to the todo list. This is
-           needed since the live list may contain ephemerons with unmarked
-           keys, which need to be cleaned. This code is executed exactly once
-           per major cycle per domain. */
         domain_state->ephe_info->must_sweep_ephe = 0;
-
-        value e = ephe_list_tail (domain_state->ephe_info->todo);
-        if (e == (value)NULL) {
-          domain_state->ephe_info->todo = domain_state->ephe_info->live;
-        } else {
-          CAMLassert(Ephe_link(e) == (value)NULL);
-          Ephe_link(e) = domain_state->ephe_info->live;
-        }
-        domain_state->ephe_info->live = (value)NULL;
-
-        /* If the todo list is empty, then the ephemeron has no sweeping work
-         * to do. */
-        if (domain_state->ephe_info->todo == 0) {
-          (void)caml_atomic_counter_decr(&num_domains_to_ephe_sweep);
-        }
+        prepare_for_ephe_sweeping(domain_state);
       }
 
       if (domain_state->ephe_info->todo != 0) {
@@ -2206,7 +2227,7 @@ mark_again:
 
         while (domain_state->ephe_info->todo != 0 &&
                (budget = get_major_slice_work(mode)) > 0) {
-          intnat left = ephe_sweep (domain_state, budget);
+          intnat left = ephe_sweep(domain_state, budget);
           intnat work_done = budget - left;
           commit_major_slice_work(work_done);
         }
