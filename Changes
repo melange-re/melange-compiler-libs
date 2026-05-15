@@ -783,6 +783,10 @@ OCaml 5.5.0
   OpenSUSE with the site-config package installed.
   (David Allsopp, review by Edwin Török, report by Edwin Török)
 
+- #14797: avoid dropping attributes attached to package types when pretty
+  printing in surface syntax.
+  (Chet Murthy, review by Nicolás Ojeda Bär)
+
 OCaml 5.4.0 (9 October 2025)
 ----------------------------
 
