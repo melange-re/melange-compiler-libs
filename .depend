@@ -29,21 +29,18 @@ utils/ccomp.cmx : \
     utils/ccomp.cmi
 utils/ccomp.cmi :
 utils/clflags.cmo : \
-    utils/profile.cmi \
     utils/numbers.cmi \
     utils/misc.cmi \
     utils/config.cmi \
     utils/arg_helper.cmi \
     utils/clflags.cmi
 utils/clflags.cmx : \
-    utils/profile.cmx \
     utils/numbers.cmx \
     utils/misc.cmx \
     utils/config.cmx \
     utils/arg_helper.cmx \
     utils/clflags.cmi
 utils/clflags.cmi : \
-    utils/profile.cmi \
     utils/misc.cmi \
     utils/config.cmi
 utils/compression.cmo : \
@@ -182,11 +179,14 @@ utils/numbers.cmi : \
     utils/identifiable.cmi
 utils/profile.cmo : \
     utils/misc.cmi \
+    utils/clflags.cmi \
     utils/profile.cmi
 utils/profile.cmx : \
     utils/misc.cmx \
+    utils/clflags.cmx \
     utils/profile.cmi
-utils/profile.cmi :
+utils/profile.cmi : \
+    utils/clflags.cmi
 utils/stable_matching.cmo : \
     utils/stable_matching.cmi
 utils/stable_matching.cmx : \
