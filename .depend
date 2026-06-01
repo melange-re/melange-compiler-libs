@@ -185,8 +185,7 @@ utils/profile.cmx : \
     utils/misc.cmx \
     utils/clflags.cmx \
     utils/profile.cmi
-utils/profile.cmi : \
-    utils/clflags.cmi
+utils/profile.cmi :
 utils/stable_matching.cmo : \
     utils/stable_matching.cmi
 utils/stable_matching.cmx : \

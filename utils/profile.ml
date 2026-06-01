@@ -188,6 +188,7 @@ let compute_other_category (E table : hierarchy) (total : Measure_diff.t) =
   !r
 
 type row = R of string * (float * display) list * row list
+type column = [ `Time | `Alloc | `Top_heap | `Abs_top_heap ]
 
 let rec rows_of_hierarchy ~nesting make_row name measure_diff hierarchy env =
   let rows =
