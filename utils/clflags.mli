@@ -205,7 +205,7 @@ val force_slash : bool ref
 val keep_docs : bool ref
 val keep_locs : bool ref
 val opaque : bool ref
-val profile_columns : Profile.column list ref
+val profile_columns : [ `Time | `Alloc | `Top_heap | `Abs_top_heap ] list ref
 val flambda_invariant_checks : bool ref
 val unbox_closures : bool ref
 val unbox_closures_factor : int ref

@@ -38,6 +38,8 @@ module Float_arg_helper = Arg_helper.Make (struct
   end
 end)
 
+type profile_column = [ `Time | `Alloc | `Top_heap | `Abs_top_heap ]
+
 let objfiles = ref ([] : string list)         (* .cmo and .cma files *)
 and ccobjs = ref ([] : string list)           (* .o, .a, .so and -cclib -lxxx *)
 and dllibs = ref ([] : (suffixed:bool * string) list)
@@ -151,7 +153,7 @@ let dump_reload = ref false             (* -dreload *)
 let dump_scheduling = ref false         (* -dscheduling *)
 let dump_linear = ref false             (* -dlinear *)
 let keep_startup_file = ref false       (* -dstartup *)
-let profile_columns : Profile.column list ref = ref [] (* -dprofile/-dtimings *)
+let profile_columns : profile_column list ref = ref [] (* -dprofile/-dtimings *)
 
 let native_code = ref false             (* set to true under ocamlopt *)
 

@@ -2428,7 +2428,6 @@ ocamlcp_ocamloptp_SOURCES = \
   build_path_prefix_map.mli build_path_prefix_map.ml \
   format_doc.mli format_doc.ml \
   misc.mli misc.ml \
-  profile.mli profile.ml \
   warnings.mli warnings.ml \
   identifiable.mli identifiable.ml \
   numbers.mli numbers.ml \
@@ -2436,6 +2435,7 @@ ocamlcp_ocamloptp_SOURCES = \
   local_store.mli local_store.ml \
   load_path.mli load_path.ml \
   clflags.mli clflags.ml \
+  profile.mli profile.ml \
   terminfo.mli terminfo.ml \
   location.mli location.ml \
   ccomp.mli ccomp.ml \

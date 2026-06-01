@@ -72,6 +72,7 @@ let initial_measure = ref None
 let reset () = hierarchy := create (); initial_measure := None
 
 let record_call ?(accumulate = false) name f =
+  if !Clflags.profile_columns = [] then f () else
   let E prev_hierarchy = !hierarchy in
   let start_measure = Measure.create () in
   if !initial_measure = None then initial_measure := Some start_measure;
