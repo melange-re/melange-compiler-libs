@@ -796,10 +796,10 @@ OCaml 5.5.0
 - #14719, #14721: compute arity correctly for module-dependent function
   (Florian Angeletti, report by Jeremy Yallop, review by Stefan Muenzel)
 
-- #14760, #14802: Correct the detection of argument defaults in configure,
-  fixing an incorrect error message when installing OCaml through opam on
-  OpenSUSE with the site-config package installed.
-  (David Allsopp, review by Edwin Török, report by Edwin Török)
+- #14760, #14802, #14846: Correct the detection of argument defaults in
+  configure, fixing an incorrect error message when installing OCaml through
+  opam on OpenSUSE with the site-config package installed.
+  (David Allsopp, report and review by Edwin Török)
 
 - #14797: avoid dropping attributes attached to package types when pretty
   printing in surface syntax.

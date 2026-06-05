@@ -3359,12 +3359,10 @@ do
   case $ac_arg in
     -mandir=* | --mandir=* | --mandi=* | --mand=* | --man=* | --ma=* | --m=* | \
     -mandir | --mandir | --mandi | --mand | --man | --ma | --m)
-      mandir_given=yes
-      break ;;
+      mandir_given=yes;;
     -libdir=* | --libdir=* | --libdi=* | --libd=* | \
     -libdir   | --libdir   | --libdi   | --libd)
-      libdir_given=yes
-      break ;;
+      libdir_given=yes;;
   esac
 done
 
