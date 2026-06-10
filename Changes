@@ -805,6 +805,9 @@ OCaml 5.5.0
   printing in surface syntax.
   (Chet Murthy, review by Nicolás Ojeda Bär)
 
+- #14853: fix quoting of filenames passed to Filename.quote_command on Windows.
+  (David Allsopp, report by Andrew Nesbitt, review by ???)
+
 OCaml 5.4.0 (9 October 2025)
 ----------------------------
 
