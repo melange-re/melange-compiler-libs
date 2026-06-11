@@ -33,6 +33,11 @@ OCaml 4.14 maintenance version
   caml_ba_reshape
   (Stephen Dolan, review by Xavier Leroy)
 
+- #14853, CVE-2026-41083, OSEC-2026-05: fix quoting of filenames passed to
+  Filename.quote_command on Windows.
+  (David Allsopp, report by Andrew Nesbitt, review by Florian Angeletti)
+
+
 OCaml 4.14.3 (17 February 2026)
 ------------------------------
 
