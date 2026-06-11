@@ -744,7 +744,7 @@ OCaml 5.5.0
   circumstances due to bad error checking when calling `mmap()`.
   (Mark Elvers, review by Nicolás Ojeda Bär)
 
-- private: robustify intern.c
+- private, CVE-2026-28364, OSEC-2026-01: robustify intern.c
   (Xavier Leroy and Nicolás Ojeda Bär, review by Olivier Nicole, Mindy Preston,
   Edwin Török, and Gabriel Scherer)
 
@@ -807,8 +807,9 @@ OCaml 5.5.0
   printing in surface syntax.
   (Chet Murthy, review by Nicolás Ojeda Bär)
 
-- #14853: fix quoting of filenames passed to Filename.quote_command on Windows.
-  (David Allsopp, report by Andrew Nesbitt, review by ???)
+- #14853, CVE-2026-41083, OSEC-2026-05: fix quoting of filenames
+   passed to Filename.quote_command on Windows.
+  (David Allsopp, report by Andrew Nesbitt, review by Florian Angeletti)
 
 OCaml 5.4.0 (9 October 2025)
 ----------------------------
