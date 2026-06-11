@@ -29,7 +29,8 @@ OCaml 4.14 maintenance version
   themselves.
   (David Allsopp, review by Gabriel Scherer)
 
-- #14655, #14691, CVE-2026-34353: check for size overflow in caml_ba_reshape
+- #14655, #14691, CVE-2026-34353, OSEC-2026-04: check for size overflow in
+  caml_ba_reshape
   (Stephen Dolan, review by Xavier Leroy)
 
 OCaml 4.14.3 (17 February 2026)
