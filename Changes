@@ -76,7 +76,7 @@ OCaml 4.14.3 (17 February 2026)
   demarshaling.
   (Benoît Vaugon, review by David Allsopp and Gabriel Scherer)
 
-- private: robustify intern.c
+- private, CVE-2026-28364, OSEC-2026-01: robustify intern.c
   (Xavier Leroy, review by Damien Doligez and Olivier Nicole)
 
 
