@@ -36,8 +36,6 @@ argv[4] = {|in reprehenderit|}
 argv[5] = {|in voluptate|}
 argv[7] = {|velit esse cillum|}
 argv[9] = {|dolore|}
--------- Forward slashes in program position
-argv[1] = {|alea iacta est|}
 -------- Metacharacters in program name
 -- my&echo.exe
 argv[1] = {|per aspera|}

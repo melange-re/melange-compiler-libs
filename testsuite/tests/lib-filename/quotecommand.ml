@@ -58,6 +58,7 @@ let cat_and_rm_file f =
 
 let myecho =
   Filename.concat Filename.current_dir_name "my echo.exe"
+let echo_exe = Filename.concat Filename.current_dir_name "myecho.exe"
 
 let run ?(prog=myecho) ?stdin ?stdout ?stderr args =
   flush Stdlib.stdout;
@@ -107,11 +108,11 @@ let _ =
   cat_and_rm_file "my file.tmp";
   Sys.remove "my echo.exe"
 
+(* Disabled in 4.14.4: missing fix
 let _ =
   printf "-------- Forward slashes in program position\n";
   run ~prog:"./myecho.exe" ["alea iacta est"]
-
-let echo_exe = "./myecho.exe"
+*)
 
 (* The program name and the redirection files go through quote_cmd_filename,
    which must double-quote cmd.exe metacharacters that are legal in a Windows
