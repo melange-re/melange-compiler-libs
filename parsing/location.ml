@@ -607,6 +607,23 @@ let lines_around_from_lexbuf
     lines_around ~start_pos ~end_pos ~seek ~read_char
   end
 
+let lines_around_from_file file ~start_pos ~end_pos =
+  match open_in_bin file with
+  | exception Sys_error _ -> []
+  | ic ->
+      Fun.protect
+        ~finally:(fun () -> close_in_noerr ic)
+        (fun () ->
+          let seek n = seek_in ic n in
+          let read_char () =
+            match input_char ic with
+            | c -> Some c
+            | exception End_of_file -> None
+          in
+          match lines_around ~start_pos ~end_pos ~seek ~read_char with
+          | lines -> lines
+          | exception Invalid_argument _ -> [])
+
 (* Attempt to get lines from the phrase buffer *)
 let lines_around_from_phrasebuf
     ~(start_pos: position) ~(end_pos: position)
@@ -697,14 +714,121 @@ let is_dummy_loc loc =
    [!Location.input_lexbuf];
 
    - when calling the compiler on a .ml file that contains lexer line directives
-   indicating an other file. This should happen relatively rarely in practice --
-   in particular this is not what happens when using -pp or -ppx or a ppx
-   driver.
+   indicating another file. The filename no longer matches the current input,
+   so we quote from the original file using line/column positions.
 *)
+let line_start_offset ic line =
+  if line < 1 then None
+  else begin
+    seek_in ic 0;
+    let rec loop current_line =
+      if current_line = line then Some (pos_in ic)
+      else
+        match input_char ic with
+        | '\n' -> loop (current_line + 1)
+        | _ -> loop current_line
+        | exception End_of_file -> None
+    in
+    loop 1
+  end
+
+let loc_in_original_file loc =
+  let file = loc.loc_start.pos_fname in
+  let start_line = loc.loc_start.pos_lnum in
+  let end_line = loc.loc_end.pos_lnum in
+  let start_col = loc.loc_start.pos_cnum - loc.loc_start.pos_bol in
+  let end_col = loc.loc_end.pos_cnum - loc.loc_end.pos_bol in
+  if start_line < 1 || end_line < start_line || start_col < 0 || end_col < 0
+  then None
+  else
+    match open_in_bin file with
+    | exception Sys_error _ -> None
+    | ic ->
+        Fun.protect
+          ~finally:(fun () -> close_in_noerr ic)
+          (fun () ->
+            match
+              line_start_offset ic start_line, line_start_offset ic end_line
+            with
+            | None, _ | _, None -> None
+            | Some start_bol, Some end_bol ->
+                let start_cnum = start_bol + start_col in
+                let end_cnum = end_bol + end_col in
+                if start_cnum < start_bol || end_cnum < start_cnum then None
+                else
+                  Some
+                    { loc with
+                      loc_start =
+                        { loc.loc_start with
+                          pos_bol = start_bol;
+                          pos_cnum = start_cnum
+                        };
+                      loc_end =
+                        { loc.loc_end with
+                          pos_bol = end_bol;
+                          pos_cnum = end_cnum
+                        }
+                    })
+
+let parse_line_directive line =
+  match
+    Scanf.sscanf line "# %d %S" (fun _line filename -> Some filename)
+  with
+  | filename -> filename
+  | exception _ -> None
+
+let line_directive_loc_in_current_input loc =
+  match !input_name with
+  | "" | "//toplevel//" -> false
+  | file -> (
+      match open_in_bin file with
+      | exception Sys_error _ -> false
+      | ic ->
+          Fun.protect
+            ~finally:(fun () -> close_in_noerr ic)
+            (fun () ->
+              let file_len = in_channel_length ic in
+              let range_is_in_file =
+                loc.loc_start.pos_bol >= 0
+                && loc.loc_start.pos_cnum >= loc.loc_start.pos_bol
+                && loc.loc_end.pos_cnum >= loc.loc_start.pos_cnum
+                && loc.loc_end.pos_cnum <= file_len
+              in
+              if not range_is_in_file then false
+              else begin
+                let latest_filename = ref None in
+                (try
+                   while pos_in ic < loc.loc_start.pos_bol do
+                     Option.iter
+                       (fun filename -> latest_filename := Some filename)
+                       (parse_line_directive (input_line ic))
+                   done
+                 with
+                 | End_of_file -> ());
+                !latest_filename = Some loc.loc_start.pos_fname
+              end))
+
+let same_file_loc loc =
+  loc.loc_start.pos_fname = loc.loc_end.pos_fname
+
+let valid_loc loc =
+  not (is_dummy_loc loc) && same_file_loc loc
+
+type quoted_source =
+  | Current_input of t
+  | Original_file of t
+
+let quoted_source loc =
+  if not (valid_loc loc) then None
+  else if loc.loc_start.pos_fname = !input_name then Some (Current_input loc)
+  else if line_directive_loc_in_current_input loc then
+    Option.map (fun loc -> Original_file loc) (loc_in_original_file loc)
+  else None
+
 let is_quotable_loc loc =
-  not (is_dummy_loc loc)
-  && loc.loc_start.pos_fname = !input_name
-  && loc.loc_end.pos_fname = !input_name
+  match quoted_source loc with
+  | Some _ -> true
+  | None -> false
 
 let error_style () =
   match !Clflags.error_style with
@@ -723,10 +847,17 @@ let batch_mode_printer : report_printer =
     let highlight ppf loc =
       match error_style () with
       | Misc.Error_style.Contextual ->
-          if is_quotable_loc loc then
-            highlight_quote ppf
-              ~get_lines:lines_around_from_current_input
-              tag [loc]
+          begin match quoted_source loc with
+          | Some (Current_input loc) ->
+              highlight_quote ppf
+                ~get_lines:lines_around_from_current_input
+                tag [loc]
+          | Some (Original_file loc) ->
+              highlight_quote ppf
+                ~get_lines:(lines_around_from_file loc.loc_start.pos_fname)
+                tag [loc]
+          | None -> ()
+          end
       | Misc.Error_style.Short ->
           ()
     in
@@ -820,6 +951,18 @@ let default_report_printer () : report_printer =
     batch_mode_printer
 
 let report_printer = ref default_report_printer
+
+let wrapper_report_printer () : report_printer =
+  let printer = !report_printer () in
+  let pp self ppf report =
+    let num_loc_lines_before = !num_loc_lines in
+    Fun.protect
+      ~finally:(fun () -> num_loc_lines := num_loc_lines_before)
+      (fun () -> printer.pp self ppf report)
+  in
+  { printer with pp }
+
+let () = Melange_wrapper.Location.report_printer := wrapper_report_printer
 
 let print_report ppf report =
   let printer = !report_printer () in
