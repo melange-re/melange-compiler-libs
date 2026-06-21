@@ -153,6 +153,8 @@ let systhread_supported = true;;
 
 let flexdll_dirs = [];;
 
+let ar_supports_response_files = %%AR_SUPPORTS_RESPONSE_FILES%%;;
+
 type configuration_value =
   | String of string
   | Int of int
