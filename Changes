@@ -18,6 +18,10 @@ OCaml 5.5.1
 - #14883, #14884: fix Windows cross-compilation with older mingw32-gcc versions
   (Brian Ward, review by Antonin Décimo and Stefan Muenzel)
 
+- #14881, #14882: fix printing of external types that are subject to module
+  constraints.
+  (Stefan Muenzel, review by Florian Angeletti)
+
 OCaml 5.5.0 (19 June 2026)
 -------------------------
 
