@@ -15,6 +15,9 @@ OCaml 5.5.1
   ````
   (Florian Angeletti, report by Hazem ElMasry, review by Gabriel Scherer)
 
+- #14883, #14884: fix Windows cross-compilation with older mingw32-gcc versions
+  (Brian Ward, review by Antonin Décimo and Stefan Muenzel)
+
 OCaml 5.5.0 (19 June 2026)
 -------------------------
 
