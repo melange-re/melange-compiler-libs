@@ -2321,7 +2321,7 @@ let occur_univar_or_unscoped ?(inj_only=false) env ty =
       | Tpackage {pack_path = p; pack_constraints} ->
           begin match Path.check_for_unbound_unscoped_idents bound_id p with
           | Some i ->
-            occur_normalize_modtype_path env bound_uv bound_id i p
+            occur_normalize_modtype_path env bound_uv bound_id i p ty
               (fun pack_path -> Tpackage {pack_path; pack_constraints})
           | None ->
               List.iter (fun (_, t) -> occur_rec env bound_uv bound_id t)
@@ -2334,6 +2334,7 @@ let occur_univar_or_unscoped ?(inj_only=false) env ty =
           match id_escape with
           | Some i ->
             occur_normalize_modtype_path env bound_uv bound_id i pack.pack_path
+              ty
               (fun pack_path -> Tfunctor (l, id, {pack with pack_path}, ty))
           | None ->
               List.iter (fun (_, t) -> occur_rec env bound_uv bound_id t)
@@ -2358,7 +2359,7 @@ let occur_univar_or_unscoped ?(inj_only=false) env ty =
         occur_desc env bound_uv bound_id ty
       end else
         iter_type_expr (occur_rec env bound_uv bound_id) ty
-    and occur_normalize_modtype_path env bound_uv bound_id us p f =
+    and occur_normalize_modtype_path env bound_uv bound_id us p ty f =
       match Env.try_normalize_modtype_path env p with
       | None -> raise_escape_exn (Module (Ident.of_unscoped us))
       | Some p' ->
@@ -2459,7 +2460,7 @@ let enter_poly_for tr_exn env t1 tl1 t2 tl2 f =
     Similar to [nondep_type], however we remove the dependency in place,
     while [nondep] does a copy of the type.
 *)
-let identifier_escape env idl ty =
+let identifier_escape env idl initial_ty =
   with_type_mark begin fun mark ->
   let rec occur ?(ignore_mark=false) idl ty =
     if try_mark_node mark ty || ignore_mark then begin
@@ -2473,7 +2474,7 @@ let identifier_escape env idl ty =
           begin match Path.find_free_opt idl pack.pack_path with
           | None -> iter_type_expr (occur idl) ty
           | Some i ->
-            occur_normalize_modtype_path env idl pack.pack_path i
+            occur_normalize_modtype_path env idl pack.pack_path i ty
               (fun pack_path -> Tpackage {pack with pack_path})
           end
       | Tobject (_, ({contents = Some (p, _)} as nm)) ->
@@ -2489,7 +2490,7 @@ let identifier_escape env idl ty =
       | Tfunctor (l, id, pack, t) ->
           begin match Path.find_free_opt idl pack.pack_path with
           | Some i ->
-              occur_normalize_modtype_path env idl pack.pack_path i
+              occur_normalize_modtype_path env idl pack.pack_path i ty
                 (fun pack_path -> Tfunctor (l, id, {pack with pack_path}, ty))
           | None ->
               List.iter (fun (_, t) -> occur idl t) pack.pack_constraints;
@@ -2514,14 +2515,14 @@ let identifier_escape env idl ty =
       occur ~ignore_mark:true idl ty
     end else
       iter_type_expr (occur idl) ty
-  and occur_normalize_modtype_path env idl p id f =
+  and occur_normalize_modtype_path env idl p id ty f =
     match Env.try_normalize_modtype_path env p with
     | None -> raise_escape_exn (Module id)
     | Some p' ->
       set_type_desc ty (f p');
       occur ~ignore_mark:true idl ty
   in
-  occur (List.map Ident.of_unscoped idl) ty
+  occur (List.map Ident.of_unscoped idl) initial_ty
   end
 
 let identifier_escape_for tr_exn env idl t =

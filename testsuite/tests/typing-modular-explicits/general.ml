@@ -1495,3 +1495,30 @@ Line 1, characters 62-64:
                                                                   ^^
   This extra argument is not expected.
 |}]
+
+module type S = sig type t type e val v : e -> t end
+let helper (type a) (module M : S with type t = a) _ : a = assert false
+let outer (type a) (type b) (module M : S with type e = a and type t = b) e =
+  helper (module M) (M.v e)
+[%%expect {|
+module type S = sig type t type e val v : e -> t end
+val helper : (module S with type t = 'a) -> 'b -> 'a = <fun>
+val outer : (module M : S with type e = 'a and type t = 'b) -> M.e -> M.t =
+  <fun>
+|}]
+
+
+(* Bug #14891: nondep package type *)
+
+module type N = sig module type T end
+module type S = sig type 'a t end
+let f (module M:N) (x:(module M.T)) = x
+let app = f (module struct module type T = S end)
+let ok = f (module struct module type T = S end) (module List:S)
+[%%expect {|
+module type N = sig module type T end
+module type S = sig type 'a t end
+val f : (module M : N) -> (module M.T) -> (module M.T) = <fun>
+val app : (module S) -> (module S) = <fun>
+val ok : (module S) = <module>
+|}]
