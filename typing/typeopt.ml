@@ -85,6 +85,7 @@ let cannot_inhabit_none_like_value (typ : Types.type_expr) (env : Env.t) =
     | Ttuple _
     | Tvariant _
     | Tpackage _
+    | Tfunctor _
     | Tarrow _ -> true
     | Tfield _
     | Tpoly _
