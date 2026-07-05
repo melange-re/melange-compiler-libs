@@ -9,9 +9,8 @@
   (modules :standard \ melange_wrapper)
   (modules_without_implementation annot))
 
- (library
-  (name melange_wrapper)
-  (public_name melange-compiler-libs.wrapper)
-  (libraries compiler-libs.common)
-  (modules melange_wrapper)
-  (modules_without_implementation melange_wrapper))
+(library
+ (name melange_wrapper)
+ (public_name melange-compiler-libs.wrapper)
+ (libraries compiler-libs.common)
+ (modules melange_wrapper))
