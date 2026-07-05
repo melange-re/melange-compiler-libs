@@ -3,7 +3,6 @@
      awk '{ myvar = toupper( substr( $0, 1, 1 ) ) substr( $0, 2 ); print "module " myvar " = " myvar; }'
 *)
 
-module Annot = Annot
 module Bs_clflags = Bs_clflags
 module Btype = Btype
 module Builtin_attributes = Builtin_attributes
