@@ -290,6 +290,57 @@ let primitives_table = lazy (
       "%int64_to_int32", Primitive ((Pcvtbint(Pint64, Pint32)), 1);
       "%int64_of_nativeint", Primitive ((Pcvtbint(Pnativeint, Pint64)), 1);
       "%int64_to_nativeint", Primitive ((Pcvtbint(Pint64, Pnativeint)), 1);
+      "%caml_ba_ref_1",
+      Primitive
+        ((Pbigarrayref(false, 1, Pbigarray_unknown, Pbigarray_unknown_layout)),
+         2);
+      "%caml_ba_ref_2",
+      Primitive
+        ((Pbigarrayref(false, 2, Pbigarray_unknown, Pbigarray_unknown_layout)),
+         3);
+      "%caml_ba_ref_3",
+      Primitive
+        ((Pbigarrayref(false, 3, Pbigarray_unknown, Pbigarray_unknown_layout)),
+         4);
+      "%caml_ba_set_1",
+      Primitive
+        ((Pbigarrayset(false, 1, Pbigarray_unknown, Pbigarray_unknown_layout)),
+         3);
+      "%caml_ba_set_2",
+      Primitive
+        ((Pbigarrayset(false, 2, Pbigarray_unknown, Pbigarray_unknown_layout)),
+         4);
+      "%caml_ba_set_3",
+      Primitive
+        ((Pbigarrayset(false, 3, Pbigarray_unknown, Pbigarray_unknown_layout)),
+         5);
+      "%caml_ba_unsafe_ref_1",
+      Primitive
+        ((Pbigarrayref(true, 1, Pbigarray_unknown, Pbigarray_unknown_layout)),
+         2);
+      "%caml_ba_unsafe_ref_2",
+      Primitive
+        ((Pbigarrayref(true, 2, Pbigarray_unknown, Pbigarray_unknown_layout)),
+         3);
+      "%caml_ba_unsafe_ref_3",
+      Primitive
+        ((Pbigarrayref(true, 3, Pbigarray_unknown, Pbigarray_unknown_layout)),
+         4);
+      "%caml_ba_unsafe_set_1",
+      Primitive
+        ((Pbigarrayset(true, 1, Pbigarray_unknown, Pbigarray_unknown_layout)),
+         3);
+      "%caml_ba_unsafe_set_2",
+      Primitive
+        ((Pbigarrayset(true, 2, Pbigarray_unknown, Pbigarray_unknown_layout)),
+         4);
+      "%caml_ba_unsafe_set_3",
+      Primitive
+        ((Pbigarrayset(true, 3, Pbigarray_unknown, Pbigarray_unknown_layout)),
+         5);
+      "%caml_ba_dim_1", Primitive ((Pbigarraydim(1)), 1);
+      "%caml_ba_dim_2", Primitive ((Pbigarraydim(2)), 1);
+      "%caml_ba_dim_3", Primitive ((Pbigarraydim(3)), 1);
       "%caml_string_get16", Primitive ((Pstring_load_16(false)), 2);
       "%caml_string_get16u", Primitive ((Pstring_load_16(true)), 2);
       "%caml_string_get32", Primitive ((Pstring_load_32(false)), 2);
@@ -314,6 +365,18 @@ let primitives_table = lazy (
       "%caml_bytes_set32u", Primitive ((Pbytes_set_32(true)), 3);
       "%caml_bytes_set64", Primitive ((Pbytes_set_64(false)), 3);
       "%caml_bytes_set64u", Primitive ((Pbytes_set_64(true)), 3);
+      "%caml_bigstring_get16", Primitive ((Pbigstring_load_16(false)), 2);
+      "%caml_bigstring_get16u", Primitive ((Pbigstring_load_16(true)), 2);
+      "%caml_bigstring_get32", Primitive ((Pbigstring_load_32(false)), 2);
+      "%caml_bigstring_get32u", Primitive ((Pbigstring_load_32(true)), 2);
+      "%caml_bigstring_get64", Primitive ((Pbigstring_load_64(false)), 2);
+      "%caml_bigstring_get64u", Primitive ((Pbigstring_load_64(true)), 2);
+      "%caml_bigstring_set16", Primitive ((Pbigstring_set_16(false)), 3);
+      "%caml_bigstring_set16u", Primitive ((Pbigstring_set_16(true)), 3);
+      "%caml_bigstring_set32", Primitive ((Pbigstring_set_32(false)), 3);
+      "%caml_bigstring_set32u", Primitive ((Pbigstring_set_32(true)), 3);
+      "%caml_bigstring_set64", Primitive ((Pbigstring_set_64(false)), 3);
+      "%caml_bigstring_set64u", Primitive ((Pbigstring_set_64(true)), 3);
       "%bswap16", Primitive (Pbswap16, 1);
       "%bswap_int32", Primitive ((Pbbswap(Pint32)), 1);
       "%bswap_int64", Primitive ((Pbbswap(Pint64)), 1);
