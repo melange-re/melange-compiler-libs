@@ -1,0 +1,40 @@
+(**************************************************************************)
+(*                                                                        *)
+(*                                 OCaml                                   *)
+(*                                                                        *)
+(*   Copyright 2024 Melange contributors                                  *)
+(*                                                                        *)
+(*   All rights reserved.  This file is distributed under the terms of    *)
+(*   the GNU Lesser General Public License version 2.1, with the          *)
+(*   special exception on linking described in the file LICENSE.          *)
+(*                                                                        *)
+(**************************************************************************)
+
+(** Fields of a module's runtime representation.
+
+    A module compiles to a JavaScript object, which has a single namespace,
+    while OCaml has one namespace per sort of component.  A runtime field
+    records the namespace its identifier was taken from so that the name it is
+    given in the generated object can keep components of different namespaces
+    apart. *)
+
+type t = { id : Ident.t; kind : Shape.Sig_component_kind.t }
+
+val create : kind:Shape.Sig_component_kind.t -> Ident.t -> t
+val id : t -> Ident.t
+val kind : t -> Shape.Sig_component_kind.t
+
+val of_signature_item : Types.signature_item -> t option
+(** [None] for components without a runtime representation (types, module
+    types, primitives, absent modules). *)
+
+val of_signature : Types.signature -> t list
+(** The runtime components of a signature, in order: the fields of the object
+    the module compiles to.  Same order as {!Types.bound_value_identifiers}. *)
+
+val mangle : Shape.Sig_component_kind.t -> string -> string
+(** The name a component of that namespace is given at runtime.  Currently the
+    OCaml name, whatever the namespace. *)
+
+val name : t -> string
+val names : t list -> string list

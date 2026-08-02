@@ -866,16 +866,24 @@ let rec path_and_name path =
   | Path.Pextra_ty (path, _) -> path_and_name path
   | Path.Papply _ -> assert false
 
-let rec transl_address loc env path = function
+(* [kind] is the namespace the last component of [path] is looked up in; every
+   component before it is a module, and the field names have to agree with the
+   ones the module's runtime representation was built with (cf.
+   [Runtime_fields]). *)
+let rec transl_address loc env path (kind : Shape.Sig_component_kind.t) =
+  function
   | Env.Aident id ->
       if Ident.global id
       then Lprim(Pgetglobal id, [], loc)
       else Lvar id
   | Env.Adot(addr, pos) ->
       let path', name = path_and_name path in
-      Lprim(Pfield (pos, Pointer, Mutable, Fld_module { name }), [transl_address loc env path' addr], loc)
+      let name = Runtime_fields.mangle kind name in
+      Lprim(Pfield (pos, Pointer, Mutable, Fld_module { name }),
+            [transl_address loc env path' Shape.Sig_component_kind.Module addr],
+            loc)
 
-let transl_path find loc env path =
+let transl_path find loc env path kind =
   let path =
     let loc' = Some (Debuginfo.Scoped_location.to_location loc) in
     Env.normalize_module_path loc' env path
@@ -883,21 +891,21 @@ let transl_path find loc env path =
   match find path env with
   | exception Not_found ->
       fatal_error ("Cannot find address for: " ^ (Path.name path))
-  | addr -> transl_address loc env path addr
+  | addr -> transl_address loc env path kind addr
 
 (* Translation of identifiers *)
 
 let transl_module_path loc env path =
-  transl_path Env.find_module_address loc env path
+  transl_path Env.find_module_address loc env path Shape.Sig_component_kind.Module
 
 let transl_value_path loc env path =
-  transl_path Env.find_value_address loc env path
+  transl_path Env.find_value_address loc env path Shape.Sig_component_kind.Value
 
 let transl_extension_path loc env path =
-  transl_path Env.find_constructor_address loc env path
+  transl_path Env.find_constructor_address loc env path Shape.Sig_component_kind.Extension_constructor
 
 let transl_class_path loc env path =
-  transl_path Env.find_class_address loc env path
+  transl_path Env.find_class_address loc env path Shape.Sig_component_kind.Class
 
 let transl_prim modname field =
   let mod_ident = Ident.create_persistent modname in

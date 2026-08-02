@@ -78,5 +78,7 @@ val report_error: Location.t -> error -> Location.error
 
 val reset: unit -> unit
 
-(** make it an array for better performance*)
-val get_export_identifiers : unit -> Ident.t list
+(** The runtime fields of the compilation unit's module block, in the order
+    they appear in it.  Each carries the namespace it comes from, which is what
+    decides the name it is exported under. *)
+val get_export_identifiers : unit -> Runtime_fields.t list
