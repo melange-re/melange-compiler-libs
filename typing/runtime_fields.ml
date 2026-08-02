@@ -38,11 +38,46 @@ let of_signature_item item =
 
 let of_signature sg = List.filter_map of_signature_item sg
 
-(* The name a component of a given namespace goes by at runtime.  Every
-   namespace still keeps the OCaml name here: knowing the namespace at all the
-   places a field is named or read is the point of this commit, telling them
-   apart comes next. *)
-let mangle (_kind : Shape.Sig_component_kind.t) name = name
+(* The mangling has to be a function of the component alone: coercions read
+   fields out of a module while only knowing the signature they are coercing
+   *to*, so a scheme that only renamed on an actual clash would make the two
+   sides of a signature ascription disagree on the field name.
+
+   Values and modules keep their name (they can never clash with each other:
+   values are lowercase, modules are uppercase), so only extension constructors
+   and classes are mangled.  [$] cannot appear in an OCaml identifier, which
+   makes the encoding injective. *)
+let mangle (kind : Shape.Sig_component_kind.t) name =
+  match kind with
+  | Extension_constructor -> name ^ "$extension"
+  | Class -> name ^ "$class"
+  | Value | Module | Type | Constructor | Label | Module_type | Class_type ->
+      name
 
 let name t = mangle t.kind (Ident.name t.id)
 let names l = List.map name l
+
+let suffixes = [ "$extension"; "$class" ]
+
+let unmangle name =
+  let ends_with ~suffix s =
+    let ls = String.length s and lsuf = String.length suffix in
+    ls > lsuf && String.equal (String.sub s (ls - lsuf) lsuf) suffix
+  in
+  List.find_map
+    (fun suffix ->
+       if ends_with ~suffix name then
+         Some (String.sub name 0 (String.length name - String.length suffix))
+       else None)
+    suffixes
+
+(* Mangled fields are additionally exposed under their unmangled name, so that
+   JavaScript code reaching for [M.Foo] keeps working, unless some other field
+   of the same module already answers to that name. *)
+let compat_alias ~fields t =
+  let plain = Ident.name t.id in
+  let runtime_name = name t in
+  if String.equal plain runtime_name then None
+  else if List.exists (fun other -> String.equal (name other) plain) fields then
+    None
+  else Some plain

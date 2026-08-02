@@ -33,8 +33,25 @@ val of_signature : Types.signature -> t list
     the module compiles to.  Same order as {!Types.bound_value_identifiers}. *)
 
 val mangle : Shape.Sig_component_kind.t -> string -> string
-(** The name a component of that namespace is given at runtime.  Currently the
-    OCaml name, whatever the namespace. *)
+(** The name a component of that namespace is given at runtime.  Values and
+    modules keep their name; extension constructors and classes are suffixed
+    with ["$extension"] and ["$class"] respectively.
+
+    This is deliberately a function of the component alone rather than of the
+    module it belongs to: signature ascription can drop the component a name
+    clashes with, and the coercion that reads the field only knows the
+    signature it coerces to. *)
 
 val name : t -> string
 val names : t list -> string list
+
+val unmangle : string -> string option
+(** The OCaml name a runtime name was built from, when {!mangle} renamed it.
+    Exact: [$] cannot appear in an OCaml identifier, so a name carrying one of
+    the suffixes can only have come from {!mangle}. *)
+
+val compat_alias : fields:t list -> t -> string option
+(** The unmangled name a mangled field is additionally exposed under, for the
+    benefit of JavaScript callers written against the old names.  [None] when
+    the field is not mangled, or when another field of [fields] is already
+    called that. *)
