@@ -36,6 +36,7 @@ module Printpat = Printpat
 module Printtyp = Printtyp
 module Out_type = Out_type
 module Printtyped = Printtyped
+module Runtime_fields = Runtime_fields
 module Value_rec_check = Value_rec_check
 module Value_rec_compiler = Value_rec_compiler
 module Value_rec_types = Value_rec_types

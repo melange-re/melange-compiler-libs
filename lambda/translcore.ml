@@ -43,8 +43,9 @@ let transl_module =
 
 let transl_struct_item =
   ref ((fun ~scopes:_ _loc _fields _rootpath _stri _next -> assert false) :
-       scopes:scopes -> Lambda.scoped_location -> Ident.t list -> Path.t option ->
-       structure_item -> (Ident.t list -> lambda) -> lambda)
+       scopes:scopes -> Lambda.scoped_location -> Runtime_fields.t list ->
+       Path.t option -> structure_item ->
+       (Runtime_fields.t list -> lambda) -> lambda)
 
 let transl_object =
   ref (fun ~scopes:_ _id _s _cl -> assert false :

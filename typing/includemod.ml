@@ -712,10 +712,7 @@ and signatures ~core ~direction ~loc env subst sig1 sig2 mod_shape =
         | item -> (l, if is_runtime_component item then pos+1 else pos))
       ([], 0) sig1 in
 
-  let runtime_fields =
-     List.fold_right (fun item fields ->
-        if is_runtime_component item then
-          signature_item_id item :: fields else fields) sig2 [] in
+  let runtime_fields = Runtime_fields.of_signature sig2 in
 
   (* Build a table of the components of sig1, along with their positions.
      The table is indexed by kind and name of component *)
