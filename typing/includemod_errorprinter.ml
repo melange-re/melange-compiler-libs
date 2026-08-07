@@ -106,7 +106,7 @@ module Runtime_coercion = struct
   (** We extract a small change from a full coercion. *)
   let rec first_change_under path (coerc:Typedtree.module_coercion) =
     match coerc with
-    | Tcoerce_structure(c,_, _) ->
+    | Tcoerce_structure { field_coercions = c; _ } ->
         either
           (first_item_transposition path 0) c
           (first_non_id path 0) c
@@ -136,7 +136,7 @@ module Runtime_coercion = struct
     | (_, Typedtree.Tcoerce_primitive p) :: _ ->
         let name = Primitive.byte_name p.pc_desc in
         Some (List.rev path, Primitive_coercion name)
-    | (_,c) :: q ->
+    | (_, c) :: q ->
         either
           (first_change_under (Item pos :: path)) c
           (first_non_id path (pos + 1)) q
@@ -184,7 +184,10 @@ module Runtime_coercion = struct
 
   let illegal_permutation ctx_printer env ppf (mty,c) =
     match first_change c with
-    | None | Some (_, (Primitive_coercion _ | Alias_coercion _)) ->
+    | None ->
+        Fmt.fprintf ppf
+          "The module types have different runtime representations."
+    | Some (_, (Primitive_coercion _ | Alias_coercion _)) ->
         (* those kind coercions are not inversible, and raise an error earlier
            when checking for module type equivalence *)
         assert false
@@ -203,11 +206,9 @@ module Runtime_coercion = struct
   let in_package_subtype ctx_printer env mty c ppf =
     match first_change c with
     | None ->
-        (* The coercion looks like the identity but was not simplified to
-           [Tcoerce_none], this only happens when the two first-class module
-           types differ by runtime size *)
         Fmt.fprintf ppf
-          "The two first-class module types differ by their runtime size."
+          "The two first-class module types have different runtime \
+           representations."
     | Some (path, c) ->
   try
     let ctx, mt = find env path mty in

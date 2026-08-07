@@ -50,7 +50,7 @@ type summary =
 
 type address =
   | Aident of Ident.t
-  | Adot of address * int
+  | Adot of address * int * string
 
 type t
 

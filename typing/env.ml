@@ -179,7 +179,7 @@ let map_summary f = function
 
 type address =
   | Aident of Ident.t
-  | Adot of address * int
+  | Adot of address * int * string
 
 module TycompTbl =
   struct
@@ -574,7 +574,7 @@ and functor_components = {
 }
 
 and address_unforced =
-  | Projection of { parent : address_lazy; pos : int; }
+  | Projection of { parent : address_lazy; pos : int; name : string; }
   | ModAlias of { env : t; path : Path.t; }
 
 and address_lazy = (address_unforced, address) Lazy_backtrack.t
@@ -803,7 +803,7 @@ let md md_type =
 
 let rec print_address ppf = function
   | Aident id -> Format.fprintf ppf "%s" (Ident.name id)
-  | Adot(a, pos) -> Format.fprintf ppf "%a.[%i]" print_address a pos
+  | Adot(a, pos, _) -> Format.fprintf ppf "%a.[%i]" print_address a pos
 
 (* The name of the compilation unit currently compiled.
    "" if outside a compilation unit. *)
@@ -1255,7 +1255,7 @@ let rec find_module_address path env =
   | Papply _ | Pextra_ty _ -> raise Not_found
 
 and force_address = function
-  | Projection { parent; pos } -> Adot(get_address parent, pos)
+  | Projection { parent; pos; name } -> Adot(get_address parent, pos, name)
   | ModAlias { env; path } -> find_module_address path env
 
 and get_address a =
@@ -1743,7 +1743,14 @@ let prefix_idents root prefixing_sub sg =
         rem
   in
   let sg = Subst.Lazy.force_signature_once sg in
-  prefix_idents root [] prefixing_sub sg
+  (* This list must stay aligned with calls to [next_address] below.  The
+     resolved name is part of the module representation, so projections retain
+     it rather than reconstructing it from a path later. *)
+  let runtime_fields = Runtime_fields.of_lazy_signature_items sg in
+  let items_and_paths, prefixing_sub =
+    prefix_idents root [] prefixing_sub sg
+  in
+  (items_and_paths, prefixing_sub, runtime_fields)
 
 (* Compute structure descriptions *)
 
@@ -1785,17 +1792,24 @@ let rec components_of_module_maker
           comp_modules = NameMap.empty; comp_modtypes = NameMap.empty;
           comp_classes = NameMap.empty; comp_cltypes = NameMap.empty }
       in
-      let items_and_paths, sub =
+      let items_and_paths, sub, runtime_fields =
         prefix_idents cm_path cm_prefixing_subst sg
       in
       let env = ref cm_env in
       let pos = ref 0 in
-      let next_address () =
-        let addr : address_unforced =
-          Projection { parent = cm_addr; pos = !pos }
-        in
-        incr pos;
-        Lazy_backtrack.create addr
+      let remaining_runtime_fields = ref runtime_fields in
+      let next_address id =
+        match !remaining_runtime_fields with
+        | [] -> assert false
+        | field :: remaining ->
+            assert (Ident.same id (Runtime_fields.id field));
+            remaining_runtime_fields := remaining;
+            let name = Runtime_fields.name field in
+            let addr : address_unforced =
+              Projection { parent = cm_addr; pos = !pos; name }
+            in
+            incr pos;
+            Lazy_backtrack.create addr
       in
       List.iter (fun ((item : Subst.Lazy.signature_item), path) ->
         match item with
@@ -1804,7 +1818,7 @@ let rec components_of_module_maker
             let addr =
               match decl.val_kind with
               | Val_prim _ -> Lazy_backtrack.create_failed Not_found
-              | _ -> next_address ()
+              | _ -> next_address id
             in
             let vda_shape = Shape.proj cm_shape (Shape.Item.value id) in
             let vda =
@@ -1862,7 +1876,7 @@ let rec components_of_module_maker
               Datarepr.extension_descr ~current_unit:(get_current_unit ()) path
                 ext'
             in
-            let addr = next_address () in
+            let addr = next_address id in
             let cda_shape =
               Shape.proj cm_shape (Shape.Item.extension_constructor id)
             in
@@ -1885,7 +1899,7 @@ let rec components_of_module_maker
                       Lazy_backtrack.create (ModAlias {env = !env; path})
                   | _ -> assert false
                 end
-              | Mp_present -> next_address ()
+              | Mp_present -> next_address id
             in
             let alerts =
               Builtin_attributes.alerts_of_attrs md.mdl_attributes
@@ -1923,7 +1937,7 @@ let rec components_of_module_maker
             env := store_modtype ~update_summary:false id decl shape !env
         | SigL_class(id, decl, _, _) ->
             let decl' = Subst.class_declaration sub decl in
-            let addr = next_address () in
+            let addr = next_address id in
             let shape = Shape.proj cm_shape (Shape.Item.class_ id) in
             let clda =
               { clda_declaration = decl';
@@ -1938,7 +1952,8 @@ let rec components_of_module_maker
             c.comp_cltypes <-
               NameMap.add (Ident.name id) cltda c.comp_cltypes)
         items_and_paths;
-        Ok (Structure_comps c)
+      assert (!remaining_runtime_fields = []);
+      Ok (Structure_comps c)
   | MtyL_functor(arg, ty_res) ->
       let sub = cm_prefixing_subst in
       let scoping = Subst.Rescope (Path.scope cm_path) in
