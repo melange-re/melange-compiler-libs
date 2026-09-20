@@ -407,10 +407,24 @@ let equal_modtype_paths env p1 subst p2 =
        (Env.normalize_modtype_path env
           (Subst.modtype_path subst p2))
 
-let rec is_identity_coercion pos = function
-  | [] -> true
+let structure_coercion cc id_pos_list sig1 sig2 =
+  let source_names =
+    Array.of_list
+      (List.map Runtime_fields.name (Runtime_fields.of_signature sig1))
+  in
+  let runtime_fields = Runtime_fields.of_signature sig2 in
+  Tcoerce_structure
+    { field_coercions = cc; id_pos_list; source_names; runtime_fields }
+
+let simplify_structure_coercion cc id_pos_list sig1 sig2 =
+  let rec is_identity_coercion pos = function
+  | [] ->
+      true
   | (n, c) :: rem ->
-      n = pos && c = Tcoerce_none && is_identity_coercion (pos + 1) rem
+      n = pos && c = Tcoerce_none && is_identity_coercion (pos + 1) rem in
+  if is_identity_coercion 0 cc
+  then Tcoerce_none
+  else structure_coercion cc id_pos_list sig1 sig2
 
 let retrieve_functor_params env mty =
   let rec retrieve_functor_params before env =
@@ -689,6 +703,15 @@ and signatures ~core ~direction ~loc env subst sig1 sig2 mod_shape =
   (* Environment used to check inclusion of components *)
   let new_env =
     Env.add_signature sig1 (Env.in_signature true env) in
+  (* Keep ids for module aliases *)
+  let (id_pos_list,_) =
+    List.fold_left
+      (fun (l,pos) -> function
+          Sig_module (id, Mp_present, _, _, _) ->
+            ((id,pos,Tcoerce_none)::l , pos+1)
+        | item -> (l, if is_runtime_component item then pos+1 else pos))
+      ([], 0) sig1 in
+
   (* Build a table of the components of sig1, along with their positions.
      The table is indexed by kind and name of component *)
   let rec build_component_table nb_exported pos tbl = function
@@ -737,35 +760,10 @@ and signatures ~core ~direction ~loc env subst sig1 sig2 mod_shape =
                   then mod_shape
                   else Shape.str ?uid:mod_shape.Shape.uid d.shape_map
                 in
-                let coercion =
-                  (* Paired components have the same kind and name, so an
-                     identity layout also preserves their runtime names. *)
-                  if runtime_len1 = runtime_len2 (* see PR#5098 *)
-                     && is_identity_coercion 0 cc
-                  then Tcoerce_none
-                  else
-                    let source_names =
-                      Array.of_list
-                        (List.map Runtime_fields.name
-                           (Runtime_fields.of_signature sig1))
-                    in
-                    let runtime_fields = Runtime_fields.of_signature sig2 in
-                    (* Keep ids for module aliases. *)
-                    let (id_pos_list,_) =
-                      List.fold_left
-                        (fun (l,pos) -> function
-                            Sig_module (id, Mp_present, _, _, _) ->
-                              ((id, pos, Tcoerce_none) :: l, pos + 1)
-                          | item ->
-                              (l, if is_runtime_component item
-                                  then pos+1 else pos))
-                        ([], 0) sig1
-                    in
-                    Tcoerce_structure
-                      { field_coercions = cc; id_pos_list; source_names;
-                        runtime_fields }
-                in
-                Ok (coercion, shape)
+                if runtime_len1 = runtime_len2 then (* see PR#5098 *)
+                  Ok (simplify_structure_coercion cc id_pos_list sig1 sig2, shape)
+                else
+                  Ok (structure_coercion cc id_pos_list sig1 sig2, shape)
             | missings, incompatibles, runtime_coercions, untypables ->
                 let additions = additions |> FieldMap.to_list |> List.map snd in
                 Error {

@@ -47,6 +47,11 @@ type error =
 
 exception Error of Location.t * error
 
+let cons_opt x_opt xs =
+  match x_opt with
+  | None -> xs
+  | Some x -> x :: xs
+
 (* Keep track of the root path (from the root of the namespace to the
    currently compiled module expression).  Useful for naming extensions. *)
 
@@ -594,7 +599,7 @@ and transl_module ~scopes cc rootpath mexp =
       apply_coercion loc Strict cc
         (transl_module_path loc mexp.mod_env path)
   | Tmod_structure str ->
-      transl_struct ~scopes loc cc rootpath str
+      transl_struct ~scopes loc [] cc rootpath str
   | Tmod_functor _ ->
       oo_wrap mexp.mod_env true (fun () ->
         compile_functor ~scopes mexp cc rootpath loc) ()
@@ -622,71 +627,82 @@ and transl_apply ~scopes ~loc ~cc mod_env funct translated_arg =
        ap_inlined=inlined_attribute;
        ap_specialised=Default_specialise})
 
-and transl_struct ~scopes loc cc rootpath
+and transl_struct ~scopes loc fields cc rootpath
     { str_final_env; str_items; str_type } =
   let source_runtime_fields = Runtime_fields.of_signature str_type in
-  (* Compile in top to bottom order to display warnings by increasing
-     locations. *)
-  let rec loop = function
-  | [] ->
+  transl_structure ~scopes loc fields cc rootpath str_final_env
+    source_runtime_fields str_items
+
+(* The function  transl_structure is called by  the bytecode compiler.
+   Some effort is made to compile in top to bottom order, in order to display
+   warning by increasing locations. *)
+and transl_structure ~scopes loc fields cc rootpath final_env
+    source_runtime_fields = function
+    [] ->
       let is_top_root_path = is_top rootpath in
-      let make_block runtime_fields block_fields =
-        if is_top_root_path then export_fields := runtime_fields;
-        Lprim(Pmakeblock(0,
-          (if is_top_root_path then
-             Blk_module_export (List.map Runtime_fields.id runtime_fields)
-           else
-             Blk_module (List.map Runtime_fields.name runtime_fields)),
-          Immutable, None),
-          block_fields, loc)
-      in
       let body =
         match cc with
           Tcoerce_none ->
-            let block_fields =
-              List.map
-                (fun field -> Lvar (Runtime_fields.id field))
-                source_runtime_fields
-            in
-            make_block source_runtime_fields block_fields
+            let runtime_fields = source_runtime_fields in
+            let block_fields = List.rev_map (fun id -> Lvar id) fields in
+            if is_top_root_path then export_fields := runtime_fields;
+            Lprim(Pmakeblock(0,
+              (if is_top_root_path then
+                 Blk_module_export (List.map Runtime_fields.id runtime_fields)
+               else
+                 Blk_module (List.map Runtime_fields.name runtime_fields)),
+              Immutable, None),
+              block_fields, loc)
         | Tcoerce_structure
             { field_coercions; id_pos_list; runtime_fields; _ } ->
+                (* Do not ignore id_pos_list ! *)
+            (*Format.eprintf "%a@.@[" Includemod.print_coercion cc;
+            List.iter (fun l -> Format.eprintf "%a@ " Ident.print l)
+              fields;
+            Format.eprintf "@]@.";*)
             assert (List.length runtime_fields = List.length field_coercions);
-            let fields = List.map Runtime_fields.id source_runtime_fields in
-            let v = Array.of_list fields in
+            let v = Misc.array_of_list_rev fields in
             let get_field pos =
               if pos < 0 then lambda_unit
               else Lvar v.(pos)
             and ids =
               List.fold_right Ident.Set.add fields Ident.Set.empty
             in
-            let runtime_fields, block_fields = List.fold_right2
-              (fun (pos, cc) runtime_field (runtime_fields, code) ->
-                 let runtime_field = match cc with
+            let exports, result = List.fold_right2
+              (fun (pos, cc) runtime_field (exports, code) ->
+                 let export, field = match cc with
                    | Tcoerce_primitive p ->
-                       Runtime_fields.with_id runtime_field p.pc_id
-                   (* no runtime repr, pos is -1 *)
-                   | Tcoerce_alias _ -> runtime_field
-                   | _ -> Runtime_fields.with_id runtime_field v.(pos)
-                 in
-                 let field = match cc with
-                   | Tcoerce_primitive p ->
+                       Runtime_fields.with_id runtime_field p.pc_id,
                        Translprim.transl_primitive
                          (of_location ~scopes p.pc_loc)
                          p.pc_desc p.pc_env p.pc_type None
-                   | _ -> apply_coercion loc Strict cc (get_field pos)
+                   | _ ->
+                       let export = match cc with
+                       (* no runtime repr, pos is -1 *)
+                       | Tcoerce_alias _ -> runtime_field
+                       | _ -> Runtime_fields.with_id runtime_field v.(pos)
+                       in
+                       export, apply_coercion loc Strict cc (get_field pos)
                  in
-                 runtime_field :: runtime_fields, field :: code)
+                 export :: exports, field :: code)
               field_coercions runtime_fields ([], [])
             in
-            let lam = make_block runtime_fields block_fields
+            if is_top_root_path then export_fields := exports;
+            let lam =
+              Lprim(Pmakeblock(0,
+                (if is_top_root_path then
+                   Blk_module_export (List.map Runtime_fields.id exports)
+                 else
+                   Blk_module (List.map Runtime_fields.name runtime_fields)),
+                Immutable, None),
+                   result, loc)
             and id_pos_list =
               List.filter (fun (id, _, _) -> not (Ident.Set.mem id ids))
                 id_pos_list
             in
             wrap_id_pos_list loc id_pos_list get_field lam
         | _ ->
-            fatal_error "Translmod.transl_struct"
+            fatal_error "Translmod.transl_structure"
       in
       (* This debugging event provides information regarding the structure
          items. It is ignored by the OCaml debugger but is used by
@@ -696,38 +712,42 @@ and transl_struct ~scopes loc cc rootpath
                {lev_loc = loc;
                 lev_kind = Lev_pseudo;
                 lev_repr = None;
-                lev_env = str_final_env})
+                lev_env = final_env})
       else
         body
   | item :: rem ->
-      transl_struct_item ~scopes loc rootpath item (fun () -> loop rem)
-  in
-  loop str_items
+      transl_struct_item ~scopes loc fields rootpath item
+        (fun fields ->
+           transl_structure ~scopes loc fields cc rootpath final_env
+             source_runtime_fields rem)
 
-and transl_struct_item ~scopes loc rootpath item next =
+and transl_struct_item ~scopes loc fields rootpath item next =
   match item.str_desc with
   | Tstr_eval (expr, _) ->
-      let body = next () in
+      let body = next fields in
       Lsequence(transl_exp ~scopes expr, body)
   | Tstr_value(rec_flag, pat_expr_list) ->
       (* Translate bindings first *)
       let mk_lam_let =
         transl_let ~scopes ~in_structure:true rec_flag pat_expr_list in
+      let ext_fields =
+        List.rev_append (let_bound_idents pat_expr_list) fields in
       (* Then, translate remainder of struct *)
-      let body = next () in
+      let body = next ext_fields in
       mk_lam_let body
   | Tstr_primitive descr ->
       record_primitive descr.val_val;
-      next ()
+      next fields
   | Tstr_type _ ->
-      next ()
+      next fields
   | Tstr_typext(tyext) ->
-      let body = next () in
+      let ids = List.map (fun ext -> ext.ext_id) tyext.tyext_constructors in
+      let body = next (List.rev_append ids fields) in
       transl_type_extension ~scopes item.str_env rootpath tyext body
   | Tstr_exception ext ->
       let id = ext.tyexn_constructor.ext_id in
       let path = field_path rootpath id in
-      let body = next () in
+      let body = next (id::fields) in
       Llet(Strict, Pgenval, id,
            transl_extension_constructor ~scopes
              item.str_env
@@ -748,7 +768,7 @@ and transl_struct_item ~scopes loc rootpath item next =
           mb.mb_attributes
       in
       (* Translate remainder second *)
-      let body = next () in
+      let body = next (if !Typemod.should_hide mb then fields else cons_opt id fields) in
       begin match id with
       | None ->
           Lsequence (Lprim(Pignore, [module_body],
@@ -757,17 +777,21 @@ and transl_struct_item ~scopes loc rootpath item next =
           Llet(pure_module mb.mb_expr, Pgenval, id, module_body, body)
       end
   | Tstr_module ({mb_presence=Mp_absent;mb_id = None}) ->
-      next ()
+      next fields
   | Tstr_module ({mb_presence=Mp_absent; mb_id = Some id} as mb) ->
       if !Config.bs_only then begin
         let module_body = apply_coercion loc Alias Tcoerce_none lambda_module_alias in
-        let body = next () in
+        let body = next fields in
         Llet(pure_module mb.mb_expr, Pgenval, id, module_body, body)
       end else begin
-        next ()
+        next fields
       end
   | Tstr_recmodule bindings ->
-      let body = next () in
+      let ext_fields =
+        List.rev_append (List.filter_map (fun mb -> mb.mb_id) bindings)
+          fields
+      in
+      let body = next ext_fields in
       let lam =
         compile_recmodule ~scopes (fun id modl ->
             match id with
@@ -780,27 +804,27 @@ and transl_struct_item ~scopes loc rootpath item next =
       in
       lam
   | Tstr_class cl_list ->
-      let (_, class_bindings) = transl_class_bindings ~scopes cl_list in
-      let body = next () in
+      let (ids, class_bindings) = transl_class_bindings ~scopes cl_list in
+      let body = next (List.rev_append ids fields) in
       !Value_rec_compiler.compile_letrec class_bindings body
   | Tstr_include incl ->
       let incl_fields = Runtime_fields.of_signature incl.incl_type in
       let modl = incl.incl_mod in
       let mid = Ident.create_local "include" in
-      let rec rebind_idents pos = function
+      let rec rebind_idents pos newfields = function
           [] ->
-            next ()
+            next newfields
         | field :: rem ->
             let id = Runtime_fields.id field in
             let body =
-              rebind_idents (pos + 1) rem
+              rebind_idents (pos + 1) (id :: newfields) rem
             in
             Llet(Alias, Pgenval, id,
                  Lprim(Pfield (pos, Pointer, Mutable,
                                Fld_module { name = Runtime_fields.name field }),
                        [Lvar mid], of_location ~scopes incl.incl_loc), body)
       in
-      let body = rebind_idents 0 incl_fields in
+      let body = rebind_idents 0 fields incl_fields in
       Llet(pure_module modl, Pgenval, mid,
            transl_module ~scopes Tcoerce_none None modl, body)
 
@@ -812,30 +836,30 @@ and transl_struct_item ~scopes loc rootpath item next =
          it. *)
       begin match od.open_bound_items with
       | [] when pure = Alias ->
-          next ()
+          next fields
       | _ ->
           let open_fields = Runtime_fields.of_signature od.open_bound_items in
           let mid = Ident.create_local "open" in
-          let rec rebind_idents pos = function
-              [] -> next ()
+          let rec rebind_idents pos newfields = function
+              [] -> next newfields
             | field :: rem ->
                 let id = Runtime_fields.id field in
                 let body =
-                  rebind_idents (pos + 1) rem
+                  rebind_idents (pos + 1) (id :: newfields) rem
                 in
                 Llet(Alias, Pgenval, id,
                      Lprim(Pfield (pos, Pointer, Mutable,
                                    Fld_module { name = Runtime_fields.name field }),
                         [Lvar mid], of_location ~scopes od.open_loc), body)
           in
-          let body = rebind_idents 0 open_fields in
+          let body = rebind_idents 0 fields open_fields in
           Llet(pure, Pgenval, mid,
                transl_module ~scopes Tcoerce_none None od.open_expr, body)
       end
   | Tstr_modtype _
   | Tstr_class_type _
   | Tstr_attribute _ ->
-      next ()
+      next fields
 
 (* Update forward declaration in Translcore *)
 let _ =
@@ -896,7 +920,7 @@ let transl_implementation_flambda module_name (str, cc) =
   let scopes = enter_module_definition ~scopes:empty_scopes module_id in
   let body =
     Translobj.transl_label_init
-      (fun () -> transl_struct ~scopes Loc_unknown cc
+      (fun () -> transl_struct ~scopes Loc_unknown [] cc
                    (global_path module_id) str)
   in
   let size =
