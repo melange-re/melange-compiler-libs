@@ -625,7 +625,6 @@ and transl_structure ~scopes loc fields cc rootpath final_env = function
             List.iter (fun l -> Format.eprintf "%a@ " Ident.print l)
               fields;
             Format.eprintf "@]@.";*)
-            assert (List.length runtime_fields = List.length pos_cc_list);
             let v = Misc.array_of_list_rev fields in
             let get_field pos =
               if pos < 0 then lambda_unit
