@@ -90,15 +90,20 @@ let rec apply_coercion loc strict restr arg =
     Tcoerce_none ->
       arg
   | Tcoerce_structure(pos_cc_list, id_pos_list, runtime_fields) ->
-      assert (List.length runtime_fields = List.length pos_cc_list);
-      let names = Array.of_list runtime_fields in
       name_lambda strict arg (fun id ->
-        let get_field_i i pos = Lprim(Pfield (pos, Pointer, Mutable, Fld_module { name = Ident.name names.(i) }),[Lvar id], loc) in
         let get_field_name name pos =
             Lprim (Pfield (pos, Pointer, Mutable, Fld_module {name}), [Lvar id], loc) in
+        let names = List.map Ident.name runtime_fields in
+        let fields =
+          List.map2
+            (fun runtime_field pos_cc ->
+              apply_coercion_field loc
+                (get_field_name (Ident.name runtime_field)) pos_cc)
+            runtime_fields pos_cc_list
+        in
         let lam =
-          Lprim(Pmakeblock(0, Lambda.Blk_module (List.map Ident.name runtime_fields), Immutable, None),
-                List.mapi (fun i x -> apply_coercion_field loc (get_field_i i) x) pos_cc_list,
+          Lprim(Pmakeblock(0, Lambda.Blk_module names, Immutable, None),
+                fields,
                 loc)
         in
         wrap_id_pos_list loc id_pos_list get_field_name lam)
