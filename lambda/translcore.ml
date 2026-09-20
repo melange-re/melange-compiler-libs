@@ -354,7 +354,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
   | Texp_extension_constructor (_, path) ->
       transl_extension_path (of_location ~scopes e.exp_loc) e.exp_env path
   | Texp_variant(l, arg) ->
-      let tag = Btype.hash_variant l in
+      let tag = Obj.hash_variant l in
       begin match arg with
         None -> Lconst(const_int ~ptr_info:(Pt_variant { name = l }) tag)
       | Some arg ->
@@ -372,10 +372,9 @@ and transl_exp0 ~in_new_scope ~scopes e =
       transl_record ~scopes e.exp_loc e.exp_env
         fields representation extended_expression
   | Texp_atomic_loc (arg, _, lbl) ->
-      let shape = Some [Typeopt.value_kind arg.exp_env arg.exp_type; Pintval] in
-      let (arg, lbl) = transl_atomic_loc ~scopes arg lbl in
       let loc = of_location ~scopes e.exp_loc in
-      Lprim (Pmakeblock (0, Blk_array, Immutable, shape), [arg; lbl], loc)
+      let (arg, lbl) = transl_atomic_loc ~scopes arg lbl in
+      make_atomic_loc ~loc arg lbl
   | Texp_field (arg, _, ({ lbl_atomic = Atomic; _ } as lbl)) ->
       let arg, lbl = transl_atomic_loc ~scopes arg lbl in
       let loc = of_location ~scopes e.exp_loc in
@@ -590,19 +589,13 @@ and transl_exp0 ~in_new_scope ~scopes e =
               of_location ~scopes e.exp_loc)
       else
       begin match Typeopt.classify_lazy_argument e with
-      | `Constant_or_function ->
-        (* A constant expr (of type <> float if [Config.flat_float_array] is
-           true) gets compiled as itself. *)
+      | Eager Shortcut ->
          transl_exp ~scopes e
-      | `Float_that_cannot_be_shortcut
-      | `Identifier `Forward_value ->
+      | Eager Forward ->
          Lprim (Pmakelazyblock Forward_tag,
                 [transl_exp ~scopes e],
                 of_location ~scopes e.exp_loc)
-      | `Identifier `Other ->
-         transl_exp ~scopes e
-      | `Other ->
-         (* other cases compile to a lazy block holding a function *)
+      | Lazy_thunk ->
          let fn = lfunction ~kind:Curried
                             ~params:[Ident.create_local "param", Pgenval]
                             ~return:Pgenval
@@ -660,7 +653,8 @@ and transl_guard ~scopes guard rhs =
 
 and transl_cont cont c_cont body =
   match cont, c_cont with
-  | Some id1, Some id2 -> Llet(Alias, Pgenval, id2, Lvar id1, body)
+  | Some id1, Some {cont_id = id2; _} ->
+      Llet(Alias, Pgenval, id2, Lvar id1, body)
   | None, None
   | Some _, None -> body
   | None, Some _ -> assert false
@@ -802,7 +796,7 @@ and transl_apply ~scopes
    the function as taking each argument individually (in
    [trans_curried_function]).
 *)
-and transl_function_without_attributes ~scopes loc repr params body =
+and transl_function_without_attributes ~scopes ~env loc repr params body =
   let return, return_unit =
     match body with
     | Tfunction_body body ->
@@ -816,11 +810,11 @@ and transl_function_without_attributes ~scopes loc repr params body =
         Pgenval, false
   in
   let (cf, params, return), body =
-    transl_tupled_function ~scopes loc return repr params body
+    transl_tupled_function ~scopes ~env loc return repr params body
   in
   (cf, params, return, return_unit), body
 
-and transl_tupled_function ~scopes loc return repr params body =
+and transl_tupled_function ~scopes ~env loc return repr params body =
   (* Cases are eligible for flattening if they belong to the only param. *)
   let eligible_cases =
     match params, body with
@@ -844,6 +838,11 @@ and transl_tupled_function ~scopes loc return repr params body =
             (fun {c_lhs; c_guard; c_rhs} ->
               (Matching.flatten_pattern size c_lhs, c_guard, c_rhs))
             cases in
+        (* if the match is partial, we cannot rely on GADT equations *)
+        let local_equations = match partial with
+          | Partial -> Some (Env.freeze_local_equations env)
+          | Total -> None
+        in
         let kinds =
           (* All the patterns might not share the same types. We must take the
              union of the patterns types *)
@@ -851,13 +850,13 @@ and transl_tupled_function ~scopes loc return repr params body =
           | [] -> assert false
           | (pats, _, _) :: cases ->
               let first_case_kinds =
-                List.map (fun pat -> value_kind pat.pat_env pat.pat_type) pats
+                List.map (pattern_kind local_equations) pats
               in
               List.fold_left
                 (fun kinds (pats, _, _) ->
                   List.map2 (fun kind pat ->
                     value_kind_union kind
-                      (value_kind pat.pat_env pat.pat_type))
+                      (pattern_kind local_equations pat))
                     kinds pats)
                 first_case_kinds cases
         in
@@ -869,11 +868,11 @@ and transl_tupled_function ~scopes loc return repr params body =
          Matching.for_tupled_function ~scopes loc params
            (transl_tupled_cases ~scopes pats_expr_list) partial)
     with Matching.Cannot_flatten ->
-      transl_curried_function ~scopes loc return repr params body
+      transl_curried_function ~scopes ~env loc return repr params body
       end
-  | _ -> transl_curried_function ~scopes loc return repr params body
+  | _ -> transl_curried_function ~scopes ~env loc return repr params body
 
-and transl_curried_function ~scopes loc return repr params body =
+and transl_curried_function ~scopes ~env loc return repr params body =
   let cases_param, body =
     match body with
     | Tfunction_body body ->
@@ -898,13 +897,32 @@ and transl_curried_function ~scopes loc return repr params body =
         in
         Some (param, kind), body
   in
+  (* We freeze local GADTs equations to the set existing before the
+     first partial match to avoid using equations that might be only
+     valid if a match succeeds. *)
+  let _, params = List.fold_left_map (fun (local_equations, prev_env) fp ->
+      let local_equations =
+        match local_equations, fp.fp_partial, fp.fp_kind with
+        | Some _, _, _ -> local_equations
+        | None, Total, Tparam_pat _ -> local_equations
+        | None, Partial, _
+        (* in default arguments [?(pat=exp)], [exp] can raise and
+           thus even a [Total] pattern can fail. *)
+        | None, _, Tparam_optional_default _ ->
+            Some (Env.freeze_local_equations prev_env)
+      in
+      let env = match fp.fp_kind with
+        | Tparam_pat pat | Tparam_optional_default (pat,_) -> pat.pat_env
+      in
+      (local_equations,env), (fp, local_equations)
+    ) (None, env) params in
   let body, params =
-    List.fold_right (fun fp (body, params) ->
+    List.fold_right (fun (fp, local_equations) (body, params) ->
       let param = fp.fp_param in
       let param_loc = fp.fp_loc in
       match fp.fp_kind with
       | Tparam_pat pat ->
-          let kind = value_kind pat.pat_env pat.pat_type in
+          let kind = pattern_kind local_equations pat in
           let body =
             Matching.for_function ~scopes param_loc None (Lvar param)
               [ pat, body ]
@@ -955,7 +973,8 @@ and transl_function ~scopes e params body =
     event_function ~scopes e
       (function repr ->
          let params, body = fuse_method_arity params body in
-         transl_function_without_attributes ~scopes e.exp_loc repr params body)
+         let env = e.exp_env and loc = e.exp_loc in
+         transl_function_without_attributes ~env ~scopes loc repr params body)
   in
   let attr = { function_attribute_disallowing_arity_fusion with return_unit } in
   let loc = of_location ~scopes e.exp_loc in
@@ -1304,14 +1323,12 @@ and transl_handler ~scopes e body val_caselist exn_caselist eff_caselist =
   let eff_fun =
     let param = Typecore.name_cases "eff" eff_caselist in
     let cont = Ident.create_local "k" in
-    let cont_tail = Ident.create_local "ktail" in
     let eff_cases = transl_cases ~scopes ~cont eff_caselist in
     let body =
-      Matching.for_handler ~scopes e.exp_loc (Lvar param) (Lvar cont)
-        (Lvar cont_tail) eff_cases
+      Matching.for_handler ~scopes e.exp_loc (Lvar param) (Lvar cont) eff_cases
     in
     lfunction ~kind:Curried
-      ~params:[(param, Pgenval); (cont, Pgenval); (cont_tail, Pgenval)]
+      ~params:[(param, Pgenval); (cont, Pgenval)]
       ~return:Pgenval ~attr:default_function_attribute ~loc:Loc_unknown ~body
   in
   let (body_fun, arg) =
@@ -1366,7 +1383,7 @@ and transl_letop ~scopes loc env let_ ands param case partial =
         (function repr ->
            let loc = case.c_rhs.exp_loc in
            let ghost_loc = { loc with loc_ghost = true } in
-           transl_function_without_attributes ~scopes loc repr []
+           transl_function_without_attributes ~scopes ~env loc repr []
              (Tfunction_cases
                 { cases = [case]; param; partial; loc = ghost_loc;
                   exp_extra = None; attributes = []; }))

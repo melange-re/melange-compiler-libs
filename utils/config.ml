@@ -26,7 +26,7 @@ let standard_library_default = "/usr/local/lib/ocaml"
    from values in ../build-aux/ocaml_version.m4 - do not edit these lines
    directly. *)
 let is_official_release = false
-let release_number = 21
+let release_number = 22
 
 external standard_library_default : unit -> string = "%standard_library_default"
 
@@ -100,7 +100,7 @@ let ar_supports_response_files = true
 
 let tsan = false
 
-let exec_magic_number = {magic|Caml1999X037|magic}
+let exec_magic_number = {magic|Caml1999X038|magic}
 
 let bindir = {|/usr/local/bin|}
 let target_bindir = bindir
@@ -113,16 +113,16 @@ let target_bindir =
     target_bindir
 
     (* exec_magic_number is duplicated in runtime/caml/exec.h *)
-and cmi_magic_number = {magic|Caml1999I037|magic}
-and cmo_magic_number = {magic|Caml1999O037|magic}
-and cma_magic_number = {magic|Caml1999A037|magic}
-and cmx_magic_number = {magic|Caml1999y037|magic}
-and cmxa_magic_number = {magic|Caml1999z037|magic}
-and ast_impl_magic_number = {magic|Caml1999M037|magic}
-and ast_intf_magic_number = {magic|Caml1999N037|magic}
-and cmxs_magic_number = {magic|Caml1999D037|magic}
-and cmt_magic_number = {magic|Caml1999T037|magic}
-and linear_magic_number = {magic|Caml1999L037|magic}
+and cmi_magic_number = {magic|Caml1999I038|magic}
+and cmo_magic_number = {magic|Caml1999O038|magic}
+and cma_magic_number = {magic|Caml1999A038|magic}
+and cmx_magic_number = {magic|Caml1999y038|magic}
+and cmxa_magic_number = {magic|Caml1999z038|magic}
+and ast_impl_magic_number = {magic|Caml1999M038|magic}
+and ast_intf_magic_number = {magic|Caml1999N038|magic}
+and cmxs_magic_number = {magic|Caml1999D038|magic}
+and cmt_magic_number = {magic|Caml1999T038|magic}
+and linear_magic_number = {magic|Caml1999L038|magic}
 
 let safe_string = true
 let default_safe_string = true
@@ -302,6 +302,7 @@ let configuration_variables () =
   p_bool "native_dynlink" native_dynlink;
   p_bool "naked_pointers" naked_pointers;
   p_bool "with_codegen_invariants" with_codegen_invariants;
+  p_int "reserved_header_bits" reserved_header_bits;
 
   p "exec_magic_number" exec_magic_number;
   p "cmi_magic_number" cmi_magic_number;

@@ -113,7 +113,7 @@ let is_absrow env ty =
          included into (usually numbered with "2" in this file).  In this case,
          the abstract row variable has been substituted for an object or variant
          type. *)
-      begin match get_desc (Ctype.expand_head env ty) with
+      begin match get_desc (Ctype.expand_head_nolink env ty) with
       | Tobject _|Tvariant _ -> true
       | _ -> false
       end
@@ -181,6 +181,7 @@ type extension_constructor_mismatch =
                             * Types.extension_constructor
                             * Types.extension_constructor
                             * constructor_mismatch
+  | Constructor_arity
 
 type private_variant_mismatch =
   | Only_outer_closed (* It's only dangerous in one direction *)
@@ -399,6 +400,8 @@ let report_extension_constructor_mismatch first second decl env ppf err =
         constructor ext1
         constructor ext2
         (report_constructor_mismatch first second decl env) err
+  | Constructor_arity ->
+      pr "They have a different number of type parameters."
 
 
 let report_private_variant_mismatch first second decl env ppf err =
@@ -413,7 +416,7 @@ let report_private_variant_mismatch first second decl env ppf err =
       pr "The constructor %a is only present in %s %s."
         Style.inline_code name (choose ord first second) decl
   | Presence s ->
-      pr "The tag %a is present in the %s %s,@ but might not be in the %s"
+      pr "The tag %a is present in %s %s,@ but might not be in %s"
         (Style.as_inline_code pp_tag) s second decl first
   | Incompatible_types_for s -> pr "Types for tag `%s are incompatible" s
   | Types err ->
@@ -790,7 +793,7 @@ let privacy_mismatch env decl1 decl2 =
         when Option.is_some decl2.type_manifest -> begin
           match decl1.type_manifest with
           | Some ty1 -> begin
-            let ty1 = Ctype.expand_head env ty1 in
+            let ty1 = Ctype.expand_head_nolink env ty1 in
             match get_desc ty1 with
             | Tvariant row when Btype.is_constr_row ~allow_ident:true
                                   (row_more row) ->
@@ -902,7 +905,8 @@ let private_object env fields1 params1 fields2 params2 =
   end
 
 let type_manifest env ty1 params1 ty2 params2 priv2 kind2 =
-  let ty1' = Ctype.expand_head env ty1 and ty2' = Ctype.expand_head env ty2 in
+  let ty1' = Ctype.expand_head_nolink env ty1
+  and ty2' = Ctype.expand_head_nolink env ty2 in
   match get_desc ty1', get_desc ty2' with
   | Tvariant row1, Tvariant row2
     when is_absrow env (row_more row2) -> begin
@@ -940,7 +944,8 @@ let type_manifest env ty1 params1 ty2 params2 priv2 kind2 =
         else
           Ctype.equal env true (params1 @ [ty1]) (params2 @ [ty2])
       with
-      | exception Ctype.Equality err -> Some (Manifest err)
+      | exception Ctype.Equality err ->
+          Some (Manifest err)
       | () -> None
     end
 
@@ -1090,6 +1095,9 @@ let extension_constructors ~loc env ~mark id ext1 ext2 =
     in
     Env.mark_extension_used usage ext1.ext_uid
   end;
+  if List.length ext1.ext_type_params <> List.length ext2.ext_type_params then
+    Some Constructor_arity
+  else
   let ty1 =
     Btype.newgenty (Tconstr(ext1.ext_type_path, ext1.ext_type_params, ref Mnil))
   in

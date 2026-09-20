@@ -339,6 +339,10 @@ val add_class: Ident.t -> class_declaration -> t -> t
 val add_cltype: Ident.t -> class_type_declaration -> t -> t
 val add_local_constraint: Path.t -> type_declaration -> t -> t
 
+type local_equations
+val freeze_local_equations: t -> local_equations
+val restrict_local_equations: local_equations -> t -> t
+
 (* Insertion of persistent signatures *)
 
 (* [add_persistent_structure id env] is an environment such that
@@ -403,7 +407,7 @@ val enter_signature: ?mod_shape:Shape.t -> scope:int -> signature -> t ->
   signature * t
 
 (* Same as [enter_signature] but also extends the shape map ([parent_shape])
-   with all the the items from the signature, their shape being a projection
+   with all the items from the signature, their shape being a projection
    from the given shape. *)
 val enter_signature_and_shape: scope:int -> parent_shape:Shape.Map.t ->
   Shape.t -> signature -> t -> signature * Shape.Map.t * t
@@ -480,6 +484,11 @@ for an example of careful usage of [Unscoped], by locally shadowing
 [Path] to hide [Path.same].
 "]
 
+(** Equivalence of (mod)type paths modulo path normalization. *)
+val type_path_equiv_modulo : t -> Path.t -> Path.t -> bool
+val modtype_path_equiv_modulo : t -> Path.t -> Path.t -> bool
+
+
 (* Error report *)
 
 type error =
@@ -487,7 +496,12 @@ type error =
   | Illegal_value_name of Location.t * string
   | Lookup_error of Location.t * t * lookup_error
 
-exception Error of error
+module Error : sig
+  type exn += private In_context of error
+
+  val log_or_raise : error -> unit
+  val log_and_raise : error -> 'a
+end
 
 val in_signature: bool -> t -> t
 
