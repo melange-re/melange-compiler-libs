@@ -849,10 +849,10 @@ let rec transl_address loc env path = function
       let path', name = path_and_name path in
       Lprim(Pfield (pos, Pointer, Mutable, Fld_module { name }), [transl_address loc env path' addr], loc)
 
-let transl_path find loc env path =
+let transl_path normalize find loc env path =
   let path =
     let loc' = Some (Debuginfo.Scoped_location.to_location loc) in
-    Env.normalize_module_path loc' env path
+    normalize loc' env path
   in
   match find path env with
   | exception Not_found ->
@@ -862,16 +862,16 @@ let transl_path find loc env path =
 (* Translation of identifiers *)
 
 let transl_module_path loc env path =
-  transl_path Env.find_module_address loc env path
+  transl_path Env.normalize_module_path Env.find_module_address loc env path
 
 let transl_value_path loc env path =
-  transl_path Env.find_value_address loc env path
+  transl_path Env.normalize_value_path Env.find_value_address loc env path
 
 let transl_extension_path loc env path =
-  transl_path Env.find_constructor_address loc env path
+  transl_path Env.normalize_type_path Env.find_constructor_address loc env path
 
 let transl_class_path loc env path =
-  transl_path Env.find_class_address loc env path
+  transl_path Env.normalize_value_path Env.find_class_address loc env path
 
 let transl_prim mod_name name =
   let pers = Ident.create_persistent mod_name in
