@@ -1,4 +1,4 @@
-(dirs wrapper lib parsing utils file_formats lambda typing)
+(dirs wrapper lib parsing utils file_formats lambda typing tests)
 
 (include_subdirs unqualified)
 
