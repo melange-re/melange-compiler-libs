@@ -558,16 +558,6 @@ let without_assume_injective uenv f =
 
 (*** Checks for type definitions ***)
 
-let rec in_current_module = function
-  | Path.Pident _ -> true
-  | Path.Pdot _ | Path.Papply _ -> false
-  | Path.Pextra_ty (p, _) -> in_current_module p
-
-let in_pervasives p =
-  in_current_module p &&
-  try ignore (Env.find_type p Env.initial); true
-  with Not_found -> false
-
 let is_datatype decl=
   match decl.type_kind with
     Type_record _ | Type_variant _ | Type_open | Type_external _ -> true
@@ -1080,6 +1070,11 @@ let update_level_for tr_exn env level ty =
   try
     update_level env level ty
   with Escape e -> raise_for tr_exn (Escape e)
+
+(* Lower the level of a type to the current level *)
+let enforce_current_level env ty =
+  try update_level env !current_level ty
+  with Escape _ -> fatal_error "Ctype.enforce_current_level"
 
 (* Lower level of type variables inside contravariant branches.
 
@@ -2265,9 +2260,7 @@ let rec extract_package_modulo_subtype env ty =
   | _ -> raise Not_found
 
 let is_contractive env p =
-  try
-    let decl = Env.find_type p env in
-    in_pervasives p && decl.type_manifest = None || is_datatype decl
+  try is_datatype (Env.find_type p env)
   with Not_found -> false
 
 
@@ -3559,8 +3552,7 @@ and unify3 uenv t1' t2' =
             unify_list uenv tl1 tl2
           else if can_assume_injective uenv then
             without_assume_injective uenv (fun uenv -> unify_list uenv tl1 tl2)
-          else if in_current_module p1 (* || in_pervasives p1 *)
-               || List.exists
+          else if List.exists
                    (expands_to_datatype (get_env uenv))
                    (List.map (fun a -> a.abbr_path)
                       (Option.to_list (get_abbrev t1') @
@@ -4038,9 +4030,6 @@ let unify_pairs env ty1 ty2 pairs =
 
 let unify env ty1 ty2 =
   unify_pairs env ty1 ty2 []
-
-(* Lower the level of a type to the current level *)
-let enforce_current_level env ty = unify_var env (newvar ()) ty
 
 
 (**** Special cases of unification ****)
@@ -5328,8 +5317,10 @@ let eqtype rename type_pairs subst env t1 t2 =
 
 (* Two modes: with or without renaming of variables *)
 let equal env rename tyl1 tyl2 =
-  if List.length tyl1 <> List.length tyl2 then
-    raise_unexplained_for Equality;
+  (* In practice, `Equality` is not a good error to report to users and thus
+      callers of this function ought to raise their own error when
+      `List.length tyl1 <> List.length tyl2`. *)
+  assert (List.length tyl1 = List.length tyl2);
   if List.for_all2 eq_type tyl1 tyl2 then () else
   let subst = ref [] in
   try eqtype_list_same_length rename (TypePairs.create 11) subst env tyl1 tyl2
@@ -6449,21 +6440,18 @@ let arrow_spine env ty =
       | _ -> List.rev labels, Ret_type ty)
     else List.rev labels, Ret_cycle
   in
-  let snap = snapshot () in
-  let result =
-    with_type_mark (fun mark ->
-        wrap_trace_gadt_instances env (arrow_spine_rec ~mark []) ty)
-  in
-  backtrack snap;
-  result
+  with_type_mark (fun mark ->
+    wrap_trace_gadt_instances env (arrow_spine_rec ~mark []) ty)
 
 let arrow_labels env ty =
+  let snap = snapshot () in
   let label_tys, ret_ty_or_cycle = arrow_spine env ty in
   let is_ret_tvar =
     match ret_ty_or_cycle with
     | Ret_cycle -> false
     | Ret_type ty -> is_Tvar ty
   in
+  backtrack snap;
   List.map fst label_tys, ~is_ret_tvar
 
                               (*************************)
