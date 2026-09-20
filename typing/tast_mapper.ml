@@ -615,20 +615,18 @@ let module_coercion sub = function
       Tcoerce_functor (sub.module_coercion sub c1, sub.module_coercion sub c2)
   | Tcoerce_alias (env, p, c1) ->
       Tcoerce_alias (sub.env sub env, p, sub.module_coercion sub c1)
-  | Tcoerce_structure
-      { field_coercions; id_pos_list; source_names; runtime_fields } ->
+  | Tcoerce_structure sc ->
       let field_coercions =
         List.map
           (fun (i, c) -> i, sub.module_coercion sub c)
-          field_coercions
+          sc.field_coercions
       in
       let id_pos_list =
         List.map
           (fun (id, i, c) -> id, i, sub.module_coercion sub c)
-          id_pos_list
+          sc.id_pos_list
       in
-      Tcoerce_structure
-        { field_coercions; id_pos_list; source_names; runtime_fields }
+      Tcoerce_structure { sc with field_coercions; id_pos_list }
   | Tcoerce_primitive pc ->
       Tcoerce_primitive {pc with pc_loc = sub.location sub pc.pc_loc;
                                  pc_env = sub.env sub pc.pc_env}

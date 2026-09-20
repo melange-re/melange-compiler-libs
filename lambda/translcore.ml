@@ -42,9 +42,9 @@ let transl_module =
       module_expr -> lambda)
 
 let transl_struct_item =
-  ref ((fun ~scopes:_ _loc _fields _rootpath _stri _next -> assert false) :
-       scopes:scopes -> Lambda.scoped_location -> Ident.t list -> Path.t option ->
-       structure_item -> (Ident.t list -> lambda) -> lambda)
+  ref ((fun ~scopes:_ _loc _rootpath _stri _next -> assert false) :
+       scopes:scopes -> Lambda.scoped_location -> Path.t option ->
+       structure_item -> (unit -> lambda) -> lambda)
 
 let transl_object =
   ref (fun ~scopes:_ _id _s _cl -> assert false :
@@ -632,7 +632,8 @@ and transl_exp0 ~in_new_scope ~scopes e =
   | Texp_unreachable ->
       raise (Error (e.exp_loc, Unreachable_reached))
   | Texp_struct_item (si, e) ->
-      !transl_struct_item ~scopes (of_location ~scopes e.exp_loc) [] None si (fun _ -> transl_exp ~scopes e)
+      !transl_struct_item ~scopes (of_location ~scopes e.exp_loc) None si
+        (fun () -> transl_exp ~scopes e)
 
 and pure_module m =
   match m.mod_desc with

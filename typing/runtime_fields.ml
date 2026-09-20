@@ -19,68 +19,69 @@ let id t = t.id
 let name t = t.name
 let with_id t id = { t with id }
 
-let resolve fields =
-  let value_names = Hashtbl.create (List.length fields) in
-  let module_names = Hashtbl.create (List.length fields) in
-  List.iter
-    (fun (id, kind) ->
-      match kind with
-      | Shape.Sig_component_kind.Value ->
-          Hashtbl.replace value_names (Ident.name id) ()
-      | Shape.Sig_component_kind.Module ->
-          Hashtbl.replace module_names (Ident.name id) ()
-      | Extension_constructor | Class -> ()
-      | Type | Constructor | Label | Module_type | Class_type -> assert false)
-    fields;
-  let has names name = Hashtbl.mem names name in
-  List.map
-    (fun (id, kind) ->
-      let name = Ident.name id in
-      let name =
-        match kind with
-        | Shape.Sig_component_kind.Extension_constructor
-          when has module_names name ->
-            name ^ "$1"
-        | Shape.Sig_component_kind.Class when has value_names name ->
-            name ^ "$1"
-        | Value | Module | Extension_constructor | Class ->
-            name
-        | Type | Constructor | Label | Module_type | Class_type -> assert false
-      in
-      { id; name })
-    fields
+type component =
+  | Value of Ident.t
+  | Module of Ident.t
+  | Extension of Ident.t
+  | Class of Ident.t
+  | Non_runtime
 
-let unresolved_of_signature_item = function
-  | Types.Sig_value (_, { val_kind = Val_prim _; _ }, _) -> None
-  | Sig_value (id, _, _) -> Some (id, Shape.Sig_component_kind.Value)
-  | Sig_typext (id, _, _, _) ->
-      Some (id, Shape.Sig_component_kind.Extension_constructor)
-  | Sig_module (id, Mp_present, _, _, _) ->
-      Some (id, Shape.Sig_component_kind.Module)
-  | Sig_class (id, _, _, _) -> Some (id, Shape.Sig_component_kind.Class)
+let of_items classify items =
+  let size = List.length items in
+  let value_names = Hashtbl.create size in
+  let module_names = Hashtbl.create size in
+  List.iter
+    (fun item ->
+      match classify item with
+      | Value id ->
+          Hashtbl.replace value_names (Ident.name id) ()
+      | Module id ->
+          Hashtbl.replace module_names (Ident.name id) ()
+      | Extension _ | Class _ | Non_runtime -> ())
+    items;
+  let field names id =
+    let name = Ident.name id in
+    let name = if Hashtbl.mem names name then name ^ "$1" else name in
+    { id; name }
+  in
+  List.filter_map
+    (fun item ->
+      match classify item with
+      | Value id | Module id -> Some { id; name = Ident.name id }
+      | Extension id -> Some (field module_names id)
+      | Class id -> Some (field value_names id)
+      | Non_runtime -> None)
+    items
+
+let classify_signature_item = function
+  | Types.Sig_value (_, { val_kind = Val_prim _; _ }, _) -> Non_runtime
+  | Sig_value (id, _, _) -> Value id
+  | Sig_typext (id, _, _, _) -> Extension id
+  | Sig_module (id, Mp_present, _, _, _) -> Module id
+  | Sig_class (id, _, _, _) -> Class id
   | Sig_type _ | Sig_module (_, Mp_absent, _, _, _) | Sig_modtype _
   | Sig_class_type _ ->
-      None
+      Non_runtime
 
 let is_runtime_component item =
-  Option.is_some (unresolved_of_signature_item item)
+  match classify_signature_item item with
+  | Non_runtime -> false
+  | Value _ | Module _ | Extension _ | Class _ -> true
 
 let of_signature signature =
-  resolve (List.filter_map unresolved_of_signature_item signature)
+  of_items classify_signature_item signature
 
-let unresolved_of_lazy_signature_item =
+let classify_lazy_signature_item =
   let open Subst.Lazy in
   function
-  | SigL_value (_, { val_kind = Val_prim _; _ }, _) -> None
-  | SigL_value (id, _, _) -> Some (id, Shape.Sig_component_kind.Value)
-  | SigL_typext (id, _, _, _) ->
-      Some (id, Shape.Sig_component_kind.Extension_constructor)
-  | SigL_module (id, Mp_present, _, _, _) ->
-      Some (id, Shape.Sig_component_kind.Module)
-  | SigL_class (id, _, _, _) -> Some (id, Shape.Sig_component_kind.Class)
+  | SigL_value (_, { val_kind = Val_prim _; _ }, _) -> Non_runtime
+  | SigL_value (id, _, _) -> Value id
+  | SigL_typext (id, _, _, _) -> Extension id
+  | SigL_module (id, Mp_present, _, _, _) -> Module id
+  | SigL_class (id, _, _, _) -> Class id
   | SigL_type _ | SigL_module (_, Mp_absent, _, _, _)
   | SigL_modtype _ | SigL_class_type _ ->
-      None
+      Non_runtime
 
 let of_lazy_signature_items signature =
-  resolve (List.filter_map unresolved_of_lazy_signature_item signature)
+  of_items classify_lazy_signature_item signature
