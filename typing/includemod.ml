@@ -357,16 +357,7 @@ let item_ident_name = function
   | Sig_class_type(id, d, _, _) ->
       (id, d.clty_loc, field_desc Field_classtype id)
 
-let is_runtime_component = function
-  | Sig_value(_,{val_kind = Val_prim _}, _)
-  | Sig_type(_,_,_,_)
-  | Sig_module(_,Mp_absent,_,_,_)
-  | Sig_modtype(_,_,_)
-  | Sig_class_type(_,_,_,_) -> false
-  | Sig_value(_,_,_)
-  | Sig_typext(_,_,_,_)
-  | Sig_module(_,Mp_present,_,_,_)
-  | Sig_class(_,_,_,_) -> true
+let is_runtime_component = Runtime_fields.is_runtime_component
 
 (* Print a coercion *)
 
@@ -381,7 +372,7 @@ let rec print_coercion ppf c =
   let pr fmt = Format.fprintf ppf fmt in
   match c with
     Tcoerce_none -> pr "id"
-  | Tcoerce_structure (fl, nl, _) ->
+  | Tcoerce_structure { field_coercions = fl; id_pos_list = nl; _ } ->
       pr "@[<2>struct@ %a@ %a@]"
         (print_list print_coercion2) fl
         (print_list print_coercion3) nl
@@ -416,7 +407,16 @@ let equal_modtype_paths env p1 subst p2 =
        (Env.normalize_modtype_path env
           (Subst.modtype_path subst p2))
 
-let simplify_structure_coercion cc id_pos_list runtime_fields =
+let structure_coercion cc id_pos_list sig1 sig2 =
+  let source_names =
+    Array.of_list
+      (List.map Runtime_fields.name (Runtime_fields.of_signature sig1))
+  in
+  let runtime_fields = Runtime_fields.of_signature sig2 in
+  Tcoerce_structure
+    { field_coercions = cc; id_pos_list; source_names; runtime_fields }
+
+let simplify_structure_coercion cc id_pos_list sig1 sig2 =
   let rec is_identity_coercion pos = function
   | [] ->
       true
@@ -424,7 +424,7 @@ let simplify_structure_coercion cc id_pos_list runtime_fields =
       n = pos && c = Tcoerce_none && is_identity_coercion (pos + 1) rem in
   if is_identity_coercion 0 cc
   then Tcoerce_none
-  else Tcoerce_structure (cc, id_pos_list, runtime_fields)
+  else structure_coercion cc id_pos_list sig1 sig2
 
 let retrieve_functor_params env mty =
   let rec retrieve_functor_params before env =
@@ -712,11 +712,6 @@ and signatures ~core ~direction ~loc env subst sig1 sig2 mod_shape =
         | item -> (l, if is_runtime_component item then pos+1 else pos))
       ([], 0) sig1 in
 
-  let runtime_fields =
-     List.fold_right (fun item fields ->
-        if is_runtime_component item then
-          signature_item_id item :: fields else fields) sig2 [] in
-
   (* Build a table of the components of sig1, along with their positions.
      The table is indexed by kind and name of component *)
   let rec build_component_table nb_exported pos tbl = function
@@ -766,9 +761,9 @@ and signatures ~core ~direction ~loc env subst sig1 sig2 mod_shape =
                   else Shape.str ?uid:mod_shape.Shape.uid d.shape_map
                 in
                 if runtime_len1 = runtime_len2 then (* see PR#5098 *)
-                  Ok (simplify_structure_coercion cc id_pos_list runtime_fields, shape)
+                  Ok (simplify_structure_coercion cc id_pos_list sig1 sig2, shape)
                 else
-                  Ok (Tcoerce_structure (cc, id_pos_list, runtime_fields), shape)
+                  Ok (structure_coercion cc id_pos_list sig1 sig2, shape)
             | missings, incompatibles, runtime_coercions, untypables ->
                 let additions = additions |> FieldMap.to_list |> List.map snd in
                 Error {

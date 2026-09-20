@@ -106,7 +106,7 @@ module Runtime_coercion = struct
   (** We extract a small change from a full coercion. *)
   let rec first_change_under path (coerc:Typedtree.module_coercion) =
     match coerc with
-    | Tcoerce_structure(c,_, _) ->
+    | Tcoerce_structure { field_coercions = c; _ } ->
         either
           (first_item_transposition path 0) c
           (first_non_id path 0) c

@@ -341,9 +341,12 @@ and value_binding =
 
 and module_coercion =
     Tcoerce_none
-  | Tcoerce_structure of (int * module_coercion) list *
-                         (Ident.t * int * module_coercion) list *
-                         Ident.t list (* runtime fields *)
+  | Tcoerce_structure of {
+      field_coercions : (int * module_coercion) list;
+      id_pos_list : (Ident.t * int * module_coercion) list;
+      source_names : string array;
+      runtime_fields : Runtime_fields.t list;
+    }
   | Tcoerce_functor of module_coercion * module_coercion
   | Tcoerce_primitive of primitive_coercion
   | Tcoerce_alias of Env.t * Path.t * module_coercion

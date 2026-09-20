@@ -857,47 +857,41 @@ let rec patch_guarded patch = function
       Levent (patch_guarded patch lam, ev)
   | _ -> fatal_error "Lambda.patch_guarded"
 
-(* Translate an access path *)
+(* Translate an access path.  Projection addresses retain the exact property
+   name selected for their enclosing module representation. *)
 
-let rec path_and_name path =
-  match path with
-  | Path.Pdot (path', s) -> path', s
-  | Path.Pident id -> path, Ident.name id
-  | Path.Pextra_ty (path, _) -> path_and_name path
-  | Path.Papply _ -> assert false
-
-let rec transl_address loc env path = function
+let rec transl_address loc = function
   | Env.Aident id ->
       if Ident.global id
       then Lprim(Pgetglobal id, [], loc)
       else Lvar id
-  | Env.Adot(addr, pos) ->
-      let path', name = path_and_name path in
-      Lprim(Pfield (pos, Pointer, Mutable, Fld_module { name }), [transl_address loc env path' addr], loc)
+  | Env.Adot(addr, pos, name) ->
+      Lprim(Pfield (pos, Pointer, Mutable, Fld_module { name }),
+            [transl_address loc addr], loc)
 
-let transl_path find loc env path =
+let transl_path normalize find loc env path =
   let path =
     let loc' = Some (Debuginfo.Scoped_location.to_location loc) in
-    Env.normalize_module_path loc' env path
+    normalize loc' env path
   in
   match find path env with
   | exception Not_found ->
       fatal_error ("Cannot find address for: " ^ (Path.name path))
-  | addr -> transl_address loc env path addr
+  | addr -> transl_address loc addr
 
 (* Translation of identifiers *)
 
 let transl_module_path loc env path =
-  transl_path Env.find_module_address loc env path
+  transl_path Env.normalize_module_path Env.find_module_address loc env path
 
 let transl_value_path loc env path =
-  transl_path Env.find_value_address loc env path
+  transl_path Env.normalize_value_path Env.find_value_address loc env path
 
 let transl_extension_path loc env path =
-  transl_path Env.find_constructor_address loc env path
+  transl_path Env.normalize_type_path Env.find_constructor_address loc env path
 
 let transl_class_path loc env path =
-  transl_path Env.find_class_address loc env path
+  transl_path Env.normalize_value_path Env.find_class_address loc env path
 
 let transl_prim modname field =
   let mod_ident = Ident.create_persistent modname in

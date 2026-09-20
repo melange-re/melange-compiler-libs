@@ -23,7 +23,7 @@ type id_or_ignore_loc =
   | Id of Ident.t
   | Ignore_loc of Lambda.scoped_location
 
-val mangle_ident : (Ident.t -> string) ref
+val mangle_name : (string -> string) ref
 
 val eval_rec_bindings:
      ((id_or_ignore_loc * (Lambda.lambda * Lambda.lambda) option *
@@ -78,5 +78,5 @@ val report_error: Location.t -> error -> Location.error
 
 val reset: unit -> unit
 
-(** make it an array for better performance*)
-val get_export_identifiers : unit -> Ident.t list
+(** The compilation unit's resolved runtime fields, in representation order. *)
+val get_export_fields : unit -> Runtime_fields.t list
