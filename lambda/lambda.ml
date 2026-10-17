@@ -315,6 +315,7 @@ type pointer_info =
     ; attributes: Parsetree.attributes
     }
   | Pt_constructor_access of {cstr_name : string}
+  | Pt_atomic_field of {name : string}
   | Pt_variant of {name : string}
   | Pt_module_alias
   | Pt_builtin_boolean
