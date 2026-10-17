@@ -1167,19 +1167,28 @@ and transl_record ~scopes loc env fields repres opt_init_expr =
 
 and transl_atomic_loc ~scopes arg lbl =
   let arg = transl_exp ~scopes arg in
-  let offset =
+  let offset, field =
     match lbl.lbl_repres with
-    | Record_regular
-    | Record_inlined _ -> 0
+    | Record_regular -> 0, !Lambda.fld_record lbl
+    | Record_inlined _ -> 0, !Lambda.fld_record_inline lbl
     | Record_float ->
         fatal_error
           "Translcore.transl_atomic_loc: atomic field in float record"
     | Record_unboxed _ ->
         fatal_error
           "Translcore.transl_atomic_loc: atomic field in unboxed record"
-    | Record_extension _ -> 1
+    | Record_extension _ -> 1, !Lambda.fld_record_extension lbl
   in
-  let lbl = Lconst (Const_int ((lbl.lbl_pos + offset), default_pointer_info)) in
+  let name =
+    match field with
+    | Fld_record {name; _}
+    | Fld_record_inline {name}
+    | Fld_record_extension {name} -> name
+    | _ -> assert false
+  in
+  let lbl =
+    Lconst (Const_int (lbl.lbl_pos + offset, Pt_atomic_field {name}))
+  in
   (arg, lbl)
 
 and transl_match ~scopes e arg pat_expr_list partial =

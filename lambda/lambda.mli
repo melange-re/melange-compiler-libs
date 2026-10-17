@@ -170,6 +170,7 @@ type pointer_info =
   | Pt_constructor_access of {cstr_name : string}
     (* associated with a Const_int pointer for dynamic constructor lookup
        in TMC *)
+  | Pt_atomic_field of {name : string}
   | Pt_variant of {name : string}
   | Pt_module_alias
   | Pt_builtin_boolean

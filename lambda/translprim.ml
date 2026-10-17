@@ -752,7 +752,8 @@ let lambda_of_atomic prim_name loc op (kind : atomic_kind) args =
            [Lprim(caml_atomic_exchange_field, [ref; 0; v])]
       *)
       let ref_arg, rest = split args in
-      let args = ref_arg :: Lconst (Lambda.const_int 0) :: rest in
+      let field = Lambda.const_int ~ptr_info:(Pt_atomic_field {name = "v"}) 0 in
+      let args = ref_arg :: Lconst field :: rest in
       Lprim (prim, args, loc)
   | Field ->
       (* the primitive application
