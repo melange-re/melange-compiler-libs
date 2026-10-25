@@ -2962,7 +2962,9 @@ let sort_int_lambda_list l =
         0)
     l
 
-let as_interval fail ?(low = min_int) ?(high = max_int) l =
+let as_interval fail
+    ?(low = if !Config.bs_only then Int32.to_int Int32.min_int else min_int)
+    ?(high = if !Config.bs_only then Int32.to_int Int32.max_int else max_int) l =
   let l = sort_int_lambda_list l in
   ( get_edges ~low ~high l,
     match fail with
