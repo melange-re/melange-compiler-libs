@@ -244,7 +244,7 @@ let primitive ppf = function
         | Assignment -> ""
       in
       fprintf ppf "setfloatfield%s %i" init n
-  | Pduprecord (rep, size) -> fprintf ppf "duprecord %a %i" record_rep rep size
+  | Pduprecord (rep, size, _) -> fprintf ppf "duprecord %a %i" record_rep rep size
   | Prunstack -> fprintf ppf "runstack"
   | Pperform -> fprintf ppf "perform"
   | Presume -> fprintf ppf "resume"

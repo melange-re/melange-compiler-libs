@@ -258,7 +258,7 @@ let compute_static_size lam =
            but it doesn't hurt to be consistent. *)
       Constant
 
-    | Pduprecord (repres, size) ->
+    | Pduprecord (repres, size, _) ->
         begin match repres with
         | Record_regular | Record_inlined _ | Record_extension _ ->
             Block (Regular_block size)
