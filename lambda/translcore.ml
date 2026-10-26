@@ -1159,7 +1159,7 @@ and transl_record ~scopes loc env fields repres opt_init_expr =
       None -> assert false
     | Some init_expr ->
         Llet(Strict, Pgenval, copy_id,
-             Lprim(Pduprecord (repres, size), [transl_exp ~scopes init_expr],
+             Lprim(Pduprecord (repres, size, !Lambda.blk_record fields), [transl_exp ~scopes init_expr],
                    of_location ~scopes loc),
              Array.fold_left update_field (Lvar copy_id) fields)
     end
