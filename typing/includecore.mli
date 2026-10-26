@@ -105,12 +105,19 @@ type type_mismatch =
   | Variance
   | Record_mismatch of record_mismatch
   | Variant_mismatch of variant_change list
+  | Variant_representation of string
   | Unboxed_representation of position
   | Immediate of Type_immediacy.Violation.t
 
 val value_descriptions:
   loc:Location.t -> Env.t -> Ident.t ->
   value_description -> value_description -> module_coercion
+
+val check_variant_representation:
+  (Types.constructor_declaration list -> Types.constructor_declaration list ->
+   string option) ref
+(** Backend hook for regular variants with otherwise compatible declarations.
+    Returns the name of a constructor whose runtime representation differs. *)
 
 val type_declarations:
   ?equality:bool ->
