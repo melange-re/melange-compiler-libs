@@ -209,6 +209,7 @@ type type_mismatch =
   | Variance
   | Record_mismatch of record_mismatch
   | Variant_mismatch of variant_change list
+  | Variant_representation of string
   | Unboxed_representation of position
   | Immediate of Type_immediacy.Violation.t
 
@@ -470,6 +471,8 @@ let report_type_mismatch first second decl env ppf err =
       report_record_mismatch first second decl env ppf err
   | Variant_mismatch err ->
       report_patch pp_variant_diff first second decl env ppf err
+  | Variant_representation name ->
+      pr "The JavaScript runtime representations of constructor %s differ." name
   | Unboxed_representation ord ->
       pr "Their internal representations differ:@ %s %s %s."
          (choose ord first second) decl
@@ -655,6 +658,8 @@ module Record_diffing = struct
 end
 
 
+let check_variant_representation = ref (fun _ _ -> None)
+
 module Variant_diffing = struct
 
   let compare_constructor_arguments ~loc env params1 params2 arg1 arg2 =
@@ -770,9 +775,10 @@ module Variant_diffing = struct
     =
     let err = compare ~loc env params1 params2 cstrs1 cstrs2 in
     match err, rep1, rep2 with
-    | None, Variant_regular, Variant_regular
-    | None, Variant_unboxed, Variant_unboxed ->
-        None
+    | None, Variant_regular, Variant_regular ->
+        Option.map (fun name -> Variant_representation name)
+          (!check_variant_representation cstrs1 cstrs2)
+    | None, Variant_unboxed, Variant_unboxed -> None
     | Some err, _, _ ->
         Some (Variant_mismatch err)
     | None, Variant_unboxed, Variant_regular ->
