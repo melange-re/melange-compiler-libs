@@ -2259,6 +2259,12 @@ let rec final_subexpression exp =
     -> final_subexpression e
   | _ -> exp
 
+let is_melange_uncurried_callee funct =
+  List.exists
+    (fun (attr : Parsetree.attribute) ->
+      attr.attr_name.txt = "mel.internal.uncurried")
+    funct.exp_attributes
+
 (* Generalization criterion for expressions *)
 
 let rec is_nonexpansive exp =
@@ -4542,7 +4548,10 @@ and type_application env funct sargs =
       | Tvar _ ->
           let t1 = newvar () and t2 = newvar () in
           if get_level ty_fun >= get_level t1 &&
-             not (is_prim ~name:"%identity" funct)
+             not (is_prim ~name:"%identity" funct) &&
+             (* Exempt the generated invocation, while retaining
+                warnings in its callee and argument expressions. *)
+             not (is_melange_uncurried_callee funct)
           then
             Location.prerr_warning sarg.pexp_loc
               Warnings.Ignored_extra_argument;
