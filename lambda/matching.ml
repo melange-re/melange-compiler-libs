@@ -484,6 +484,8 @@ module Context : sig
 
   val lub : pattern -> t -> t
 
+  val erase_first_col : t -> t
+
   val matches : t -> matrix -> bool
 
   val combine : t -> t
@@ -509,6 +511,11 @@ end = struct
       match right with
       | _ :: xs -> { left = Patterns.omega :: left; right = xs }
       | _ -> assert false
+
+    let erase_first_col { left; right } =
+      match right with
+      | _ :: right -> { left; right = Patterns.omega :: right }
+      | [] -> assert false
 
     let rshift { left; right } =
       match left with
@@ -548,6 +555,8 @@ end = struct
       get_mins Row.le (List.map Row.lforget ctx)
 
   let rshift ctx = List.map Row.rshift ctx
+
+  let erase_first_col ctx = List.map Row.erase_first_col ctx
 
   let rshift_num n ctx = List.map (Row.rshift_num n) ctx
 
@@ -3407,6 +3416,14 @@ and combine_handlers ~scopes repr partial ctx (v, str, arg) first_match rem =
          repr)
       partial ctx first_match rem
   in
+  (* Once a mutable read's binding is out of scope, a later handler may
+     read a different value. Do not carry its constructor assumptions into
+     that handler (OCaml #7241 / #12555). *)
+  let total =
+    match str with
+    | StrictOpt -> Jumps.map Context.erase_first_col total
+    | Strict | Alias -> total
+  in
   (bind_check str v arg lam, total)
 
 (* verbose version of do_compile_matching, for debug *)
@@ -3553,12 +3570,12 @@ let is_record_with_mutable_field p =
           | Mutable -> true
           | Immutable -> false)
         lps
+  | Tpat_array _ -> true
   | Tpat_alias _
   | Tpat_variant _
   | Tpat_lazy _
   | Tpat_tuple _
   | Tpat_construct _
-  | Tpat_array _
   | Tpat_or _
   | Tpat_constant _
   | Tpat_var _
@@ -3569,7 +3586,11 @@ let has_mutable p = Typedtree.exists_pattern is_record_with_mutable_field p
 
 (* Downgrade Total when
    1. Matching accesses some mutable fields;
-   2. And there are  guards or lazy patterns.
+   2. And there are guards or lazy patterns, possibly in a different case.
+
+   Conservatively keep a failure path for the whole match. This also covers
+   immutable subpatterns nested below the mutable field without changing the
+   representation of matching arguments on these older compiler branches.
 *)
 
 let check_partial has_mutable has_lazy pat_act_list = function
@@ -3578,10 +3599,10 @@ let check_partial has_mutable has_lazy pat_act_list = function
       if
         pat_act_list = []
         || (* allow empty case list *)
-           List.exists
-             (fun (pats, lam) ->
-               has_mutable pats && (is_guarded lam || has_lazy pats))
-             pat_act_list
+           (List.exists (fun (pats, _) -> has_mutable pats) pat_act_list
+            && List.exists
+                 (fun (pats, lam) -> is_guarded lam || has_lazy pats)
+                 pat_act_list)
       then
         Partial
       else
