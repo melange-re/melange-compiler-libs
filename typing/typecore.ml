@@ -2335,6 +2335,14 @@ let force_delayed_checks () =
   reset_delayed_checks ();
   Btype.backtrack snap
 
+(* The PPX marks generated callees so that warning 20 remains enabled in
+   user-provided callee and argument expressions. *)
+let is_melange_uncurried_callee funct =
+  List.exists
+    (fun (attr : Parsetree.attribute) ->
+      attr.attr_name.txt = "mel.internal.uncurried")
+    funct.exp_attributes
+
 let rec final_subexpression exp =
   match exp.exp_desc with
     Texp_let (_, _, e)
@@ -4721,6 +4729,7 @@ and type_application env funct sargs =
       | Tvar _ ->
           let t1 = newvar () and t2 = newvar () in
           if get_level ty_fun >= get_level t1 &&
+             not (is_melange_uncurried_callee funct) &&
              not (is_prim ~name:"%identity" funct)
           then
             Location.prerr_warning sarg.pexp_loc
