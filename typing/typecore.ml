@@ -531,7 +531,12 @@ let constant_desc
   function
   | Pconst_integer (i,None) ->
      begin
-       try Ok (Const_int (Misc.Int_literal_converter.int i))
+       try
+         let n = Misc.Int_literal_converter.int i in
+         (* Normalize before pattern analysis, so wrapped spellings share the
+            same key. Native OCaml retains the host integer representation. *)
+         let n = if !Config.bs_only then Int32.to_int (Int32.of_int n) else n in
+         Ok (Const_int n)
        with Failure _ -> Error (Literal_overflow "int")
      end
   | Pconst_integer (i,Some 'l') ->
