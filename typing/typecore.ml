@@ -3129,6 +3129,12 @@ let is_prim ~name funct =
       prim_name = name
   | _ -> false
 
+let is_melange_uncurried_callee funct =
+  List.exists
+    (fun (attr : Parsetree.attribute) ->
+      attr.attr_name.txt = "mel.internal.uncurried")
+    funct.exp_attributes
+
 (* Collecting arguments for function applications. *)
 
 type untyped_apply_arg =
@@ -3363,6 +3369,9 @@ let collect_unknown_apply_args env funct ty_fun0 rev_args sargs =
                   let ty_res = newvar () in
                   if get_level ty_fun >= get_level ty_param &&
                      not (is_prim ~name:"%identity" funct) &&
+                     (* Exempt the generated invocation, while retaining
+                        warnings in its callee and argument expressions. *)
+                     not (is_melange_uncurried_callee funct) &&
                      (not !Clflags.typing_recovery
                       || not (Typing_recovery_state.erroneous_expr_check funct))
                   then
