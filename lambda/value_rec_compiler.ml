@@ -510,6 +510,7 @@ let rec split_static_function env lam :
         ap_tailcall = Default_tailcall;
         ap_inlined = Default_inline;
         ap_specialised = Default_specialise;
+        ap_arity = Arity_unknown;
       }
     in
     let wrapper =
@@ -806,6 +807,7 @@ let compile_indirect newval =
     ap_tailcall = Default_tailcall;
     ap_inlined = Default_inline;
     ap_specialised = Default_specialise;
+    ap_arity = Arity_unknown;
   }
 
 let compile_alloc size =
