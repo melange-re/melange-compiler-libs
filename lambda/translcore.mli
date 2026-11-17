@@ -35,6 +35,7 @@ val transl_apply: scopes:scopes
                   -> ?tailcall:tailcall_attribute
                   -> ?inlined:inline_attribute
                   -> ?specialised:specialise_attribute
+                  -> ?arity:apply_arity
                   -> lambda -> (arg_label * apply_arg) list
                   -> scoped_location -> lambda
 val transl_let: scopes:scopes -> ?in_structure:bool -> rec_flag

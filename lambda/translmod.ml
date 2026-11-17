@@ -149,6 +149,7 @@ and apply_coercion_result loc strict funct params args cc_res =
                       ap_tailcall=Default_tailcall;
                       ap_inlined=Default_inline;
                       ap_specialised=Default_specialise;
+                      ap_arity=Arity_unknown;
                     })))
 
 and wrap_id_pos_list loc id_pos_list get_field lam =
@@ -244,6 +245,7 @@ let mod_prim name args loc =
       ap_tailcall = Default_tailcall;
       ap_inlined = Default_inline;
       ap_specialised = Default_specialise;
+      ap_arity = Arity_unknown;
     }
   with Not_found ->
     fatal_error ("Primitive " ^ name ^ " not found.")
@@ -259,9 +261,13 @@ exception Initialization_failure of unsafe_info
 
 let mangle_ident = ref Ident.name
 
-let cstr_const = 3
-let cstr_non_const = 2
 let init_shape id modl =
+  (* tags of the constant constructors of [CamlinternalMod.shape] *)
+  let const_recursive_module_shape shape =
+    const_int
+      ~ptr_info:(Pt_recursive_module_shape shape)
+      (match shape with Function -> 0 | Lazy -> 1 | Class -> 2)
+  in
   let add_name x id =
     if !Config.bs_only then
       Const_block
@@ -299,21 +305,9 @@ let init_shape id modl =
         let init_v =
           match get_desc (Ctype.expand_head env ty) with
             Tarrow(_,_,_,_) | Tfunctor(_,_,_,_) ->
-              const_int 0
-                ~ptr_info:(Pt_constructor
-                  { name = "Function"
-                  ; const = cstr_const
-                  ; non_const = cstr_non_const
-                   ; attributes = []
-                   }) (* camlinternalMod.Function *)
+              const_recursive_module_shape Function
           | Tconstr(p, _, _) when Path.same p Predef.path_lazy_t ->
-              const_int 1
-                ~ptr_info:(Pt_constructor
-                  { name = "Lazy"
-                  ; const = cstr_const
-                  ; non_const = cstr_non_const
-                  ; attributes = []
-                  }) (* camlinternalMod.Lazy *)
+              const_recursive_module_shape Lazy
           | _ ->
               let info =
                 Unsafe {reason=Unsafe_non_function; loc; path=new_path} in
@@ -341,14 +335,7 @@ let init_shape id modl =
     | Sig_modtype(id, minfo, _) :: rem ->
         init_shape_struct path (Env.add_modtype id minfo env) rem
     | Sig_class (id, _, _, _) :: rem ->
-        (add_name
-          (const_int 2
-            ~ptr_info:(Pt_constructor
-              { name = "Class"
-              ; const = cstr_const
-              ; non_const = cstr_non_const
-              ; attributes = []
-              })) id) (* camlinternalMod.Class *)
+        (add_name (const_recursive_module_shape Class) id)
         :: init_shape_struct path env rem
     | Sig_class_type _ :: rem ->
         init_shape_struct path env rem
@@ -608,7 +595,8 @@ and transl_apply ~scopes ~loc ~cc mod_env funct translated_arg =
        ap_args=[translated_arg];
        ap_tailcall=Default_tailcall;
        ap_inlined=inlined_attribute;
-       ap_specialised=Default_specialise})
+       ap_specialised=Default_specialise;
+       ap_arity=Arity_unknown})
 
 and transl_struct ~scopes loc fields cc rootpath {str_final_env; str_items; _} =
   transl_structure ~scopes loc fields cc rootpath str_final_env str_items
@@ -1501,6 +1489,7 @@ let toploop_getvalue id =
     ap_tailcall=Default_tailcall;
     ap_inlined=Default_inline;
     ap_specialised=Default_specialise;
+    ap_arity=Arity_unknown;
   }
 
 let toploop_setvalue id lam =
@@ -1515,6 +1504,7 @@ let toploop_setvalue id lam =
     ap_tailcall=Default_tailcall;
     ap_inlined=Default_inline;
     ap_specialised=Default_specialise;
+    ap_arity=Arity_unknown;
   }
 
 let toploop_setvalue_id id = toploop_setvalue id (Lvar id)

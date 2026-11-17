@@ -719,6 +719,7 @@ let rec choice ctx t =
                        ap_func = Lvar specialized.dps_id;
                        ap_args = add_dst_args dst args;
                        ap_tailcall = tailcall tail;
+                       ap_arity = Arity_unknown;
                      });
             direct = (fun () ->
               Lapply { apply with ap_tailcall = tailcall tail });

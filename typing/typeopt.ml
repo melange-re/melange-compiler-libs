@@ -25,6 +25,7 @@ let scrape_ty env ty =
   match get_desc ty with
   | Tconstr _ ->
       let ty = Ctype.expand_head_opt env ty in
+      let ty = Ctype.maybe_instance_poly ty in
       begin match get_desc ty with
       | Tconstr (p, _, _) ->
           begin match Env.find_type p env with
@@ -96,6 +97,29 @@ let cannot_inhabit_none_like_value (typ : Types.type_expr) (env : Env.t) =
     | Tvar _
     | Tobject _
       -> false
+
+let application_result_arity env ty =
+  match scrape env ty with
+  | Some (Ttuple _ | Tvariant _) -> Arity_exact
+  | Some (Tconstr (path, _, _)) ->
+      (match Predef.find_type_constr path with
+      | Some (#Predef.data_type_constr
+             | `Int | `Char | `String | `Bytes | `Float | `Int32 | `Int64
+             | `Nativeint | `Array | `Floatarray | `Extension_constructor
+             | `Todo_info) ->
+          Arity_exact
+      | Some (`Continuation | `Lazy_t | `Iarray | `Atomic_loc) ->
+          Arity_unknown
+      | None ->
+          match (Env.find_type path env).type_kind with
+          | Type_record _
+          | Type_variant _
+          | Type_open -> Arity_exact
+          | Type_abstract _ | Type_external _ -> Arity_unknown
+          | exception Not_found -> Arity_unknown)
+  | Some (Tvar _ | Tarrow _ | Tfunctor _ | Tobject _ | Tfield _ | Tnil
+         | Tlink _ | Tsubst _ | Texpand _ | Tunivar _ | Tpoly _ | Tpackage _)
+  | None -> Arity_unknown
 
 let is_function_type env ty =
   match scrape env ty with

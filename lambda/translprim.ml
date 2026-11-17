@@ -904,6 +904,7 @@ let lambda_of_prim prim_name prim loc args arg_exps =
         ap_tailcall = Default_tailcall;
         ap_inlined = Default_inline;
         ap_specialised = Default_specialise;
+        ap_arity = Arity_unknown;
       }
   | Atomic (op, kind), args ->
       lambda_of_atomic prim_name loc op kind args
