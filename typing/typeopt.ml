@@ -79,6 +79,18 @@ let cannot_inhabit_none_like_value (typ : Types.type_expr) (env : Env.t) =
                     (Ident.name i1 = "Some" && Ident.name i2 = "None")
           (* | Types.Type_variant  *)
                -> false (* conservative *)
+          | Types.Type_variant (constructors, _) ->
+              not (List.exists (fun (constructor : Types.constructor_declaration) ->
+                match constructor.cd_args with
+                | Cstr_tuple [] ->
+                    List.exists (function
+                      | { Parsetree.attr_name = { txt = "mel.as"; _ };
+                          attr_payload = PStr [{ pstr_desc = Pstr_eval
+                            ({ pexp_desc = Pexp_ident
+                               { txt = Longident.Lident "undefined"; _ }; _ }, _);
+                            _ }]; _ } -> true
+                      | _ -> false) constructor.cd_attributes
+                | Cstr_tuple _ | Cstr_record _ -> false) constructors)
           | _ -> true
           end)
     | Ttuple _
