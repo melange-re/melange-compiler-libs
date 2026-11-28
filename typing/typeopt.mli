@@ -15,6 +15,9 @@
 
 (* Auxiliaries for type-based optimizations, e.g. array kinds *)
 
+val application_result_arity :
+  Env.t -> Types.type_expr -> Lambda.apply_arity
+
 val is_function_type :
       Env.t -> Types.type_expr -> (Types.type_expr * Types.type_expr) option
 val is_base_type : Env.t -> Types.type_expr -> Path.t -> bool

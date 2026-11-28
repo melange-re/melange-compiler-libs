@@ -252,9 +252,21 @@ and transl_exp0 ~in_new_scope ~scopes e =
       let tailcall = Translattribute.get_tailcall_attribute funct in
       let inlined = Translattribute.get_inlined_attribute funct in
       let specialised = Translattribute.get_specialised_attribute funct in
+      let arity =
+        match oargs with
+        | [ (Nolabel, Arg _) ] ->
+            begin match
+              get_desc (Ctype.expand_head e.exp_env funct.exp_type)
+            with
+            | Tarrow (Nolabel, _, result, _) ->
+                Typeopt.application_result_arity e.exp_env result
+            | _ -> Arity_unknown
+            end
+        | _ -> Arity_unknown
+      in
       let e = { e with exp_desc = Texp_apply(funct, oargs) } in
       event_after ~scopes e
-        (transl_apply ~scopes ~tailcall ~inlined ~specialised
+        (transl_apply ~scopes ~tailcall ~inlined ~specialised ~arity
            (transl_exp ~scopes funct) oargs (of_location ~scopes e.exp_loc))
   | Texp_match(arg, pat_expr_list, [], partial) ->
       transl_match ~scopes e arg pat_expr_list partial
@@ -524,7 +536,8 @@ and transl_exp0 ~in_new_scope ~scopes e =
                     ap_args = [self];
                     ap_tailcall = Default_tailcall;
                     ap_inlined = Default_inline;
-                    ap_specialised = Default_specialise}
+                    ap_specialised = Default_specialise;
+                    ap_arity = Arity_unknown}
       in
       event_after ~scopes e lam
   | Texp_new (cl, {Location.loc=loc}, _) ->
@@ -537,6 +550,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
         ap_tailcall=Default_tailcall;
         ap_inlined=Default_inline;
         ap_specialised=Default_specialise;
+        ap_arity=Arity_unknown;
       }
   | Texp_instvar(path_self, path, _) ->
       let loc = of_location ~scopes e.exp_loc in
@@ -560,6 +574,7 @@ and transl_exp0 ~in_new_scope ~scopes e =
              ap_tailcall=Default_tailcall;
              ap_inlined=Default_inline;
              ap_specialised=Default_specialise;
+             ap_arity=Arity_unknown;
            },
            List.fold_right
              (fun (id, _, expr) rem ->
@@ -690,6 +705,7 @@ and transl_apply ~scopes
       ?(tailcall=Default_tailcall)
       ?(inlined = Default_inline)
       ?(specialised = Default_specialise)
+      ?(arity = Arity_unknown)
       lam sargs loc
   =
   let lapply funct args =
@@ -699,7 +715,8 @@ and transl_apply ~scopes
     | Levent(Lsend(k, lmet, lobj, largs, _), _) ->
         Lsend(k, lmet, lobj, largs @ args, loc)
     | Lapply ap ->
-        Lapply {ap with ap_args = ap.ap_args @ args; ap_loc = loc}
+        Lapply {ap with ap_args = ap.ap_args @ args; ap_loc = loc;
+                        ap_arity = Arity_unknown}
     | lexp ->
         Lapply {
           ap_loc=loc;
@@ -708,6 +725,7 @@ and transl_apply ~scopes
           ap_tailcall=tailcall;
           ap_inlined=inlined;
           ap_specialised=specialised;
+          ap_arity=arity;
         }
   in
   (* Build a function application.
@@ -1377,6 +1395,7 @@ and transl_letop ~scopes loc env let_ ands param case partial =
                ap_tailcall = Default_tailcall;
                ap_inlined = Default_inline;
                ap_specialised = Default_specialise;
+               ap_arity = Arity_unknown;
              })
         in
         bind Strict left_id prev_lam (loop lam rest)
@@ -1408,6 +1427,7 @@ and transl_letop ~scopes loc env let_ ands param case partial =
     ap_tailcall = Default_tailcall;
     ap_inlined = Default_inline;
     ap_specialised = Default_specialise;
+    ap_arity = Arity_unknown;
   }
 
 (* Wrapper for class compilation *)

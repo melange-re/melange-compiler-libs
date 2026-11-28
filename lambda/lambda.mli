@@ -160,6 +160,11 @@ type is_safe =
   | Safe
   | Unsafe
 
+type recursive_module_shape =
+  | Function
+  | Lazy
+  | Class
+
 type pointer_info =
   | Pt_constructor of
     { name: string
@@ -176,6 +181,7 @@ type pointer_info =
   | Pt_builtin_boolean
   | Pt_shape_none
   | Pt_assertfalse
+  | Pt_recursive_module_shape of recursive_module_shape
   | Pt_na
 
 type lazy_block_tag =
@@ -388,6 +394,11 @@ type specialise_attribute =
   | Never_specialise (* [@specialise never] *)
   | Default_specialise (* no [@specialise] attribute *)
 
+type apply_arity =
+  | Arity_unknown
+  | Arity_exact
+      (** the type of the callee proves it takes exactly these arguments *)
+
 val equal_specialise_attribute
    : specialise_attribute
   -> specialise_attribute
@@ -516,7 +527,8 @@ and lambda_apply =
     ap_loc : scoped_location;
     ap_tailcall : tailcall_attribute;
     ap_inlined : inline_attribute; (* specified with the [@inlined] attribute *)
-    ap_specialised : specialise_attribute; }
+    ap_specialised : specialise_attribute;
+    ap_arity : apply_arity; }
 
 and lambda_switch =
   { sw_numconsts: int;                  (* Number of integer cases *)

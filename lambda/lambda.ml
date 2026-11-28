@@ -307,6 +307,11 @@ let equal_value_kind x y =
   | Pintval, Pintval -> true
   | (Pgenval | Pfloatval | Pboxedintval _ | Pintval), _ -> false
 
+type recursive_module_shape =
+  | Function
+  | Lazy
+  | Class
+
 type pointer_info =
   | Pt_constructor of
     { name: string
@@ -321,6 +326,7 @@ type pointer_info =
   | Pt_builtin_boolean
   | Pt_shape_none
   | Pt_assertfalse
+  | Pt_recursive_module_shape of recursive_module_shape
   | Pt_na
 
 let default_pointer_info = Pt_na
@@ -367,6 +373,8 @@ type specialise_attribute =
   | Always_specialise (* [@specialise] or [@specialise always] *)
   | Never_specialise (* [@specialise never] *)
   | Default_specialise (* no [@specialise] attribute *)
+
+type apply_arity = Arity_unknown | Arity_exact
 
 let equal_specialise_attribute x y =
   match x, y with
@@ -484,7 +492,8 @@ and lambda_apply =
     ap_loc : scoped_location;
     ap_tailcall : tailcall_attribute;
     ap_inlined : inline_attribute;
-    ap_specialised : specialise_attribute; }
+    ap_specialised : specialise_attribute;
+    ap_arity : apply_arity; }
 
 and lambda_switch =
   { sw_numconsts: int;
@@ -1107,7 +1116,7 @@ let shallow_map f = function
   | Lmutvar _
   | Lconst _ as lam -> lam
   | Lapply { ap_func; ap_args; ap_loc; ap_tailcall;
-             ap_inlined; ap_specialised } ->
+             ap_inlined; ap_specialised; ap_arity } ->
       Lapply {
         ap_func = f ap_func;
         ap_args = List.map f ap_args;
@@ -1115,6 +1124,7 @@ let shallow_map f = function
         ap_tailcall;
         ap_inlined;
         ap_specialised;
+        ap_arity;
       }
   | Lfunction lfun ->
       Lfunction (map_lfunction f lfun)

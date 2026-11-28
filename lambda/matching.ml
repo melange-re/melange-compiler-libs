@@ -2214,12 +2214,13 @@ let call_force_lazy_block varg loc =
       ap_func = force_fun;
       ap_args = [ Lprim (Popaque, [ varg ], loc) ];
       ap_inlined = Default_inline;
-      ap_specialised = Default_specialise
+      ap_specialised = Default_specialise;
+      ap_arity = Arity_unknown
     }
 
 let inline_lazy_force_cond arg loc =
   if !Config.bs_only then
-    Lapply {ap_tailcall=Default_tailcall; ap_func = Lazy.force code_force_lazy; ap_inlined = Default_inline; ap_specialised = Default_specialise; ap_args = [arg]; ap_loc = loc}
+    Lapply {ap_tailcall=Default_tailcall; ap_func = Lazy.force code_force_lazy; ap_inlined = Default_inline; ap_specialised = Default_specialise; ap_arity = Arity_unknown; ap_args = [arg]; ap_loc = loc}
   else
   let idarg = Ident.create_local "lzarg" in
   let varg = Lvar idarg in
@@ -2294,7 +2295,8 @@ let inline_lazy_force arg loc =
         ap_func = Lazy.force code_force_lazy;
         ap_args = [ Lconst (Const_int (0, default_pointer_info)); arg ];
         ap_inlined = Never_inline;
-        ap_specialised = Default_specialise
+        ap_specialised = Default_specialise;
+        ap_arity = Arity_unknown
       }
   else if !Clflags.native_code then
     (* Lswitch generates compact and efficient native code *)

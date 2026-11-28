@@ -217,7 +217,12 @@ let lfunction params body =
 let lapply ap =
   match ap.ap_func with
     Lapply ap' ->
-      Lapply {ap with ap_func = ap'.ap_func; ap_args = ap'.ap_args @ ap.ap_args}
+      Lapply {
+        ap with
+        ap_func = ap'.ap_func;
+        ap_args = ap'.ap_args @ ap.ap_args;
+        ap_arity = Arity_unknown;
+      }
   | _ ->
       Lapply ap
 
@@ -229,6 +234,7 @@ let mkappl (func, args) =
     ap_tailcall=Default_tailcall;
     ap_inlined=Default_inline;
     ap_specialised=Default_specialise;
+    ap_arity=Arity_unknown;
   }
 
 let lsequence l1 l2 =
@@ -800,6 +806,7 @@ let transl_class_rebind ~scopes cl vf =
         ap_tailcall=Default_tailcall;
         ap_inlined=Default_inline;
         ap_specialised=Default_specialise;
+        ap_arity=Arity_unknown;
       }
     in
     let _, path_lam, obj_init' =
