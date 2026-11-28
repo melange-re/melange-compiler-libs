@@ -10,7 +10,7 @@
         system:
         nixpkgs.legacyPackages.${system}.extend (
           self: super: {
-            ocamlPackages = super.ocaml-ng.ocamlPackages_5_5;
+            ocamlPackages = super.ocaml-ng.ocamlPackages_5_6;
           }
         )
       );
